@@ -305,11 +305,12 @@ class DBEditor
         @glade = GTBld::load(DLG_DB_EDITOR)
 
         @editors = []
-        if mc.record.compile?
-            @editors << ArtistEditor.new(@glade, mc.segment.rartist)
-        else
-            @editors << ArtistEditor.new(@glade, mc.artist.rartist)
-        end
+#         if mc.record.compile?
+#             @editors << ArtistEditor.new(@glade, mc.segment.rartist)
+#         else
+#             @editors << ArtistEditor.new(@glade, mc.artist.rartist)
+#         end
+        @editors << ArtistEditor.new(@glade, mc.record.compile? ? mc.segment.rartist : mc.artist.rartist)
         @editors << RecordEditor.new(@glade, mc.record.rrecord)
         @editors << SegmentEditor.new(@glade, mc.segment.rsegment)
         @editors << TrackEditor.new(@glade, mc.track.rtrack)
