@@ -7,12 +7,12 @@ class FilterWindow < TopWindow
 
     include UIConsts
 
-    TRACK_WEIGHT    = 0
-    TRACK_RTRACK    = 1
-    TRACK_PLAYED    = 2
-    TRACK_RATING    = 3
-    TRACK_TITLE     = 4
-    TRACK_SELECTION = 5
+    TRACK_WEIGHT    = 0 # Global computed weight
+    TRACK_RTRACK    = 1 # DB ref
+    TRACK_PLAYED    = 2 # Played weight in % in regard of the most played track of the selection
+    TRACK_RATING    = 3 # Rating weight in %
+    TRACK_TITLE     = 4 # Not used, only for debug. To remove asap
+    #TRACK_SELECTION = 5
 
     TITLES = { "genres" => "Genre", "origins" => "Country", "medias" => "Medium" } # "labels" => "Label"
     COND_FIELDS = ["records.rgenre", "artists.rorigin", "records.rmedia"] # Fields to sort on
@@ -166,31 +166,76 @@ puts wc
               "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
 puts sql
         f = File.new(Cfg::instance.rsrc_dir+"genpl.txt", "w")
+
         max_played = 0
         tracks = []
+        track_infos = TrackInfos.new
         DBIntf.connection.execute(sql) do |row|
+            # Skip tracks which aren't ripped
+            next if Utils::audio_file_exists(track_infos.get_track_infos(row[0])).status == Utils::FILE_NOT_FOUND
+            
             max_played = row[1] if row[1] > max_played
-            tracks << [0, row[0], row[1].to_f, row[2].to_f/6.0*100.0, row[3], 0]
+            tracks << [0.0, row[0], row[1].to_f, row[2].to_f/6.0*100.0, row[3]]
             f << row[0] << " - " << row[1] << " - " << row[2] << " - " << row[3] << "\n"
         end
         f.puts
-#         pcweight = @glade[UIConsts::FLT_SPIN_PCWEIGHT].value > 0.0 ? @glade[UIConsts::FLT_SPIN_PCWEIGHT].value : 1.0
-#         rtweight = @glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value > 0.0 ? @glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value : 1.0
-        tracks.each { |track|
-            track[TRACK_PLAYED] = track[2]/max_played*100.0 if max_played > 0
-            track[TRACK_WEIGHT] = 0
-            track[TRACK_WEIGHT] += track[2]*@mc.glade[UIConsts::FLT_SPIN_PCWEIGHT].value
-            track[TRACK_WEIGHT] += track[3]*@mc.glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value
-            f << track[TRACK_RTRACK] << " - " << track[TRACK_PLAYED] << " - " << track[TRACK_RATING] \
-              << " - Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
+
+        # Filter was too restrictive, no match, exit silently
+        return if tracks.size == 0
+        
+        # Store play count and rating weight for effiency purpose
+        pcweight = @mc.glade[UIConsts::FLT_SPIN_PCWEIGHT].value
+        rtweight = @mc.glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value
+
+        # The array is ready. If random selection, shuffle it else compute and sort by weight
+        if @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
+            tracks.shuffle!
+        else
+            tracks.each { |track|
+                track[TRACK_PLAYED]  = track[TRACK_PLAYED]/max_played*100.0 if max_played > 0
+                track[TRACK_WEIGHT] += track[TRACK_PLAYED]*pcweight if pcweight > 0.0
+                track[TRACK_WEIGHT] += track[TRACK_RATING]*rtweight if rtweight > 0.0
+                f << track[TRACK_RTRACK] << " - pcp: " << track[TRACK_PLAYED] << " - rtp: " << track[TRACK_RATING] \
+                  << " - Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
+            }
+            tracks.sort! { |t1, t2| t2[TRACK_WEIGHT] <=> t1[TRACK_WEIGHT] } # reverse sort, most weighted first
+        end
+
+        tracks.slice!(@mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round, tracks.size)
+
+        f.puts; f.puts 
+        tracks.each_with_index { |track, i|
+            f << "i="<< i << "  Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
         }
+
+        f.close
+
+        return
+        
+        rplist = DBUtils::get_last_id("plist")+1
+        DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
+                                    #{Time.now.to_i}, #{Time.now.to_i});")
+        count = 1
+        tracks.each { |track|
+            f << "Weight: " << track[TRACK_WEIGHT] << " (" << track[TRACK_SELECTION] << ") for " << track[TRACK_TITLE] << "\n"
+            DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{track[TRACK_RTRACK]}, #{count});")
+            count += 1
+            #DBUtils::log_exec("INSERT INTO pltracks VALUES (null, #{rplist}, #{track[1]}, #{i+1});") if track[5] == 1 || tracks.size <= max_entries
+        }
+
+        f.close
+
+        @mc.reload_plists
+
+        return
+        
         #if !is_full_rnd && max_played != 0 # Don't sort tracks if no weight for played and rating
         unless @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
-            tracks.sort! { |t1, t2| t2 <=> t1 } # reverse sort, most weighted first
+            tracks.sort! { |t1, t2| t2[0] <=> t1[0] } # reverse sort, most weighted first
         end
+
         max_entries = @mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round
         pos = 0
-        track_infos = TrackInfos.new
         #if tracks.size > max_entries
             tracks_found = 0
             pass_count = 0
@@ -220,6 +265,9 @@ puts sql
         f.puts
 
         # Copy selected tracks to a list store to use the reorder method if we have a random selection
+
+        # Use tracks.shuffle if random and remove the list store ???
+        
         count = 0
         ls = Gtk::ListStore.new(Integer)
         tracks.each { |track| if track[TRACK_SELECTION] == 1 then iter = ls.append; iter[0] = track[TRACK_RTRACK]; count += 1; end }
