@@ -23,21 +23,13 @@ class RecentRecordsDialog
         @dlg.signal_connect(:focus_in_event) { |widget, event| @mc.filter_receiver = self; false }
         @dlg.signal_connect(:delete_event)   { puts "delete received"; @mc.reset_filter_receiver; @dlg.destroy; false }
 
-# A explorer...  @glade[UIConsts::RECREC_BTN_CANCEL].signal_connect(:clicked) { send(:delete_event, Gdk::Event::DELETE_EVENT.new) }
-        #@glade["recrec_btn_close"].signal_connect(:clicked) { @dlg.delete }
+        # J'aimerais bien piger une fois comment on envoie un delete_event a la fenetre!!!
+        #@glade["recrec_btn_close"].signal_connect(:clicked) { @dlg.delete } # @dlg.signal_emit(:delete_event, Gdk::Event.new(Gdk::Event::DESTROY)) }
+        @glade[UIConsts::RECREC_BTN_CLOSE].signal_connect(:clicked) { puts "closing"; @mc.reset_filter_receiver; @dlg.destroy }
 
         @glade[UIConsts::RECREC_BTN_SHOW].signal_connect(:clicked) {
             @mc.select_record(@tv.selection.selected[COL_REF]) if @tv.selection.selected
         }
-
-#         @glade[UIConsts::RECREC_BTN_FILTER].signal_connect(:clicked) {
-#             flt_gen = FilterGeneratorDialog.new
-#             unless flt_gen.show(FilterGeneratorDialog::MODE_FILTER) == Gtk::Dialog::RESPONSE_CANCEL
-#                 @filter = flt_gen.get_filter
-#                 exec_sql(view_type);
-#             end
-#             flt_gen.destroy
-#         }
 
         @tv = @glade[UIConsts::RECREC_TV]
 
@@ -111,8 +103,5 @@ class RecentRecordsDialog
 
     def run
         @dlg.show
-#         resp = 1
-#         resp = @dlg.run while resp == 1
-#         @dlg.destroy
     end
 end
