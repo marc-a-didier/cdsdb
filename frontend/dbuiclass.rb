@@ -20,7 +20,7 @@ class ArtistUI < ArtistDBClass
     
     def to_widgets
         super
-        to_infos_widget(@glade[UIConsts::MW_INFLBL_ARTIST])
+        return to_infos_widget(@glade[UIConsts::MW_INFLBL_ARTIST])
     end
 
     def build_infos_string
@@ -45,13 +45,12 @@ class RecordUI < RecordDBClass
 
     def to_widgets
         super
-        to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
+        return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
     end
     
     def to_widgets_with_img
         @cover_file_name = Utils::get_cover_file_name(self.rrecord, 0, self.irecsymlink)
         @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, 0, self.irecsymlink, 128)
-        to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
         return to_widgets
     end
 
@@ -80,7 +79,8 @@ class SegmentUI < SegmentDBClass
     end
     
     def to_widgets
-        to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
+        super
+        return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
     end
 
     def build_infos_string
@@ -106,7 +106,7 @@ class TrackUI < TrackDBClass
 
     def to_widgets
         super
-        to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
+        return to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
     end
 
     def to_widgets_with_img(record)
@@ -120,7 +120,6 @@ class TrackUI < TrackDBClass
             @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, self.rtrack, 0, 128)
             @cover_file_name = fname
         end
-        to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
         return to_widgets
     end
     
@@ -152,7 +151,7 @@ class ArtistEditor < ArtistDBClass
     def initialize(glade, rartist)
         super()
 
-        @glade = glade #GTBld::load(DLG_DB_EDITOR) #DLG_ART_EDITOR)
+        @glade = glade
         init_baseui("arted_")
 
         ref_load(rartist)
@@ -160,16 +159,16 @@ class ArtistEditor < ArtistDBClass
         @glade[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
     end
 
-    def run
-        #[ARTED_BTN_OK, ARTED_BTN_ORIGIN].each { |ctrl| @glade[ctrl].sensitive = Cfg::instance.admin? }
-        artist = nil
-        self.to_widgets
-        #artist = self.from_widgets.sql_update if @glade[DLG_ART_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-        @glade[DLG_DB_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-        #@glade[DLG_ART_EDITOR].destroy
-        @glade[DLG_DB_EDITOR].destroy
-        return artist
-    end
+#     def run
+#         #[ARTED_BTN_OK, ARTED_BTN_ORIGIN].each { |ctrl| @glade[ctrl].sensitive = Cfg::instance.admin? }
+#         artist = nil
+#         self.to_widgets
+#         #artist = self.from_widgets.sql_update if @glade[DLG_ART_EDITOR].run == Gtk::Dialog::RESPONSE_OK
+#         @glade[DLG_DB_EDITOR].run == Gtk::Dialog::RESPONSE_OK
+#         #@glade[DLG_ART_EDITOR].destroy
+#         @glade[DLG_DB_EDITOR].destroy
+#         return artist
+#     end
 
 end
 
@@ -182,7 +181,7 @@ class RecordEditor < RecordDBClass
     def initialize(glade, rrecord)
         super()
 
-        @glade = glade #GTBld::load(DLG_REC_EDITOR)
+        @glade = glade
         init_baseui("reced_")
 
         ref_load(rrecord)
@@ -199,17 +198,17 @@ class RecordEditor < RecordDBClass
         }
     end
 
-    def run
+#     def run
 #         [RECED_BTN_OK, RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
 #             @glade[ctrl].sensitive = Cfg::instance.admin?
 #         }
-
-        record = nil
-        self.to_widgets
-        record = self.from_widgets.sql_update if @glade[DLG_REC_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-        @glade[DLG_REC_EDITOR].destroy
-        return record
-    end
+# 
+#         record = nil
+#         self.to_widgets
+#         record = self.from_widgets.sql_update if @glade[DLG_REC_EDITOR].run == Gtk::Dialog::RESPONSE_OK
+#         @glade[DLG_REC_EDITOR].destroy
+#         return record
+#     end
 
     def update_ptime
         return if rmedia != DBIntf::MEDIA_AUDIO_FILE
@@ -228,7 +227,7 @@ class SegmentEditor < SegmentDBClass
     def initialize(glade, rsegment)
         super()
 
-        @glade = glade #GTBld::load(DLG_SEG_EDITOR)
+        @glade = glade
         init_baseui("seged_")
 
         ref_load(rsegment)
@@ -241,17 +240,17 @@ class SegmentEditor < SegmentDBClass
         }
     end
 
-    def run
+#     def run
 #         [SEGED_BTN_OK, SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
 #             @glade[ctrl].sensitive = Cfg::instance.admin?
 #         }
-
-        segment = nil
-        to_widgets
-        segment = self.from_widgets.sql_update if @glade[DLG_SEG_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-        @glade[DLG_SEG_EDITOR].destroy
-        return segment
-    end
+# 
+#         segment = nil
+#         to_widgets
+#         segment = self.from_widgets.sql_update if @glade[DLG_SEG_EDITOR].run == Gtk::Dialog::RESPONSE_OK
+#         @glade[DLG_SEG_EDITOR].destroy
+#         return segment
+#     end
 
     def update_ptime
         DBUtils::update_segment_playtime(self.rsegment)
@@ -270,7 +269,7 @@ class TrackEditor < TrackDBClass
     def initialize(glade, rtrack)
         super()
 
-        @glade = glade #GTBld::load(DLG_TRK_EDITOR)
+        @glade = glade
         init_baseui("trked_")
 
         ref_load(rtrack)
@@ -287,15 +286,15 @@ class TrackEditor < TrackDBClass
         UIUtils::setup_tracks_tags_tv(@glade[UIConsts::TRKED_TV_TAGS])
     end
 
-    def run
-        @glade[TRKED_BTN_OK].sensitive = Cfg::instance.admin?
-
-        track = nil
-        to_widgets
-        track = self.from_widgets.sql_update if @glade[DLG_TRK_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-        @glade[DLG_TRK_EDITOR].destroy
-        return track
-    end
+#     def run
+#         @glade[TRKED_BTN_OK].sensitive = Cfg::instance.admin?
+# 
+#         track = nil
+#         to_widgets
+#         track = self.from_widgets.sql_update if @glade[DLG_TRK_EDITOR].run == Gtk::Dialog::RESPONSE_OK
+#         @glade[DLG_TRK_EDITOR].destroy
+#         return track
+#     end
 end
 
 class DBEditor
