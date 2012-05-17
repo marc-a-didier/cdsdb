@@ -285,7 +285,7 @@ module UIConsts
     #
     RECENT_RECORDS_DIALOG   = "recent_records_dialog"
     RECREC_BTN_SHOW         = "recrec_btn_show"
-    RECREC_BTN_FILTER       = "recrec_btn_filter"
+    RECREC_BTN_CLOSE        = "recrec_btn_close"
     RECREC_TV               = "recrec_tv"
 
     #
