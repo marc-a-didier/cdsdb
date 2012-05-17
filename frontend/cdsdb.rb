@@ -199,6 +199,24 @@ require './my_rr_lib'
 #   TODO: faire un serveur web plutot que de se faire chier avec une base sql locale?
 
 
+#
+# Main chnages for v0.8.0
+#
+# - Port to ruby 1.9.x
+# - SQLite3 ruby lib now returns columns with native type rather than strings
+# - Re-ported lastest version of RubyRipper rr_lib
+# - Removed dependancies on GTK obsoleted packages, mainly libglade2 by using GTK Builder
+# - One glade file per dialog
+# - Removed the tabs in main window, replaced by status lines in each browser
+# - New memo window, replacing the memo in tabs
+# - DB editors grouped in one global tabbed editor
+# - Filter window applicates on the most recent focused filterable window (main, charts, recent...)
+# - Old filter generator window removed, filter prefs class removed along
+# - Play list generation integrated within the filter window
+# - Artist tree view is now hierarchical and gives several filters
+# - May show/hide db references in tree views
+#
+
 class Cdsdb
 
     VERSION = "0.8.0"
