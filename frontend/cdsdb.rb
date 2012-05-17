@@ -183,7 +183,6 @@ require './my_rr_lib'
 
 # TODO: piger comment on envoie un delete event a une fenetre!!!
 
-# TODO: faire disparaitre les references aux anciens tabs (renommer les controls de facon plus claire)
 # TODO: utilitaire pour transferer l'historique des morceaux quand on change de medium (mp3->cd, p.e.)
 # TODO: Mettre une couleur differente pour chaque nouvelle lettre dans la liste des artistes???
 # TODO: Voir le probleme du remplissage des titres depuis le net avec la nouvelle version de rr lib
