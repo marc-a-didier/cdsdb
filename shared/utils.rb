@@ -200,10 +200,10 @@ puts "val2=#{val}"
     def Utils::tag_and_move_file(fname, track_infos)
         tag_file(fname, track_infos)
 
-        root_dir = Cfg::instance.music_dir+track_infos.genre+"/"
+        root_dir = Cfg::instance.music_dir+track_infos.genre+File::SEPARATOR
         FileUtils.mkpath(root_dir+track_infos.dir)
-        FileUtils.mv(fname, root_dir+track_infos.dir+"/"+track_infos.fname+File.extname(fname))
-        Log.instance.info("Source #{fname} tagged and moved to "+root_dir+track_infos.dir+"/"+track_infos.fname+File.extname(fname))
+        FileUtils.mv(fname, root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
+        Log.instance.info("Source #{fname} tagged and moved to "+root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
         Utils::remove_dirs(File.dirname(fname))
     end
 
@@ -234,7 +234,7 @@ puts "val2=#{val}"
             if file[0] =~ /([^0-9]*)([0-9]+)(.*)/
                 next if $2.length > 1
                 nfile = $1+"0"+$2+$3
-                FileUtils.mv(file[1]+"/"+file[0], file[1]+"/"+nfile)
+                FileUtils.mv(file[1]+File::SEPARATOR+file[0], file[1]+File::SEPARATOR+nfile)
                 puts "File #{file[0]} renamed to #{nfile}"
                 file[0] = nfile
             end
@@ -250,7 +250,7 @@ puts "val2=#{val}"
         i = 0
         DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
             yield
-            tag_and_move_file(files[i][1]+"/"+files[i][0], track_infos.get_track_infos(row[0]))
+            tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], track_infos.get_track_infos(row[0]))
             i += 1
         end
         return [trk_count, files.size]
@@ -288,15 +288,13 @@ puts "val2=#{val}"
     #
     #
     def Utils::audio_file_exists(track_infos)
-        file = Cfg::instance.music_dir+track_infos.genre+"/"+track_infos.dir+"/"+track_infos.fname
+        file = Cfg::instance.music_dir+track_infos.genre+File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname
         AUDIO_EXTS.each { |ext| return AudioFileStatus.new(FILE_OK, file+ext) if File::exists?(file+ext) }
 
-        file = (track_infos.dir+"/"+track_infos.fname).gsub(/\[/, '\[').gsub(/\]/, '\]')
+        file = File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname
         Dir[Cfg::instance.music_dir+"*"].each { |entry|
-            if FileTest::directory?(entry)
-                files = Dir[entry+"/"+file+".*"]
-                return AudioFileStatus.new(FILE_MISPLACED, files[0]) if files.size > 0
-            end
+            next unless FileTest::directory?(entry)
+            AUDIO_EXTS.each { |ext| return AudioFileStatus.new(FILE_MISPLACED, entry+file+ext) if File::exists?(entry+file+ext) }
         }
         return AudioFileStatus.new(FILE_NOT_FOUND, "")
     end
@@ -309,7 +307,7 @@ puts "val2=#{val}"
         track_infos = TrackInfos.new.get_track_infos(rtrack)
         fname = audio_file_exists(track_infos).file_name;
         unless fname.empty?
-            File.unlink(fname);
+            File.unlink(fname)
             Log.instance.info("File #{fname} removed from file system.")
             Utils::remove_dirs(File.dirname(fname))
         end
@@ -323,7 +321,7 @@ puts "val2=#{val}"
     def Utils::record_on_disk?(track_infos)
         Dir[Cfg::instance.music_dir+"*"].each do |entry|
             if FileTest::directory?(entry)
-                return true if FileTest::exists?(entry+"/"+track_infos.dir)
+                return true if FileTest::exists?(entry+File::SEPARATOR+track_infos.dir)
             end
         end
         return false
@@ -428,7 +426,7 @@ print "Checking #{file}\n"
     def Utils::get_cover_file_name(rrecord, rtrack, irecsymlink)
         file = []
         dir = Cfg::instance.covers_dir+rrecord.to_s
-        file = Dir[dir+"/"+rtrack.to_s+".*"] if rtrack != 0 && File::directory?(dir)
+        file = Dir[dir+File::SEPARATOR+rtrack.to_s+".*"] if rtrack != 0 && File::directory?(dir)
         file = Dir[dir+".*"] if file.size == 0
         file = Dir[Cfg::instance.covers_dir+irecsymlink.to_s+".*"] if irecsymlink != 0 && file.size == 0
         return file.size > 0 ? file[0] : ""
@@ -449,8 +447,8 @@ print "Checking #{file}\n"
             # so we assign the file to the track rather than the record
             cover_file = Cfg::instance.covers_dir+rrecord.to_s
             File::mkpath(cover_file)
-            cover_file += "/"+rtrack.to_s+File::extname(fname)
-            ex_name = cover_file+"/ex"+rtrack.to_s+File::extname(fname)
+            cover_file += File::SEPARATOR+rtrack.to_s+File::extname(fname)
+            ex_name = cover_file+File::SEPARATOR+"ex"+rtrack.to_s+File::extname(fname)
         else
             # Assign file to record
             cover_file = Cfg::instance.covers_dir+rrecord.to_s+File::extname(fname)
