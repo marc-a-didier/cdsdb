@@ -115,7 +115,8 @@ attr_reader :settings, :configFound
 			"filemanager" => filemanager(), #string, default file manager
 			"browser" => browser(), #string, default browser
 			"no_log" =>false, #boolean, delete log if no errors?
-			"create_cue" => true, #boolean, create cuesheet
+# 			"create_cue" => true, #boolean, create cuesheet
+            "create_cue" => false, # !!mad #boolean, create cuesheet
 			"image" => false, #boolean, save to single file
 			'normalize' => false, #boolean, normalize volume?
 			'gain' => "album", #string, gain mode
