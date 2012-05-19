@@ -30,7 +30,6 @@ class Cfg
         @live_charts_update = false
         @log_played_tracks = false
         @tx_block_size = 128*1024
-        @sync_dls = false
         @dirs = {}
         @max_items = 100;
         @db_version = "5.7"
@@ -60,7 +59,6 @@ class Cfg
             @music_dir = elm.attributes['params']+"/" if elm.name == UIConsts::PREFS_FC_MUSICDIR
             @rsrc_dir = elm.attributes['params']+"/" if elm.name == UIConsts::PREFS_FC_RSRCDIR
             @local_store = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CHKBTN_LOCALSTORE
-            @sync_dls = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CHKBTN_SYNCDLS
             @notifications = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CB_SHOWNOTIFICATIONS
             @notif_duration = elm.attributes['params'].to_i if elm.name == UIConsts::PREFS_ENTRY_NOTIFDURATION
             @live_charts_update = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CB_LIVEUPDATE
@@ -107,10 +105,6 @@ puts "db version=#{@db_version}"
 
     def log_played_tracks?
         return @log_played_tracks
-    end
-
-    def sync_downloads?
-        return @sync_dls
     end
 
     def covers_dir

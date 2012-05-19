@@ -346,7 +346,7 @@ module UIConsts
     PREFS_ENTRY_NOTIFDURATION   = "prefs_entry_notifduration"
     PREFS_CB_LIVEUPDATE         = "prefs_cb_liveupdate"
     PREFS_CB_LOGTRACKFILE       = "prefs_cb_logtrackfile"
-    PREFS_CHKBTN_SYNCDLS        = "prefs_chkbtn_syncdls"
+#     PREFS_CHKBTN_SYNCDLS        = "prefs_chkbtn_syncdls"
     PREFS_ENTRY_MAXITEMS        = "prefs_entry_maxitems"
 #     PREFS_CB_SYSRAND            = "prefs_cb_sysrandom"
     PREFS_CD_DEVICE             = "prefs_entry_cddevice"
