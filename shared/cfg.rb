@@ -34,7 +34,6 @@ class Cfg
         @dirs = {}
         @max_items = 100;
         @db_version = "5.7"
-        @use_sys_rand = false
         @cd_device = "/dev/cdrom"
     end
 
@@ -67,7 +66,6 @@ class Cfg
             @live_charts_update = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CB_LIVEUPDATE
             @log_played_tracks = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CB_LOGTRACKFILE
             @max_items = elm.attributes['params'].to_i if elm.name == UIConsts::PREFS_ENTRY_MAXITEMS
-            @use_sys_rand = elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_CB_SYSRAND
             @cd_device = elm.attributes['params'] if elm.name == UIConsts::PREFS_CD_DEVICE
         }
         set_dirs
@@ -133,10 +131,6 @@ puts "db version=#{@db_version}"
 
     def prefs_file
         return PREFS_DIR+PREFS_FILE
-    end
-
-    def use_system_rand?
-        return @use_sys_rand
     end
 
 

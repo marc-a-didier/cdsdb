@@ -79,9 +79,6 @@ class Utils
             dt = 0
         end
         return dt
-        # parse_date returns [year, mon, mday, hour, min, sec, zone, wday] or nil if not parsable
-#         tbl = ParseDate::parsedate(str)
-#         return tbl[0].nil? ? 0 : Time.local(tbl[0], tbl[1], tbl[2], tbl[3], tbl[4], tbl[5]).to_i
     end
 
     def Utils::parse_date2(str)
@@ -91,9 +88,6 @@ class Utils
             dt = 0
         end
         return dt
-        # parse_date returns [year, mon, mday, hour, min, sec, zone, wday] or nil if not parsable
-#         tbl = ParseDate::parsedate(str)
-#         return tbl[0].nil? ? 0 : Time.local(tbl[0], tbl[1], tbl[2]).to_i
     end
 
     def Utils::format_date(date, zero_msg = "Unknown")
@@ -104,28 +98,6 @@ class Utils
         return fname.gsub(/[\*|\?|\\|\:|\<|\>|\"]/, "_") # y'a aussi |
     end
 
-    def Utils::set_random_generator
-        if Cfg::instance.use_system_rand?
-            sysrand = `head -c 4 /dev/urandom` # /dev/random is more 'random' but much slower
-p sysrand
-            srand(sysrand[3]*2**24 + sysrand[2]*2**16 + sysrand[1]*2**8 + sysrand[0]) # Sets the random generator
-        else
-            srand
-        end
-    end
-
-    def Utils::get_system_rand(max_val)
-        if Cfg::instance.use_system_rand?
-            sysrand = `head -c 4 /dev/urandom`
-            val = sysrand[0]*2**24 + sysrand[1]*2**16 + sysrand[2]*2**8 + sysrand[3]
-puts "val1=#{val}"
-            val = val % max_val
-puts "val2=#{val}"
-            return val
-        else
-            return rand(max_val)
-        end
-    end
     #
     # Methods intended to deal with the fact that files may now be anywhere on disk rather than just ../
 	#

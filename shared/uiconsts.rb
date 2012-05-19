@@ -348,7 +348,7 @@ module UIConsts
     PREFS_CB_LOGTRACKFILE       = "prefs_cb_logtrackfile"
     PREFS_CHKBTN_SYNCDLS        = "prefs_chkbtn_syncdls"
     PREFS_ENTRY_MAXITEMS        = "prefs_entry_maxitems"
-    PREFS_CB_SYSRAND            = "prefs_cb_sysrandom"
+#     PREFS_CB_SYSRAND            = "prefs_cb_sysrandom"
     PREFS_CD_DEVICE             = "prefs_entry_cddevice"
 
     #

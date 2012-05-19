@@ -152,14 +152,10 @@ puts wc
         return wc
     end
 
+    #
+    # Generate play list from filter
+    #
     def generate_play_list
-        # Generate play list from filter
-#         Utils::set_random_generator
-#         sysrand = `head -c 4 /dev/urandom`
-# p sysrand
-#         srand(sysrand[3]*2**24+sysrand[2]*2**16+sysrand[1]*2**8+sysrand[0]) # Sets the random generator
-        #srand
-#         is_full_rnd = !@glade[UIConsts::FLTGEN_CB_PLAYED].active? & !@glade[UIConsts::FLTGEN_CB_RATING].active?
         wc = generate_filter
         wc = " WHERE "+wc[5..-1] unless wc.empty?
         sql = "SELECT tracks.rtrack, tracks.iplayed, tracks.irating, tracks.stitle, tracks.iplaytime, records.rgenre FROM tracks " \

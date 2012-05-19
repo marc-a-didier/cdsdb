@@ -404,26 +404,17 @@ public
 #     end
 
     def shuffle_play_list
-        Utils::set_random_generator
         count = 0
         new_order = []
         @pts.each { |model, path, iter| new_order << count; count += 1 }
         return if count < 2
         new_order.shuffle!
-
-#         new_order = Array.new(count, -1)
-#         used = Array.new(count, -1)
-#         count.times { |i|
-#             #new_order[i] = rand(count) while used[new_order[i]] != -1
-#             new_order[i] = Utils::get_system_rand(count) while used[new_order[i]] != -1
-#             used[new_order[i]] = 0
-#         }
         # ce putain de truc marche plus depuis qu'on peut trier les colonnes...!!!
         # Apres consultation de diverses doc, c'est impossible de remettre le sort a nil
         # une fois qu'on a selectionne une colonne... donc impossible!
         @curr_track = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
-        @pts.reorder(new_order) # It's magic! It WAS magic...
+        @pts.reorder(new_order) # It's magic!
     end
 
     def do_renumber
