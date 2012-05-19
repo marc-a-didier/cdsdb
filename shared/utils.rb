@@ -293,7 +293,7 @@ puts "val2=#{val}"
 
         file = File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname
         Dir[Cfg::instance.music_dir+"*"].each { |entry|
-            next unless FileTest::directory?(entry)
+            next if entry[0] == "." || !FileTest::directory?(entry)
             AUDIO_EXTS.each { |ext| return AudioFileStatus.new(FILE_MISPLACED, entry+file+ext) if File::exists?(entry+file+ext) }
         }
         return AudioFileStatus.new(FILE_NOT_FOUND, "")
