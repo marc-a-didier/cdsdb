@@ -23,7 +23,8 @@ class Utils
     FILE_OK        = 1
     FILE_MISPLACED = 2
 
-    AUDIO_EXTS = [".ogg", ".flac", ".mp3"]
+    # The order matters if the same track is ripped in various format, prefered format first
+    AUDIO_EXTS = [".flac", ".ogg", ".mp3"]
 
     DOWNLOADING = "downloading"
 
