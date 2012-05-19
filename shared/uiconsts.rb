@@ -495,6 +495,7 @@ module UIConsts
     #
     AUDIO_DIALOG        = "audio_dialog"
     AUDIO_ENTRY_FILE    = "audio_entry_file"
+    AUDIO_LBL_DFILESIZE = "audio_lbl_dfilesize"
     AUDIO_LBL_DTITLE    = "audio_lbl_dtitle"
     AUDIO_LBL_DARTIST   = "audio_lbl_dartist"
     AUDIO_LBL_DALBUM    = "audio_lbl_dalbum"

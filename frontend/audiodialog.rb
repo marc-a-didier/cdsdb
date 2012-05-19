@@ -7,8 +7,8 @@ class AudioDialog
 
     def show(file_name)
         tags = TagLib::File.new(file_name)
-
         @glade[UIConsts::AUDIO_ENTRY_FILE].text = file_name
+        @glade[UIConsts::AUDIO_LBL_DFILESIZE].text = File.size(file_name).to_s.gsub(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1\'")+" bytes"
         @glade[UIConsts::AUDIO_LBL_DTITLE].text = tags.title
         @glade[UIConsts::AUDIO_LBL_DARTIST].text = tags.artist
         @glade[UIConsts::AUDIO_LBL_DALBUM].text = tags.album
