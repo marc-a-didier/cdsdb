@@ -203,109 +203,17 @@ puts sql
 
         tracks.slice!(@mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round, tracks.size)
 
-        f.puts; f.puts 
+        f.puts; f.puts
+
+        rplist = DBUtils::get_last_id("plist")+1
+        DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
+                                    #{Time.now.to_i}, #{Time.now.to_i});")
+
+        rpltrack = DBUtils::get_last_id("pltrack")+1
         tracks.each_with_index { |track, i|
             f << "i="<< i << "  Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
+            DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track[TRACK_RTRACK]}, #{i+1});")
         }
-
-        f.close
-
-        return
-        
-        rplist = DBUtils::get_last_id("plist")+1
-        DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
-                                    #{Time.now.to_i}, #{Time.now.to_i});")
-        count = 1
-        tracks.each { |track|
-            f << "Weight: " << track[TRACK_WEIGHT] << " (" << track[TRACK_SELECTION] << ") for " << track[TRACK_TITLE] << "\n"
-            DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{track[TRACK_RTRACK]}, #{count});")
-            count += 1
-            #DBUtils::log_exec("INSERT INTO pltracks VALUES (null, #{rplist}, #{track[1]}, #{i+1});") if track[5] == 1 || tracks.size <= max_entries
-        }
-
-        f.close
-
-        @mc.reload_plists
-
-        return
-        
-        #if !is_full_rnd && max_played != 0 # Don't sort tracks if no weight for played and rating
-        unless @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
-            tracks.sort! { |t1, t2| t2[0] <=> t1[0] } # reverse sort, most weighted first
-        end
-
-        max_entries = @mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round
-        pos = 0
-        #if tracks.size > max_entries
-            tracks_found = 0
-            pass_count = 0
-            begin
-                if @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
-                    begin
-                        #pos = rand(tracks.size)
-                        pos = Utils::get_system_rand(tracks.size)
-                    end until tracks[pos][TRACK_SELECTION] == 0
-                    if Utils::audio_file_exists(track_infos.get_track_infos(tracks[pos][TRACK_RTRACK])).status == Utils::FILE_NOT_FOUND
-                        tracks[pos][TRACK_SELECTION] = 2 # 2 means selected but with no audio file found
-                    else
-                        tracks[pos][TRACK_SELECTION] = 1
-                        tracks_found += 1
-                    end
-                else # Take the tracks as returned by the select statement
-                    if Utils::audio_file_exists(track_infos.get_track_infos(tracks[pass_count][TRACK_RTRACK])).status == Utils::FILE_NOT_FOUND
-                        tracks[pass_count][TRACK_SELECTION] = 2
-                    else
-                        tracks[pass_count][TRACK_SELECTION] = 1
-                        tracks_found += 1
-                    end
-                end
-                pass_count += 1
-            end until tracks_found == max_entries || pass_count >= tracks.size
-        #end
-        f.puts
-
-        # Copy selected tracks to a list store to use the reorder method if we have a random selection
-
-        # Use tracks.shuffle if random and remove the list store ???
-        
-        count = 0
-        ls = Gtk::ListStore.new(Integer)
-        tracks.each { |track| if track[TRACK_SELECTION] == 1 then iter = ls.append; iter[0] = track[TRACK_RTRACK]; count += 1; end }
-
-        # Randomly reorder tracks if necessary
-        if count > 2 && @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0
-#             new_order = Array.new(count, -1)
-#             used = Array.new(count, -1)
-#             count.times { |i|
-#                 #new_order[i] = rand(count) while used[new_order[i]] != -1
-#                 new_order[i] = Utils::get_system_rand(count) while used[new_order[i]] != -1
-#                 used[new_order[i]] = 0
-#             }
-#             ls.reorder(new_order) # It's magic!
-            new_order = []
-            count.times { |i| new_order << i }
-            ls.reorder(new_order.shuffle) # It's magic!
-        end
-
-        rplist = DBUtils::get_last_id("plist")+1
-        DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
-                                    #{Time.now.to_i}, #{Time.now.to_i});")
-        #DBUtils::log_exec("INSERT INTO plists VALUES (null, 'Auto-generated');")
-        rpltrack = DBUtils::get_last_id("pltrack")
-        count = 1
-        ls.each { |model, path, iter|
-            DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[0]}, #{count});")
-            count += 1
-            break if count > max_entries
-        }
-#         tracks.each { |track|
-#             f << "Weight: " << track[TRACK_WEIGHT] << " (" << track[TRACK_SELECTION] << ") for " << track[TRACK_TITLE] << "\n"
-#             if track[TRACK_SELECTION] == 1 || tracks.size <= max_entries
-#                 DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{track[TRACK_RTRACK]}, #{count});")
-#                 count += 1
-#             end
-#             #DBUtils::log_exec("INSERT INTO pltracks VALUES (null, #{rplist}, #{track[1]}, #{i+1});") if track[5] == 1 || tracks.size <= max_entries
-#         }
         f.close
 
         @mc.reload_plists
