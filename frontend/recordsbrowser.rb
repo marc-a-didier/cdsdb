@@ -310,22 +310,22 @@ class RecordsBrowser < GenericBrowser
 #         @tv.signal_handler_unblock(@row_exp_handler)
     end
 
-    def on_cursor_changed(widget)
-#         if @record.valid? && @record.clone.from_widgets != @record
-#             UIUtils::show_message("modified!!!", Gtk::MessageDialog::WARNING)
+#     def on_cursor_changed(widget)
+# #         if @record.valid? && @record.clone.from_widgets != @record
+# #             UIUtils::show_message("modified!!!", Gtk::MessageDialog::WARNING)
+# #         end
+# 
+#         iter = @tv.model.get_iter(@tv.cursor[RTV_REF])
+# #puts "record cursor changed: iter="; p iter
+#         if iter.parent # It's a segment
+#             @record.ref_load(iter.parent[RTV_REF]).to_widgets
+#             @segment.ref_load(iter[RTV_REF]).to_widgets
+#         else
+#             @record.ref_load(iter[RTV_REF]).to_widgets_with_img
+#             @segment.ref_load(iter[RTV_RS_REF]).to_widgets # Get the associated segment
 #         end
-
-        iter = @tv.model.get_iter(@tv.cursor[RTV_REF])
-#puts "record cursor changed: iter="; p iter
-        if iter.parent # It's a segment
-            @record.ref_load(iter.parent[RTV_REF]).to_widgets
-            @segment.ref_load(iter[RTV_REF]).to_widgets
-        else
-            @record.ref_load(iter[RTV_REF]).to_widgets_with_img
-            @segment.ref_load(iter[RTV_RS_REF]).to_widgets # Get the associated segment
-        end
-        @mc.record_changed
-    end
+#         @mc.record_changed
+#     end
 
     def on_selection_changed(widget)
         load_rec_and_seg(@tv.selection.selected)
@@ -334,8 +334,12 @@ class RecordsBrowser < GenericBrowser
             # We must force display of record widgets for the image because if a segment
             # is selected from another record, the image is not refreshed
             @record.to_widgets_with_img
-            # Redraw segment only if on a segment or the infos string will overwrite the record infos string
-            @segment.to_widgets if @tv.selection.selected.parent
+            # Redraw segment only if on a segment or the infos string will overwrite the record infos
+            if @tv.selection.selected.parent
+                @segment.to_widgets
+                # Change artist infos if we're browsing a compile subtree
+                @mc.change_segment_artist(@segment.rartist) if @mc.artist.compile?
+            end
         end
         @mc.record_changed #if @record.valid?
     end
