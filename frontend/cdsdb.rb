@@ -191,6 +191,9 @@ require './my_rr_lib'
 
 # TODO: s'inscrire comme client sur le serveur pour recevoir les updates des morceaux joues???
 
+# TODO: remove the oldest played tracks from menus and make the recently played tracks filterable
+
+
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)
