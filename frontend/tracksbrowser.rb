@@ -81,7 +81,8 @@ class TracksBrowser < GenericBrowser
         @mc.glade[UIConsts::TRK_POPUP_ADD].signal_connect(:activate)       { on_trk_add }
         @mc.glade[UIConsts::TRK_POPUP_DEL].signal_connect(:activate)       { on_trk_del }
         @mc.glade[UIConsts::TRK_POPUP_DELFROMFS].signal_connect(:activate) { on_del_from_fs }
-        @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { on_download_trk }
+#         @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { on_download_trk }
+        @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { download_tracks(true) }
         @mc.glade[UIConsts::TRK_POPUP_TAGFILE].signal_connect(:activate)   { on_tag_file }
         @mc.glade[UIConsts::TRK_POPUP_UPDPTIME].signal_connect(:activate)  { on_update_playtime }
         @mc.glade[UIConsts::TRK_POPUP_ENQUEUE].signal_connect(:activate)   { on_trk_enqueue(false) }
@@ -465,6 +466,15 @@ class TracksBrowser < GenericBrowser
     def on_download_trk
         tracks = []
         @tv.selection.selected_each { |model, path, iter| tracks << iter[TTV_REF] if iter[TTV_DATA].status == TRK_ON_SERVER }
+        tracks.each { |rtrack|
+            Utils::search_and_get_audio_file(self, @mc.tasks, TrackInfos.new.get_track_infos(rtrack))
+        }
+    end
+
+    def download_tracks(use_selection)
+        tracks = []
+        meth = use_selection ? @tv.selection.method(:selected_each) : @tv.model.method(:each)
+        meth.call { |model, path, iter| tracks << iter[TTV_REF] if iter[TTV_DATA].status == TRK_ON_SERVER }
         tracks.each { |rtrack|
             Utils::search_and_get_audio_file(self, @mc.tasks, TrackInfos.new.get_track_infos(rtrack))
         }

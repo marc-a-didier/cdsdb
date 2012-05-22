@@ -451,6 +451,10 @@ class MasterController
         @trk_browser.get_tracks_list.each { |rtrack| @pqueue.enqueue(rtrack) }
     end
 
+    def download_tracks
+        @trk_browser.download_tracks(false)
+    end
+
     def get_drag_tracks
         return @trk_browser.get_drag_tracks
     end

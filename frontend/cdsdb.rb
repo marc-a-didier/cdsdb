@@ -158,6 +158,7 @@ require './my_rr_lib'
 #       c'est elle qui recoit le message quand le filtre est applique plutot que de mettre un menu
 #       dans les fenetres susceptibles d'etre filtrees.
 # TODO: URGENT!!! voir pour le save du memo et si le to_widgets a encore un sens pour la main window
+# TODO: add a download from server item in the record/segment popup menu
 
 
 #
@@ -192,6 +193,7 @@ require './my_rr_lib'
 # TODO: s'inscrire comme client sur le serveur pour recevoir les updates des morceaux joues???
 
 # TODO: remove the oldest played tracks from menus and make the recently played tracks filterable
+
 
 
 

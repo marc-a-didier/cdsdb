@@ -1461,6 +1461,11 @@ ou n'importe lequel des tags
     <property name="stock">gtk-network</property>
     <property name="icon-size">1</property>
   </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-network</property>
+  </object>
   <object class="GtkListStore" id="liststore1">
     <columns>
       <!-- column-name item -->
@@ -3623,6 +3628,16 @@ ou n'importe lequel des tags
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue</property>
         <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="rpm_download">
+        <property name="label" translatable="yes">Download from server</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image2</property>
+        <property name="use_stock">False</property>
       </object>
     </child>
   </object>

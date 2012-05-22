@@ -128,6 +128,7 @@ module UIConsts
     REC_POPUP_RATING    = "rpm_rating"
     REC_POPUP_TAGS      = "rpm_tags"
     REC_POPUP_PHISTORY  = "rpm_phistory"
+    REC_POPUP_DOWNLOAD  = "rpm_download"
 
     # Tracks browser popup menu
     TRK_POPUP_MENU      = "tpm_menu"

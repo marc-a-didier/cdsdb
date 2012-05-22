@@ -58,6 +58,7 @@ class RecordsBrowser < GenericBrowser
         @mc.glade[UIConsts::REC_POPUP_CPTITLE].signal_connect(:activate)  { on_cp_title_to_segs }
         @mc.glade[UIConsts::REC_POPUP_TAGDIR].signal_connect(:activate)   { on_tag_dir }
         @mc.glade[UIConsts::REC_POPUP_ENQUEUE].signal_connect(:activate)  { @mc.enqueue_record }
+        @mc.glade[UIConsts::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
         @mc.glade[UIConsts::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils::assign_track_seg_order(@record.rrecord) }
         @mc.glade[UIConsts::REC_POPUP_PHISTORY].signal_connect(:activate) {
             PlayHistoryDialog.new.show_record(@record.rrecord)
