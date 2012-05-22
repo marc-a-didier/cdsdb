@@ -29,6 +29,11 @@ class CDEditorWindow
         @glade[UIConsts::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
         @glade[UIConsts::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
         @glade[UIConsts::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
+        @glade["cded_btn_rip"].signal_connect(:clicked) {
+            ripper = Rubyripper.new(Settings.new.settings, self)
+            puts ripper.settingsOk
+            ripper.startRip
+            }
         @glade[UIConsts::CDED_BTN_CLOSE].signal_connect(:clicked)     {
             Prefs::instance.save_window(@window)
             @window.destroy

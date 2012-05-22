@@ -115,8 +115,7 @@ attr_reader :settings, :configFound
 			"filemanager" => filemanager(), #string, default file manager
 			"browser" => browser(), #string, default browser
 			"no_log" =>false, #boolean, delete log if no errors?
-# 			"create_cue" => true, #boolean, create cuesheet
-            "create_cue" => false, # !!mad #boolean, create cuesheet
+			"create_cue" => true, #boolean, create cuesheet
 			"image" => false, #boolean, save to single file
 			'normalize' => false, #boolean, normalize volume?
 			'gain' => "album", #string, gain mode
@@ -479,6 +478,9 @@ attr_reader :mSecLength, :mSecPT # !!mad
 
 	# use cdrdao to scan for exact pregaps, hidden tracks, pre_emphasis
 	def prepareToc
+        @settings['create_cue'] = false # for further assumptions later on
+        return # !!mad
+        
 		if @settings['create_cue'] && installed('cdrdao')
 			@cdrdaoThread = Thread.new{advancedToc()}
 		end
@@ -2599,6 +2601,11 @@ attr_reader :outputDir
 			return false
 		end
 
+        # !!mad
+        @settings['tracksToRip'] = Array.new
+        @settings['cd'].audiotracks.times{|number| @settings['tracksToRip'] << number + 1} # Start with all tracks selected
+        # !!mad
+        
 		if @settings['tracksToRip'].size == 0
 			@error = ["error", _("Please select at least one track.")]
 			return false
