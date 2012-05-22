@@ -99,11 +99,6 @@ class TracksBrowser < GenericBrowser
             TrkPListsDialog.new(@mc, @track.rtrack).run
         }
 
-        #
-        # Setup the track tags treeview
-        #
-        #UIUtils::setup_tracks_tags_tv(@mc.glade[UIConsts::TRK_TV_TAGS])
-
         # Current track index in browser when it's the player provider
         @curr_track = -1
 
@@ -241,11 +236,6 @@ class TracksBrowser < GenericBrowser
     def update_entry
         map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@track.rtrack)), position_to(@track.rtrack))
     end
-
-#     def update_from_gui
-#         @track.from_widgets.sql_update
-#         update_entry
-#     end
 
     # Returns an array of the the currently visible tracks
     def get_tracks_list
@@ -434,10 +424,6 @@ class TracksBrowser < GenericBrowser
             @tv.selection.selected_each { |model, path, iter| tracks << iter[TTV_REF] }
         end
         tracks.each { |rtrack| @mc.pqueue.enqueue(rtrack) }
-
-        # Just to remember in case of...
-    #     is_from ? meth = @lst.method(:each) : meth = @tvt.selection.method(:selected_each)
-    #     meth.call { |model, path, iter| ... }
     end
 
 
@@ -445,17 +431,11 @@ class TracksBrowser < GenericBrowser
         # Voire si c'est vraiment utile de traiter des cas plus qu'exceptionnels...:
         # s'en fout si on a change qqch dans les db refs et qu'on se repositionne pas automatiquement
         if DBEditor.new(@mc, @track).run == Gtk::Dialog::RESPONSE_OK
+            # TODO: review this code. It's useless or poorly coded
             load_entries
-            @track.ref_load(trk.rtrack)
+            @track.sql_load
             @mc.select_track(@track.rtrack)
         end
-# 
-#         trk = TrackEditor.new(@track.rtrack).run if @track.valid?
-#         if trk
-#             load_entries #if @record.stitle != rec.stitle
-#             @track.ref_load(trk.rtrack)
-#             @mc.select_track(@track.rtrack)
-#         end
     end
 
 
