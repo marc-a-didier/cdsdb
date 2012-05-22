@@ -1828,26 +1828,11 @@ ou n'importe lequel des tags
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSeparatorMenuItem" id="mm_win_sep2">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkMenuItem" id="mm_win_played">
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Recently pla_yed tracks</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mm_win_oldest">
-                        <property name="use_action_appearance">False</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">_Oldest played tracks</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>

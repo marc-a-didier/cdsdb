@@ -130,11 +130,9 @@ class MasterController
         @glade[UIConsts::MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
         @glade[UIConsts::MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 
-        @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { RecentRecordsDialog.new(self, 0).run }
-        @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { RecentRecordsDialog.new(self, 1).run }
-        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentRecordsDialog.new(self, 2).run }
-#         @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentTracksDialog.new(self, 0).run }
-        @glade[UIConsts::MM_WIN_OLDEST].signal_connect(:activate) { RecentTracksDialog.new(self, 1).run }
+        @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { RecentItemsDialog.new(self, 0).run }
+        @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { RecentItemsDialog.new(self, 1).run }
+        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentItemsDialog.new(self, 2).run }
 
         @glade[UIConsts::MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {

@@ -194,7 +194,6 @@ module UIConsts
     MM_WIN_RECENT               = "mm_win_recent"
     MM_WIN_RIPPED               = "mm_win_ripped"
     MM_WIN_PLAYED               = "mm_win_played"
-    MM_WIN_OLDEST               = "mm_win_oldest"
 
     # Tools menu
     MM_TOOLS_TAG_GENRE          = "mm_tools_tag_genre"
@@ -275,19 +274,12 @@ module UIConsts
     DBSEL_TV            = "dbsel_tv"
 
     #
-    # Recent tracks dialog
-    #
-    RECENT_TRACKS_DIALOG    = "recent_tracks_dialog"
-    RECTRACKS_BTN_SHOW      = "rectracks_btn_show"
-    RECTRACKS_TV            = "rectracks_tv"
-
-    #
     # Recent added/ripped records dialog
     #
-    RECENT_RECORDS_DIALOG   = "recent_records_dialog"
-    RECREC_BTN_SHOW         = "recrec_btn_show"
-    RECREC_BTN_CLOSE        = "recrec_btn_close"
-    RECREC_TV               = "recrec_tv"
+    DLG_RECENT_ITEMS        = "dlg_recent_items"
+    RCTITM_BTN_SHOW         = "rctitm_btn_show"
+    RCTITM_BTN_CLOSE        = "rctitm_btn_close"
+    RCTITM_TV               = "rctitm_tv"
 
     #
     # Play history dialog
