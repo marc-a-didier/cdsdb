@@ -1,8 +1,9 @@
 
 class RecentRecordsDialog
 
-    VIEW_RECENT = 0
+    VIEW_ADDED  = 0
     VIEW_RIPPED = 1
+    VIEW_PLAYED = 2
 
     COL_ENTRY = 0
     COL_PIX   = 1
@@ -71,33 +72,52 @@ class RecentRecordsDialog
     end
     
     def exec_sql(view_type)
-        if view_type == VIEW_RECENT
-            sql =  "SELECT DISTINCT(records.rrecord), records.stitle, artists.sname, records.idateadded, records.irecsymlink FROM tracks " \
-                   "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                   "INNER JOIN records ON records.rrecord=segments.rrecord " \
-                   "INNER JOIN artists ON artists.rartist=records.rartist "
-            sql += "WHERE #{@filter[4..-1]} " unless @filter.empty?
-            sql += "ORDER BY records.idateadded DESC LIMIT #{Cfg::instance.max_items};"
-        else
-            sql = "SELECT DISTINCT(records.rrecord), records.stitle, artists.sname, records.idateripped, records.irecsymlink FROM tracks " \
-                  "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                  "INNER JOIN records ON records.rrecord=segments.rrecord " \
-                  "INNER JOIN artists ON artists.rartist=records.rartist " \
-                  "WHERE records.idateripped<>0 #{@filter}" \
-                  "ORDER BY records.idateripped DESC LIMIT #{Cfg::instance.max_items};"
+        sql = case view_type
+            when VIEW_ADDED
+                %Q{SELECT DISTINCT(records.rrecord), records.stitle, artists.sname, records.idateadded, records.irecsymlink FROM tracks
+                   INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                   INNER JOIN records ON records.rrecord=segments.rrecord
+                   INNER JOIN artists ON artists.rartist=records.rartist
+                   WHERE records.idateadded<>0 #{@filter}
+                   ORDER BY records.idateadded DESC LIMIT #{Cfg::instance.max_items};}
+            when VIEW_RIPPED
+                %Q{SELECT DISTINCT(records.rrecord), records.stitle, artists.sname, records.idateripped, records.irecsymlink FROM tracks
+                   INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                   INNER JOIN records ON records.rrecord=segments.rrecord
+                   INNER JOIN artists ON artists.rartist=records.rartist
+                   WHERE records.idateripped<>0 #{@filter}
+                   ORDER BY records.idateripped DESC LIMIT #{Cfg::instance.max_items};}
+            when VIEW_PLAYED
+                # The WHERE clause was added to add a WHERE for the filter if any. Should be changed...
+                %Q{SELECT logtracks.rtrack, logtracks.idateplayed, logtracks.shostname, records.rrecord, records.irecsymlink FROM logtracks
+                   INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                   INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                   INNER JOIN records ON records.rrecord=segments.rrecord
+                   INNER JOIN artists ON artists.rartist=records.rartist
+                   WHERE tracks.iplayed > 0 #{@filter}
+                   ORDER BY logtracks.idateplayed DESC LIMIT #{Cfg::instance.max_items};}
         end
 
+        track_infos = TrackInfos.new # Only needed for recent tracks
         @tv.model.clear
         i = 0
         DBIntf::connection.execute(sql) do |row|
             i += 1
             iter = @tv.model.append
             iter[COL_ENTRY] = i
-            iter[COL_PIX]  = IconsMgr::instance.get_cover(row[0], 0, row[4], 64)
-            iter[COL_TITLE] = "<b>"+CGI::escapeHTML(row[1])+"</b>\n"+
-                              "by <i>"+CGI::escapeHTML(row[2])+"</i>"
-            iter[COL_DATE] = row[3] == 0 ? "Unknown" : Time.at(row[3]).to_s
             iter[COL_REF] = row[0]
+
+            if @view_type == VIEW_PLAYED
+                track_infos.get_track_infos(row[0])
+                iter[COL_PIX]  = IconsMgr::instance.get_cover(row[3], row[0], row[4], 64)
+                iter[COL_TITLE] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
+                iter[COL_DATE] = Time.at(row[1]).strftime("%a %b %d %Y %H:%M:%S")+" @ "+row[2]
+            else
+                iter[COL_PIX]  = IconsMgr::instance.get_cover(row[0], 0, row[4], 64)
+                iter[COL_TITLE] = "<b>"+CGI::escapeHTML(row[1])+"</b>\n"+
+                                "by <i>"+CGI::escapeHTML(row[2])+"</i>"
+                iter[COL_DATE] = row[3] == 0 ? "Unknown" : Time.at(row[3]).to_s
+            end
         end
     end
 

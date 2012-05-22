@@ -132,7 +132,8 @@ class MasterController
 
         @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { RecentRecordsDialog.new(self, 0).run }
         @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { RecentRecordsDialog.new(self, 1).run }
-        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentTracksDialog.new(self, 0).run }
+        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentRecordsDialog.new(self, 2).run }
+#         @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentTracksDialog.new(self, 0).run }
         @glade[UIConsts::MM_WIN_OLDEST].signal_connect(:activate) { RecentTracksDialog.new(self, 1).run }
 
         @glade[UIConsts::MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
