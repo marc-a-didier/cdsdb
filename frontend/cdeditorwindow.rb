@@ -29,7 +29,7 @@ class CDEditorWindow
         @glade[UIConsts::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
         @glade[UIConsts::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
         @glade[UIConsts::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
-        @glade["cded_btn_rip"].signal_connect(:clicked)               { Thread.new { @ripper.prepareRip } }
+        @glade["cded_btn_rip"].signal_connect(:clicked)               { rip_tracks }
         @glade[UIConsts::CDED_BTN_CLOSE].signal_connect(:clicked)     {
             Prefs::instance.save_window(@window)
             @window.destroy
@@ -60,6 +60,18 @@ class CDEditorWindow
 
     def swap_artists_titles
         @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
+    end
+
+    def rip_tracks
+        if @glade["cded_chk_flac"].active? || @glade["cded_chk_ogg"].active?
+            @ripper.settings['flac'] = @glade["cded_chk_flac"].active?
+            @ripper.settings['flacsettings'] = "--best -V"
+            @ripper.settings['vorbis'] = @glade["cded_chk_ogg"].active?
+            @ripper.settings['vorbissettings'] = "-q 8"
+            Thread.new { @ripper.prepareRip }
+        else
+            UIUtils::show_message("Faudrait p't'êt' sélectionner un format, non?", Gtk::MessageDialog::ERROR)
+        end
     end
     
     def generate_sql

@@ -1327,19 +1327,19 @@ attr_accessor :segments, :comment # !!mad
 #Then we got "TITLE" by ARTIST
 # Some albums use a mixture of these schemes
 
+    # !!mad
+    # My own algo. Si tous les tracks ne comprennent pas un separateur pour l'artiste, on
+    # ne considere pas le disque comme compilation.
+    #
+    # Un peu plus evolue que celui d'origine.
+    #
 	def checkVarArtist
-		sep = ''
-		varArtist = false
+		var_count = 0
 		@disc.audiotracks.times do |tracknumber|
-			if @tracklist[tracknumber] && @tracklist[tracknumber] =~ /[-\/]|\sby\s/
-				varArtist = true
-                break # !!mad Contraire: prefere le considerer comme VA
-# 			else
-# 				varArtist = false 	# one of the tracks does not conform to VA schema
-# 				break 					# consider the whole album as not VA
-			end
-
+			var_count += 1 if @tracklist[tracknumber] && @tracklist[tracknumber] =~ /[-\/]|\sby\s/
 		end
+
+        varArtist = var_count == @disc.audiotracks.size
 
 		if varArtist == true
 			@backupTracklist = @tracklist.dup() #backup before overwrite with new values
