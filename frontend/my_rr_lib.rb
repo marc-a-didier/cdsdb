@@ -34,9 +34,12 @@ $rr_version = '0.6.2' #application wide setting
 
 Thread.abort_on_exception = true
 
-# require 'monitor' #help library for threaded applications
-# require 'yaml' #help library to save data structures into files
-# require 'fileutils' #help library for moving files
+require 'monitor' #help library for threaded applications
+require 'yaml' #help library to save data structures into files
+require 'fileutils' #help library for moving files
+
+require 'optparse'
+require 'ostruct'
 
 def installed(filename) # a help function to check if an application is installed
 	ENV['PATH'].split(':').each do |dir|
@@ -429,11 +432,11 @@ attr_reader :cdrom, :multipleDriveSupport, :audiotracks, :devicename,
 :discId, :toc, :tocStarted, :tocFinished
 attr_reader :mSecLength, :mSecPT # !!mad
 
-	# def initialize(settings, gui=false, oldFreedbString = '', test = false)
-    def initialize(device = "/dev/sr0", gui=false, oldFreedbString = '', test = false)
-		# @settings = settings # !!mad
-        @settings = Settings.new.settings # !!mad
-        @settings['cdrom'] = device # !!mad
+	def initialize(settings, gui=false, oldFreedbString = '', test = false)
+    # def initialize(device = "/dev/sr0", gui=false, oldFreedbString = '', test = false)
+		@settings = settings # !!mad
+        #@settings = Settings.new.settings # !!mad
+        #@settings['cdrom'] = device # !!mad
 		@cdrom = @settings['cdrom'] 
 		@freedb = @settings['freedb']
 		@verbose = @settings['verbose']
@@ -1122,8 +1125,8 @@ attr_accessor :segments, :comment # !!mad
 	end
 
 	def freedb(freedbSettings, alwaysFirstChoice=true)
-        @freedbSettings = @settings # !!mad
-		#@freedbSettings = freedbSettings # !!mad
+        #@freedbSettings = @settings # !!mad
+		@freedbSettings = freedbSettings # !!mad
 		@alwaysFirstChoice = alwaysFirstChoice
 
 		if not @disc.freedbString.empty? #no disc found
@@ -2601,11 +2604,6 @@ attr_reader :outputDir
 			return false
 		end
 
-        # !!mad
-        @settings['tracksToRip'] = Array.new
-        @settings['cd'].audiotracks.times{|number| @settings['tracksToRip'] << number + 1} # Start with all tracks selected
-        # !!mad
-        
 		if @settings['tracksToRip'].size == 0
 			@error = ["error", _("Please select at least one track.")]
 			return false
@@ -2719,4 +2717,151 @@ attr_reader :outputDir
 		@settings['tracksToRip'].each{|track| totalSectors += @settings['cd'].getLengthSector(track)} #update totalSectors
 		@settings['tracksToRip'].each{|track| @settings['percentages'][track] = @settings['cd'].getLengthSector(track) / totalSectors}
 	end
+end
+
+class RipperClient
+
+    attr_reader :update, :settings
+    
+    def initialize()
+        parse_options()
+        @ripping_log = ""
+        @ripping_progress = 0.0
+        @encoding_progress = 0.0
+        @settingsClass = Settings.new(@options.file)
+        @settings = @settingsClass.settings
+
+        get_cd_info()
+    end
+
+    def parse_options
+        @options = OpenStruct.new
+        @options.file = false
+        @options.version = false
+        @options.help = false
+        @options.verbose = true
+        @options.configure = false
+        @options.defaults = true
+        @options.help = false
+    end
+
+    def get_cd_info
+        @settings['cd'] = Disc.new(@settings, self) # Analyze the TOC of disc in drive
+        if @settings['cd'].audiotracks != 0 # a disc is found
+            puts _("Audio-disc found, number of tracks : %s, total playlength : %s") % [@settings['cd'].audiotracks, @settings['cd'].playtime]
+            if @settings['freedb'] #freedb enabled?
+                puts _("Fetching freedb info...")
+                handleFreedb()
+            else
+                showFreedb()
+            end
+        else
+            puts @settings['cd'].error
+        end
+    end
+
+    #Fetch the cddb info if user wants to
+    def handleFreedb(choice = false)
+        if choice == false
+            @settings['cd'].md.freedb(@settings, @settings['first_hit'])
+        else
+            @settings['cd'].md.freedbChoice(choice)
+        end
+
+        status = @settings['cd'].md.status
+
+        if status == true #success
+            showFreedb()
+        elsif status[0] == "choices"
+            chooseFreedb(status[1])
+        elsif status[0] == "noMatches"
+            update("error", status[1]) # display the warning, but continue anyway
+            showFreedb()
+        elsif status[0] == "networkDown" || status[0] == "unknownReturnCode" || status[0] == "NoAudioDisc"
+            update("error", status[1])
+        else
+            puts "Unknown error with Metadata class."
+        end
+    end
+
+    def chooseFreedb(choices)
+        puts _("Freedb reported multiple possibilities.")
+        puts _("The first freedb option is automatically selected (no questions allowed)")
+        handleFreedb(0)
+    end
+
+    def showFreedb()
+        puts ""
+        puts _("FREEDB INFO\n\n")
+        puts _("DISC INFO")
+        print _("Artist:") ; print " #{@settings['cd'].md.artist}\n"
+        print _("Album:") ; print " #{@settings['cd'].md.album}\n"
+        print _("Genre:") ; print " #{@settings['cd'].md.genre}\n"
+        print _("Year:") ; print " #{@settings['cd'].md.year}\n"
+        puts ""
+        puts _("TRACK INFO")
+
+        showTracks()
+    end
+
+    def showTracks()
+        @settings['cd'].audiotracks.times do |index|
+            trackname = @settings['cd'].md.tracklist[index]
+            if not @settings['cd'].md.varArtists.empty?
+                trackname = "#{@settings['cd'].md.varArtists[index]} - #{trackname}"
+            end
+
+            puts "#{index +1 }) #{trackname}"
+        end
+    end
+
+    def cancelRip()
+        puts _("Rip is canceled, exiting...")
+        eject(@settings['cd'].cdrom)
+        exit()
+    end
+
+    def prepareRip()
+        tracklist() # Which tracks should be ripped?
+        @rubyripper = Rubyripper.new(@settings, self) # starts some check if the settings are sane
+
+        status = @rubyripper.settingsOk
+        if status == true
+            @rubyripper.startRip()
+        else
+            update(status[0], status[1])
+        end
+    end
+
+    def dir_exists
+        puts _("The output directory already exists. What would you like to do?")
+        puts ""
+        puts _("2) Overwrite the existing directory")
+
+        @rubyripper.overwriteDir()
+        #@rubyripper.startRip()
+    end
+
+    def update(modus, value=false)
+        if modus == "ripping_progress"
+            progress = "%.3g" % (value * 100)
+            puts "Ripping progress (#{progress} %)"
+        elsif modus == "encoding_progress"
+            progress = "%.3g" % (value * 100)
+            puts "Encoding progress (#{progress} %)"
+        elsif modus == "log_change"
+            print value
+        elsif modus == "error"
+            print value
+            print "\n"
+#             if get_answer(_("Do you want to change your settings? (y/n) : "), "yes",_("y")) ; edit_settings() end
+        elsif modus == "dir_exists"
+            dir_exists()
+        end
+    end
+
+    def tracklist # Fill @settings['tracksToRip']
+        @settings['tracksToRip'] = Array.new
+        @settings['cd'].audiotracks.times{|number| @settings['tracksToRip'] << number + 1} # Start with all tracks selected
+    end
 end

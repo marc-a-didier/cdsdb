@@ -29,11 +29,7 @@ class CDEditorWindow
         @glade[UIConsts::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
         @glade[UIConsts::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
         @glade[UIConsts::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
-        @glade["cded_btn_rip"].signal_connect(:clicked) {
-            ripper = Rubyripper.new(Settings.new.settings, self)
-            puts ripper.settingsOk
-            ripper.startRip
-            }
+        @glade["cded_btn_rip"].signal_connect(:clicked)               { Thread.new { @ripper.prepareRip } }
         @glade[UIConsts::CDED_BTN_CLOSE].signal_connect(:clicked)     {
             Prefs::instance.save_window(@window)
             @window.destroy
@@ -130,13 +126,14 @@ class CDEditorWindow
     end
 
     def edit_record()
-        disc = Disc.new(Cfg::instance.cd_device) # ("/dev/sr0")
+        @ripper = RipperClient.new
+        disc = @ripper.settings['cd'] #Disc.new(Cfg::instance.cd_device) # ("/dev/sr0")
         if disc.md.nil?
             UIUtils::show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL
         end
 
-        disc.md.freedb($rr_defaultSettings)
+        #disc.md.freedb($rr_defaultSettings)
         if disc.md.tracklist.size == 0
             UIUtils::show_message("Disc not found on freedb!", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL
