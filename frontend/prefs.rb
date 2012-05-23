@@ -46,6 +46,7 @@ class Prefs
     def load_window(top_window)
         return if REXML::XPath.first(@xdoc.root, "windows/"+top_window.window.builder_name).nil?
         REXML::XPath.first(@xdoc.root, "windows/"+top_window.window.builder_name).each_element { |elm|
+            next if top_window.mc.glade[elm.name].nil?
             if elm.attributes['item']
                 top_window.mc.glade[elm.name].model.get_iter(elm.attributes['item'])[0] = true
             else
@@ -126,6 +127,7 @@ class Prefs
     def restore_window_content(glade, window)
         return if REXML::XPath.first(@xdoc.root, "windows/"+window.builder_name).nil?
         REXML::XPath.first(@xdoc.root, "windows/"+window.builder_name).each_element { |elm|
+            next if glade[elm.name].nil?
             if elm.attributes['method'] == "text=" || elm.attributes['method'] == "current_folder="
                 cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']},'#{elm.attributes['params']}')"
             else
@@ -152,7 +154,7 @@ class Prefs
     def load_menu_state(mw, menu)
         return if REXML::XPath.first(@xdoc.root, "menus/"+menu.builder_name).nil?
         REXML::XPath.first(@xdoc.root, "menus/"+menu.builder_name).each_element { |elm|
-            mw.glade[elm.name].send(elm.attributes['method'].to_sym, elm.attributes['params'] == 'true') if elm.attributes
+            mw.glade[elm.name].send(elm.attributes['method'].to_sym, elm.attributes['params'] == 'true') if mw.glade[elm.name]
         }
     end
 
