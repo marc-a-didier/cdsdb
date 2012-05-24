@@ -160,13 +160,42 @@ class TagsRowProp < GenRowProp
     end
 end
 
+class RippedRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        if level == 0
+            sql = %Q{SELECT DISTINCT(records.idateripped), artists.rartist, artists.sname FROM artists
+                        INNER JOIN records ON records.rartist = artists.rartist
+                        ORDER BY records.idateripped DESC LIMIT 100;}
+            DBIntf::connection.execute(sql) { |row|
+                                              p row
+                child = model.append(iter)
+                child[0] = row[0]
+                child[1] = Time.at(row[0]).strftime("%Y.%m.%d") #+" "+row[0]
+                child[2] = iter[2]
+                model.append(child) # Add a fake child
+            }
+            sql = ""
+        elsif level == 1
+            sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+                    "INNER JOIN records ON artists.rartist=records.rartist "
+            sql += " WHERE (#{@where_fields} >= #{iter.parent[0]}) AND #{@where_fields} < #{iter.parent[0]+3600*24}"
+        end
+        return sql
+    end
+
+    def sub_filter(iter)
+        return " (#{@where_fields} >= #{iter.parent[0]}) AND #{@where_fields} < #{iter.parent[0]+3600*24}"
+    end
+end
+
 class ArtistsBrowser < GenericBrowser
 
     MB_TOP_LEVELS = [AllArtistsRowProp.new(1, "artists", 1, false, "", "All"),
                      GenresRowProp.new(2, "genres", 2, true, "records.rgenre", "Genres"),
                      OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
                      TagsRowProp.new(4, "tags", 2, true, "tracks.itags", "Tags"),
-                     LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels")]
+                     LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
+                     RippedRowProp.new(6, "artists", 2, false, "records.idateripped", "Ripped")]
 # TODO: add by rating  LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels")]
     
     ATV_REF  = 0
