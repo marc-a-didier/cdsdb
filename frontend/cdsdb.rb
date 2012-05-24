@@ -54,7 +54,7 @@ require './playerwindow'
 require './pqueuewindow'
 require './cdeditorwindow'
 require './memoswindow'
-require './mcdbdialog'
+# require './mcdbdialog'
 # require './filtergeneratordialog'
 require './prefsdialog'
 require './audiodialog'
@@ -158,6 +158,10 @@ require './my_rr_lib'
 #       dans les fenetres susceptibles d'etre filtrees.
 # TODO: URGENT!!! voir pour le save du memo et si le to_widgets a encore un sens pour la main window
 # TODO: add a download from server item in the record/segment popup menu
+# TODO: remove the oldest played tracks from menus and make the recently played tracks filterable
+# TODO: Voir le probleme du remplissage des titres depuis le net avec la nouvelle version de rr lib
+# TODO: URGENT: voir le bug de l'expand des records quand on est pas dans All ??? hallucination???
+#       Hallucination, de toute evidence...
 
 
 #
@@ -177,24 +181,16 @@ require './my_rr_lib'
 # TODO: enlever le hostname de logtracks et remplacer par une ref sur une table de hostname
 #       automatiquement remplie??? Ca sauverait des bytes...
 
-# TODO: URGENT: voir le bug de l'expand des records quand on est pas dans All ??? hallucination???
-
 # TODO: desimbriquer la main window du master controller pour en faire une top window comme les autres.
 
 # TODO: piger comment on envoie un delete event a une fenetre!!!
 
 # TODO: utilitaire pour transferer l'historique des morceaux quand on change de medium (mp3->cd, p.e.)
 # TODO: Mettre une couleur differente pour chaque nouvelle lettre dans la liste des artistes???
-# TODO: Voir le probleme du remplissage des titres depuis le net avec la nouvelle version de rr lib
 
 # TODO: ajouter rating & never played dans la view des artistes???
 
 # TODO: s'inscrire comme client sur le serveur pour recevoir les updates des morceaux joues???
-
-# TODO: remove the oldest played tracks from menus and make the recently played tracks filterable
-
-
-
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)
