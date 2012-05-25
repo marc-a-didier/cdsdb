@@ -163,28 +163,32 @@ end
 class RippedRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
-            sql = %Q{SELECT DISTINCT(records.idateripped), artists.rartist, artists.sname FROM artists
+            sql = %Q{SELECT records.idateripped, artists.rartist, artists.sname FROM artists
                         INNER JOIN records ON records.rartist = artists.rartist
+                        WHERE records.idateripped <> 0
                         ORDER BY records.idateripped DESC LIMIT 100;}
+            last_child = nil
             DBIntf::connection.execute(sql) { |row|
-                                              p row
+                dt = Time.parse(Time.at(row[0]).strftime("%Y%m%d")).to_i
+                next if last_child && last_child[0] == dt
                 child = model.append(iter)
-                child[0] = row[0]
-                child[1] = Time.at(row[0]).strftime("%Y.%m.%d") #+" "+row[0]
+                last_child = child
+                child[0] = dt
+                child[1] = "<i>"+Time.at(row[0]).strftime("%Y.%m.%d")+"</i>"
                 child[2] = iter[2]
                 model.append(child) # Add a fake child
             }
             sql = ""
         elsif level == 1
             sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN records ON artists.rartist=records.rartist "
-            sql += " WHERE (#{@where_fields} >= #{iter.parent[0]}) AND #{@where_fields} < #{iter.parent[0]+3600*24}"
+                    "INNER JOIN records ON artists.rartist=records.rartist " \
+                    "WHERE (#{@where_fields} >= #{iter[0]}) AND #{@where_fields} < #{iter[0]+3600*24};"
         end
         return sql
     end
 
     def sub_filter(iter)
-        return " (#{@where_fields} >= #{iter.parent[0]}) AND #{@where_fields} < #{iter.parent[0]+3600*24}"
+        return " (#{@where_fields} >= #{iter.parent[0]} AND #{@where_fields} < #{iter.parent[0]+3600*24})"
     end
 end
 
@@ -195,7 +199,7 @@ class ArtistsBrowser < GenericBrowser
                      OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
                      TagsRowProp.new(4, "tags", 2, true, "tracks.itags", "Tags"),
                      LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
-                     RippedRowProp.new(6, "artists", 2, false, "records.idateripped", "Ripped")]
+                     RippedRowProp.new(6, "artists", 2, false, "records.idateripped", "Last ripped")]
 # TODO: add by rating  LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels")]
     
     ATV_REF  = 0
