@@ -17,11 +17,13 @@ CREATE TABLE "artists"
   "rorigin" INTEGER NOT NULL DEFAULT 0 REFERENCES origins(rorigin),
   "mnotes"  VARCHAR NOT NULL DEFAULT ''
 );
+
 CREATE TABLE "collections"
 (
   "rcollection"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
   "sname"	VARCHAR NOT NULL DEFAULT ''
 );
+
 CREATE TABLE "segments"
 (
   "rsegment"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
@@ -32,21 +34,25 @@ CREATE TABLE "segments"
   "iplaytime"	INTEGER NOT NULL DEFAULT 0,
   "mnotes"	VARCHAR NOT NULL DEFAULT ''
 );
+
 CREATE TABLE "labels"
 (
   "rlabel"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
   "sname"	VARCHAR NOT NULL DEFAULT ''
 );
+
 CREATE TABLE "medias"
 (
   "rmedia"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
   "sname"	VARCHAR NOT NULL DEFAULT ''
 );
+
 CREATE TABLE "genres"
 (
   "rgenre"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
   "sname"	VARCHAR NOT NULL DEFAULT ''
 );
+
 CREATE TABLE "records"
 (
   "rrecord"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
@@ -70,6 +76,7 @@ CREATE TABLE "records"
   "iissegmented"    SMALLINT NOT NULL DEFAULT 0,
   "irecsymlink" INTEGER NOT NULL DEFAULT 0
 );
+
 CREATE TABLE "tracks"
 (
   "rtrack"	INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
@@ -101,23 +108,21 @@ CREATE TABLE "pltracks" (
     "iorder" INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE "logtracks" (
-    "rlogtrack"     INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
-    "rtrack"        INTEGER NOT NULL DEFAULT 0 REFERENCES tracks(rtrack),
-    "idateplayed"   INTEGER NOT NULL DEFAULT 0,
+CREATE TABLE "hostnames" (
+    "rhostname"     INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
     "shostname"     VARCHAR NOT NULL DEFAULT 'localhost'
 );
 
+CREATE TABLE "logtracks" (
+    "rtrack"        INTEGER NOT NULL DEFAULT 0 REFERENCES tracks(rtrack),
+    "idateplayed"   INTEGER NOT NULL DEFAULT 0,
+    "rhostname"     INTEGER NOT NULL DEFAULT 0 REFERENCES hostnames(rhostname)
+);
+
 CREATE INDEX "ixartistname" ON "artists"("sname");
-CREATE INDEX "ixcollectionname" ON "collections"("sname");
-CREATE INDEX "ixsegtitle" ON "segments"("stitle");
-CREATE INDEX "ixsegorder" ON "segments"("iorder");
-CREATE INDEX "ixrecsegment" ON "segments"("rrecord", "iorder");
-CREATE INDEX "ixlabelname" ON "labels"("sname");
-CREATE INDEX "ixmedia" ON "medias"("sname");
-CREATE INDEX "ixmgenrename" ON "genres"("sname");
 CREATE INDEX "ixrecordtitle" ON "records"("stitle");
+/*
 CREATE INDEX "ixlogrtrack" ON "logtracks"("rtrack");
 CREATE INDEX "ixlogdplayed" ON "logtracks"("idateplayed");
-
+*/
 COMMIT;

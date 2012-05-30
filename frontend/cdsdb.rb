@@ -180,6 +180,7 @@ require './my_rr_lib'
 
 # TODO: enlever le hostname de logtracks et remplacer par une ref sur une table de hostname
 #       automatiquement remplie??? Ca sauverait des bytes...
+#       Et virer le champ rlogtrack qui sert a rien...???
 
 # TODO: desimbriquer la main window du master controller pour en faire une top window comme les autres.
 
