@@ -2,8 +2,6 @@
 #
 # TODO: remplacer All par filtered et appliquer le filtre seulement sur cette branche???
 
-#MBRowProperties = Struct.new(:ref, :table, :max_level, :filtered, :where_fields, :title)
-
 class GenRowProp
 
     attr_accessor :ref, :table, :max_level, :filtered, :where_fields, :title
@@ -80,8 +78,14 @@ class OriginsRowProp < GenRowProp
         if level == 0
             sql = "SELECT * FROM #{iter[2].table}"
         elsif level == 1
-            sql = %Q{SELECT artists.rartist, artists.sname FROM artists
-                     WHERE artists.rorigin=#{iter[0]}}
+#             if mc.view_compile?
+#                 sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+#                        "INNER JOIN records ON artists.rartist=records.rartist " \
+#                        "WHERE artists.rorigin=#{iter[0]}"
+#             else
+                sql = %Q{SELECT artists.rartist, artists.sname FROM artists
+                         WHERE artists.rorigin=#{iter[0]}}
+#             end
         end
         return sql
     end
@@ -114,10 +118,8 @@ class AllArtistsRowProp < GenRowProp
             # it's inserted BEFORE the first child since it's ref is 0.
             fchild = iter.first_child
             child = model.append(iter)
-#            child = [0, "Compilations", iter[2]]
-            child[0] = 0
-            child[1] = "Compilations"
-            child[2] = iter[2]
+#             child[0..3] = [0, "Compilations", iter[2], child[1]]
+            child[0], child[1], child[2], child[3] = 0, "Compilations", iter[2], "Compilations"
             model.remove(fchild)
         end
     end
@@ -135,6 +137,7 @@ class TagsRowProp < GenRowProp
                 child[0] = i
                 child[1] = "<i>#{tag}</i>"
                 child[2] = iter[2]
+                child[3] = tag
                 model.append(child) # Add a fake child
             }
             sql = ""
@@ -156,39 +159,38 @@ class TagsRowProp < GenRowProp
     end
     
     def sub_filter(iter)
-        return " (#{@where_fields} & #{1 << iter.parent[0]}) <> 0 "
+        return " (#@where_fields & #{1 << iter.parent[0]}) <> 0 "
     end
 end
 
 class RippedRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
-            sql = %Q{SELECT records.idateripped, artists.rartist, artists.sname FROM artists
-                        INNER JOIN records ON records.rartist = artists.rartist
-                        WHERE records.idateripped <> 0
-                        ORDER BY records.idateripped DESC LIMIT 100;}
-            last_child = nil
+            sql = %Q{SELECT records.idateripped, artists.rartist, artists.sname, records.rrecord FROM artists
+                     INNER JOIN records ON records.rartist = artists.rartist
+                     WHERE records.idateripped <> 0
+                     ORDER BY records.idateripped DESC LIMIT 100;}
+            fchild = iter.first_child
+            count = 0
             DBIntf::connection.execute(sql) { |row|
-                dt = Time.parse(Time.at(row[0]).strftime("%Y%m%d")).to_i
-                next if last_child && last_child[0] == dt
                 child = model.append(iter)
-                last_child = child
-                child[0] = dt
-                child[1] = "<i>"+Time.at(row[0]).strftime("%Y.%m.%d")+"</i>"
+                child[0] = row[1]
+                child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+row[2]
                 child[2] = iter[2]
-                model.append(child) # Add a fake child
+                child[3] = ("%03d" % count)+row[3].to_s #dt.to_i.to_s
+                count += 1
             }
-            sql = ""
-        elsif level == 1
-            sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN records ON artists.rartist=records.rartist " \
-                    "WHERE (#{@where_fields} >= #{iter[0]}) AND #{@where_fields} < #{iter[0]+3600*24};"
+            model.remove(fchild)
         end
-        return sql
+        return ""
+    end
+
+    # Iter removed in select: don't remove another child!
+    def post_select(model, iter, mc)
     end
 
     def sub_filter(iter)
-        return " (#{@where_fields} >= #{iter.parent[0]} AND #{@where_fields} < #{iter.parent[0]+3600*24})"
+        return " #@where_fields = #{iter[3][3..-1].to_i}" # Extract rrecord from the sort column
     end
 end
 
@@ -199,11 +201,13 @@ class ArtistsBrowser < GenericBrowser
                      OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
                      TagsRowProp.new(4, "tags", 2, true, "tracks.itags", "Tags"),
                      LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
-                     RippedRowProp.new(6, "artists", 2, false, "records.idateripped", "Last ripped")]
+                     RippedRowProp.new(6, "artists", 1, false, "records.rrecord", "Last ripped")]
 # TODO: add by rating  LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels")]
     
-    ATV_REF  = 0
-    ATV_NAME = 1
+    ATV_REF   = 0
+    ATV_NAME  = 1
+    ATV_CLASS = 2
+    ATV_SORT  = 3
 
     ROW_REF     = 0
     ROW_NAME    = 1
@@ -227,19 +231,14 @@ class ArtistsBrowser < GenericBrowser
 
         @tv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new, :text => ATV_REF))
         @tv.append_column(name_column)
-        #@tv.append_column(Gtk::TreeViewColumn.new("Name", renderer, :text => ATV_NAME))
 
-        @tv.columns[ATV_NAME].sort_order = Gtk::SORT_ASCENDING
-        @tv.columns[ATV_NAME].resizable = @tv.columns[ATV_NAME].sort_indicator =  @tv.columns[ATV_NAME].clickable = true
-        @tv.columns[ATV_NAME].signal_connect(:clicked) { change_sort_order(ATV_NAME) } # { load_entries } }
+        @tv.columns[ATV_NAME].resizable = true
 
-        @tvm = Gtk::TreeStore.new(Integer, String, Class)
-        @tvm.set_sort_column_id(ATV_NAME, @tv.columns[ATV_NAME].sort_order)
+        @tvm = Gtk::TreeStore.new(Integer, String, Class, String)
 
         @tvs = nil # Intended to be a shortcut to @tv.selection.selected. Set in selection change
         
         @tv.selection.signal_connect(:changed) { |widget| on_selection_changed(widget) }
-        #@tv.signal_connect(:cursor_changed)     { |widget| on_cursor_changed(widget) }
         @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::ART_POPUP_MENU) }
 
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
@@ -251,10 +250,6 @@ class ArtistsBrowser < GenericBrowser
         @mc.glade[UIConsts::ART_POPUP_ADD].signal_connect(:activate)  { on_art_popup_add  }
         @mc.glade[UIConsts::ART_POPUP_DEL].signal_connect(:activate)  { on_art_popup_del  }
         @mc.glade[UIConsts::ART_POPUP_EDIT].signal_connect(:activate) { edit_artist       }
-
-#         @mc.glade[UIConsts::ART_BTN_ORIGIN].signal_connect(:clicked) {
-#             @artist.rartist == 0 ? @seg_art.select_dialog("rorigin") : @artist.select_dialog("rorigin")
-#         }
 
         return super
     end
@@ -302,10 +297,12 @@ class ArtistsBrowser < GenericBrowser
             iter[0] = entry.ref
             iter[1] = "<b>#{entry.title}</b>"
             iter[2] = entry
+            iter[3] = entry.title
             @tvm.append(iter) # Append a fake child
             load_sub_tree(iter) if entry.ref == 1 # Load subtree if all artists
         }
         @tv.model = @tvm
+        @tvm.set_sort_column_id(3, Gtk::SORT_ASCENDING)
 
         return self
     end
@@ -328,12 +325,7 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def edit_artist
-        return unless @artist.valid?
-        DBEditor.new(@mc, @artist).run
-#         art = @artist.rartist == 0 ? ArtistEditor.new(@seg_art.rartist).run : ArtistEditor.new(@artist.rartist).run
-#         if art
-#             art.rartist == @artist.rartist ? update_entry : @mc.select_artist(art.rartist)
-#         end
+        DBEditor.new(@mc, @artist).run if @artist.valid?
     end
 
     # Recursively search for rartist from iter. If iter is nil, search from tree root.
@@ -361,6 +353,7 @@ class ArtistsBrowser < GenericBrowser
         new_child[0] = row[0]
         new_child[1] = CGI::escapeHTML(row[1])
         new_child[2] = iter[2]
+        new_child[3] = row[1]
         if @tvm.iter_depth(new_child) < iter[2].max_level
             new_child[1] = "<i>#{new_child[1]}</i>"
             @tvm.append(new_child)
@@ -376,7 +369,6 @@ class ArtistsBrowser < GenericBrowser
 
 puts "*** load new sub tree ***"        
         # La bidouille sur le sort accelere mechament les choses!!!
-        sc = @tvm.sort_column_id
         @tvm.set_sort_column_id(0)
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
@@ -393,31 +385,19 @@ puts "*** load new sub tree ***"
 
         iter[1] = iter[1]+" - (#{iter.n_children})"
 
-        @tvm.set_sort_column_id(sc[0], sc[1])
+        @tvm.set_sort_column_id(3, Gtk::SORT_ASCENDING)
     end
 
     def on_row_expanded(widget, iter, path)
-puts "*** row expanded ***"        
         load_sub_tree(iter)
     end
     
-    # unused!!! see next method!!!
-#     def on_cursor_changed(widget)
-# #puts "artist cursor changed: selection="; p @tv.cursor
-#         @artist.ref_load(@tvm.get_iter(@tv.cursor[0])[ATV_REF]).to_widgets
-#         @mc.artist_changed
-#     end
-
     def on_selection_changed(widget)
-#puts "artist selection changed: selection="; p @tv.selection.selected
-        #rartist = @artist.rartist # Store artist ref before change
         @tvs = @tv.selection.selected
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artist.reset
-#p "reset"; p @artist
         else
             @artist.ref_load(@tvs[ATV_REF])
-#p "loaded"; p @artist
         end
         #load_selection.artist.to_widgets
         @artist.to_widgets
@@ -430,7 +410,6 @@ puts "*** row expanded ***"
         if @tvs[2].where_fields.empty? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             return ""
         else
-            #return " #{@tvs[2].where_fields}=#{@tvs.parent[0]} "
             return @tvs[2].sub_filter(@tvs)
         end
     end
