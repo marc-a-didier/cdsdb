@@ -88,7 +88,8 @@ class RecentItemsDialog
                    ORDER BY records.idateripped DESC LIMIT #{Cfg::instance.max_items};}
             when VIEW_PLAYED
                 # The WHERE clause was added to add a WHERE for the filter if any. Should be changed...
-                %Q{SELECT logtracks.rtrack, logtracks.idateplayed, logtracks.shostname, records.rrecord, records.irecsymlink FROM logtracks
+                %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
+                   INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname
                    INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
                    INNER JOIN segments ON tracks.rsegment=segments.rsegment
                    INNER JOIN records ON records.rrecord=segments.rrecord
