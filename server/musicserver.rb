@@ -75,7 +75,7 @@ class MusicServer
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
         file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).file_name
-        Log::instance.info("Sending #{file} in #{block_size} bytes chunks to #{session.peeraddr[2]}")
+        Log::instance.info("Sending #{file} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
         if file.empty?
             session.puts("0")
         else
@@ -102,15 +102,15 @@ class MusicServer
     def update_stats(session)
         session.puts("OK")
         if @parent
-            @parent.notify_played(session.gets.chomp.to_i, session.peeraddr[2])
+            @parent.notify_played(session.gets.chomp.to_i, session.peeraddr(:hostname)[2])
         else
-            DBUtils::update_track_stats(session.gets.chomp.to_i, session.peeraddr[2])
+            DBUtils::update_track_stats(session.gets.chomp.to_i, session.peeraddr(:hostname)[2])
         end
     end
 
     def exec_sql(session)
         session.puts("OK")
-        DBUtils::log_exec(session.gets.chomp, session.peeraddr[2])
+        DBUtils::log_exec(session.gets.chomp, session.peeraddr(:hostname)[2])
     end
 
     def synchronize_resources(session)
@@ -147,7 +147,7 @@ class MusicServer
             session.puts("Fucked up...")
             return
         end
-        Log::instance.info("Sending file #{file_name} in #{block_size} bytes chunks to #{session.peeraddr[2]}")
+        Log::instance.info("Sending file #{file_name} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
         session.puts(File.size(file_name).to_s)
         f = File.new(file_name, "rb")
         while (data = f.read(block_size))
@@ -162,10 +162,10 @@ class MusicServer
         new_title   = session.gets.chomp
         file_name   = Utils::audio_file_exists(track_infos).file_name
         if file_name.empty?
-            Log::instance.info("Attempt to rename inexisting track to #{new_title} [#{session.peeraddr[2]}]")
+            Log::instance.info("Attempt to rename inexisting track to #{new_title} [#{session.peeraddr(:hostname)[2]}]")
         else
             track_infos.track.stitle = new_title
-            Log::instance.info("Track renaming [#{session.peeraddr[2]}]")
+            Log::instance.info("Track renaming [#{session.peeraddr(:hostname)[2]}]")
             Utils::tag_and_move_file(file_name, track_infos.build_access_infos)
         end
     end
