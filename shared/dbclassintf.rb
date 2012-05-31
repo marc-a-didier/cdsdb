@@ -137,8 +137,8 @@ class ArtistDBClass < DBClassIntf
     end
 end
 
-RecordDBS = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iiscompile, :iyear, :rlabel,
-                       :rgenre, :rmedia, :rcollection, :iplaytime, :iisinset, :isetorder, :isetof,
+RecordDBS = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
+                       :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
                        :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink)
 
 class RecordDBClass < DBClassIntf
@@ -192,7 +192,7 @@ class SegmentDBClass < DBClassIntf
 end
 
 TrackDBS = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
-                      :iplayed, :irating, :itags, :ilastplayed, :ipreforder)
+                      :iplayed, :irating, :itags, :ilastplayed)
 
 class TrackDBClass < DBClassIntf
 

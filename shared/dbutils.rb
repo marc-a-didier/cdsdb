@@ -34,12 +34,24 @@ class DBUtils
         return if rtrack == 0 # Possible when files are dropped into the play queue
         sql1 = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
         DBIntf::connection.execute(sql1)
-        rlogtrack = DBUtils::get_last_id("logtrack")+1
+#         rlogtrack = DBUtils::get_last_id("logtrack")+1
         #sql2 = "INSERT INTO logtracks VALUES (#{rlogtrack}, #{rtrack}, #{Time::now.to_i}, #{hostname.gsub(/\..*/, "").to_sql});"
-        sql2 = "INSERT INTO logtracks VALUES (#{rlogtrack}, #{rtrack}, #{Time::now.to_i}, #{hostname.to_sql});"
+#         sql2 = "INSERT INTO logtracks VALUES (#{rlogtrack}, #{rtrack}, #{Time::now.to_i}, #{hostname.to_sql});"
+        sql3 = ""
+        rhost = DBIntf::connection.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
+        if rhost.nil?
+            rhost = DBUtils::get_last_id("hostname")+1
+            sql3 = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
+            DBUtils::log_exec(sql3)
+        end
+        sql2 = "INSERT INTO logtracks VALUES (#{rtrack}, #{Time::now.to_i}, #{rhost});"
         DBIntf::connection.execute(sql2)
         #log_exec(sql)
-        File.open("../playedtracks.sql", "a+") { |file| file.puts(sql1); file.puts(sql2) } if Cfg::instance.log_played_tracks?
+        File.open("../playedtracks.sql", "a+") { |file|
+            file.puts(sql1)
+            file.puts(sql3) unless sql3.empty?
+            file.puts(sql2)
+        } if Cfg::instance.log_played_tracks?
     end
 
     def DBUtils::update_record_playtime(rrecord)

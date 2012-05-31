@@ -32,19 +32,21 @@ class PlayHistoryDialog
 
         @tv.model = Gtk::ListStore.new(Integer, String, String)
         count = 0
-        DBIntf::connection.execute("SELECT * FROM logtracks WHERE rtrack=#{rtrack} ORDER BY idateplayed DESC;") do |row|
+        DBIntf::connection.execute(
+            %Q{SELECT logtracks.idateplayed, hostnames.sname FROM logtracks
+               INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
+               WHERE rtrack=#{rtrack} ORDER BY idateplayed DESC;}) do |row|
             count += 1
             iter = @tv.model.append
             iter[0] = count
-            iter[1] = Time.at(row[2]).ctime
-            #iter[1] = Time.at(row[2]).to_s
-            iter[2] = row[3]
+            iter[1] = Time.at(row[0]).ctime
+            iter[2] = row[1]
         end
 
-		sql = %Q{SELECT COUNT(logtracks.rlogtrack) AS totplayed, tracks.rtrack FROM tracks
-				 INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
-				 WHERE tracks.iplayed > 0
-				 GROUP BY tracks.rtrack ORDER BY totplayed DESC;}
+        sql = %Q{SELECT COUNT(logtracks.rtrack) AS totplayed, tracks.rtrack FROM tracks
+                 INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                 WHERE tracks.iplayed > 0
+                 GROUP BY tracks.rtrack ORDER BY totplayed DESC;}
         show_ranking(sql, rtrack)
     end
 
@@ -61,10 +63,15 @@ class PlayHistoryDialog
 
         count = 0
         DBIntf::connection.execute(
-            %Q{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, logtracks.shostname
-               FROM logtracks, tracks
-               WHERE tracks.rtrack=logtracks.rtrack AND tracks.rrecord=#{rrecord}
+            %Q{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hostnames.sname FROM tracks
+               INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+               INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
+               WHERE tracks.rrecord=#{rrecord}
                ORDER BY logtracks.idateplayed DESC;}) do |row|
+#             %Q{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hostnames.sname
+#                FROM logtracks, tracks, hostnames
+#                WHERE tracks.rtrack=logtracks.rtrack AND tracks.rrecord=#{rrecord} AND hostnames.rhostname=logtracks.rhostname
+#                ORDER BY logtracks.idateplayed DESC;}) do |row|
             count += 1
             iter = @tv.model.append
             iter[0] = count
@@ -72,7 +79,7 @@ class PlayHistoryDialog
             row.each_with_index { |col, i| iter[i+1] = i == 2 ?  Time.at(row[2]).ctime : col.to_s }
         end
 
-        sql = %Q{SELECT COUNT(logtracks.rlogtrack) AS totplayed, records.rrecord FROM tracks
+        sql = %Q{SELECT COUNT(logtracks.rtrack) AS totplayed, records.rrecord FROM tracks
                  INNER JOIN records ON tracks.rrecord=records.rrecord
                  INNER JOIN artists ON artists.rartist=records.rartist
                  INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack

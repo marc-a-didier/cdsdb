@@ -531,7 +531,7 @@ module UIConsts
     #
     # Artist editor dialog
     #
-    DLG_ART_EDITOR      = "dlg_art_editor"
+#     DLG_ART_EDITOR      = "dlg_art_editor"
 
     ARTED_ENTRY_ARTIST  = "arted_entry_sname"
     ARTED_ENTRY_WEBSITE = "arted_entry_swebsite"
@@ -547,7 +547,7 @@ module UIConsts
     #
     # Record editor dialog
     #
-    DLG_REC_EDITOR          = "dlg_rec_editor"
+#     DLG_REC_EDITOR          = "dlg_rec_editor"
 
     RECED_ENTRY_ARTIST      = "reced_lkentry_rartist"
     RECED_ENTRY_TITLE       = "reced_entry_stitle"
@@ -558,14 +558,14 @@ module UIConsts
     RECED_ENTRY_CAT         = "reced_entry_scatalog"
     RECED_ENTRY_CDDBID      = "reced_entry_icddbid"
     RECED_ENTRY_MEDIUM      = "reced_lkentry_rmedia"
-    RECED_CHKBTN_SET        = "reced_cb_iisinset"
+#     RECED_CHKBTN_SET        = "reced_cb_iisinset"
     RECED_ENTRY_SETORDER    = "reced_entry_isetorder"
     RECED_ENTRY_SETOF       = "reced_entry_isetof"
     RECED_ENTRY_COLLECTION  = "reced_lkentry_rcollection"
     RECED_ENTRY_ADDED       = "reced_dateentry_idateadded"
     RECED_ENTRY_RIPPED      = "reced_dateentry_idateripped"
     RECED_CHKBTN_SEGMENTED  = "reced_cb_iissegmented"
-    RECED_CHKBTN_COMPILE    = "reced_cb_iiscompile"
+#     RECED_CHKBTN_COMPILE    = "reced_cb_iiscompile"
     RECED_ENTRY_DBREF       = "reced_entry_rrecord"
 
     RECED_BTN_ARTIST        = "reced_btn_artist"
@@ -582,7 +582,7 @@ module UIConsts
     #
     # Segment editor dialog
     #
-    DLG_SEG_EDITOR      = "dlg_seg_editor"
+#     DLG_SEG_EDITOR      = "dlg_seg_editor"
 
     SEGED_ENTRY_ARTIST  = "seged_lkentry_rartist"
     SEGED_ENTRY_TITLE   = "seged_entry_stitle"
@@ -601,7 +601,7 @@ module UIConsts
     #
     # Track editor dialog
     #
-    DLG_TRK_EDITOR          = "dlg_trk_editor"
+#     DLG_TRK_EDITOR          = "dlg_trk_editor"
 
     TRKED_ENTRY_ORDER       = "trked_entry_iorder"
     TRKED_ENTRY_TITLE       = "trked_entry_stitle"
@@ -611,7 +611,7 @@ module UIConsts
     #TRKED_CMB_TAGS          = "trked_cmb_tags"
     TRKED_ENTRY_PLAYED      = "trked_entry_iplayed"
     TRKED_ENTRY_LASTPLAYED  = "trked_dateentry_ilastplayed"
-    TRKED_ENTRY_PREFORDER   = "trked_entry_ipreforder"
+#     TRKED_ENTRY_PREFORDER   = "trked_entry_ipreforder"
     TRKED_ENTRY_RECREF      = "trked_entry_rrecord"
     TRKED_ENTRY_SEGREF      = "trked_entry_rsegment"
     TRKED_ENTRY_DBREF       = "trked_entry_rtrack"

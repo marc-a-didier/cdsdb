@@ -116,12 +116,11 @@ class SQLGenerator
     def insert_record
         row = nil #DBIntf::connection.get_first_row("SELECT * FROM records WHERE LOWER(stitle)=LOWER(#{@disc.title.to_sql}) AND rartist=#{@main_rartist}")
         if row.nil?
-            iscomp = @is_compile ? 1 : 0
             issegd = @is_segmented ? 1 : 0
             @recordid = DBUtils::get_last_id("record")+1
-            @sqlf << "INSERT INTO records (rrecord, icddbid, rartist, stitle, iiscompile, iyear, rgenre, rmedia, iplaytime, mnotes, idateadded, iissegmented) " \
+            @sqlf << "INSERT INTO records (rrecord, icddbid, rartist, stitle, iyear, rgenre, rmedia, iplaytime, mnotes, idateadded, iissegmented) " \
                         "VALUES (#{@recordid}, #{@disc.cddbid}, #{@main_rartist}, " \
-                                "#{@disc.title.to_sql}, #{iscomp}, #{@disc.year}, #{@rgenre}, " \
+                                "#{@disc.title.to_sql}, #{@disc.year}, #{@rgenre}, " \
                                 "#{@disc.medium}, #{@disc.length}, #{@comments.to_sql}, #{Time.now.to_i}, #{issegd});\n"
         else
             @recordid = row[0]

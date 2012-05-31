@@ -32,7 +32,7 @@ class Cfg
         @tx_block_size = 128*1024
         @dirs = {}
         @max_items = 100;
-        @db_version = "5.7"
+        @db_version = "5.8"
         @cd_device = "/dev/cdrom"
     end
 

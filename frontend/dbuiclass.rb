@@ -61,7 +61,7 @@ class RecordUI < RecordDBClass
         str += ", "+DBUtils::name_from_id(self.rlabel, "label")
         str += ", "+self.scatalog unless self.scatalog.empty?
         str += ", "+DBUtils::name_from_id(self.rgenre, "genre")
-        str += ", "+self.isetorder.to_s+" of "+self.isetof.to_s if self.iisinset > 0
+        str += ", "+self.isetorder.to_s+" of "+self.isetof.to_s if self.isetorder > 0
         str += ", "+DBUtils::name_from_id(self.rcollection, "collection") if self.rcollection != 0
         str += ", "+Utils::format_ms_length(self.iplaytime)
     end

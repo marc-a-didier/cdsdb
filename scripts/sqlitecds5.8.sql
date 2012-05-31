@@ -59,14 +59,12 @@ CREATE TABLE "records"
   "icddbid"	INTEGER NOT NULL DEFAULT 0,
   "rartist"	INTEGER NOT NULL DEFAULT 0 REFERENCES artists(rartist),
   "stitle"	VARCHAR NOT NULL DEFAULT '',
-  "iiscompile"	SMALLINT NOT NULL DEFAULT 0,
   "iyear"	SMALLINT NOT NULL DEFAULT 0,
   "rlabel"	INTEGER NOT NULL DEFAULT 0 REFERENCES labels(rlabel),
   "rgenre"	INTEGER NOT NULL DEFAULT 0 REFERENCES genres(rgenre),
   "rmedia"	INTEGER NOT NULL DEFAULT 0 REFERENCES medias(rmedia),
   "rcollection"	INTEGER NOT NULL DEFAULT 0 REFERENCES collections(rcollection),
   "iplaytime"	INTEGER NOT NULL DEFAULT 0,
-  "iisinset"	SMALLINT NOT NULL DEFAULT 0,
   "isetorder"	SMALLINT NOT NULL DEFAULT 0,
   "isetof"	SMALLINT NOT NULL DEFAULT 0,
   "scatalog"	VARCHAR NOT NULL DEFAULT '',
@@ -109,8 +107,8 @@ CREATE TABLE "pltracks" (
 );
 
 CREATE TABLE "hostnames" (
-    "rhostname"     INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
-    "shostname"     VARCHAR NOT NULL DEFAULT 'localhost'
+    "rhostname"  INTEGER PRIMARY KEY DEFAULT 0 NOT NULL,
+    "sname"      VARCHAR NOT NULL DEFAULT 'localhost'
 );
 
 CREATE TABLE "logtracks" (

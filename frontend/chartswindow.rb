@@ -198,7 +198,7 @@ class ChartsWindow < TopWindow
         # N.B: le join sur les records dans les vues par artiste et pays est necessaire si on utilise le filtre!!!
         #      (Juste pour me rappeler pourquoi je me demande pourquoi j'ai foutu ça alors qu'à priori y'a pas besoin)
         #
-		field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rlogtrack)"
+		field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
 		field += " AS totplayed"
         case @view_type
             when VIEW_TRACKS

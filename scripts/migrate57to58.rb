@@ -45,14 +45,13 @@ def dup_table(table) # Copy table as it, that is there are no change
     $dst.execute("BEGIN TRANSACTION;")
     $src.execute("SELECT * FROM #{table}") do |row|
         sql = "INSERT INTO #{table} VALUES ("
-        if (table == "tracks")
-            row.each_with_index do |val, i|
-                break if i == 12 # Skip last track column
-				sql += val.to_sql+","
-            end
-        else
-            row.each { |val| sql += val.to_sql+"," }
+        row.slice!(-1) if table == "tracks" # Remove last element
+        if table == "records"
+            # Must remove cols 4 & 11. Beware to the order. if 4 is removed before, 11 becomes 10.
+            row.slice!(11)
+            row.slice!(4)
         end
+        row.each { |val| sql += val.to_sql+"," }
         sql = sql[0..-2]+");"
 puts sql
         $dst.execute(sql)

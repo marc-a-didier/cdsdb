@@ -238,19 +238,10 @@
               <object class="GtkTable" id="table1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="n_rows">19</property>
+                <property name="n_rows">17</property>
                 <property name="n_columns">3</property>
                 <property name="column_spacing">2</property>
                 <property name="row_spacing">1</property>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -628,34 +619,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="reced_lbl_inset">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="xalign">1</property>
-                    <property name="label" translatable="yes">Set</property>
-                  </object>
-                  <packing>
-                    <property name="top_attach">9</property>
-                    <property name="bottom_attach">10</property>
-                    <property name="x_options">GTK_FILL</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkCheckButton" id="reced_cb_iisinset">
-                    <property name="use_action_appearance">False</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">9</property>
-                    <property name="bottom_attach">10</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkLabel" id="reced_lbl_setorder">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -663,8 +626,8 @@
                     <property name="label" translatable="yes">Set order</property>
                   </object>
                   <packing>
-                    <property name="top_attach">10</property>
-                    <property name="bottom_attach">11</property>
+                    <property name="top_attach">9</property>
+                    <property name="bottom_attach">10</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -682,8 +645,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">10</property>
-                    <property name="bottom_attach">11</property>
+                    <property name="top_attach">9</property>
+                    <property name="bottom_attach">10</property>
                   </packing>
                 </child>
                 <child>
@@ -694,8 +657,8 @@
                     <property name="label" translatable="yes">Set of</property>
                   </object>
                   <packing>
-                    <property name="top_attach">11</property>
-                    <property name="bottom_attach">12</property>
+                    <property name="top_attach">10</property>
+                    <property name="bottom_attach">11</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -713,8 +676,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">11</property>
-                    <property name="bottom_attach">12</property>
+                    <property name="top_attach">10</property>
+                    <property name="bottom_attach">11</property>
                   </packing>
                 </child>
                 <child>
@@ -725,8 +688,8 @@
                     <property name="label" translatable="yes">Collection</property>
                   </object>
                   <packing>
-                    <property name="top_attach">12</property>
-                    <property name="bottom_attach">13</property>
+                    <property name="top_attach">11</property>
+                    <property name="bottom_attach">12</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -745,8 +708,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">12</property>
-                    <property name="bottom_attach">13</property>
+                    <property name="top_attach">11</property>
+                    <property name="bottom_attach">12</property>
                   </packing>
                 </child>
                 <child>
@@ -761,8 +724,8 @@
                   <packing>
                     <property name="left_attach">2</property>
                     <property name="right_attach">3</property>
-                    <property name="top_attach">12</property>
-                    <property name="bottom_attach">13</property>
+                    <property name="top_attach">11</property>
+                    <property name="bottom_attach">12</property>
                     <property name="x_options"></property>
                   </packing>
                 </child>
@@ -774,8 +737,8 @@
                     <property name="label" translatable="yes">Added</property>
                   </object>
                   <packing>
-                    <property name="top_attach">13</property>
-                    <property name="bottom_attach">14</property>
+                    <property name="top_attach">12</property>
+                    <property name="bottom_attach">13</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -793,8 +756,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">13</property>
-                    <property name="bottom_attach">14</property>
+                    <property name="top_attach">12</property>
+                    <property name="bottom_attach">13</property>
                   </packing>
                 </child>
                 <child>
@@ -805,8 +768,8 @@
                     <property name="label" translatable="yes">Ripped</property>
                   </object>
                   <packing>
-                    <property name="top_attach">14</property>
-                    <property name="bottom_attach">15</property>
+                    <property name="top_attach">13</property>
+                    <property name="bottom_attach">14</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -824,8 +787,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">14</property>
-                    <property name="bottom_attach">15</property>
+                    <property name="top_attach">13</property>
+                    <property name="bottom_attach">14</property>
                   </packing>
                 </child>
                 <child>
@@ -836,8 +799,8 @@
                     <property name="label" translatable="yes">Segmented</property>
                   </object>
                   <packing>
-                    <property name="top_attach">15</property>
-                    <property name="bottom_attach">16</property>
+                    <property name="top_attach">14</property>
+                    <property name="bottom_attach">15</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -852,36 +815,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">15</property>
-                    <property name="bottom_attach">16</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="reced_lbl_compile">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="xalign">1</property>
-                    <property name="label" translatable="yes">Compile</property>
-                  </object>
-                  <packing>
-                    <property name="top_attach">16</property>
-                    <property name="bottom_attach">17</property>
-                    <property name="x_options">GTK_FILL</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkCheckButton" id="reced_cb_iiscompile">
-                    <property name="use_action_appearance">False</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">16</property>
-                    <property name="bottom_attach">17</property>
+                    <property name="top_attach">14</property>
+                    <property name="bottom_attach">15</property>
                   </packing>
                 </child>
                 <child>
@@ -909,8 +844,8 @@
                     <property name="label" translatable="yes">DB Ref.</property>
                   </object>
                   <packing>
-                    <property name="top_attach">18</property>
-                    <property name="bottom_attach">19</property>
+                    <property name="top_attach">16</property>
+                    <property name="bottom_attach">17</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -928,8 +863,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">18</property>
-                    <property name="bottom_attach">19</property>
+                    <property name="top_attach">16</property>
+                    <property name="bottom_attach">17</property>
                   </packing>
                 </child>
                 <child>
@@ -940,8 +875,8 @@
                     <property name="label" translatable="yes">Record link</property>
                   </object>
                   <packing>
-                    <property name="top_attach">17</property>
-                    <property name="bottom_attach">18</property>
+                    <property name="top_attach">15</property>
+                    <property name="bottom_attach">16</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -959,9 +894,12 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">17</property>
-                    <property name="bottom_attach">18</property>
+                    <property name="top_attach">15</property>
+                    <property name="bottom_attach">16</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -1253,7 +1191,7 @@
                   <object class="GtkTable" id="table6">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="n_rows">11</property>
+                    <property name="n_rows">10</property>
                     <property name="n_columns">2</property>
                     <property name="column_spacing">2</property>
                     <property name="row_spacing">1</property>
@@ -1271,8 +1209,8 @@
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
-                        <property name="top_attach">8</property>
-                        <property name="bottom_attach">9</property>
+                        <property name="top_attach">7</property>
+                        <property name="bottom_attach">8</property>
                       </packing>
                     </child>
                     <child>
@@ -1283,8 +1221,8 @@
                         <property name="label" translatable="yes">Segment Ref.</property>
                       </object>
                       <packing>
-                        <property name="top_attach">9</property>
-                        <property name="bottom_attach">10</property>
+                        <property name="top_attach">8</property>
+                        <property name="bottom_attach">9</property>
                         <property name="x_options">GTK_FILL</property>
                       </packing>
                     </child>
@@ -1302,8 +1240,8 @@
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
-                        <property name="top_attach">9</property>
-                        <property name="bottom_attach">10</property>
+                        <property name="top_attach">8</property>
+                        <property name="bottom_attach">9</property>
                       </packing>
                     </child>
                     <child>
@@ -1509,8 +1447,8 @@
                         <property name="label" translatable="yes">Record Ref.</property>
                       </object>
                       <packing>
-                        <property name="top_attach">8</property>
-                        <property name="bottom_attach">9</property>
+                        <property name="top_attach">7</property>
+                        <property name="bottom_attach">8</property>
                         <property name="x_options">GTK_FILL</property>
                       </packing>
                     </child>
@@ -1522,8 +1460,8 @@
                         <property name="label" translatable="yes">DB Ref.</property>
                       </object>
                       <packing>
-                        <property name="top_attach">10</property>
-                        <property name="bottom_attach">11</property>
+                        <property name="top_attach">9</property>
+                        <property name="bottom_attach">10</property>
                         <property name="x_options">GTK_FILL</property>
                       </packing>
                     </child>
@@ -1541,8 +1479,8 @@
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
-                        <property name="top_attach">10</property>
-                        <property name="bottom_attach">11</property>
+                        <property name="top_attach">9</property>
+                        <property name="bottom_attach">10</property>
                       </packing>
                     </child>
                     <child>
@@ -1563,37 +1501,6 @@
                         <property name="right_attach">2</property>
                         <property name="top_attach">6</property>
                         <property name="bottom_attach">7</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="trked_lbl_preforder">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="xalign">1</property>
-                        <property name="label" translatable="yes">Pref. order</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">7</property>
-                        <property name="bottom_attach">8</property>
-                        <property name="x_options">GTK_FILL</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="trked_entry_ipreforder">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="invisible_char">●</property>
-                        <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">7</property>
-                        <property name="bottom_attach">8</property>
                       </packing>
                     </child>
                   </object>
