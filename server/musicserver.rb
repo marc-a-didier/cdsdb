@@ -1,14 +1,14 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'socket'
-require 'ftools'
+require 'fileutils'
 require 'find'
 require 'singleton'
 
 require 'logger'
 
 require 'sqlite3'
-require 'taglib'
+require 'taglib2'
 require 'rexml/document'
 
 require '../shared/uiconsts'
@@ -30,6 +30,10 @@ class MusicServer
 
         Thread.abort_on_exception = true
 
+        Log::instance.info("Server started")
+        Log::instance.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
+        Log::instance.info("    SQLite3 #{`sqlite3 --version`}")
+        Log::instance.info("    Database #{Cfg::instance.db_version}")
         Log::instance.info("Server listening on host #{Cfg::instance.server} port #{Cfg::instance.port}.")
 
         # A bit of security...
