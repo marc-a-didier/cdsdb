@@ -255,16 +255,14 @@ class TracksBrowser < GenericBrowser
         @tv.selection.selected_each { |model, path, iter|
             DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rtrack=#{iter[TTV_REF]};")
         }
-        #@track.sql_load.to_widgets
-        @track.sql_load.to_widgets
+        @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
     end
 
     def set_rating(rating)
         @tv.selection.selected_each { |model, path, iter|
             DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rtrack=#{iter[TTV_REF]};")
         }
-        #@track.sql_load.to_widgets
-        @track.sql_load.to_widgets
+        @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
     end
 
     def check_for_audio_file
