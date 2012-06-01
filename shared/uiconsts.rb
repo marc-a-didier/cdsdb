@@ -110,6 +110,8 @@ module UIConsts
     ART_POPUP_ADD       = "apm_add"
     ART_POPUP_DEL       = "apm_del"
     ART_POPUP_EDIT      = "apm_edit"
+    ART_POPUP_INFOS     = "apm_infos"
+    
 #     ART_POPUP_VIEWALL   = "apm_view_all"
 #     ART_POPUP_VIEWRECS  = "apm_view_by_records"
 #     ART_POPUP_FILTER    = "apm_filter"
@@ -683,6 +685,19 @@ module UIConsts
     FLT_CMB_SELECTBY      = "flt_cmb_selectby"
     FLT_BTN_PLGEN         = "flt_btn_plgen"
 
+
+    DLG_ART_INFOS   = "dlg_art_infos"
+
+    ARTINFOS_LBL_RECCOUNT   = "artinfos_lbl_reccount"
+    ARTINFOS_LBL_COMPCOUNT  = "artinfos_lbl_compcount"
+    ARTINFOS_LBL_SEGCOUNT   = "artinfos_lbl_segcount"
+    ARTINFOS_LBL_TRKCOUNT   = "artinfos_lbl_trkcount"
+
+    ARTINFOS_LBL_RECPTIME   = "artinfos_lbl_recptime"
+    ARTINFOS_LBL_COMPPTIME  = "artinfos_lbl_compptime"
+    ARTINFOS_LBL_SEGPTIME   = "artinfos_lbl_segptime"
+    ARTINFOS_LBL_TRKPTIME   = "artinfos_lbl_trkptime"
+    
     #
     # Disabled controls when not in admin mode.
     #

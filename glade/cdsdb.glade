@@ -51,6 +51,17 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <child>
+      <object class="GtkImageMenuItem" id="apm_edit">
+        <property name="label">gtk-edit</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="accel_group">accelgroup1</property>
+      </object>
+    </child>
+    <child>
       <object class="GtkImageMenuItem" id="apm_add">
         <property name="label">gtk-add</property>
         <property name="use_action_appearance">False</property>
@@ -79,14 +90,13 @@
       </object>
     </child>
     <child>
-      <object class="GtkImageMenuItem" id="apm_edit">
-        <property name="label">gtk-edit</property>
+      <object class="GtkImageMenuItem" id="apm_infos">
+        <property name="label">gtk-info</property>
         <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
-        <property name="accel_group">accelgroup1</property>
       </object>
     </child>
   </object>
