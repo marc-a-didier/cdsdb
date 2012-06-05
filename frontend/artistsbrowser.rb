@@ -334,7 +334,7 @@ class ArtistsBrowser < GenericBrowser
     def select_artist(rartist, iter = nil)
         iter = @tvm.iter_first unless iter
         if iter.has_child?
-            if iter.first_child[2] #!= -1
+            if iter.first_child[2] != false
                 self.select_artist(rartist, iter.first_child)
             else
                 self.select_artist(rartist, iter) if iter.next!
@@ -365,14 +365,14 @@ class ArtistsBrowser < GenericBrowser
     # If first child ref is nil, it's a fake entry so load the true children
     def load_sub_tree(iter, force_reload = false)
         #return if iter.first_child && iter.first_child[0] != -1 && !force_reload
-        return if iter.first_child && iter.first_child[2] && !force_reload
-
+        return if iter.first_child && iter.first_child[2] != false && !force_reload
+# p iter.first_child[2].nil?
 puts "*** load new sub tree ***"        
         # La bidouille sur le sort accelere mechament les choses!!!
         @tvm.set_sort_column_id(0)
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
-        if iter.first_child && iter.first_child[2]
+        if iter.first_child && iter.first_child[2] != false
             @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
         end
             
