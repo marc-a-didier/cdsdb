@@ -5,7 +5,7 @@
 class GenRowProp
 
     attr_accessor :ref, :table, :max_level, :filtered, :where_fields, :title
-    
+
     def initialize(ref, table, max_level, filtered, where_fields, title)
         @ref = ref
         @table = table
@@ -23,9 +23,12 @@ class GenRowProp
         end
     end
 
-    # By default, post_select removes the first child which is the fake child
+    # By default, post_select removes the first child which is the fake child BUT
+    # depending on the sort order, the fake child is either the first child OR the second one.
+    # Test is done on iter[1] which is a string and nil if not initialized as it is the case
+    # when adding the fake child.
     def post_select(model, iter, mc)
-        model.remove(iter.first_child)
+        iter.first_child[1] ? model.remove(iter.nth_child(1)) : model.remove(iter.first_child)
     end
 
     def sub_filter(iter)
@@ -107,12 +110,12 @@ class AllArtistsRowProp < GenRowProp
         sql += "WHERE "+mc.main_filter.gsub(/^ AND/, "") unless mc.main_filter.empty?
         return sql
     end
-    
+
     def post_select(model, iter, mc)
         # If not showing compile, we must add the Compilations anyway or the show record
         # in browser feature from various popups/buttons won't work
         if mc.view_compile?
-            model.remove(iter.first_child)
+            super(model, iter, mc)
         else
             # We must keep track of the current first_child because when inserting the compilations
             # it's inserted BEFORE the first child since it's ref is 0.
@@ -157,7 +160,7 @@ class TagsRowProp < GenRowProp
         end
         return sql
     end
-    
+
     def sub_filter(iter)
         return " (#@where_fields & #{1 << iter.parent[0]}) <> 0 "
     end
@@ -203,7 +206,7 @@ class ArtistsBrowser < GenericBrowser
                      LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
                      RippedRowProp.new(6, "artists", 1, false, "records.rrecord", "Last ripped")]
 # TODO: add by rating  LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels")]
-    
+
     ATV_REF   = 0
     ATV_NAME  = 1
     ATV_CLASS = 2
@@ -237,7 +240,7 @@ class ArtistsBrowser < GenericBrowser
         @tvm = Gtk::TreeStore.new(Integer, String, Class, String)
 
         @tvs = nil # Intended to be a shortcut to @tv.selection.selected. Set in selection change
-        
+
         @tv.selection.signal_connect(:changed) { |widget| on_selection_changed(widget) }
         @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::ART_POPUP_MENU) }
 
@@ -334,7 +337,7 @@ class ArtistsBrowser < GenericBrowser
     def select_artist(rartist, iter = nil)
         iter = @tvm.iter_first unless iter
         if iter.has_child?
-            if iter.first_child[2] != false
+            if iter.first_child[1]
                 self.select_artist(rartist, iter.first_child)
             else
                 self.select_artist(rartist, iter) if iter.next!
@@ -347,7 +350,7 @@ class ArtistsBrowser < GenericBrowser
             @tv.set_cursor(iter.path, nil, false)
         end
     end
-    
+
     def map_sub_row_to_entry(row, iter)
         new_child = @tvm.append(iter)
         new_child[0] = row[0]
@@ -365,17 +368,19 @@ class ArtistsBrowser < GenericBrowser
     # If first child ref is nil, it's a fake entry so load the true children
     def load_sub_tree(iter, force_reload = false)
         #return if iter.first_child && iter.first_child[0] != -1 && !force_reload
-        return if iter.first_child && iter.first_child[2] != false && !force_reload
-# p iter.first_child[2].nil?
-puts "*** load new sub tree ***"        
-        # La bidouille sur le sort accelere mechament les choses!!!
+        return if iter.first_child && !iter.first_child[1].nil? #&& !force_reload
+
+puts "*** load new sub tree ***"
+        # Making the first column the sort column greatly speeds up things AND makes sure that the
+        # fake item is first in the store EXCEPT for all artists view since the Compilations
+        # item also has 0 as ID. In this case it's either the first or the second item.
         @tvm.set_sort_column_id(0)
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
-        if iter.first_child && iter.first_child[2] != false
+        if iter.nth_child(1) && !iter.nth_child(1)[1].nil? #.instance_of?(FalseClass) != false
             @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
         end
-            
+
         sql = iter[2].select_for_level(@tvm.iter_depth(iter), iter, @mc, @tvm)
 
         DBIntf::connection.execute(sql) { |row| map_sub_row_to_entry(row, iter) } unless sql.empty?
@@ -391,7 +396,7 @@ puts "*** load new sub tree ***"
     def on_row_expanded(widget, iter, path)
         load_sub_tree(iter)
     end
-    
+
     def on_selection_changed(widget)
         @tvs = @tv.selection.selected
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
