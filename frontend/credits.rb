@@ -7,9 +7,9 @@
 # You can redistribute it and/or modify it under the terms of
 # the Ruby's licence.
 
-require 'gnomecanvas2'
+# require 'gnomecanvas2'
 
-class ScrollingText < Gnome::Canvas
+class ScrollingText #< Gnome::Canvas
 	LineHeight= 16
 	ScrollSpeed= [50,1]
 
