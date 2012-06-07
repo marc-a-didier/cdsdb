@@ -23,12 +23,16 @@ class GenRowProp
         end
     end
 
-    # By default, post_select removes the first child which is the fake child BUT
-    # depending on the sort order, the fake child is either the first child OR the second one.
-    # Test is done on iter[1] which is a string and nil if not initialized as it is the case
-    # when adding the fake child.
+    # Add a fake child setting its ref to -1 so we're sure it's always the
+    # first child since db refs are always positive.
+    def append_fake_child(model, iter)
+        fake = model.append(iter)
+        fake[0] = -1
+    end
+
+    # By default, post_select removes the first child which is the fake child.
     def post_select(model, iter, mc)
-        iter.first_child[1] ? model.remove(iter.nth_child(1)) : model.remove(iter.first_child)
+        model.remove(iter.first_child)
     end
 
     def sub_filter(iter)
@@ -114,17 +118,11 @@ class AllArtistsRowProp < GenRowProp
     def post_select(model, iter, mc)
         # If not showing compile, we must add the Compilations anyway or the show record
         # in browser feature from various popups/buttons won't work
-        if mc.view_compile?
-            super(model, iter, mc)
-        else
-            # We must keep track of the current first_child because when inserting the compilations
-            # it's inserted BEFORE the first child since it's ref is 0.
-            fchild = iter.first_child
+        unless mc.view_compile?
             child = model.append(iter)
-#             child[0..3] = [0, "Compilations", iter[2], child[1]]
             child[0], child[1], child[2], child[3] = 0, "Compilations", iter[2], "Compilations"
-            model.remove(fchild)
         end
+        super(model, iter, mc)
     end
 
     def sub_filter(iter)
@@ -141,7 +139,7 @@ class TagsRowProp < GenRowProp
                 child[1] = "<i>#{tag}</i>"
                 child[2] = iter[2]
                 child[3] = tag
-                model.append(child) # Add a fake child
+                append_fake_child(model, child)
             }
             sql = ""
         elsif level == 1
@@ -173,23 +171,17 @@ class RippedRowProp < GenRowProp
                      INNER JOIN records ON records.rartist = artists.rartist
                      WHERE records.idateripped <> 0
                      ORDER BY records.idateripped DESC LIMIT 100;}
-            fchild = iter.first_child
             count = 0
             DBIntf::connection.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
                 child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+row[2]
                 child[2] = iter[2]
-                child[3] = ("%03d" % count)+row[3].to_s #dt.to_i.to_s
+                child[3] = ("%03d" % count)+row[3].to_s
                 count += 1
             }
-            model.remove(fchild)
         end
         return ""
-    end
-
-    # Iter removed in select: don't remove another child!
-    def post_select(model, iter, mc)
     end
 
     def sub_filter(iter)
@@ -241,7 +233,7 @@ class ArtistsBrowser < GenericBrowser
 
         @tvs = nil # Intended to be a shortcut to @tv.selection.selected. Set in selection change
 
-        @tv.selection.signal_connect(:changed) { |widget| on_selection_changed(widget) }
+        @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::ART_POPUP_MENU) }
 
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
@@ -301,7 +293,7 @@ class ArtistsBrowser < GenericBrowser
             iter[1] = "<b>#{entry.title}</b>"
             iter[2] = entry
             iter[3] = entry.title
-            @tvm.append(iter) # Append a fake child
+            entry.append_fake_child(@tvm, iter)
             load_sub_tree(iter) if entry.ref == 1 # Load subtree if all artists
         }
         @tv.model = @tvm
@@ -337,7 +329,7 @@ class ArtistsBrowser < GenericBrowser
     def select_artist(rartist, iter = nil)
         iter = @tvm.iter_first unless iter
         if iter.has_child?
-            if iter.first_child[1]
+            if iter.first_child[0] != -1
                 self.select_artist(rartist, iter.first_child)
             else
                 self.select_artist(rartist, iter) if iter.next!
@@ -359,16 +351,16 @@ class ArtistsBrowser < GenericBrowser
         new_child[3] = row[1]
         if @tvm.iter_depth(new_child) < iter[2].max_level
             new_child[1] = "<i>#{new_child[1]}</i>"
-            @tvm.append(new_child)
+            iter[2].append_fake_child(@tvm, new_child)
         end
     end
 
-    # Load children of iter. If it has childen and first child ref is not nil the children
+    # Load children of iter. If it has childen and first child ref is not -1 the children
     # are already loaded, so do nothing except if force_reload is set to true.
-    # If first child ref is nil, it's a fake entry so load the true children
+    # If first child ref is -1, it's a fake entry so load the true children
     def load_sub_tree(iter, force_reload = false)
-        #return if iter.first_child && iter.first_child[0] != -1 && !force_reload
-        return if iter.first_child && !iter.first_child[1].nil? #&& !force_reload
+
+        return if iter.first_child && iter.first_child[0] != -1 && !force_reload
 
 puts "*** load new sub tree ***"
         # Making the first column the sort column greatly speeds up things AND makes sure that the
@@ -377,7 +369,8 @@ puts "*** load new sub tree ***"
         @tvm.set_sort_column_id(0)
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
-        if iter.nth_child(1) && !iter.nth_child(1)[1].nil? #.instance_of?(FalseClass) != false
+        # If not force_reload, we have just one child, the fake entry, so don't remove it now
+        if force_reload #&& iter.nth_child(1)
             @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
         end
 
