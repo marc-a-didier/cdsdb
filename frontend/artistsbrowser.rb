@@ -234,7 +234,9 @@ class ArtistsBrowser < GenericBrowser
         @tvs = nil # Intended to be a shortcut to @tv.selection.selected. Set in selection change
 
         @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
-        @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::ART_POPUP_MENU) }
+        @tv.signal_connect(:button_press_event) { |widget, event|
+            show_popup(widget, event, UIConsts::ART_POPUP_MENU) if @tvs && @tvm.iter_depth(@tvs) == @tvs[2].max_level
+        }
 
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
 
@@ -242,47 +244,12 @@ class ArtistsBrowser < GenericBrowser
 #             model.iter_depth(iter) < iter[2].max_level
 #         }
 
-        @mc.glade[UIConsts::ART_POPUP_ADD].signal_connect(:activate)  { on_art_popup_add  }
-        @mc.glade[UIConsts::ART_POPUP_DEL].signal_connect(:activate)  { on_art_popup_del  }
-        @mc.glade[UIConsts::ART_POPUP_EDIT].signal_connect(:activate) { edit_artist       }
+        @mc.glade[UIConsts::ART_POPUP_ADD].signal_connect(:activate)   { on_art_popup_add   }
+        @mc.glade[UIConsts::ART_POPUP_DEL].signal_connect(:activate)   { on_art_popup_del   }
+        @mc.glade[UIConsts::ART_POPUP_EDIT].signal_connect(:activate)  { edit_artist        }
+        @mc.glade[UIConsts::ART_POPUP_INFOS].signal_connect(:activate) { show_artists_infos }
 
         return super
-    end
-
-    def generate_sql(rartist = -1)
-        # There's no need to sort by name in the sql statement, the list is re-ordered by the tree view
-
-        if @mc.glade[UIConsts::ART_POPUP_VIEWALL].active?
-            if @mc.main_filter.empty?
-                sql = "SELECT * FROM artists " # ORDER BY LOWER(sname)"
-            else
-                sql =  "SELECT artists.rartist, artists.sname FROM tracks " \
-                        "INNER JOIN records ON tracks.rrecord=records.rrecord " \
-                        "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                        "INNER JOIN artists ON artists.rartist=segments.rartist "
-            end
-        else
-            # Select artists that have at least one record, eliminating artists that only appear in compilations
-            sql = "SELECT DISTINCT (artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN records ON artists.rartist=records.rartist " \
-                    "INNER JOIN segments ON segments.rrecord=records.rrecord " \
-                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
-        end
-        if rartist == -1
-            unless @mc.main_filter.empty?
-                sql += "WHERE "+@mc.main_filter.gsub(/^ AND/, "") unless @mc.main_filter.empty?
-                sql += "GROUP BY artists.rartist;"
-            end
-        else
-            sql += "WHERE rartist=#{rartist};"
-        end
-
-        return sql
-    end
-
-    def map_row_to_entry(row, iter)
-        iter[ATV_REF]  = row[ROW_REF]
-        iter[ATV_NAME] = row[ROW_NAME]
     end
 
     def load_entries
@@ -305,17 +272,6 @@ class ArtistsBrowser < GenericBrowser
     def reload
         load_entries
         @mc.no_selection if position_to(@artist.rartist).nil?
-        return self
-    end
-
-    def load_selection
-        @tv.selection.selected.nil? ? @artist.reset : @artist.ref_load(@tv.selection.selected[ATV_REF])
-        return self
-    end
-
-    def update_entry
-        map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@artist.rartist)), @tv.selection.selected)
-        position_to(@artist.rartist)
         return self
     end
 
@@ -364,8 +320,7 @@ class ArtistsBrowser < GenericBrowser
 
 puts "*** load new sub tree ***"
         # Making the first column the sort column greatly speeds up things AND makes sure that the
-        # fake item is first in the store EXCEPT for all artists view since the Compilations
-        # item also has 0 as ID. In this case it's either the first or the second item.
+        # fake item is first in the store.
         @tvm.set_sort_column_id(0)
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
@@ -397,9 +352,8 @@ puts "*** load new sub tree ***"
         else
             @artist.ref_load(@tvs[ATV_REF])
         end
-        #load_selection.artist.to_widgets
         @artist.to_widgets
-        @artist.valid? ? @mc.artist_changed : @mc.invalidate_tabs #unless rartist == -1
+        @artist.valid? ? @mc.artist_changed : @mc.invalidate_tabs
     end
 
     def sub_filter
@@ -418,26 +372,41 @@ puts "*** load new sub tree ***"
     end
 
     def on_art_popup_del
-        iter = @tv.selection.selected
-        @tvm.remove(iter) if UIUtils::delete_artist(iter[ATV_REF]) == 0 if !iter.nil? && UIUtils::get_response("Sure to delete this artist?") == Gtk::Dialog::RESPONSE_OK
+        @tvm.remove(@tvs) if UIUtils::delete_artist(@tvs[ATV_REF]) == 0 if !@tvs.nil? && UIUtils::get_response("Sure to delete this artist?") == Gtk::Dialog::RESPONSE_OK
     end
 
     def on_art_popup_edit
-        @tv.set_cursor(@tv.selection.selected.path, @tv.columns[ATV_NAME], true) if @tv.selection.selected
+        @tv.set_cursor(@tvs.path, @tv.columns[ATV_NAME], true) if @tvs
     end
 
     def on_artist_edited(widget, path, new_text)
-        iter = @tv.selection.selected
-        if iter[ATV_NAME] != new_text
-            iter[ATV_NAME] = new_text
+        if @tvs[ATV_NAME] != new_text
+            @tvs[ATV_NAME] = new_text
             @artist.sname = new_text
             @artist.sql_update.to_widgets
-            #@mc.reposition_browsers
         end
     end
 
     def update_segment_artist(rartist)
         @seg_art.ref_load(rartist).to_widgets
+    end
+
+    def show_artists_infos
+        recs_infos = DBIntf::connection.get_first_row(
+            %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(records.iplaytime)), COUNT(tracks.rtrack) FROM records
+               INNER JOIN tracks ON tracks.rrecord=records.rrecord
+               WHERE rartist=#{@tvs[0]};})
+        comp_infos = DBIntf::connection.get_first_row(
+            %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(segments.iplaytime)), COUNT(tracks.rtrack) FROM records
+               INNER JOIN segments ON segments.rrecord=records.rrecord
+               INNER JOIN tracks ON tracks.rsegment=segments.rsegment
+               WHERE segments.rartist=#{@tvs[0]} AND records.rartist=0;})
+
+        glade = GTBld::load(UIConsts::DLG_ART_INFOS)
+        glade[UIConsts::ARTINFOS_LBL_RECS].text = recs_infos[0].to_s+" records, #{recs_infos[2]} tracks for "+Utils::format_day_length(recs_infos[1].to_i)
+        glade[UIConsts::ARTINFOS_LBL_COMPILES].text = comp_infos[0].to_s+" compilations, #{comp_infos[2]} tracks for "+Utils::format_day_length(comp_infos[1].to_i)
+        glade[UIConsts::DLG_ART_INFOS].show.run
+        glade[UIConsts::DLG_ART_INFOS].destroy
     end
 
 end

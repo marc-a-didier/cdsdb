@@ -47,8 +47,8 @@ module UIConsts
     MW_INFLBL_ARTIST    = "mw_inflbl_artist"
     MW_INFLBL_RECORD    = "mw_inflbl_record"
     MW_INFLBL_TRACK     = "mw_inflbl_track"
-    
-    
+
+
     # Record tab entries
     #ENTRY_CDID          = "rec_entry_cddbid"
 #     ENTRY_YEAR          = "rec_tab_entry_iyear"
@@ -111,7 +111,7 @@ module UIConsts
     ART_POPUP_DEL       = "apm_del"
     ART_POPUP_EDIT      = "apm_edit"
     ART_POPUP_INFOS     = "apm_infos"
-    
+
 #     ART_POPUP_VIEWALL   = "apm_view_all"
 #     ART_POPUP_VIEWRECS  = "apm_view_by_records"
 #     ART_POPUP_FILTER    = "apm_filter"
@@ -236,7 +236,7 @@ module UIConsts
     # Memos window controls
     #
     MEMO_NBOOK  =   "memo_nbook"
-    
+
 
 
     #
@@ -289,7 +289,7 @@ module UIConsts
     PLAY_HISTORY_DIALOG = "play_history_dialog"
     PH_TV               = "ph_tv"
     PH_CHARTS_LBL       = "tph_lbl_charts"
-    
+
     #
     # Track play list dialog
     #
@@ -414,44 +414,44 @@ module UIConsts
     # Filter generator dialog
     #
 #     FILTER_GENERATOR_DIALOG = "filter_generator_dialog"
-# 
+#
 #     FLTGEN_TV_TAGS          = "fltgen_tv_tags"
-# 
+#
 #     HS_PLAYED_WEIGHT        = "fltgen_hs_playedweight"
 #     LBL_PLAYED_WEIGHT       = "fltgen_lbl_val_playedweight"
 #     HS_MIN_PLAYED           = "fltgen_hs_minplayed"
 #     LBL_MIN_PLAYED          = "fltgen_lbl_val_minplayed"
 #     HS_MAX_PLAYED           = "fltgen_hs_maxplayed"
 #     LBL_MAX_PLAYED          = "fltgen_lbl_val_maxplayed"
-# 
+#
 #     HS_RATING_WEIGHT        = "fltgen_hs_ratingweight"
 #     LBL_RATING_WEIGHT       = "fltgen_lbl_val_ratingweight"
 #     HS_MIN_RATING           = "fltgen_hs_minrating"
 #     LBL_MIN_RATING          = "fltgen_lbl_val_minrating"
 #     HS_MAX_RATING           = "fltgen_hs_maxrating"
 #     LBL_MAX_RATING          = "fltgen_lbl_val_maxrating"
-# 
+#
 #     HS_MIN_DURATION         = "fltgen_hs_minduration"
 #     LBL_MIN_DURATION        = "fltgen_lbl_val_minduration"
 #     HS_MAX_DURATION         = "fltgen_hs_maxduration"
 #     LBL_MAX_DURATION        = "fltgen_lbl_val_maxduration"
-# 
+#
 #     FLTGEN_LBL_GENRES       = "fltgen_lbl_genres"
 #     FLTGEN_LBL_COUNTRIES    = "fltgen_lbl_countries"
 #     FLTGEN_LBL_LABELS       = "fltgen_lbl_labels"
 #     FLTGEN_LBL_MEDIA        = "fltgen_lbl_media"
-# 
+#
 #     FLTGEN_BTN_GENRES       = "fltgen_btn_genres"
 #     FLTGEN_BTN_COUNTRIES    = "fltgen_btn_countries"
 #     FLTGEN_BTN_LABELS       = "fltgen_btn_labels"
 #     FLTGEN_BTN_MEDIA        = "fltgen_btn_media"
-# 
+#
 #     FLTGEN_CMB_SELECTBY     = "fltgen_cmb_selectby"
 #     FLTGEN_CB_PLAYED        = "fltgen_cb_played"
 #     FLTGEN_CB_RATING        = "fltgen_cb_rating"
 #     FLTGEN_CB_MATCHALL      = "fltgen_cb_matchall"
 #     FLTGEN_SB_MAXENTRIES    = "fltgen_sb_maxentries"
-# 
+#
 #     FLTGEN_CHK_FROMDATE		= "fltgen_chk_fromdate"
 # 	FLTGEN_ENTRY_FROMDATE	= "fltgen_entry_fromdate"
 # 	FLTGEN_BTN_FROMDATE		= "fltgen_btn_fromdate"
@@ -528,7 +528,7 @@ module UIConsts
     DBED_NBOOK      = "dbed_nbook"
     DBED_BTN_OK     = "dbed_btn_ok"
     DBED_BTN_CANCEL = "dbed_btn_cancel"
-    
+
 
     #
     # Artist editor dialog
@@ -659,7 +659,7 @@ module UIConsts
     FTV_GENRES          = "ftv_genres"
     FTV_ORIGINS         = "ftv_origins"
     FTV_MEDIAS          = "ftv_medias"
-    
+
     FLT_CB_MATCHALL     = "flt_cb_matchall"
     FLT_CMB_MINRATING   = "flt_cmb_minrating"
     FLT_CMB_MAXRATING   = "flt_cmb_maxrating"
@@ -688,16 +688,10 @@ module UIConsts
 
     DLG_ART_INFOS   = "dlg_art_infos"
 
-    ARTINFOS_LBL_RECCOUNT   = "artinfos_lbl_reccount"
-    ARTINFOS_LBL_COMPCOUNT  = "artinfos_lbl_compcount"
-    ARTINFOS_LBL_SEGCOUNT   = "artinfos_lbl_segcount"
-    ARTINFOS_LBL_TRKCOUNT   = "artinfos_lbl_trkcount"
+    ARTINFOS_LBL_RECS      = "artinfos_lbl_recs"
+    ARTINFOS_LBL_COMPILES  = "artinfos_lbl_compiles"
+    ARTINFOS_LBL_TOTAL     = "artinfos_lbl_total"
 
-    ARTINFOS_LBL_RECPTIME   = "artinfos_lbl_recptime"
-    ARTINFOS_LBL_COMPPTIME  = "artinfos_lbl_compptime"
-    ARTINFOS_LBL_SEGPTIME   = "artinfos_lbl_segptime"
-    ARTINFOS_LBL_TRKPTIME   = "artinfos_lbl_trkptime"
-    
     #
     # Disabled controls when not in admin mode.
     #
