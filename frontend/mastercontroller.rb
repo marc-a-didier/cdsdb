@@ -20,7 +20,6 @@ class MasterController
 
 
     def initialize(path_or_data, root, domain)
-        #@glade = GladeXML.new(path_or_data, root, domain, nil, GladeXML::FILE) { |handler| method(handler) }
         @glade = GTBld.main
 
 
@@ -28,7 +27,6 @@ class MasterController
         @st_icon.stock = Gtk::Stock::CDROM
         if @st_icon.respond_to?(:has_tooltip=) # To keep compat with gtk2 < 2.16
             @st_icon.has_tooltip = true
-            #@st_icon.signal_connect('activate'){|icon| icon.blinking=!(icon.blinking?)}
             @st_icon.signal_connect(:query_tooltip) { |si, x, y, is_kbd, tool_tip| show_tooltip(si, x, y, is_kbd, tool_tip); true }
         end
         @st_icon.signal_connect(:popup_menu) { |tray, button, time|
@@ -61,9 +59,7 @@ class MasterController
         Gtk::IconTheme.add_builtin_icon("tasks_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"tasks.png"))
         Gtk::IconTheme.add_builtin_icon("filter_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"filter.png"))
         Gtk::IconTheme.add_builtin_icon("memos_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"document-edit.png"))
-#         Gtk::IconTheme.add_builtin_icon("audio_cd_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"audio-cd.png"))
-#         Gtk::IconTheme.add_builtin_icon("import_sql_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"import-sql.png"))
-#         Gtk::IconTheme.add_builtin_icon("import_audio_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"import-audio.png"))
+
         @glade[UIConsts::MW_TBBTN_APPFILTER].icon_name  = "information_icon"
         @glade[UIConsts::MW_TBBTN_TASKS].icon_name  = "tasks_icon"
         @glade[UIConsts::MW_TBBTN_FILTER].icon_name = "filter_icon"
@@ -85,10 +81,6 @@ class MasterController
         # Load view menu before instantiating windows (plists case)
         Prefs::instance.load_menu_state(self, @glade[UIConsts::VIEW_MENU])
 
-        # For filter, force it to be unchecked and connect signal after
-#         @glade[UIConsts::MW_APPFILTER_ACTION].active = false
-#         @glade[UIConsts::MW_APPFILTER_ACTION].signal_connect(:activate)  { set_main_filter }
-        
         #
         # Create never destroyed windows
         #
@@ -158,12 +150,6 @@ class MasterController
 
         @glade[UIConsts::REC_VP_IMAGE].signal_connect("button_press_event") { zoom_rec_image }
 
-#        @glade[UIConsts::MW_TBBTN_INFOS].signal_connect(:clicked)      { show_informations }
-#         @glade[UIConsts::MW_TBBTN_CHECKCD].signal_connect(:clicked)    { CDEditorWindow.new.edit_record }
-#         @glade[UIConsts::MW_TBBTN_IMPORTSQL].signal_connect(:clicked)  { @glade[UIConsts::MM_FILE_IMPORTSQL].send(:activate) }
-#         @glade[UIConsts::MW_TBBTN_IMPORTFILE].signal_connect(:clicked) { @glade[UIConsts::MM_FILE_IMPORTAUDIO].send(:activate) }
-
-
         @glade[UIConsts::MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
         @glade[UIConsts::MAIN_WINDOW].signal_connect(:delete_event) { clean_up; false }
         @glade[UIConsts::MAIN_WINDOW].signal_connect(:show)         { Prefs::instance.load_main(@glade, UIConsts::MAIN_WINDOW) }
@@ -171,7 +157,7 @@ class MasterController
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         @glade[UIConsts::MAIN_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE) # It took me ages to research this
         @glade[UIConsts::MAIN_WINDOW].signal_connect("focus_in_event") { |widget, event| @filter_receiver = self; false }
-        
+
         # Status icon popup menu
         @glade[UIConsts::TTPM_ITEM_PLAY].signal_connect(:activate)  { @glade[UIConsts::PLAYER_BTN_START].send(:clicked) }
         @glade[UIConsts::TTPM_ITEM_PAUSE].signal_connect(:activate) { @glade[UIConsts::PLAYER_BTN_START].send(:clicked) }
@@ -273,7 +259,6 @@ class MasterController
     # calling the callback associated!
     #
     def update_tags_menu(pm_owner, menu_item)
-        #@trk_browser.iter_first.nil? ? tags = 0 : tags = @track.itags
         @pm_owner = pm_owner
         tags = track.itags
         i = 1
@@ -355,7 +340,7 @@ class MasterController
         @rec_browser.invalidate
         @trk_browser.invalidate
     end
-    
+
     def sub_filter
         return @art_browser.sub_filter
     end
@@ -398,17 +383,6 @@ class MasterController
     #
     # Filter management
     #
-    def set_main_filter
-        # Condition is inverted because the signal is received before the action takes place
-        @main_filter = @glade[UIConsts::MW_APPFILTER_ACTION].active? ? @filter.generate_filter(false) : ""
-
-        # Try to reposition on the same track
-        lrtrack = @trk_browser.track.rtrack
-        #@must_join_logtracks = must_join_logtracks
-        @art_browser.reload
-        select_track(lrtrack) unless lrtrack == -1
-    end
-
     def set_filter(where_clause, must_join_logtracks)
         if (where_clause != @main_filter)
             lrtrack = @trk_browser.track.rtrack
@@ -423,12 +397,6 @@ class MasterController
         @plists.reload
     end
 
-    def on_show_main_filter
-        flt_gen = FilterGeneratorDialog.new
-        set_main_filter(flt_gen.get_filter) unless flt_gen.show(FilterGeneratorDialog::MODE_FILTER) == Gtk::Dialog::RESPONSE_CANCEL
-        flt_gen.destroy
-    end
-
 
     def import_sql_file
         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| DBUtils::client_sql(line.chomp) }
@@ -437,14 +405,14 @@ class MasterController
     end
 
 
-    def select_dialog(tbl_id, dbclass, dbfield)
-        value = DBSelectorDialog.new.run(tbl_id)
-        unless value == -1
-            dbclass.send(dbfield, value)
-            dbclass.sql_update.to_widgets
-        end
-        return value != -1
-    end
+#     def select_dialog(tbl_id, dbclass, dbfield)
+#         value = DBSelectorDialog.new.run(tbl_id)
+#         unless value == -1
+#             dbclass.send(dbfield, value)
+#             dbclass.sql_update.to_widgets
+#         end
+#         return value != -1
+#     end
 
     def enqueue_record
         @trk_browser.get_tracks_list.each { |rtrack| @pqueue.enqueue(rtrack) }
@@ -458,24 +426,9 @@ class MasterController
         return @trk_browser.get_drag_tracks
     end
 
-#     def show_informations
-#         case @glade[UIConsts::NB_NOTEBOOK].page
-#             when 0 then @rec_browser.edit_record
-#             when 1 then @rec_browser.edit_segment
-#             when 2 then @trk_browser.edit_track
-#             when 3 then @art_browser.edit_artist
-#         end
-#     end
-
     def on_save_item
-#         case @glade[UIConsts::NB_NOTEBOOK].page
-#             when 0 then record.from_widgets.sql_update.field_to_widget("mnotes")
-#             when 1 then segment.from_widgets.sql_update.field_to_widget("mnotes")
-#             when 2 then track.from_widgets.sql_update.field_to_widget("mnotes")
-#             when 3 then artist.from_widgets.sql_update.field_to_widget("mnotes")
-#         end
         # If there's no change the db is not updated so we can do it in batch
-puts "*** save memos called"        
+puts "*** save memos called"
         [record, segment, track, artist].each { |uiclass| uiclass.from_widgets.sql_update }
     end
 
@@ -541,8 +494,7 @@ puts "*** save memos called"
         return if cover_name.empty?
         dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
         dlg.vbox.add(Gtk::Image.new(cover_name))
-        dlg.show_all
-        dlg.run
+        dlg.show_all.run
         dlg.destroy
     end
 

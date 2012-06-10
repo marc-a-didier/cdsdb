@@ -40,7 +40,6 @@ module UIConsts
     MW_FILTER_ACTION    = "mw_filter_action"
     MW_MEMOS_ACTION     = "mw_memos_action"
     MW_MEMO_SAVE_ACTION = "mw_memo_save_action"
-#     MW_APPFILTER_ACTION = "mw_appfilter_action"
 
     #
     # Main window browser infos bars
@@ -49,60 +48,9 @@ module UIConsts
     MW_INFLBL_TRACK     = "mw_inflbl_track"
 
 
-    # Record tab entries
-    #ENTRY_CDID          = "rec_entry_cddbid"
-#     ENTRY_YEAR          = "rec_tab_entry_iyear"
-#     ENTRY_REFERENCE     = "rec_tab_entry_scatalog"
-#     ENTRY_LABEL         = "rec_tab_lkentry_rlabel"
-#     ENTRY_SETNO         = "rec_tab_entry_isetorder"
-#     ENTRY_SETOF         = "rec_tab_entry_isetof"
-#     ENTRY_COLLECTION    = "rec_tab_lkentry_rcollection"
-#     ENTRY_GENRE         = "rec_tab_lkentry_rgenre"
-#     ENTRY_ARTIST        = "rec_tab_lkentry_rartist"
-#     ENTRY_TITLE         = "rec_tab_entry_stitle"
-#     ENTRY_RECDURATION   = "rec_tab_timeentry_iplaytime"
-#     ENTRY_REC_MEDIA     = "rec_tab_lkentry_rmedia"
-#     TEXTVIEW_RECORD     = "rec_tab_txtview_mnotes"
-#     CB_SET              = "rec_tab_cb_iisinset"
-#     REC_BTN_ARTIST      = "rec_tab_btn_artist"
-#     REC_BTN_LABEL       = "rec_tab_btn_label"
-#     REC_BTN_GENRE       = "rec_tab_btn_genre"
-#     REC_BTN_COLLECTION  = "rec_tab_btn_collection"
-#     REC_BTN_PLAYHISTORY = "rec_tab_btn_playhistory"
     REC_IMAGE           = "rec_image"
     REC_VP_IMAGE        = "rec_vp_image"
 
-
-    # Segment tab entries
-#     ENTRY_NOINDEX       = "seg_tab_entry_iorder"
-#     ENTRY_SEGTITLE      = "seg_tab_entry_stitle"
-#     ENTRY_IXDURATION    = "seg_tab_timeentry_iplaytime"
-#     ENTRY_IXARTIST      = "seg_tab_lkentry_rartist"
-#     TEXTVIEW_SEGMENT    = "seg_tab_txtview_mnotes"
-#     SEG_BTN_ARTIST      = "seg_tab_btn_artist"
-
-
-    # Track tab entries
-#     ENTRY_TRACKNO         = "trk_tab_entry_iorder"
-#     ENTRY_TRACKTITLE      = "trk_tab_entry_stitle"
-#     ENTRY_TRACKLEN        = "trk_tab_timeentry_iplaytime"
-#     ENTRY_TRACKPLAYCOUNT  = "trk_tab_entry_iplayed"
-#     ENTRY_TRACKLASTPLAYED = "trk_tab_dateentry_ilastplayed"
-#     TRK_CMB_RATING        = "trk_tab_cmb_irating"
-#     TEXTVIEW_TRACK        = "trk_tab_txtview_mnotes"
-#     TRK_BTN_AUDIOFILE     = "trk_tab_btn_audiofile"
-#     TRK_BTN_PLAYHISTORY   = "trk_tab_btn_playhistory"
-#     TRK_BTN_PLAYLISTS     = "trk_tab_btn_playlists"
-#     TRK_TV_TAGS           = "trk_tab_tv_itags"
-
-
-    # Artist tab entries
-#     ENTRY_ARTARTIST       = "art_tab_entry_rartist"
-#     ENTRY_ARTORIGIN       = "art_tab_lkentry_rorigin"
-#     ENTRY_ARTWEBSITE      = "art_tab_entry_swebsite"
-#     ENTRY_ARTREFART       = "art_tab_entry_sref"
-#     TEXTVIEW_ARTIST       = "art_tab_txtview_mnotes"
-#     ART_BTN_ORIGIN        = "art_tab_btn_origin"
 
 
     # Artists browser popup menu
@@ -112,10 +60,6 @@ module UIConsts
     ART_POPUP_EDIT      = "apm_edit"
     ART_POPUP_INFOS     = "apm_infos"
 
-#     ART_POPUP_VIEWALL   = "apm_view_all"
-#     ART_POPUP_VIEWRECS  = "apm_view_by_records"
-#     ART_POPUP_FILTER    = "apm_filter"
-#     ART_POPUP_FILTERCLR = "apm_clear_filter"
 
     # Records/Segments browser popup menu
     REC_POPUP_MENU      = "rpm_menu"
@@ -180,7 +124,6 @@ module UIConsts
     MM_VIEW_TRACKINDEX          = "mm_view_trackindex"
     MM_VIEW_SEGTITLE            = "mm_view_segtitle"
     MM_VIEW_BYRATING            = "mm_view_byrating"
-#     MM_VIEW_FILTER              = "mm_view_filter"
     MM_VIEW_COMPILE             = "mm_view_compile"
     MM_VIEW_DBREFS              = "mm_view_dbrefs"
 
@@ -206,8 +149,8 @@ module UIConsts
     MM_TOOLS_SYNCDB             = "mm_tools_syncdb"
     MM_TOOLS_SYNCRES            = "mm_tools_syncres"
     MM_TOOLS_EXPORTDB           = "mm_tools_exportdb"
-    MM_TOOLS_GENREORDER		    = "mm_tools_genreorder"
-    MM_TOOLS_RATINGSTEST	    = "mm_tools_testratings"
+    MM_TOOLS_GENREORDER		     = "mm_tools_genreorder"
+    MM_TOOLS_RATINGSTEST	     = "mm_tools_testratings"
     MM_TOOLS_FULLSTATS          = "mm_tools_fullstats"
     MM_TOOLS_DBSTATS            = "mm_tools_dbstats"
     MM_TOOLS_CHARTS             = "mm_tools_charts"
@@ -341,9 +284,7 @@ module UIConsts
     PREFS_ENTRY_NOTIFDURATION   = "prefs_entry_notifduration"
     PREFS_CB_LIVEUPDATE         = "prefs_cb_liveupdate"
     PREFS_CB_LOGTRACKFILE       = "prefs_cb_logtrackfile"
-#     PREFS_CHKBTN_SYNCDLS        = "prefs_chkbtn_syncdls"
     PREFS_ENTRY_MAXITEMS        = "prefs_entry_maxitems"
-#     PREFS_CB_SYSRAND            = "prefs_cb_sysrandom"
     PREFS_CD_DEVICE             = "prefs_entry_cddevice"
 
     #
@@ -367,7 +308,6 @@ module UIConsts
     PL_MB_SAVE          = "pl_mb_save"
     PL_MB_DELETE        = "pl_mb_delete"
     PL_MB_INFOS         = "pl_mb_infos"
-#     PL_MB_GENERATE      = "pl_mb_generate"
     PL_MB_EXPORT_XSPF   = "pl_mb_export_xspf"
     PL_MB_EXPORT_M3U    = "pl_mb_export_m3u"
     PL_MB_EXPORT_PLS    = "pl_mb_export_pls"
@@ -404,61 +344,6 @@ module UIConsts
     PQ_LBL_PTIME        = "pq_lbl_ptime"
     PQ_LBL_ETA          = "pq_lbl_eta"
 
-    #
-    # Multi choice db selector dialog
-    #
-    MCDB_DIALOG         = "mcdb_select_dialog"
-    MCDB_TV             = "mcdb_tv"
-
-    #
-    # Filter generator dialog
-    #
-#     FILTER_GENERATOR_DIALOG = "filter_generator_dialog"
-#
-#     FLTGEN_TV_TAGS          = "fltgen_tv_tags"
-#
-#     HS_PLAYED_WEIGHT        = "fltgen_hs_playedweight"
-#     LBL_PLAYED_WEIGHT       = "fltgen_lbl_val_playedweight"
-#     HS_MIN_PLAYED           = "fltgen_hs_minplayed"
-#     LBL_MIN_PLAYED          = "fltgen_lbl_val_minplayed"
-#     HS_MAX_PLAYED           = "fltgen_hs_maxplayed"
-#     LBL_MAX_PLAYED          = "fltgen_lbl_val_maxplayed"
-#
-#     HS_RATING_WEIGHT        = "fltgen_hs_ratingweight"
-#     LBL_RATING_WEIGHT       = "fltgen_lbl_val_ratingweight"
-#     HS_MIN_RATING           = "fltgen_hs_minrating"
-#     LBL_MIN_RATING          = "fltgen_lbl_val_minrating"
-#     HS_MAX_RATING           = "fltgen_hs_maxrating"
-#     LBL_MAX_RATING          = "fltgen_lbl_val_maxrating"
-#
-#     HS_MIN_DURATION         = "fltgen_hs_minduration"
-#     LBL_MIN_DURATION        = "fltgen_lbl_val_minduration"
-#     HS_MAX_DURATION         = "fltgen_hs_maxduration"
-#     LBL_MAX_DURATION        = "fltgen_lbl_val_maxduration"
-#
-#     FLTGEN_LBL_GENRES       = "fltgen_lbl_genres"
-#     FLTGEN_LBL_COUNTRIES    = "fltgen_lbl_countries"
-#     FLTGEN_LBL_LABELS       = "fltgen_lbl_labels"
-#     FLTGEN_LBL_MEDIA        = "fltgen_lbl_media"
-#
-#     FLTGEN_BTN_GENRES       = "fltgen_btn_genres"
-#     FLTGEN_BTN_COUNTRIES    = "fltgen_btn_countries"
-#     FLTGEN_BTN_LABELS       = "fltgen_btn_labels"
-#     FLTGEN_BTN_MEDIA        = "fltgen_btn_media"
-#
-#     FLTGEN_CMB_SELECTBY     = "fltgen_cmb_selectby"
-#     FLTGEN_CB_PLAYED        = "fltgen_cb_played"
-#     FLTGEN_CB_RATING        = "fltgen_cb_rating"
-#     FLTGEN_CB_MATCHALL      = "fltgen_cb_matchall"
-#     FLTGEN_SB_MAXENTRIES    = "fltgen_sb_maxentries"
-#
-#     FLTGEN_CHK_FROMDATE		= "fltgen_chk_fromdate"
-# 	FLTGEN_ENTRY_FROMDATE	= "fltgen_entry_fromdate"
-# 	FLTGEN_BTN_FROMDATE		= "fltgen_btn_fromdate"
-#     FLTGEN_CHK_TODATE		= "fltgen_chk_todate"
-# 	FLTGEN_ENTRY_TODATE		= "fltgen_entry_todate"
-# 	FLTGEN_BTN_TODATE		= "fltgen_btn_todate"
-
 
     #
     # Charts window
@@ -474,8 +359,6 @@ module UIConsts
     CHARTS_MM_COUNTRIES     = "charts_mm_countries"
     CHARTS_MM_PLAYED        = "charts_mm_played"
     CHARTS_MM_TIME          = "charts_mm_time"
-#     CHARTS_MM_FILTER        = "charts_mm_filter"
-#     CHARTS_MM_CLEAR_FILTER  = "charts_mm_clear_filter"
     CHARTS_MM_CLOSE         = "charts_mm_close"
 
     CHARTS_PM               = "charts_pm"
@@ -533,7 +416,6 @@ module UIConsts
     #
     # Artist editor dialog
     #
-#     DLG_ART_EDITOR      = "dlg_art_editor"
 
     ARTED_ENTRY_ARTIST  = "arted_entry_sname"
     ARTED_ENTRY_WEBSITE = "arted_entry_swebsite"
@@ -549,7 +431,6 @@ module UIConsts
     #
     # Record editor dialog
     #
-#     DLG_REC_EDITOR          = "dlg_rec_editor"
 
     RECED_ENTRY_ARTIST      = "reced_lkentry_rartist"
     RECED_ENTRY_TITLE       = "reced_entry_stitle"
@@ -560,14 +441,12 @@ module UIConsts
     RECED_ENTRY_CAT         = "reced_entry_scatalog"
     RECED_ENTRY_CDDBID      = "reced_entry_icddbid"
     RECED_ENTRY_MEDIUM      = "reced_lkentry_rmedia"
-#     RECED_CHKBTN_SET        = "reced_cb_iisinset"
     RECED_ENTRY_SETORDER    = "reced_entry_isetorder"
     RECED_ENTRY_SETOF       = "reced_entry_isetof"
     RECED_ENTRY_COLLECTION  = "reced_lkentry_rcollection"
     RECED_ENTRY_ADDED       = "reced_dateentry_idateadded"
     RECED_ENTRY_RIPPED      = "reced_dateentry_idateripped"
     RECED_CHKBTN_SEGMENTED  = "reced_cb_iissegmented"
-#     RECED_CHKBTN_COMPILE    = "reced_cb_iiscompile"
     RECED_ENTRY_DBREF       = "reced_entry_rrecord"
 
     RECED_BTN_ARTIST        = "reced_btn_artist"
@@ -584,7 +463,6 @@ module UIConsts
     #
     # Segment editor dialog
     #
-#     DLG_SEG_EDITOR      = "dlg_seg_editor"
 
     SEGED_ENTRY_ARTIST  = "seged_lkentry_rartist"
     SEGED_ENTRY_TITLE   = "seged_entry_stitle"
@@ -603,17 +481,14 @@ module UIConsts
     #
     # Track editor dialog
     #
-#     DLG_TRK_EDITOR          = "dlg_trk_editor"
 
     TRKED_ENTRY_ORDER       = "trked_entry_iorder"
     TRKED_ENTRY_TITLE       = "trked_entry_stitle"
     TRKED_ENTRY_PTIME       = "trked_timeentry_iplaytime"
     TRKED_ENTRY_SEGORDER    = "trked_entry_isegorder"
     TRKED_CMB_RATING        = "trked_cmb_irating"
-    #TRKED_CMB_TAGS          = "trked_cmb_tags"
     TRKED_ENTRY_PLAYED      = "trked_entry_iplayed"
     TRKED_ENTRY_LASTPLAYED  = "trked_dateentry_ilastplayed"
-#     TRKED_ENTRY_PREFORDER   = "trked_entry_ipreforder"
     TRKED_ENTRY_RECREF      = "trked_entry_rrecord"
     TRKED_ENTRY_SEGREF      = "trked_entry_rsegment"
     TRKED_ENTRY_DBREF       = "trked_entry_rtrack"
@@ -636,15 +511,6 @@ module UIConsts
     #
 
     FILTER_WINDOW       = "filter_window"
-
-#     FLT_CB_PCOUNT       = "flt_cb_pcount"
-#     FLT_CB_RATING       = "flt_cb_rating"
-#     FLT_CB_PLAYTIME     = "flt_cb_playtime"
-#     FLT_CB_PLAYDATES    = "flt_cb_playdates"
-#     FLT_CB_TAGS         = "flt_cb_tags"
-#     FLT_CB_GENRES       = "flt_cb_genres"
-#     FLT_CB_ORIGINS      = "flt_cb_origins"
-#     FLT_CB_MEDIAS       = "flt_cb_medias"
 
     FLT_EXP_PCOUNT       = "flt_exp_pcount"
     FLT_EXP_RATING       = "flt_exp_rating"
@@ -669,8 +535,6 @@ module UIConsts
     FLT_ENTRY_TODATE    = "flt_entry_todate"
     FLT_BTN_APPLY       = "flt_btn_apply"
     FLT_BTN_CLEAR       = "flt_btn_clear"
-#     FLT_BTN_SELALL      = "flt_btn_selall"
-#     FLT_BTN_DESELALL    = "flt_btn_deselall"
     FLT_SPIN_MINP       = "flt_spin_minp"
     FLT_SPIN_MAXP       = "flt_spin_maxp"
 
