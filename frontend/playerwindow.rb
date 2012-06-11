@@ -30,7 +30,7 @@ class PlayerWindow < TopWindow
 
         @pstate = {false => Gtk::Stock::MEDIA_PLAY, true => Gtk::Stock::MEDIA_PAUSE}
         @player_data = nil
-        
+
         @track_infos = TrackInfos.new
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
@@ -39,6 +39,8 @@ class PlayerWindow < TopWindow
 
         @time_view_mode = ELAPSED
         @total_time = 0
+
+        @default_img = Cfg::instance.covers_dir+"default.png"
 
         init_player
     end
@@ -98,7 +100,7 @@ class PlayerWindow < TopWindow
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i gtk-dialog-info 'Info:' 'End of play list'")
+                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{@default_img} 'CDs DB' 'End of play list'")
             end
         else
             @track_infos.from_tags(@player_data.fname)
@@ -112,7 +114,9 @@ class PlayerWindow < TopWindow
             @playbin.play
             setup_hscale
             if Cfg::instance.notifications?
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i gtk-dialog-info 'Now playing:' \"#{UIUtils::tags_html_track_title(@track_infos, "\n")}\"")
+                file_name = Utils::get_cover_file_name(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink)
+                file_name = @default_img if file_name.empty?
+                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{UIUtils::tags_html_track_title(@track_infos, "\n")}\"")
             end
         end
     end
