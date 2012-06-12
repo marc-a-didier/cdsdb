@@ -113,6 +113,11 @@ class MusicServer
         DBUtils::log_exec(session.gets.chomp, session.peeraddr(:hostname)[2])
     end
 
+    def exec_batch(session)
+        session.puts("OK")
+        DBUtils::exec_batch(session.gets.chomp.gsub(/\\n/, "\n"), session.peeraddr(:hostname)[2])
+    end
+
     def synchronize_resources(session)
         session.puts("OK")
         Cfg::DIR_NAMES[0..2].each { |name|

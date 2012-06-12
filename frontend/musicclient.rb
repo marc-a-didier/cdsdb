@@ -77,6 +77,16 @@ puts("get db version")
         socket.close
     end
 
+    def exec_batch(sql)
+        return unless socket = get_connection
+        socket.puts("exec batch")
+        if socket.gets.chomp == "OK"
+            puts "OK"
+            socket.puts(sql.gsub(/\n/, '\n'))
+        end
+        socket.close
+    end
+
     def renumber_play_list(rplist)
         return unless socket = get_connection
         socket.puts("renumber play list")

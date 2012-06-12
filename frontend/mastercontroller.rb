@@ -401,27 +401,13 @@ class MasterController
 
 
     def import_sql_file
-#         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| DBUtils::client_sql(line.chomp) }
         batch = ""
-        IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line|
-            line.chomp!
-            DBUtils::log_exec(line)
-            batch += line+'\n';
-        }
-        Thread.new { MusicClient.new.exec_batch(batch) }
+        IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| batch += line }
+        DBUtils::exec_batch(batch, Socket::gethostname)
         @art_browser.reload
         select_record(record.get_last_id) # The best guess to find the imported record
     end
 
-
-#     def select_dialog(tbl_id, dbclass, dbfield)
-#         value = DBSelectorDialog.new.run(tbl_id)
-#         unless value == -1
-#             dbclass.send(dbfield, value)
-#             dbclass.sql_update.to_widgets
-#         end
-#         return value != -1
-#     end
 
     def enqueue_record
         @trk_browser.get_tracks_list.each { |rtrack| @pqueue.enqueue(rtrack) }

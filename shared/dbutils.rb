@@ -29,6 +29,16 @@ class DBUtils
         Thread.new { MusicClient.new.exec_sql(sql) } if Cfg::instance.remote?
     end
 
+    def DBUtils::exec_batch(sql, host)
+        DBIntf::connection.transaction { |db|
+            db.execute_batch(sql)
+            Log::instance.info(sql+" [#{host}]")
+        }
+        MusicClient.new.exec_batch(sql) if Cfg::instance.remote?
+        # May be dangerous to spawn a thread... if request made on the record being inserted,
+        # don't know what happen...
+#         Thread.new { MusicClient.new.exec_batch(sql) } if Cfg::instance.remote?
+    end
 
     def DBUtils::get_last_id(short_tbl_name)
         id = DBIntf::connection.get_first_value("SELECT MAX(r#{short_tbl_name}) FROM #{short_tbl_name}s")

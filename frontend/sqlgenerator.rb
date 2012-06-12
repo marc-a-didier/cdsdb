@@ -133,7 +133,7 @@ class SQLGenerator
             row = nil #DBIntf::connection.get_first_row("SELECT * FROM segments WHERE LOWER(stitle)=LOWER(#{@discinfo[value[1]][2].to_sql}) AND rartist=#{@hartists[@discinfo[value[1]][3]]} AND rrecord=#{@recordid}")
             if row.nil?
                 rsegment += 1
-                @is_segmented ? seg_title = @discinfo[value[HS_ARTIST]][DI_SEGMENT] : seg_title = @seg_title
+                seg_title = @is_segmented ? @discinfo[value[HS_ARTIST]][DI_SEGMENT] : @seg_title
                 @sqlf << "INSERT INTO segments (rsegment, rrecord, rartist, iorder, stitle, iplaytime) " \
                             "VALUES (#{rsegment}, #{@recordid}, " \
                             "#{@hartists[@discinfo[value[HS_ARTIST]][DI_ARTIST]]}, #{value[HS_ORDER]}, " \
@@ -150,7 +150,7 @@ class SQLGenerator
         rtrack = DBUtils::get_last_id("track")
         @tracks.each_with_index do |track, i|
             if @is_segmented
-                (i == 0 || @segments[i] != @segments[i-1]) ? seg_order = 1 : seg_order += 1
+                seg_order = (i == 0 || @segments[i] != @segments[i-1]) ? 1 : seg_order+1
             end
             hsegkey = @discinfo[i][DI_ARTIST]+@discinfo[i][DI_SEGMENT]
             row = nil #DBIntf::connection.get_first_row("SELECT * FROM tracks WHERE LOWER(stitle)=LOWER(#{@tracks[i][0].to_sql}) AND rsegment=#{@hsegments[hsegkey][HS_SEGMENT]}")
@@ -166,13 +166,11 @@ class SQLGenerator
 
     def generate_inserts
         @sqlf = File.new(RESULT_SQL_FILE, "w")
-        @sqlf << "BEGIN TRANSACTION;\n"
         check_genre
         insert_artists
         insert_record
         insert_segments
         insert_tracks
-        @sqlf << "COMMIT;\n"
         @sqlf.close
     end
 

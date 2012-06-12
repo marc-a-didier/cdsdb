@@ -65,7 +65,8 @@ public
 
     # Load a full sqlite3 row from the pk field
     def sql_load
-        return load_from_row(DBIntf::connection.get_first_row("SELECT * FROM #{@tbl_name} #{generate_where_on_pk};"))
+        row = DBIntf::connection.get_first_row("SELECT * FROM #{@tbl_name} #{generate_where_on_pk};")
+        return row.nil? ? reset : load_from_row(row)
     end
 
     def sql_update
