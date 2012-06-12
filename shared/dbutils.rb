@@ -24,6 +24,11 @@ class DBUtils
         MusicClient.new.exec_sql(sql) if Cfg::instance.remote?
     end
 
+    def DBUtils::threaded_client_sql(sql)
+        DBUtils::log_exec(sql)
+        Thread.new { MusicClient.new.exec_sql(sql) } if Cfg::instance.remote?
+    end
+
 
     def DBUtils::get_last_id(short_tbl_name)
         id = DBIntf::connection.get_first_value("SELECT MAX(r#{short_tbl_name}) FROM #{short_tbl_name}s")

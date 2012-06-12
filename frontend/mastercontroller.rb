@@ -280,14 +280,16 @@ class MasterController
         i = 1
         widget.parent.each { |child| tags |= i if child.active?; i <<= 1 }
         track.itags = tags
-        @pm_owner.send(:set_tags, tags)
+        @trk_browser.set_track_field("itags", tags, @pm_owner.instance_of?(RecordsBrowser))
+#         @pm_owner.send(:set_tags, tags)
     end
 
     #
     # Send the value of rating selection to the popup owner so it can do what it wants of it
     #
     def on_set_rating(widget)
-        @pm_owner.send(:set_rating, UIConsts::RATINGS.index(widget.child.label))
+        @trk_browser.set_track_field("irating", UIConsts::RATINGS.index(widget.child.label), @pm_owner.instance_of?(RecordsBrowser))
+#         @pm_owner.send(:set_rating, UIConsts::RATINGS.index(widget.child.label))
     end
 
 
@@ -399,7 +401,14 @@ class MasterController
 
 
     def import_sql_file
-        IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| DBUtils::client_sql(line.chomp) }
+#         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| DBUtils::client_sql(line.chomp) }
+        batch = ""
+        IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line|
+            line.chomp!
+            DBUtils::log_exec(line)
+            batch += line+'\n';
+        }
+        Thread.new { MusicClient.new.exec_batch(batch) }
         @art_browser.reload
         select_record(record.get_last_id) # The best guess to find the imported record
     end
@@ -456,9 +465,10 @@ puts "*** save memos called"
         # Update local database AND remote database if in client mode
         host = Socket::gethostname if host == ""
         DBUtils::update_track_stats(rtrack, host)
-        MusicClient.new.update_stats(rtrack) if Cfg::instance.remote?
-        #Thread.new { @charts.live_update(rtrack) } if Cfg::instance.live_charts_update? && @charts.window.visible?
-        @charts.live_update(rtrack) if Cfg::instance.live_charts_update? && @charts.window.visible?
+#         MusicClient.new.update_stats(rtrack) if Cfg::instance.remote?
+        Thread.new { MusicClient.new.update_stats(rtrack) } if Cfg::instance.remote?
+        Thread.new { @charts.live_update(rtrack) } if Cfg::instance.live_charts_update? && @charts.window.visible?
+#         @charts.live_update(rtrack) if Cfg::instance.live_charts_update? && @charts.window.visible?
         # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
         track.ref_load(rtrack).to_widgets if track.rtrack == rtrack
     end

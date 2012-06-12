@@ -262,17 +262,17 @@ class RecordsBrowser < GenericBrowser
         #return @tv.model.get_iter(@tv.cursor[RTV_REF]).parent.nil?
     end
 
-    def set_tags(tags)
-        is_on_record ?
-            DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rrecord=#{@record.rrecord};") :
-            DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rsegment=#{@segment.rsegment};")
-    end
-
-    def set_rating(rating)
-        is_on_record ?
-            DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rrecord=#{@record.rrecord};") :
-            DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rsegment=#{@segment.rsegment};")
-    end
+#     def set_tags(tags)
+#         is_on_record ?
+#             DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rrecord=#{@record.rrecord};") :
+#             DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rsegment=#{@segment.rsegment};")
+#     end
+#
+#     def set_rating(rating)
+#         is_on_record ?
+#             DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rrecord=#{@record.rrecord};") :
+#             DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rsegment=#{@segment.rsegment};")
+#     end
 
     def edit_record
         rec = RecordEditor.new(@record.rrecord).run if @record.valid?
@@ -299,14 +299,14 @@ class RecordsBrowser < GenericBrowser
         if iter.first_child && iter.first_child[0]
             @tv.model.remove(iter.nth_child(1)) while iter.nth_child(1)
         end
-        
+
         #@tv.model.remove(iter.first_child) while iter.first_child
         DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             map_seg_row_to_entry(row, @tv.model.append(iter))
         }
         @tv.model.remove(iter.first_child)
-        
-#         @tv.signal_handler_block(@row_exp_handler)        
+
+#         @tv.signal_handler_block(@row_exp_handler)
 #         @tv.expand_row(iter.path, false)
 #         @tv.signal_handler_unblock(@row_exp_handler)
     end
@@ -315,7 +315,7 @@ class RecordsBrowser < GenericBrowser
 # #         if @record.valid? && @record.clone.from_widgets != @record
 # #             UIUtils::show_message("modified!!!", Gtk::MessageDialog::WARNING)
 # #         end
-# 
+#
 #         iter = @tv.model.get_iter(@tv.cursor[RTV_REF])
 # #puts "record cursor changed: iter="; p iter
 #         if iter.parent # It's a segment

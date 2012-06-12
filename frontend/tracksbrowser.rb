@@ -251,19 +251,34 @@ class TracksBrowser < GenericBrowser
         return tracks
     end
 
-    def set_tags(tags)
-        @tv.selection.selected_each { |model, path, iter|
-            DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rtrack=#{iter[TTV_REF]};")
-        }
+    def set_track_field(field, value, to_all)
+        sql = "UPDATE tracks SET #{field}=#{value} WHERE rtrack IN ("
+        meth = to_all ? @tv.model.method(:each) : @tv.selection.method(:selected_each)
+        meth.call { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
+        sql[-1] = ")"
+p sql
+        DBUtils::threaded_client_sql(sql)
         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
     end
 
-    def set_rating(rating)
-        @tv.selection.selected_each { |model, path, iter|
-            DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rtrack=#{iter[TTV_REF]};")
-        }
-        @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
-    end
+#     def set_tags(tags)
+#         set_track_field("itags", tags, false)
+#         sql = "UPDATE tracks SET itags=#{tags} WHERE rtrack IN ("
+#         @tv.selection.selected_each { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
+#         sql[-1] = ")"
+#         DBUtils::threaded_client_sql(sql)
+#         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
+#     end
+
+#     def set_rating(rating)
+#         set_track_field("irating", rating, false)
+#         sql = "UPDATE tracks SET irating=#{rating} WHERE rtrack IN ("
+#         @tv.selection.selected_each { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
+#         sql[-1] = ")"
+#         p sql
+#         DBUtils::threaded_client_sql(sql)
+#         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
+#     end
 
     def check_for_audio_file
         # If client mode, it's much too slow to check track by track if it exists on server
@@ -322,7 +337,7 @@ class TracksBrowser < GenericBrowser
 
             # Reload artist if artist changed from segment
             @mc.change_segment_artist(iter[TTV_DATA].ref_artist) if iter[TTV_DATA].ref_artist != @mc.segment.rartist
-    
+
             # Reload segment if segment changed
             @mc.change_segment(@track.rsegment) if @track.rsegment != @mc.segment.rsegment
         elsif count > 1
