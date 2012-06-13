@@ -68,7 +68,7 @@ class Cfg
         }
         set_dirs
         @db_version = xdoc.root.elements["database"].attributes["version"] if xdoc.root.elements["database"]
-puts "db version=#{@db_version}"
+# puts "db version=#{@db_version}"
     end
 
     def set_local_mode
