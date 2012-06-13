@@ -54,6 +54,16 @@ class GenericBrowser
         @tv.columns[0].visible = is_visible
     end
 
+    # Delete all children of iter EXCEPT the first one (gtk treeview requirement)
+    # Return the first child iter so it can be safely removed later
+    def remove_children_but_first(iter)
+        if fchild = iter.first_child
+            itr = iter.first_child
+            @tv.model.remove(itr) while itr.next!
+        end
+        return fchild
+    end
+
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view except in admin mode

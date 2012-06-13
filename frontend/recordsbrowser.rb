@@ -45,11 +45,10 @@ class RecordsBrowser < GenericBrowser
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             selection_data.set(Gdk::Selection::TYPE_STRING, @mc.get_drag_tracks)
         }
-        #@tv.signal_connect(:cursor_changed)     { |widget| on_cursor_changed(widget) }
-        @selection_handler = @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
+        @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::REC_POPUP_MENU) }
 
-        @row_exp_handler = @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
+        @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
 
         @mc.glade[UIConsts::REC_POPUP_EDIT].signal_connect(:activate)     { on_rec_edit }
         @mc.glade[UIConsts::REC_POPUP_ADD].signal_connect(:activate)      { on_rec_add }
@@ -63,11 +62,6 @@ class RecordsBrowser < GenericBrowser
         @mc.glade[UIConsts::REC_POPUP_PHISTORY].signal_connect(:activate) {
             PlayHistoryDialog.new.show_record(@record.rrecord)
         }
-
-#         @mc.glade[UIConsts::REC_BTN_LABEL].signal_connect(:clicked)       { @record.select_dialog("rlabel") }
-#         @mc.glade[UIConsts::REC_BTN_GENRE].signal_connect(:clicked)       { @record.select_dialog("rgenre") }
-#         @mc.glade[UIConsts::REC_BTN_COLLECTION].signal_connect(:clicked)  { @record.select_dialog("rcollection") }
-#         @mc.glade[UIConsts::SEG_BTN_ARTIST].signal_connect(:clicked)   { @segment.select_dialog("rartist") }
 
         return super
     end
@@ -136,7 +130,6 @@ class RecordsBrowser < GenericBrowser
 
     # Fills the record tv with all entries matching current artist and filter
     def load_entries
-        #@tv.selection.signal_handler_block(@selection_handler)
         @tv.model.clear
 
         DBIntf::connection.execute(generate_rec_sql) do |row|
@@ -145,13 +138,7 @@ class RecordsBrowser < GenericBrowser
 
             # Add a fake entry to have the arrow indicator
             @tv.model.append(iter)
-#             siter = @tv.model.append(iter)
-#             siter[RTV_REF]    = 0
-#             siter[RTV_TITLE]  = "Segment"
-#             siter[RTV_PTIME]  = ""
-#             siter[RTV_RS_REF] = 0
         end
-        #@tv.selection.signal_handler_unblock(@selection_handler)
         @tv.columns_autosize
 
         return self
@@ -184,15 +171,6 @@ class RecordsBrowser < GenericBrowser
         @segment.ref_load(rsegment)
         @segment.to_widgets if update_infos
     end
-
-#     def position_2(rrecord, rsegment)
-#         iter = position_to(rrecord)
-#         if iter && rsegment != 0
-#             @tv.expand_row(iter.path, false)
-#             iter = position_to(rsegment)
-#         end
-#         return iter
-#     end
 
     def select_record(rrecord)
         return position_to(rrecord)
@@ -262,18 +240,6 @@ class RecordsBrowser < GenericBrowser
         #return @tv.model.get_iter(@tv.cursor[RTV_REF]).parent.nil?
     end
 
-#     def set_tags(tags)
-#         is_on_record ?
-#             DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rrecord=#{@record.rrecord};") :
-#             DBUtils::client_sql("UPDATE tracks SET itags=#{tags} WHERE rsegment=#{@segment.rsegment};")
-#     end
-#
-#     def set_rating(rating)
-#         is_on_record ?
-#             DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rrecord=#{@record.rrecord};") :
-#             DBUtils::client_sql("UPDATE tracks SET irating=#{rating} WHERE rsegment=#{@segment.rsegment};")
-#     end
-
     def edit_record
         rec = RecordEditor.new(@record.rrecord).run if @record.valid?
         if (rec)
@@ -293,40 +259,12 @@ class RecordsBrowser < GenericBrowser
 
     # Fills all children of a record (its segments)
     def on_row_expanded(widget, iter, path)
-#puts "row expanded received"
-        #return if iter.first_child[RTV_REF] != 0 # if not 0, has already been expanded, no need to reload
-
-        if iter.first_child && iter.first_child[0]
-            @tv.model.remove(iter.nth_child(1)) while iter.nth_child(1)
-        end
-
-        #@tv.model.remove(iter.first_child) while iter.first_child
+        fchild = remove_children_but_first(iter)
         DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             map_seg_row_to_entry(row, @tv.model.append(iter))
         }
-        @tv.model.remove(iter.first_child)
-
-#         @tv.signal_handler_block(@row_exp_handler)
-#         @tv.expand_row(iter.path, false)
-#         @tv.signal_handler_unblock(@row_exp_handler)
+        @tv.model.remove(fchild) if fchild
     end
-
-#     def on_cursor_changed(widget)
-# #         if @record.valid? && @record.clone.from_widgets != @record
-# #             UIUtils::show_message("modified!!!", Gtk::MessageDialog::WARNING)
-# #         end
-#
-#         iter = @tv.model.get_iter(@tv.cursor[RTV_REF])
-# #puts "record cursor changed: iter="; p iter
-#         if iter.parent # It's a segment
-#             @record.ref_load(iter.parent[RTV_REF]).to_widgets
-#             @segment.ref_load(iter[RTV_REF]).to_widgets
-#         else
-#             @record.ref_load(iter[RTV_REF]).to_widgets_with_img
-#             @segment.ref_load(iter[RTV_RS_REF]).to_widgets # Get the associated segment
-#         end
-#         @mc.record_changed
-#     end
 
     def on_selection_changed(widget)
         load_rec_and_seg(@tv.selection.selected)
@@ -346,12 +284,7 @@ class RecordsBrowser < GenericBrowser
     end
 
     def on_rec_edit
-        if @tv.selection.selected.parent
-            DBEditor.new(@mc, @segment).run
-        else
-            DBEditor.new(@mc, @record).run
-        end
-        #@tv.selection.selected.parent ? edit_segment : edit_record
+        @tv.selection.selected.parent ? DBEditor.new(@mc, @segment).run : DBEditor.new(@mc, @record).run
     end
 
     def on_rec_add

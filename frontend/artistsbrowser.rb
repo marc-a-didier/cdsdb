@@ -325,9 +325,7 @@ puts "*** load new sub tree ***"
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
         # If not force_reload, we have just one child, the fake entry, so don't remove it now
-        if force_reload #&& iter.nth_child(1)
-            @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
-        end
+        remove_children_but_first(iter) if force_reload
 
         sql = iter[2].select_for_level(@tvm.iter_depth(iter), iter, @mc, @tvm)
 
