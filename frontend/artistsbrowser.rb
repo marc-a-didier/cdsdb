@@ -167,7 +167,7 @@ end
 class RippedRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
-            sql = %Q{SELECT records.idateripped, artists.rartist, artists.sname, records.rrecord FROM artists
+            sql = %Q{SELECT records.idateripped, artists.rartist, artists.sname, records.rrecord, records.stitle FROM artists
                      INNER JOIN records ON records.rartist = artists.rartist
                      WHERE records.idateripped <> 0
                      ORDER BY records.idateripped DESC LIMIT 100;}
@@ -175,7 +175,8 @@ class RippedRowProp < GenRowProp
             DBIntf::connection.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
-                child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+row[2]
+                child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "
+                child[1] += row[1] == 0 ? CGI::escapeHTML(row[4]) : CGI::escapeHTML(row[2])
                 child[2] = iter[2]
                 child[3] = ("%03d" % count)+row[3].to_s
                 count += 1
