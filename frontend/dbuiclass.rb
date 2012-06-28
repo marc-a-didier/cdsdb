@@ -17,7 +17,7 @@ class ArtistUI < ArtistDBClass
         @glade = glade
         init_baseui("art_tab_")
     end
-    
+
     def to_widgets
         super
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_ARTIST])
@@ -36,7 +36,7 @@ class RecordUI < RecordDBClass
     include MainTabsUI
 
     attr_reader :cover_file_name
-    
+
     def initialize(glade)
         super()
         @glade = glade
@@ -47,7 +47,7 @@ class RecordUI < RecordDBClass
         super
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
     end
-    
+
     def to_widgets_with_img
         @cover_file_name = Utils::get_cover_file_name(self.rrecord, 0, self.irecsymlink)
         @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, 0, self.irecsymlink, 128)
@@ -77,7 +77,7 @@ class SegmentUI < SegmentDBClass
         @glade = glade
         init_baseui("seg_tab_")
     end
-    
+
     def to_widgets
         super
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
@@ -122,7 +122,7 @@ class TrackUI < TrackDBClass
         end
         return to_widgets
     end
-    
+
     def build_infos_string
         return "" unless self.valid?
         str  = UIConsts::RATINGS[self.irating]+", "
@@ -158,18 +158,6 @@ class ArtistEditor < ArtistDBClass
 
         @glade[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
     end
-
-#     def run
-#         #[ARTED_BTN_OK, ARTED_BTN_ORIGIN].each { |ctrl| @glade[ctrl].sensitive = Cfg::instance.admin? }
-#         artist = nil
-#         self.to_widgets
-#         #artist = self.from_widgets.sql_update if @glade[DLG_ART_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-#         @glade[DLG_DB_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-#         #@glade[DLG_ART_EDITOR].destroy
-#         @glade[DLG_DB_EDITOR].destroy
-#         return artist
-#     end
-
 end
 
 
@@ -192,23 +180,11 @@ class RecordEditor < RecordDBClass
         @glade[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog("rmedia") }
         @glade[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog("rcollection") }
         @glade[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
-        
+
         [RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
             @glade[ctrl].sensitive = Cfg::instance.admin?
         }
     end
-
-#     def run
-#         [RECED_BTN_OK, RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
-#             @glade[ctrl].sensitive = Cfg::instance.admin?
-#         }
-# 
-#         record = nil
-#         self.to_widgets
-#         record = self.from_widgets.sql_update if @glade[DLG_REC_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-#         @glade[DLG_REC_EDITOR].destroy
-#         return record
-#     end
 
     def update_ptime
         return if rmedia != DBIntf::MEDIA_AUDIO_FILE
@@ -240,18 +216,6 @@ class SegmentEditor < SegmentDBClass
         }
     end
 
-#     def run
-#         [SEGED_BTN_OK, SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
-#             @glade[ctrl].sensitive = Cfg::instance.admin?
-#         }
-# 
-#         segment = nil
-#         to_widgets
-#         segment = self.from_widgets.sql_update if @glade[DLG_SEG_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-#         @glade[DLG_SEG_EDITOR].destroy
-#         return segment
-#     end
-
     def update_ptime
         DBUtils::update_segment_playtime(self.rsegment)
         #DBUtils::update_record_playtime(self.rrecord)
@@ -277,7 +241,6 @@ class TrackEditor < TrackDBClass
         #
         # Setup the rating combo
         #
-        #@glade[TRKED_CMB_RATING].remove_text(0)
         RATINGS.each { |rating| @glade[TRKED_CMB_RATING].append_text(rating) }
 
         #
@@ -285,31 +248,16 @@ class TrackEditor < TrackDBClass
         #
         UIUtils::setup_tracks_tags_tv(@glade[UIConsts::TRKED_TV_TAGS])
     end
-
-#     def run
-#         @glade[TRKED_BTN_OK].sensitive = Cfg::instance.admin?
-# 
-#         track = nil
-#         to_widgets
-#         track = self.from_widgets.sql_update if @glade[DLG_TRK_EDITOR].run == Gtk::Dialog::RESPONSE_OK
-#         @glade[DLG_TRK_EDITOR].destroy
-#         return track
-#     end
 end
 
 class DBEditor
 
     include UIConsts
-    
+
     def initialize(mc, initiating_class)
         @glade = GTBld::load(DLG_DB_EDITOR)
 
         @editors = []
-#         if mc.record.compile?
-#             @editors << ArtistEditor.new(@glade, mc.segment.rartist)
-#         else
-#             @editors << ArtistEditor.new(@glade, mc.artist.rartist)
-#         end
         @editors << ArtistEditor.new(@glade, mc.record.compile? ? mc.segment.rartist : mc.artist.rartist)
         @editors << RecordEditor.new(@glade, mc.record.rrecord)
         @editors << SegmentEditor.new(@glade, mc.segment.rsegment)
@@ -341,7 +289,7 @@ class PListDialog < PListDBClass
 
     def initialize(rplist)
         super()
-        
+
         @glade = GTBld::load(DLG_PLIST_INFOS)
         init_baseui("pldlg_")
 
