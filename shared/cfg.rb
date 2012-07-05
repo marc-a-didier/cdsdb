@@ -4,13 +4,13 @@ class Cfg
     include Singleton
 
     # Client/Server transmission block size
-    TX_BLOCK_SIZE = 128*1024 #524288
+    TX_BLOCK_SIZE = 128*1024
     MSG_EOL       = "EOL"
     FILE_INFO_SEP = "@:@"
 
     DIR_NAMES       = ["covers", "icons", "flags", "src", "db"]
     SERVER_RSRC_DIR = "../../"
-    PREFS_DIR       = ENV["HOME"]+"/.cds2/"
+#     PREFS_DIR       = ENV["HOME"]+"/.cdsdb/"
     PREFS_FILE      = "prefs.xml"
     LOG_FILE        = "cdsdb.log"
 
@@ -18,6 +18,10 @@ class Cfg
     attr_accessor :db_version
 
     def initialize
+        dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
+        @config_dir = File.join(dir, 'cdsdb/')
+        FileUtils::mkpath(@config_dir) unless File::exists?(@config_dir)
+
         @remote = false
         @server = "localhost"
         @port = 32666
@@ -29,7 +33,7 @@ class Cfg
         @admin_mode = false
         @live_charts_update = false
         @log_played_tracks = false
-        @tx_block_size = 128*1024
+        @tx_block_size = TX_BLOCK_SIZE
         @dirs = {}
         @max_items = 100;
         @db_version = "5.8"
@@ -42,8 +46,6 @@ class Cfg
     end
 
     def load
-        FileUtils::mkpath(PREFS_DIR) unless File::exists?(PREFS_DIR)
-
         xdoc = nil
         File::open(prefs_file, "r") { |file| xdoc = REXML::Document.new(file) } if File::exists?(prefs_file)
         if xdoc.nil? || REXML::XPath.first(xdoc.root, "windows/prefs_dialog").nil?
@@ -124,7 +126,7 @@ class Cfg
     end
 
     def prefs_file
-        return PREFS_DIR+PREFS_FILE
+        return @config_dir+PREFS_FILE
     end
 
 
