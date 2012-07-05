@@ -200,7 +200,7 @@ require './my_rr_lib'
 
 
 #
-# Main chnages for v0.8.0
+# Main changes for v0.8.0
 #
 # - Port to ruby 1.9.x
 # - SQLite3 ruby lib now returns columns with native type rather than strings
@@ -219,7 +219,7 @@ require './my_rr_lib'
 
 class Cdsdb
 
-    VERSION = "0.8.0"
+    VERSION = "0.8.1"
 
     def has_arg(arg)
         ARGV.each { |the_arg| return true if the_arg == arg }
@@ -240,9 +240,5 @@ class Cdsdb
 
 end
 
-# Main program
-if __FILE__ == $0
-    # Set values as your own application.
-    Cdsdb.new(UIConsts::GLADE_MAIN, nil, "cdsdb")
-    Gtk.main
-end
+Cdsdb.new(UIConsts::GLADE_MAIN, nil, "cdsdb")
+Gtk.main
