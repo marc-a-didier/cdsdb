@@ -59,7 +59,7 @@ class GenericBrowser
     def remove_children_but_first(iter)
         if fchild = iter.first_child
             itr = iter.first_child
-            @tv.model.remove(itr) while itr.next!
+            @tv.model.remove(itr) while itr.next! # while is called BEFORE remove
         end
         return fchild
     end
