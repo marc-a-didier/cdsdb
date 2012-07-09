@@ -38,6 +38,20 @@ class GenRowProp
     def sub_filter(iter)
         return " #{@where_fields}=#{iter.parent[0]} "
     end
+
+    def get_select_on_tracks(mc)
+        if mc.view_compile?
+            return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+                    "INNER JOIN records ON artists.rartist=records.rartist " \
+                    "INNER JOIN segments ON segments.rrecord=records.rrecord " \
+                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
+        else
+            return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+                    "INNER JOIN segments ON segments.rartist=artists.rartist " \
+                    "INNER JOIN records ON records.rrecord=segments.rrecord " \
+                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
+        end
+    end
 end
 
 class GenresRowProp < GenRowProp
@@ -100,17 +114,7 @@ end
 
 class AllArtistsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
-        if mc.view_compile?
-            sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN records ON artists.rartist=records.rartist " \
-                    "INNER JOIN segments ON segments.rrecord=records.rrecord " \
-                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
-        else
-            sql =  "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN segments ON segments.rartist=artists.rartist " \
-                    "INNER JOIN records ON records.rrecord=segments.rrecord " \
-                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
-        end
+        sql = get_select_on_tracks(mc)
         sql += "WHERE "+mc.main_filter.gsub(/^ AND/, "") unless mc.main_filter.empty?
         return sql
     end
@@ -141,22 +145,10 @@ class TagsRowProp < GenRowProp
                 child[3] = tag
                 append_fake_child(model, child)
             }
-            sql = ""
+            return ""
         elsif level == 1
-            if mc.view_compile?
-                sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                        "INNER JOIN records ON artists.rartist=records.rartist " \
-                        "INNER JOIN segments ON segments.rrecord=records.rrecord " \
-                        "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
-            else
-                sql =  "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                        "INNER JOIN segments ON segments.rartist=artists.rartist " \
-                        "INNER JOIN records ON records.rrecord=segments.rrecord " \
-                        "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
-            end
-            sql += "WHERE (tracks.itags & #{1 << iter[0]}) <> 0"
+            return get_select_on_tracks(mc)+"WHERE (tracks.itags & #{1 << iter[0]}) <> 0"
         end
-        return sql
     end
 
     def sub_filter(iter)
@@ -186,7 +178,35 @@ class RippedRowProp < GenRowProp
     end
 
     def sub_filter(iter)
-        return " #@where_fields = #{iter[3][3..-1].to_i}" # Extract rrecord from the sort column
+        return " #@where_fields = #{iter[3][3..-1]}" # Extract rrecord from the sort column
+    end
+end
+
+class NeverRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        return get_select_on_tracks(mc)+"WHERE tracks.iplayed=0;"
+    end
+
+    def sub_filter(iter)
+        return " #@where_fields=0"
+    end
+end
+
+class RatingsRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        if level == 0
+            UIConsts::RATINGS.each_with_index { |rating, i|
+                child = model.append(iter)
+                child[0] = i
+                child[1] = "<i>#{rating}</i>"
+                child[2] = iter[2]
+                child[3] = i.to_s
+                append_fake_child(model, child)
+            }
+            return ""
+        elsif level == 1
+            return get_select_on_tracks(mc)+"WHERE tracks.irating=#{iter[0]}"
+        end
     end
 end
 
@@ -197,8 +217,9 @@ class ArtistsBrowser < GenericBrowser
                      OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
                      TagsRowProp.new(4, "tags", 2, true, "tracks.itags", "Tags"),
                      LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
-                     RippedRowProp.new(6, "artists", 1, false, "records.rrecord", "Last ripped")]
-# TODO: add by rating  LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels")]
+                     RippedRowProp.new(6, "artists", 1, false, "records.rrecord", "Last ripped"),
+                     NeverRowProp.new(7, "tracks", 1, true, "tracks.iplayed", "Never played"),
+                     RatingsRowProp.new(8, "ratings", 2, true, "tracks.irating", "Rating")]
 
     ATV_REF   = 0
     ATV_NAME  = 1
