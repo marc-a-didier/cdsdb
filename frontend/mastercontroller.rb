@@ -338,6 +338,10 @@ class MasterController
         @trk_browser.load_entries_select_first
     end
 
+    def remove_artist(rartist)
+        @art_browser.remove_artist(rartist)
+    end
+
     def invalidate_tabs
         @rec_browser.invalidate
         @trk_browser.invalidate
@@ -451,12 +455,12 @@ puts "*** save memos called"
         # Update local database AND remote database if in client mode
         host = Socket::gethostname if host == ""
         DBUtils::update_track_stats(rtrack, host)
-#         MusicClient.new.update_stats(rtrack) if Cfg::instance.remote?
         Thread.new { MusicClient.new.update_stats(rtrack) } if Cfg::instance.remote?
         Thread.new { @charts.live_update(rtrack) } if Cfg::instance.live_charts_update? && @charts.window.visible?
-#         @charts.live_update(rtrack) if Cfg::instance.live_charts_update? && @charts.window.visible?
         # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
         track.ref_load(rtrack).to_widgets if track.rtrack == rtrack
+        @rec_browser.update_never_played(ltrack.rrecord) if @glade[UIConsts::MM_VIEW_UPDATENP].active? &&
+                                                            @art_browser.is_on_never_played?
     end
 
     def select_artist(rartist, force_reload = false)

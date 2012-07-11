@@ -220,12 +220,29 @@ class RecordsBrowser < GenericBrowser
         sql = object.kind_of?(RecordDBClass) ? generate_rec_sql(ref) : generate_seg_sql(object.rrecord, ref)
         iter = position_to(ref) if !curr_iter && curr_iter != iter
         row = DBIntf::connection.get_first_row(sql)
-        object.kind_of?(RecordDBClass) ? map_rec_row_to_entry(row, iter) : map_seg_row_to_entry(row, iter)
+        if row
+            object.kind_of?(RecordDBClass) ? map_rec_row_to_entry(row, iter) : map_seg_row_to_entry(row, iter)
+        else
+            @tv.model.remove(iter)
+        end
     end
 
     def update_from_gui(object)
         object.from_widgets.sql_update
         update_entry(object)
+    end
+
+    def update_never_played(rrecord)
+        # TODO: handle the case of compilations. should get artist from segment
+        return unless row_visible?(rrecord)
+        rec = @record.rrecord == rrecord ? @record : RecordDBClass.new.ref_load(rrecord)
+        rartist = rec.rartist #!! artist is lost when update_tv_entry is called!!! See why!!!
+        update_tv_entry(rec)
+        if @tv.model.iter_first.nil?
+            @mc.remove_artist(rartist)
+        else
+            @mc.record_changed if @record == rec
+        end
     end
 
     def invalidate

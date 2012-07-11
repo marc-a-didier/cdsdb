@@ -127,6 +127,7 @@ module UIConsts
     MM_VIEW_BYRATING            = "mm_view_byrating"
     MM_VIEW_COMPILE             = "mm_view_compile"
     MM_VIEW_DBREFS              = "mm_view_dbrefs"
+    MM_VIEW_UPDATENP            = "mm_view_updatenp"
 
     # Windows menus
     MM_WIN_MENU                 = "win_menu"

@@ -428,6 +428,19 @@ puts "*** load new sub tree ***"
         @seg_art.ref_load(rartist).to_widgets
     end
 
+    def is_on_never_played?
+        return @tvs.nil? ? false : @tvs[2].ref == 7
+    end
+
+    def remove_artist(rartist)
+        iter = @tvm.iter_first
+        iter.next! while iter[2].ref != 7
+        return if iter.first_child[0] == -1 # Means the subtree has not been loaded
+        sub_iter = iter.first_child
+        sub_iter.next! while sub_iter[0] != rartist
+        @tvm.remove(sub_iter) if sub_iter[0] == rartist
+    end
+
     def show_artists_infos
         recs_infos = DBIntf::connection.get_first_row(
             %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(records.iplaytime)), COUNT(tracks.rtrack) FROM records
