@@ -99,6 +99,23 @@
         <property name="use_stock">True</property>
       </object>
     </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="apm_sepitem2">
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="apm_refresh">
+        <property name="label">gtk-refresh</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
   </object>
   <object class="GtkMenu" id="charts_pm">
     <property name="visible">True</property>

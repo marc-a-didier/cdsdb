@@ -59,6 +59,7 @@ module UIConsts
     ART_POPUP_DEL       = "apm_del"
     ART_POPUP_EDIT      = "apm_edit"
     ART_POPUP_INFOS     = "apm_infos"
+    ART_POPUP_REFRESH   = "apm_refresh"
 
 
     # Records/Segments browser popup menu

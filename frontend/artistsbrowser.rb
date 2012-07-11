@@ -257,7 +257,14 @@ class ArtistsBrowser < GenericBrowser
 
         @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         @tv.signal_connect(:button_press_event) { |widget, event|
-            show_popup(widget, event, UIConsts::ART_POPUP_MENU) if @tvs && @tvm.iter_depth(@tvs) == @tvs[2].max_level
+            if event.event_type == Gdk::Event::BUTTON_PRESS || event.button == 3 # left mouse button
+                [UIConsts::ART_POPUP_ADD, UIConsts::ART_POPUP_DEL,
+                 UIConsts::ART_POPUP_EDIT, UIConsts::ART_POPUP_INFOS].each { |item|
+                    @mc.glade[item].sensitive = @tvs && @tvm.iter_depth(@tvs) == @tvs[2].max_level
+                }
+                @mc.glade[UIConsts::ART_POPUP_REFRESH].sensitive = @tvs && @tvm.iter_depth(@tvs) < @tvs[2].max_level
+                show_popup(widget, event, UIConsts::ART_POPUP_MENU) if @tvs
+            end
         }
 
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
@@ -266,10 +273,11 @@ class ArtistsBrowser < GenericBrowser
 #             model.iter_depth(iter) < iter[2].max_level
 #         }
 
-        @mc.glade[UIConsts::ART_POPUP_ADD].signal_connect(:activate)   { on_art_popup_add   }
-        @mc.glade[UIConsts::ART_POPUP_DEL].signal_connect(:activate)   { on_art_popup_del   }
-        @mc.glade[UIConsts::ART_POPUP_EDIT].signal_connect(:activate)  { edit_artist        }
-        @mc.glade[UIConsts::ART_POPUP_INFOS].signal_connect(:activate) { show_artists_infos }
+        @mc.glade[UIConsts::ART_POPUP_ADD].signal_connect(:activate)     { on_art_popup_add   }
+        @mc.glade[UIConsts::ART_POPUP_DEL].signal_connect(:activate)     { on_art_popup_del   }
+        @mc.glade[UIConsts::ART_POPUP_EDIT].signal_connect(:activate)    { edit_artist        }
+        @mc.glade[UIConsts::ART_POPUP_INFOS].signal_connect(:activate)   { show_artists_infos }
+        @mc.glade[UIConsts::ART_POPUP_REFRESH].signal_connect(:activate) { reload_sub_tree    }
 
         return super
     end
@@ -295,6 +303,12 @@ class ArtistsBrowser < GenericBrowser
         load_entries
         @mc.no_selection if position_to(@artist.rartist).nil?
         return self
+    end
+
+    def reload_sub_tree
+        return if @tvs.nil? || @tvm.iter_depth(@tvs) == @tvs[2].max_level
+        load_sub_tree(@tvs, true)
+
     end
 
     def edit_artist
@@ -347,7 +361,10 @@ puts "*** load new sub tree ***"
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
         # If not force_reload, we have just one child, the fake entry, so don't remove it now
-        remove_children_but_first(iter) if force_reload
+        if force_reload
+            @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
+            iter[1] = iter[1].gsub(/\ -\ .*$/, "") # Remove the number of entries since it's re-set later
+        end
 
         sql = iter[2].select_for_level(@tvm.iter_depth(iter), iter, @mc, @tvm)
 
