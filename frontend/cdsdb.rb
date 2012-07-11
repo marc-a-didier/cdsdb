@@ -163,24 +163,29 @@ require './my_rr_lib'
 # TODO: URGENT: voir le bug de l'expand des records quand on est pas dans All ??? hallucination???
 #       Hallucination, de toute evidence...
 
+# TODO: trier la vue artistes par date d'ajout plutot que d'avoir un recently ripped/added records...
+# TODO: database cleanup. remove iiscompile, iisinset, isetof --- keep isetorder to may be append the
+#       order to the disc name ([CD 1] for ex.).
+# TODO: enlever le hostname de logtracks et remplacer par une ref sur une table de hostname
+#       automatiquement remplie??? Ca sauverait des bytes...
+#       Et virer le champ rlogtrack qui sert a rien...???
+# TODO: ajouter rating & never played dans la view des artistes???
+
+# TODO: add a reload menu entry in artists popup
+
+
 
 #
 # ^^^       ^^^
 # |||  DONE |||
 #
 
-# TODO: trier la vue artistes par date d'ajout plutot que d'avoir un recently ripped/added records...
+# TODO: Use isetorder to may be append the order to the disc name ([CD 1] for ex.).
+#       N.B. For this to work, must add a disc number in the cd editor window since it's not yet in the db...
 
 # TODO: ajouter un tag 'a checker' quand un disque est mal rippe (ex: MM Vol.13)
 
 # TODO: ajouter un index sur rtrack dans logtracks pour voir si ca accelere les requetes pour les charts
-
-# TODO: database cleanup. remove iiscompile, iisinset, isetof --- keep isetorder to may be append the
-#       order to the disc name ([CD 1] for ex.).
-
-# TODO: enlever le hostname de logtracks et remplacer par une ref sur une table de hostname
-#       automatiquement remplie??? Ca sauverait des bytes...
-#       Et virer le champ rlogtrack qui sert a rien...???
 
 # TODO: desimbriquer la main window du master controller pour en faire une top window comme les autres.
 
@@ -188,8 +193,6 @@ require './my_rr_lib'
 
 # TODO: utilitaire pour transferer l'historique des morceaux quand on change de medium (mp3->cd, p.e.)
 # TODO: Mettre une couleur differente pour chaque nouvelle lettre dans la liste des artistes???
-
-# TODO: ajouter rating & never played dans la view des artistes???
 
 # TODO: s'inscrire comme client sur le serveur pour recevoir les updates des morceaux joues???
 
