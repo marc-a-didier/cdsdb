@@ -77,7 +77,7 @@ class RecordsBrowser < GenericBrowser
         sql += @mc.artist.rartist.to_s
         sql += " AND records.rrecord=#{rrecord}" unless rrecord == -1
         sql += " AND "+@mc.sub_filter unless @mc.sub_filter.empty?
-        sql += @mc.main_filter
+        sql += @mc.main_filter if @mc.sub_filter.empty? # Don't apply 2 filters at once!!!
         sql += @mc.artist.compile? ? " GROUP BY records.rrecord " : " GROUP BY segments.rrecord " # ??? ca change quoi ???
         sql += " ORDER BY LOWER(records.stitle)"
         sql += " DESC" if @tv.columns[RTV_TITLE].sort_order == Gtk::SORT_DESCENDING
@@ -110,7 +110,8 @@ class RecordsBrowser < GenericBrowser
             sql += " WHERE segments.rsegment=#{rsegment}"
         end
         sql += " AND "+@mc.sub_filter unless @mc.sub_filter.empty?
-        sql += "#{@mc.main_filter} GROUP BY segments.rsegment ORDER BY segments.iorder;"
+        sql += @mc.main_filter if @mc.sub_filter.empty? # Don't apply 2 filters at once!!!
+        sql += " GROUP BY segments.rsegment ORDER BY segments.iorder;"
 
         return sql
     end
@@ -232,17 +233,23 @@ class RecordsBrowser < GenericBrowser
         update_entry(object)
     end
 
-    def update_never_played(rrecord)
-        # TODO: handle the case of compilations. should get artist from segment
-        return unless row_visible?(rrecord)
-        rec = @record.rrecord == rrecord ? @record : RecordDBClass.new.ref_load(rrecord)
-        rartist = rec.rartist #!! artist is lost when update_tv_entry is called!!! See why!!!
-        update_tv_entry(rec)
-        if @tv.model.iter_first.nil?
-            @mc.remove_artist(rartist)
+    # Returns true if we should check if we can remove the artist from the never played sub tree.
+    # WARNING: The only case where we're sure that it should not be removed is when there are still tracks,
+    #          in this case when row is not nil.
+    def update_never_played(rrecord, rsegment)
+        return true unless @mc.is_on_never_played?
+        iter = find_ref(rrecord)
+        return true if iter.nil?
+
+        row = DBIntf::connection.get_first_row(generate_rec_sql(rrecord))
+p row
+        if row
+            map_rec_row_to_entry(row, iter)
         else
-            @mc.record_changed if @record == rec
+            @tv.model.remove(iter)
         end
+        @mc.record_changed
+        return row.nil?
     end
 
     def invalidate

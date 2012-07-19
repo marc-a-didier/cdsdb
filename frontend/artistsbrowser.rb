@@ -432,13 +432,41 @@ puts "*** load new sub tree ***"
         return @tvs.nil? ? false : @tvs[2].ref == 7
     end
 
-    def remove_artist(rartist)
+    def never_played_iter
         iter = @tvm.iter_first
         iter.next! while iter[2].ref != 7
-        return if iter.first_child[0] == -1 # Means the subtree has not been loaded
+        return !iter || iter.first_child[0] == -1 ? nil : iter
+    end
+
+    def remove_artist(rartist)
+        iter = never_played_iter
+        return unless iter
         sub_iter = iter.first_child
         sub_iter.next! while sub_iter[0] != rartist
-        @tvm.remove(sub_iter) if sub_iter[0] == rartist
+        if sub_iter[0] == rartist
+            @tvm.remove(sub_iter)
+            iter[1] = iter[1].gsub(/\ -\ .*$/, "")
+            iter[1] = iter[1]+" - (#{iter.n_children})"
+        end
+    end
+
+    def update_never_played(rrecord, rsegment)
+        return unless never_played_iter
+        # WARNING: Bug here when playing in the compilations artist. To check ASAP!!!
+        if @mc.view_compile?
+            rartist = RecordDBClass.new.ref_load(rrecord).rartist
+        sql =  "SELECT COUNT(tracks.rtrack) FROM tracks " \
+                "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
+                "INNER JOIN artists ON artists.rartist=segments.rartist " \
+                "INNER JOIN records ON records.rrecord=tracks.rrecord "
+#             sql = "SELECT COUNT(tracks.rtrack) FROM tracks INNER JOIN records ON records.rartist=artists.rartist WHERE artists.rartist=#{rartist} AND records.rartist=#{rartist}"
+        else
+            rartist = SegementDBClass.new.ref_load(rsegment).rartist
+            sql = "SELECT COUNT(tracks.rtrack) FROM tracks WHERE artists.rartist=#{rartist} AND segments.rartist=#{rartist}"
+        end
+        sql += " WHERE artists.rartist=#{rartist} AND tracks.iplayed=0;"
+p sql
+        remove_artist(rartist) if DBIntf::connection.get_first_value(sql) == 0
     end
 
     def show_artists_infos

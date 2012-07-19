@@ -338,8 +338,8 @@ class MasterController
         @trk_browser.load_entries_select_first
     end
 
-    def remove_artist(rartist)
-        @art_browser.remove_artist(rartist)
+    def is_on_never_played?
+        return @art_browser.is_on_never_played?
     end
 
     def invalidate_tabs
@@ -459,8 +459,11 @@ puts "*** save memos called"
         Thread.new { @charts.live_update(rtrack) } if Cfg::instance.live_charts_update? && @charts.window.visible?
         # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
         track.ref_load(rtrack).to_widgets if track.rtrack == rtrack
-        @rec_browser.update_never_played(ltrack.rrecord) if @glade[UIConsts::MM_VIEW_UPDATENP].active? &&
-                                                            @art_browser.is_on_never_played?
+        if @glade[UIConsts::MM_VIEW_UPDATENP].active?
+            if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
+                @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
+            end
+        end
     end
 
     def select_artist(rartist, force_reload = false)
