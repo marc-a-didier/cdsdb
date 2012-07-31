@@ -552,11 +552,20 @@ module UIConsts
     FLT_BTN_PLGEN         = "flt_btn_plgen"
 
 
+    #
+    # Artist Infos Dialog
+    #
     DLG_ART_INFOS   = "dlg_art_infos"
 
-    ARTINFOS_LBL_RECS      = "artinfos_lbl_recs"
-    ARTINFOS_LBL_COMPILES  = "artinfos_lbl_compiles"
-    ARTINFOS_LBL_TOTAL     = "artinfos_lbl_total"
+    ARTINFOS_LBL_RECS_COUNT  = "rec_count"
+    ARTINFOS_LBL_COMP_COUNT  = "comp_count"
+    ARTINFOS_LBL_TOT_COUNT   = "tot_count"
+    ARTINFOS_LBL_RECS_TRKS   = "rec_trks"
+    ARTINFOS_LBL_COMP_TRKS   = "comp_trks"
+    ARTINFOS_LBL_TOT_TRKS    = "tot_trks"
+    ARTINFOS_LBL_RECS_PT     = "rec_pt"
+    ARTINFOS_LBL_COMP_PT     = "comp_pt"
+    ARTINFOS_LBL_TOT_PT      = "tot_pt"
 
     #
     # Disabled controls when not in admin mode.

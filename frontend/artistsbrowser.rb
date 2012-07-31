@@ -470,6 +470,7 @@ p sql
     end
 
     def show_artists_infos
+        # TODO: the select on distinct playtime is or may be wrong if two rec/seg have the same length...
         recs_infos = DBIntf::connection.get_first_row(
             %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(records.iplaytime)), COUNT(tracks.rtrack) FROM records
                INNER JOIN tracks ON tracks.rrecord=records.rrecord
@@ -481,8 +482,19 @@ p sql
                WHERE segments.rartist=#{@tvs[0]} AND records.rartist=0;})
 
         glade = GTBld::load(UIConsts::DLG_ART_INFOS)
-        glade[UIConsts::ARTINFOS_LBL_RECS].text = recs_infos[0].to_s+" records, #{recs_infos[2]} tracks for "+Utils::format_day_length(recs_infos[1].to_i)
-        glade[UIConsts::ARTINFOS_LBL_COMPILES].text = comp_infos[0].to_s+" compilations, #{comp_infos[2]} tracks for "+Utils::format_day_length(comp_infos[1].to_i)
+
+        glade[UIConsts::ARTINFOS_LBL_RECS_COUNT].text = recs_infos[0].to_s
+        glade[UIConsts::ARTINFOS_LBL_RECS_TRKS].text  = recs_infos[2].to_s
+        glade[UIConsts::ARTINFOS_LBL_RECS_PT].text    = Utils::format_day_length(recs_infos[1].to_i)
+
+        glade[UIConsts::ARTINFOS_LBL_COMP_COUNT].text = comp_infos[0].to_s
+        glade[UIConsts::ARTINFOS_LBL_COMP_TRKS].text  = comp_infos[2].to_s
+        glade[UIConsts::ARTINFOS_LBL_COMP_PT].text    = Utils::format_day_length(comp_infos[1].to_i)
+
+        glade[UIConsts::ARTINFOS_LBL_TOT_COUNT].text = (recs_infos[0]+comp_infos[0]).to_s
+        glade[UIConsts::ARTINFOS_LBL_TOT_TRKS].text  = (recs_infos[2]+comp_infos[2]).to_s
+        glade[UIConsts::ARTINFOS_LBL_TOT_PT].text    = Utils::format_day_length(recs_infos[1].to_i+comp_infos[1].to_i)
+
         glade[UIConsts::DLG_ART_INFOS].show.run
         glade[UIConsts::DLG_ART_INFOS].destroy
     end
