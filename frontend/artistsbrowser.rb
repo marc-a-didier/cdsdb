@@ -428,6 +428,11 @@ puts "*** load new sub tree ***"
         @seg_art.ref_load(rartist).to_widgets
     end
 
+    def is_on_compile?
+        return false if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
+        return @tvs[0] == 0
+    end
+
     def is_on_never_played?
         return @tvs.nil? ? false : @tvs[2].ref == 7
     end
@@ -451,20 +456,25 @@ puts "*** load new sub tree ***"
     end
 
     def update_never_played(rrecord, rsegment)
-        return unless never_played_iter
-        # WARNING: Bug here when playing in the compilations artist. To check ASAP!!!
+        return unless never_played_iter # Sub tree not loaded, nothing to do
+
+        # If view compile, it's possible to play the last track from an artist that has full disks and
+        # thus appears in both compilations and artists list.
         if @mc.view_compile?
-            rartist = RecordDBClass.new.ref_load(rrecord).rartist
-        sql =  "SELECT COUNT(tracks.rtrack) FROM tracks " \
-                "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                "INNER JOIN artists ON artists.rartist=segments.rartist " \
-                "INNER JOIN records ON records.rrecord=tracks.rrecord "
-#             sql = "SELECT COUNT(tracks.rtrack) FROM tracks INNER JOIN records ON records.rartist=artists.rartist WHERE artists.rartist=#{rartist} AND records.rartist=#{rartist}"
+            # Check if we can remove compilations or the artist from the list
+            rartist = is_on_compile? ? 0 : RecordDBClass.new.ref_load(rrecord).rartist
+            sql = "SELECT COUNT(tracks.rtrack) FROM tracks " \
+                    "INNER JOIN records ON records.rrecord=tracks.rrecord " \
+                    "WHERE records.rartist=#{rartist}"
         else
-            rartist = SegementDBClass.new.ref_load(rsegment).rartist
-            sql = "SELECT COUNT(tracks.rtrack) FROM tracks WHERE artists.rartist=#{rartist} AND segments.rartist=#{rartist}"
+            # Get artist from segment, we may be on a compile only artist
+            rartist = SegmentDBClass.new.ref_load(rsegment).rartist
+            sql = "SELECT COUNT(tracks.rtrack) FROM tracks " \
+                    "INNER JOIN segments ON segments.rsegment=tracks.rsegment " \
+                    "WHERE segments.rartist=#{rartist}"
         end
-        sql += " WHERE artists.rartist=#{rartist} AND tracks.iplayed=0;"
+        sql += " AND tracks.iplayed=0;"
+
 p sql
         remove_artist(rartist) if DBIntf::connection.get_first_value(sql) == 0
     end
