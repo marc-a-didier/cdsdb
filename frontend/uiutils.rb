@@ -58,7 +58,7 @@ class UIUtils
         dialog = Gtk::FileChooserDialog.new(title, nil, action, nil,
                                             [Gtk::Stock::CANCEL, Gtk::Dialog::RESPONSE_CANCEL],
                                             [Gtk::Stock::OPEN, Gtk::Dialog::RESPONSE_ACCEPT])
-        dialog.current_folder = Cfg::instance.music_dir if default_dir.empty?
+        dialog.current_folder = default_dir.empty? ? Cfg::instance.music_dir : default_dir
         file = dialog.filename if dialog.run == Gtk::Dialog::RESPONSE_ACCEPT
         dialog.destroy
         return file

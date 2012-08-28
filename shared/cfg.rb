@@ -129,6 +129,10 @@ class Cfg
         return @config_dir+PREFS_FILE
     end
 
+    def rip_dir
+        return ENV["HOME"]+"/rip/"
+    end
+
 
     #
     # Special cases for the server: db & log are forced to specific directories

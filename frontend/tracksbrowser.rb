@@ -261,6 +261,20 @@ p sql
         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
     end
 
+    def get_track_status(track_index = 1)
+        itr = nil
+        i = 0
+        @tv.model.each { |model, path, iter| i += 1; itr = iter if i == track_index }
+        return itr ? itr[TTV_DATA].status : TracksBrowser::TRK_NOT_FOUND
+    end
+
+    def get_track_infos(track_index = 1)
+        itr = nil
+        i = 0
+        @tv.model.each { |model, path, iter| i += 1; itr = iter if i == track_index }
+        return itr ? TrackInfos.new.get_track_infos(itr[TTV_REF]) : nil
+    end
+
 #     def set_tags(tags)
 #         set_track_field("itags", tags, false)
 #         sql = "UPDATE tracks SET itags=#{tags} WHERE rtrack IN ("
@@ -375,7 +389,11 @@ p sql
     end
 
     def on_tag_file
-        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN)
+        return if @tv.selection.count_selected_rows != 1
+        iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+        fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
+        dir = fname.empty? ? "" : File::dirname(fname)
+        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, dir)
         Utils::tag_and_move_file(file, TrackInfos.new.get_track_infos(@track.rtrack)) unless file.empty?
     end
 

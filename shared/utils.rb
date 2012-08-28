@@ -260,7 +260,7 @@ class Utils
     #
     #
     def Utils::audio_file_exists(track_infos)
-        file = Cfg::instance.music_dir+track_infos.genre+File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname
+        file = track_infos.get_full_dir+File::SEPARATOR+track_infos.fname
         AUDIO_EXTS.each { |ext| return AudioFileStatus.new(FILE_OK, file+ext) if File::exists?(file+ext) }
 
         file = File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname

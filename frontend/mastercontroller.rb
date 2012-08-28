@@ -425,6 +425,17 @@ class MasterController
         return @trk_browser.get_drag_tracks
     end
 
+    # Return status/track infos of track track_index from the track browser, that is what is
+    # currently displayed, NOT by searching in the db.
+    def get_track_status(track_index = 1)
+        return @trk_browser.get_track_status(track_index)
+    end
+
+    def get_track_infos(track_index = 1)
+        return @trk_browser.get_track_infos(track_index)
+    end
+
+
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
 puts "*** save memos called"

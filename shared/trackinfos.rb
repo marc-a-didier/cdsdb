@@ -63,6 +63,10 @@ class TrackInfos
         return build_file_infos(rtrack)
     end
 
+    def get_full_dir
+        return Cfg::instance.music_dir+@genre+"/"+@dir
+    end
+
     def from_tags(fname)
         tags = TagLib::File.new(fname)
         @rec_art.sname   = @seg_art.sname = tags.artist

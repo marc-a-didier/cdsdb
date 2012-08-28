@@ -344,12 +344,19 @@ p row
     end
 
     def on_tag_dir
-        dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
+        default_dir = case @mc.get_track_status(1)
+            when TracksBrowser::TRK_NOT_FOUND,
+                 TracksBrowser::TRK_ON_SERVER then Cfg::instance.rip_dir
+            when TracksBrowser::TRK_FOUND,
+                 TracksBrowser::TRK_MISPLACED then @mc.get_track_infos(1).get_full_dir
+        end
+        dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
             expected, found = Utils::tag_and_move_dir(dir, @record.rrecord) { Gtk.main_iteration while Gtk.events_pending? }
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
-            elsif dir.match(/\/rip\//)
+#             elsif dir.match(/\/rip\//)
+            elsif dir.match(Cfg::instance.rip_dir)
                 # Set the ripped date only if processing files from my own rip directory...
                 DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@record.rrecord};")
             end
