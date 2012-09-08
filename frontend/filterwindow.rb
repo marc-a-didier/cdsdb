@@ -139,15 +139,15 @@ puts wc
         total = selected = 0
         ls.each { |model, path, iter| total += 1; selected += 1 if iter[0] == true }
         if selected > 0 && selected != total
-            wc += " AND ("
-            cond = ""
+            cond = " IN ("
             if selected <= total/2
-                ls.each { |model, path, iter| cond += " OR  #{cond_field} = #{iter[2]}" if iter[0] == true }
+                ls.each { |model, path, iter| cond += iter[2].to_s+"," if iter[0] == true }
             else
-                ls.each { |model, path, iter| cond += " AND #{cond_field} <> #{iter[2]}" if iter[0] == false }
+                cond = " NOT"+cond
+                ls.each { |model, path, iter| cond += iter[2].to_s+"," if iter[0] == false }
             end
-            cond = cond[4..-1]
-            wc += cond+")"
+            cond[-1] = ")"
+            wc = " AND ("+cond_field+cond+")"
         end
         return wc
     end
@@ -169,7 +169,7 @@ puts sql
         DBIntf.connection.execute(sql) do |row|
             # Skip tracks which aren't ripped
             next if Utils::audio_file_exists(track_infos.get_track_infos(row[0])).status == Utils::FILE_NOT_FOUND
-            
+
             max_played = row[1] if row[1] > max_played
             tracks << [0.0, row[0], row[1].to_f, row[2].to_f/6.0*100.0, row[3]]
             f << row[0] << " - " << row[1] << " - " << row[2] << " - " << row[3] << "\n"
@@ -178,7 +178,7 @@ puts sql
 
         # Filter was too restrictive, no match, exit silently
         return if tracks.size == 0
-        
+
         # Store play count and rating weight for effiency purpose
         pcweight = @mc.glade[UIConsts::FLT_SPIN_PCWEIGHT].value
         rtweight = @mc.glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value
