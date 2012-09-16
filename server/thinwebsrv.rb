@@ -117,30 +117,26 @@ end
 
 class ImageProvider
   def call(env)
-    params = CGI::parse(env["QUERY_STRING"])
-
-    image = ""
-    File.open(params['ref'][0], "rb") { |file| image = file.read }
-
-    [ 200, { 'Content-Type' => 'image/jpeg' }, [image] ]
+    [ 200, { 'Content-Type' => 'image/jpeg' }, [File.read(Rack::Utils::parse_query(env["QUERY_STRING"])['ref'])] ]
   end
 end
 
 class SimpleAdapter
   def call(env)
 p env
-    params = CGI::parse(env["QUERY_STRING"])
+    params = Rack::Utils::parse_query(env["QUERY_STRING"])
 p params
+# p env["PATH_INFO"]
 
     ret_code = 200
     if params.empty?
         page = NavMgr::instance.home_page
-    elsif !params["genre"].empty?
-        page = NavMgr::instance.artists_by_genre(params["genre"][0])
-    elsif !params["artist"].empty?
-        page = NavMgr::instance.records_by_artist(params["artist"][0])
-    elsif !params["record"].empty?
-        page = NavMgr::instance.tracks_by_record(params["record"][0])
+    elsif params["genre"]
+        page = NavMgr::instance.artists_by_genre(params["genre"])
+    elsif params["artist"]
+        page = NavMgr::instance.records_by_artist(params["artist"])
+    elsif params["record"]
+        page = NavMgr::instance.tracks_by_record(params["record"])
     else
         ret_code = 404
         page = "Fuck you up..."
@@ -156,7 +152,7 @@ p params
   end
 end
 
-# app = Rack::Directory.new('/home/madmac/Music')
+# app = Rack::Directory.new(Cfg::instance.music_dir)
 # Thin::Server.start('0.0.0.0', 7125, app)# do
 
 Cfg::instance.load
@@ -170,6 +166,6 @@ Thin::Server.start('0.0.0.0', 7125) do
       run ImageProvider.new
   end
   map '/files' do
-    run Rack::Directory.new('/home/madmac/Music')
+    run Rack::Directory.new(Cfg::instance.music_dir)
   end
 end
