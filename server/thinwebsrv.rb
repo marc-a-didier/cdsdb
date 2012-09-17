@@ -16,6 +16,8 @@ require '../shared/dbclassintf'
 require '../shared/utils'
 require '../shared/uiconsts'
 require '../shared/dbutils'
+require '../shared/trackinfos'
+
 
 Thread::abort_on_exception = true
 
@@ -102,9 +104,13 @@ class Navigator
                  INNER JOIN segments ON tracks.rsegment=segments.rsegment
                  WHERE segments.rrecord=#{rrecord} AND segments.rartist=#{@artist.rartist}
                  ORDER BY tracks.iorder}
+                 p sql
         DBIntf::connection.execute(sql) { |row|
             @track.ref_load(row[0])
-            page += "<a href=/muse?track=#{@track.rtrack}>#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)}</a><br>"
+            page += "#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)} "
+            page += "<a href=/file?track=#{@track.rtrack}>Download</a> "
+            page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
+            page += "<br/>"
         }
         page += "</ul>"
         return page
@@ -121,7 +127,21 @@ class ImageProvider
   end
 end
 
-class SimpleAdapter
+class AudioProvider
+  def call(env)
+    params = Rack::Utils::parse_query(env["QUERY_STRING"])
+    track_infos = TrackInfos.new
+    file_name = Utils::audio_file_exists(track_infos.get_track_infos(params["track"].to_i)).file_name
+p file_name
+    file_name.empty? ?
+        [ 404, { 'Content-Type' => 'text/html' }, [""] ] :
+        [ 200, { 'Content-Type' => 'audio/ogg' }, [File.read(file_name)] ]
+  end
+end
+
+METHS = {"genre" => :artists_by_genre, "artist" => :records_by_artist, "record" => :tracks_by_record}
+
+class PageProvider
   def call(env)
 p env
     params = Rack::Utils::parse_query(env["QUERY_STRING"])
@@ -131,24 +151,17 @@ p params
     ret_code = 200
     if params.empty?
         page = NavMgr::instance.home_page
-    elsif params["genre"]
-        page = NavMgr::instance.artists_by_genre(params["genre"])
-    elsif params["artist"]
-        page = NavMgr::instance.records_by_artist(params["artist"])
-    elsif params["record"]
-        page = NavMgr::instance.tracks_by_record(params["record"])
     else
-        ret_code = 404
-        page = "Fuck you up..."
+        pary = params.flatten
+        if METHS[pary[0]]
+            page = NavMgr::instance.send(METHS[pary[0]], pary[1])
+        else
+            ret_code = 404
+            page = "Fuck you up..."
+        end
     end
-    body = [page]
 
-    [
-      ret_code,
-      { 'Content-Type' => 'text/html; charset=utf-8',
-        'Title' => 'Test Muse' },
-      body
-    ]
+    [ret_code, { 'Content-Type' => 'text/html; charset=utf-8' }, [page]]
   end
 end
 
@@ -159,13 +172,8 @@ Cfg::instance.load
 
 Thin::Server.start('0.0.0.0', 7125) do
   use Rack::CommonLogger
-  map '/muse' do
-    run SimpleAdapter.new
-  end
-  map '/image' do
-      run ImageProvider.new
-  end
-  map '/files' do
-    run Rack::Directory.new(Cfg::instance.music_dir)
-  end
+  map('/muse')  { run(PageProvider.new) }
+  map('/image') { run(ImageProvider.new) }
+  map('/audio') { run(AudioProvider.new) }
+  map('/files') { run(Rack::Directory.new(Cfg::instance.music_dir)) }
 end
