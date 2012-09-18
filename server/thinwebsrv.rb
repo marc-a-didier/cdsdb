@@ -82,7 +82,8 @@ class Navigator
             image_file = Utils::get_cover_file_name(record.rrecord, 0, record.irecsymlink)
             image_file = Cfg::instance.covers_dir+"default.png" if image_file.empty?
             page += "<tr>"
-            page += %Q{<td><img src="/image?ref=#{URI::escape(image_file)}" width="128" height="128" /></td>}
+#             page += %Q{<td><img src="/image?ref=#{URI::escape(image_file)}" width="128" height="128" /></td>}
+            page += %Q{<td><img src="/covers/#{File::basename(image_file)}" width="128" height="128" /></td>}
             page += "<td>"
             page += "<a href=/muse?record=#{record.rrecord}>#{CGI::escapeHTML(record.stitle)}</a>"
             page += %Q{<p class="ex1">Year: #{record.iyear}<br/>}
@@ -104,12 +105,17 @@ class Navigator
                  INNER JOIN segments ON tracks.rsegment=segments.rsegment
                  WHERE segments.rrecord=#{rrecord} AND segments.rartist=#{@artist.rartist}
                  ORDER BY tracks.iorder}
-                 p sql
+        track_infos = TrackInfos.new
         DBIntf::connection.execute(sql) { |row|
             @track.ref_load(row[0])
+            file_name = Utils::audio_file_exists(track_infos.get_track_infos(@track.rtrack)).file_name
             page += "#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)} "
-            page += "<a href=/file?track=#{@track.rtrack}>Download</a> "
-            page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
+            unless file_name.empty?
+                file_name.gsub!(Cfg::instance.music_dir, "")
+                page += "<a href=/file?track=#{@track.rtrack}>Download</a> "
+#             page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
+                page += %{<audio src="/Music/#{file_name}" controls>Ca dejante...</audio><br/>}
+            end
             page += "<br/>"
         }
         page += "</ul>"
@@ -172,8 +178,10 @@ Cfg::instance.load
 
 Thin::Server.start('0.0.0.0', 7125) do
   use Rack::CommonLogger
+  use(Rack::Static, :urls => ["/covers"], :root => "/home/madmac/Dev/Ruby/cdsdb")
+  use(Rack::Static, :urls => ["/Music"],  :root => ENV["HOME"])
   map('/muse')  { run(PageProvider.new) }
-  map('/image') { run(ImageProvider.new) }
-  map('/audio') { run(AudioProvider.new) }
+#   map('/image') { run(ImageProvider.new) }
+#   map('/audio') { run(AudioProvider.new) }
   map('/files') { run(Rack::Directory.new(Cfg::instance.music_dir)) }
 end
