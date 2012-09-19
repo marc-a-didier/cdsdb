@@ -38,6 +38,7 @@ class Navigator
     def default_style
         %Q{<head><style type="text/css">
            a{font-family:Arial,Helvetica,sans-serif;}
+           p{font-family:Arial,Helvetica,sans-serif;}
            </style></head>}
     end
 
@@ -55,8 +56,9 @@ class Navigator
     def artists_by_genre(rgenre)
         @genre.ref_load(rgenre)
 
+        path = @genre.sname
         page = default_style
-        page += "<h1>Artists</h1><br><br><ul>"
+        page += "<h1>Artists</h1><br><h2>#{path}</h2><br><ul>"
         sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
                     INNER JOIN segments ON segments.rartist = artists.rartist
                     INNER JOIN records ON records.rrecord = segments.rrecord
@@ -71,10 +73,12 @@ class Navigator
     def records_by_artist(rartist)
         @artist.ref_load(rartist)
 
+        path = @genre.sname+" > "+@artist.sname
+
         page = default_style
         page += %Q{<style type="text/css">p.ex1{font:15px arial,sans-serif;}</style>}
 
-        page += %Q{<h1>Records</h1><br><br><table border="1">}
+        page += %Q{<h1>Records</h1><br><h2>#{path}</h2><br><table border="1">}
         sql = %Q{SELECT DISTINCT(rrecord) FROM segments WHERE rartist=#{rartist};}
         record = RecordDBClass.new
         DBIntf::connection.execute(sql) { |segment|
@@ -99,8 +103,12 @@ class Navigator
     end
 
     def tracks_by_record(rrecord)
+        @record.ref_load(rrecord)
+
+        path = @genre.sname+" > "+@artist.sname+" > "+@record.stitle
+
         page = default_style
-        page += "<h1>Tracks</h1><br><br><ul>"
+        page += %{<h1>Tracks</h1><br><h2>#{path}</h2><br><p><table border="2"}
         sql = %Q{SELECT tracks.rtrack, tracks.iorder, segments.rrecord FROM tracks
                  INNER JOIN segments ON tracks.rsegment=segments.rsegment
                  WHERE segments.rrecord=#{rrecord} AND segments.rartist=#{@artist.rartist}
@@ -109,16 +117,17 @@ class Navigator
         DBIntf::connection.execute(sql) { |row|
             @track.ref_load(row[0])
             file_name = Utils::audio_file_exists(track_infos.get_track_infos(@track.rtrack)).file_name
-            page += "#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)} "
+            page += "<tr>"
+            page += "<td>#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)}</td>"
             unless file_name.empty?
                 file_name.gsub!(Cfg::instance.music_dir, "")
-                page += "<a href=/file?track=#{@track.rtrack}>Download</a> "
+                page += "<td><a href=/file?track=#{@track.rtrack}>Download</a></td>"
 #             page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
-                page += %{<audio src="/Music/#{file_name}" controls>Ca dejante...</audio><br/>}
+                page += %{<td><audio src="/Music/#{URI::escape(file_name)}" controls width="300" height="42">Ca dejante...</audio><td/>}
             end
-            page += "<br/>"
+            page += "</tr>"
         }
-        page += "</ul>"
+        page += "</p></table>"
         return page
     end
 end
@@ -126,6 +135,8 @@ end
 class NavMgr < Navigator
     include Singleton
 end
+
+=begin  ...Has been...
 
 class ImageProvider
   def call(env)
@@ -138,29 +149,29 @@ class AudioProvider
     params = Rack::Utils::parse_query(env["QUERY_STRING"])
     track_infos = TrackInfos.new
     file_name = Utils::audio_file_exists(track_infos.get_track_infos(params["track"].to_i)).file_name
-p file_name
     file_name.empty? ?
         [ 404, { 'Content-Type' => 'text/html' }, [""] ] :
         [ 200, { 'Content-Type' => 'audio/ogg' }, [File.read(file_name)] ]
   end
 end
 
+=end
+
 METHS = {"genre" => :artists_by_genre, "artist" => :records_by_artist, "record" => :tracks_by_record}
 
 class PageProvider
   def call(env)
-p env
-    params = Rack::Utils::parse_query(env["QUERY_STRING"])
-p params
-# p env["PATH_INFO"]
+# p env
+    # Flatten the hash returned by parse_query so i can access it as an array
+    params = Rack::Utils::parse_query(env["QUERY_STRING"]).flatten
+# p params
 
     ret_code = 200
     if params.empty?
         page = NavMgr::instance.home_page
     else
-        pary = params.flatten
-        if METHS[pary[0]]
-            page = NavMgr::instance.send(METHS[pary[0]], pary[1])
+        if METHS[params[0]]
+            page = NavMgr::instance.send(METHS[params[0]], params[1])
         else
             ret_code = 404
             page = "Fuck you up..."
@@ -177,9 +188,9 @@ end
 Cfg::instance.load
 
 Thin::Server.start('0.0.0.0', 7125) do
-  use Rack::CommonLogger
-  use(Rack::Static, :urls => ["/covers"], :root => "/home/madmac/Dev/Ruby/cdsdb")
-  use(Rack::Static, :urls => ["/Music"],  :root => ENV["HOME"])
+  use(Rack::CommonLogger)
+  use(Rack::ShowExceptions)
+  use(Rack::Static, :urls => ["/Music", "/covers"],  :root => ENV["HOME"]+"/www")
   map('/muse')  { run(PageProvider.new) }
 #   map('/image') { run(ImageProvider.new) }
 #   map('/audio') { run(AudioProvider.new) }
