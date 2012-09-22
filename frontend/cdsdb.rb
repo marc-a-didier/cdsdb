@@ -196,6 +196,10 @@ require './my_rr_lib'
 
 # TODO: s'inscrire comme client sur le serveur pour recevoir les updates des morceaux joues???
 
+# TODO: Colorer les artistes en fonction du nombre d'ecoutes, genre vert au rouge???
+
+# TODO: Corriger le bug des charts!!!
+
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)
 #   TODO: Chercher le genre de musique sur le net (via Wikipedia)?

@@ -96,7 +96,7 @@ class PlayerWindow < TopWindow
     end
 
     def play_track
-@player_data ? puts("[#{@player_data.rtrack.to_s}, #{@player_data.fname}]") : puts("[nil]")
+puts @player_data ? "[#{@player_data.rtrack.to_s}, #{@player_data.fname}]" : "[nil]"
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?

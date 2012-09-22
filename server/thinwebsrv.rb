@@ -36,18 +36,52 @@ class Navigator
     end
 
     def default_style
-        %Q{<head><style type="text/css">
-           a{font-family:Arial,Helvetica,sans-serif;}
-           p{font-family:Arial,Helvetica,sans-serif;}
-           </style></head>}
+        %{<!DOCTYPE html>
+          <head>
+            <style type="text/css">
+                a{font-family:Arial,Helvetica,sans-serif;}
+                p{font-family:Arial,Helvetica,sans-serif;}
+            </style>
+        }
+    end
+
+    def main_title_style
+        %{
+            <style type="text/css">
+            .center
+            {
+            margin:auto;
+            width:100%;
+            background-color:#b0e0e6;
+            box-shadow: 10px 10px 5px #888888;
+            }
+            h2 {text-align:center;}
+            p {text-align:center;}
+            </style>
+        }
+    end
+
+    def set_styles(styles = [])
+        head = default_style;
+        styles.each { |style| head += self.send(style) } unless styles.empty?
+        return head+"</head>"
     end
 
     def home_page
-        page = default_style
+        artists = DBIntf::connection.get_first_value("SELECT COUNT(rartist) FROM artists")
+        records, play_time = DBIntf::connection.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records")
+        tracks = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks")
+
+
+        page = set_styles([:main_title_style])
+
+        page += %{<div class="center"><h2>Welcome to CDsDB!</h2>
+                  <p>#{artists} artists, #{records} records, #{tracks} tracks for #{Utils::format_day_length(play_time)} of non-stop music!</p>
+                  </div>}
         page += "<h1>Genres</h1><br><br><ul>"
-        sql = "SELECT * FROM genres ORDER BY LOWER(sname)"
+        sql = "SELECT * FROM genres WHERE rgenre<>0 ORDER BY LOWER(sname)"
         DBIntf::connection.execute(sql) { |row|
-            page += "<a href=/muse?genre=#{row[0]}>#{CGI::escapeHTML(row[1])}</a><br/>"
+            page += %{<a href="/muse?genre=#{row[0]}">#{CGI::escapeHTML(row[1])}</a><br/>}
         }
         page += "</ul>"
         return page
@@ -57,14 +91,14 @@ class Navigator
         @genre.ref_load(rgenre)
 
         path = @genre.sname
-        page = default_style
+        page = set_styles
         page += "<h1>Artists</h1><br><h2>#{path}</h2><br><ul>"
         sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
                     INNER JOIN segments ON segments.rartist = artists.rartist
                     INNER JOIN records ON records.rrecord = segments.rrecord
                     WHERE records.rgenre=#{rgenre} ORDER BY LOWER(artists.sname)}
         DBIntf::connection.execute(sql) { |row|
-            page += "<a href=/muse?artist=#{row[0]}>#{CGI::escapeHTML(row[1])}</a><br>"
+            page += %{<a href="/muse?artist=#{row[0]}">#{CGI::escapeHTML(row[1])}</a><br>}
         }
         page += "</ul>"
         return page
@@ -75,7 +109,7 @@ class Navigator
 
         path = @genre.sname+" > "+@artist.sname
 
-        page = default_style
+        page = set_styles
         page += %Q{<style type="text/css">p.ex1{font:15px arial,sans-serif;}</style>}
 
         page += %Q{<h1>Records</h1><br><h2>#{path}</h2><br><table border="1">}
@@ -89,7 +123,7 @@ class Navigator
 #             page += %Q{<td><img src="/image?ref=#{URI::escape(image_file)}" width="128" height="128" /></td>}
             page += %Q{<td><img src="/covers/#{File::basename(image_file)}" width="128" height="128" /></td>}
             page += "<td>"
-            page += "<a href=/muse?record=#{record.rrecord}>#{CGI::escapeHTML(record.stitle)}</a>"
+            page += %{<a href="/muse?record=#{record.rrecord}">#{CGI::escapeHTML(record.stitle)}</a>}
             page += %Q{<p class="ex1">Year: #{record.iyear}<br/>}
             page += %Q{Label: #{CGI::escapeHTML(DBUtils::name_from_id(record.rlabel, "label"))}<br/>}
             page += %Q{Catalog: #{record.scatalog}<br/>}
@@ -107,7 +141,7 @@ class Navigator
 
         path = @genre.sname+" > "+@artist.sname+" > "+@record.stitle
 
-        page = default_style
+        page = set_styles
         page += %{<h1>Tracks</h1><br><h2>#{path}</h2><br><p><table border="2"}
         sql = %Q{SELECT tracks.rtrack, tracks.iorder, segments.rrecord FROM tracks
                  INNER JOIN segments ON tracks.rsegment=segments.rsegment
@@ -121,7 +155,7 @@ class Navigator
             page += "<td>#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)}</td>"
             unless file_name.empty?
                 file_name.gsub!(Cfg::instance.music_dir, "")
-                page += "<td><a href=/file?track=#{@track.rtrack}>Download</a></td>"
+                page += %{<td><a href="/file?track=#{@track.rtrack}">Download</a></td>}
 #             page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
                 page += %{<td><audio src="/Music/#{URI::escape(file_name)}" controls width="300" height="42">Ca dejante...</audio><td/>}
             end
