@@ -243,7 +243,7 @@ class ArtistsBrowser < GenericBrowser
             name_renderer.editable = true
             name_renderer.signal_connect(:edited) { |widget, path, new_text| on_artist_edited(widget, path, new_text) }
         end
-        name_column = Gtk::TreeViewColumn.new("Name", name_renderer)
+        name_column = Gtk::TreeViewColumn.new("Artists", name_renderer)
         name_column.set_cell_data_func(name_renderer) { |col, renderer, model, iter| renderer.markup = iter[ATV_NAME] }
 
         @tv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new, :text => ATV_REF))
