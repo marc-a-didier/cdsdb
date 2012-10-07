@@ -76,12 +76,9 @@ class DBReorderer
     end
 
     def process_logs
-        i = 0
         log = DBClassIntf.new(LogTrackDBS.new)
-        DBIntf::connection.execute("SELECT * FROM logtracks ORDER BY rlogtrack;") { |row|
-            i += 1
+        DBIntf::connection.execute("SELECT * FROM logtracks;") { |row|
             log.load_from_row(row)
-            log.rlogtrack = i
             log.rtrack = @trk_map[log.rtrack]
             @outfile.puts(log.generate_insert)
         }
@@ -90,7 +87,7 @@ class DBReorderer
     def process_tracks
         seg_order = 0
         ntracks_in_seg = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{@old_seg};")
-        DBIntf::connection.execute("SELECT * FROM tracks WHERE rsegment = #{@old_seg} ORDER BY iorder;") { |row|
+        DBIntf::connection.execute("SELECT * FROM tracks WHERE rsegment=#{@old_seg} ORDER BY iorder;") { |row|
             @track.load_from_row(row)
             @new_trk += 1
 
@@ -112,7 +109,7 @@ class DBReorderer
     end
 
     def process_segments
-        DBIntf::connection.execute("SELECT * FROM segments WHERE rrecord = #{@old_rec} ORDER BY iorder;") { |row|
+        DBIntf::connection.execute("SELECT * FROM segments WHERE rrecord=#{@old_rec} ORDER BY iorder;") { |row|
             @segment.load_from_row(row)
             @new_seg += 1
             @old_seg = @segment.rsegment
@@ -126,7 +123,7 @@ class DBReorderer
     end
 
     def process_records
-        DBIntf::connection.execute("SELECT * FROM records WHERE rartist = #{@old_art} ORDER BY LOWER(stitle);") { |row|
+        DBIntf::connection.execute("SELECT * FROM records WHERE rartist=#{@old_art} ORDER BY LOWER(stitle);") { |row|
             @record.load_from_row(row)
             @new_rec += 1
             @old_rec = @record.rrecord

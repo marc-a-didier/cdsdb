@@ -481,7 +481,7 @@ print "Checking #{file}\n"
                 artist << record
             end
         end
-        ["plists", "pltracks", "logtracks"].each { |table| dump_table(xdoc, table) }
+        ["plists", "pltracks", "hostnames", "logtracks"].each { |table| dump_table(xdoc, table) }
         xdoc.save(Cfg::instance.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
     end
 
