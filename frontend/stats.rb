@@ -43,7 +43,8 @@ class Stats
     def init_globals(fname, title)
         op_id = @mc.tasks.new_progress("Collecting basic infos")
         @f = File.new(fname, "w")
-        @f << "<html><head>"
+        @f << "<!DOCTYPE html><head>"
+        @f << '<meta charset="UTF-8">'
         @f << "<title>#{title}</title>"
         @f << "</head><body>"
         @f << '<style type="text/css">'
@@ -300,6 +301,22 @@ class Stats
         @f << "</table></p><hr /><br /><br />"
     end
 
+    def played_tracks_stats
+        @f << '<h2>Played tracks</h2><br /><p>'
+        @f << '<table border="1">'
+        tot_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
+        @f << "<tr><td>Played tracks total</td><td>#{tot_played}</td></tr>"
+        never_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0")
+        @f << "<tr><td>Never played tracks</td><td>#{never_played}</td></tr>"
+        diff_played = DBIntf::connection.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks")
+        @f << "<tr><td>Different played tracks</td><td>#{diff_played}</td></tr>"
+        DBIntf::connection.execute("SELECT * FROM hostnames") { |host|
+            host_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhostname=#{host[0]}")
+            @f << "<tr><td>Played on #{host[1]}</td><td>#{host_played}</td></tr>"
+        }
+        @f << "</table></p><hr /><br /><br />"
+    end
+
     def cleanup
         @f << "</body></html>"
         @f.close
@@ -309,6 +326,7 @@ class Stats
         init_globals(Cfg::instance.rsrc_dir+"dbstats.html", "DB Statistics")
         db_general_infos
 
+        played_tracks_stats
         @genres.each { |genre| ripped_stats(genre) if genre[0] != 0 }
         records_by_genre
         records_by_artists
