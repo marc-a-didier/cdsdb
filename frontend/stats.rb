@@ -32,16 +32,46 @@ class Stats
     DBTOTS_TRACKS  = 3
     DBTOTS_PTIME   = 4
 
+    class ColorAlternator
+
+        attr_reader :counter
+
+        def initialize
+            reset
+        end
+
+        def reset
+            @counter = 0
+        end
+
+        def get_color
+            @counter += 1
+            @counter.even? ? '<tr>' : '<tr class="alt">'
+        end
+    end
+
     def initialize(mc)
         @mc = mc
+        @altr = ColorAlternator.new
+    end
+
+    def new_table
+        @f << '<table id="mytbl">'
+        @altr.reset
+    end
+
+    def new_row(cols)
+        @f << @altr.get_color
+        cols.each { |col_title| @f << "<td>"+col_title.to_s+"</td>" }
+        @f << "</tr>"
+    end
+
+    def end_table(html_epilogue = "")
+        @f << "</table>"+html_epilogue
     end
 
     def get_count(stbl)
         return DBIntf::connection.get_first_value("SELECT COUNT(r#{stbl}) FROM #{stbl}s;")
-    end
-
-    def select_color(i)
-        i % 2 == 1 ? "<tr>" : %{<tr class="alt">}
     end
 
     def init_globals(fname, title)
@@ -50,7 +80,6 @@ class Stats
         @f << "<!DOCTYPE html><head>"
         @f << '<meta charset="UTF-8">'
         @f << "<title>#{title}</title>"
-        @f << "</head><body>"
         @f << '<style type="text/css">'
         @f << 'h1 {font-size: 18px; font-family: "sans";}'
         @f << 'h2 {font-size: 16px; font-family: "sans";}'
@@ -84,7 +113,7 @@ class Stats
                 }
                 }
 #                     background-color:#EAF2D3;
-        @f << '</style>'
+        @f << '</style></head><body>'
 
         @genres = []
         @db_tots = []
@@ -103,32 +132,26 @@ class Stats
     def db_general_infos
         op_id = @mc.tasks.new_progress("General infos")
 
-        i = 0
         @f << '<h1>General infos</h1><br /><p>'
-        @f << '<table id="mytbl">'
-        @f << "#{select_color(i)}<td>Total number of artists</td><td>#{@db_tots[DBTOTS_ARTISTS]}</td></tr>"
-        i += 1
-        @f << "#{select_color(i)}<td>Total number of records</td><td>#{@db_tots[DBTOTS_RECORDS]} - Play time: #{Utils::format_day_length(@db_tots[DBTOTS_PTIME])}</td></tr>"
-        i += 1
-        @f << "#{select_color(i)}<td>Total number of segments</td><td>#{@db_tots[DBTOTS_SEGS]}</td></tr>"
-        i += 1
-        @f << "#{select_color(i)}<td>Total number of tracks</td><td>#{@db_tots[DBTOTS_TRACKS]}</td></tr>"
-        @f << "</table></p><hr /><br /><br />"
-
+        new_table
+        new_row(["Total number of artists", @db_tots[DBTOTS_ARTISTS]])
+        new_row(["Total number of records", "#{@db_tots[DBTOTS_RECORDS]} - Play time: #{Utils::format_day_length(@db_tots[DBTOTS_PTIME])}"])
+        new_row(["Total number of segments", @db_tots[DBTOTS_SEGS]])
+        new_row(["Total number of tracks", @db_tots[DBTOTS_TRACKS]])
+        end_table("</p><hr /><br /><br />")
 
         @f << "<h2>Records by media type</h2><br /><p>"
-        @f << '<table id="mytbl">'
-        i = 0
+        new_table
         DBIntf::connection.execute("SELECT * FROM medias;") do |mediatype|
             DBIntf::connection.execute("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia=#{mediatype[0]};") do |row|
                 #Gtk.main_iteration while Gtk.events_pending?
                 @mc.tasks.update_progress(op_id)
                 @media[mediatype[1]] = [row[0], row[1]]
-                @f << "#{select_color(i)}<td>#{mediatype[1]}</td><td>#{row[0]} records for #{Utils::format_day_length(row[1].to_i)}</td></tr>"
-                i+= 1
+                new_row([mediatype[1], "#{row[0]} records", Utils::format_day_length(row[1].to_i)])
             end
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
+
         @mc.tasks.end_progress(op_id)
     end
 
@@ -182,15 +205,16 @@ class Stats
 
     def records_by_genre
         @f << '<h2>Ripped records</h2><br /><p>'
-        @f << '<table id="mytbl">'
-        @genres.each_with_index { |genre, i|
+        new_table
+        @genres.each { |genre|
             next if genre[GENRE_REF] == 0
-            @f << "#{select_color(i)}<td>#{genre[GENRE_NAME]}</td>"
-            @f << "<td>#{genre[GENRE_RIPPED]}/#{genre[GENRE_TOT_RECS]}</td><td>#{Utils::format_day_length(genre[GENRE_RIPTIME])}/#{Utils::format_day_length(genre[GENRE_TOT_RECTIME])}</td></tr>"
+            new_row([genre[GENRE_NAME], "#{genre[GENRE_RIPPED]}/#{genre[GENRE_TOT_RECS]}",
+                     Utils::format_day_length(genre[GENRE_RIPTIME]), Utils::format_day_length(genre[GENRE_TOT_RECTIME])])
         }
         genre = @genres[0]
-        @f << "<tr><td>Total</td><td>#{genre[GENRE_RIPPED]}/#{genre[GENRE_TOT_RECS]}</td><td>#{Utils::format_day_length(genre[GENRE_RIPTIME])}/#{Utils::format_day_length(genre[GENRE_TOT_RECTIME])}</td></tr>"
-        @f << "</table></p><hr /><br /><br />"
+        new_row(["Total", "#{genre[GENRE_RIPPED]}/#{genre[GENRE_TOT_RECS]}",
+                 Utils::format_day_length(genre[GENRE_RIPTIME]), Utils::format_day_length(genre[GENRE_TOT_RECTIME])])
+        end_table("</p><hr /><br /><br />")
     end
 
     def records_by_artists
@@ -199,43 +223,39 @@ class Stats
                INNER JOIN records ON artists.rartist=records.rartist
                GROUP BY artists.rartist ORDER BY nrecs DESC;"
         @f << '<h2>Records by artists</h2><br /><p>'
-        @f << '<table id="mytbl">'
-        pos = 0
+        new_table
         DBIntf::connection.execute(sql) do |row|
             #Gtk.main_iteration while Gtk.events_pending?
             @mc.tasks.update_progress(op_id)
-            pos += 1
-            @f << "#{select_color(pos)}<td>#{pos}</td><td>#{row[2]}</td><td>#{row[0]}</td><td>#{Utils::format_day_length(row[1].to_i)}</td></tr>"
+            new_row([@altr.counter+1, row[2], row[0], Utils::format_day_length(row[1].to_i)])
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
         @mc.tasks.end_progress(op_id)
     end
 
     def top_genres
-        pos = 0
         @f << '<h2>Music Style Top Chart</h2><br /><p>'
-        @f << '<table id="mytbl">'
         sql = "SELECT SUM(iplayed) AS totplayed, genres.sname, COUNT(iplayed) FROM tracks
                LEFT OUTER JOIN records ON tracks.rrecord=records.rrecord
                LEFT OUTER JOIN genres ON records.rgenre=genres.rgenre
                WHERE iplayed > 0 GROUP BY records.rgenre ORDER BY totplayed DESC;"
+        cols = []
+        new_table
         DBIntf::connection.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            pos += 1
             genre = nil
             @genres.each { |g| if g.index(row[1]) then genre = g; break; end }
-            @f << "#{select_color(pos)}<td>#{pos}</td><td>#{row[0]}</td><td>#{row[1]}</td>"
+            cols = [@altr.counter+1, row[0], row[1]]
             unless genre.nil?
-                @f << "<td>#{row[2]}/#{genre[GENRE_TOT_TRACKS]}</td><td>#{"%6.2f" % [row[2].to_f/genre[GENRE_TOT_TRACKS].to_f*100.0]}%</td>"
-                @f << "<td>#{Utils::format_day_length(genre[GENRE_PLAYED_TIME])}/#{Utils::format_day_length(genre[GENRE_TOT_TIME])}</td>"
-                @f << "</tr>"
+                cols += ["#{row[2]}/#{genre[GENRE_TOT_TRACKS]}", "#{"%6.2f" % [row[2].to_f/genre[GENRE_TOT_TRACKS].to_f*100.0]}%"]
+                cols += ["#{Utils::format_day_length(genre[GENRE_PLAYED_TIME])}/#{Utils::format_day_length(genre[GENRE_TOT_TIME])}"]
             end
+            new_row(cols)
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def top_artists(genre)
-        pos = 0
         sql = "SELECT SUM(iplayed) AS totplayed, artists.sname FROM tracks
                LEFT OUTER JOIN segments ON tracks.rsegment=segments.rsegment
                LEFT OUTER JOIN artists ON artists.rartist=segments.rartist
@@ -248,17 +268,15 @@ class Stats
             @f << "<h2>#{genre[GENRE_NAME]} Artists Top Chart</h2><br /><p>"
             sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY artists.rartist ORDER BY totplayed DESC;"
         end
-        @f << '<table id="mytbl">'
+        new_table
         DBIntf::connection.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            pos += 1
-            @f << "#{select_color(pos)}<td>#{pos}</td><td>#{row[0].to_i}</td><td>#{row[1]}</td></tr>"
+            new_row([@altr.counter+1, row[0], row[1]])
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def top_records(genre)
-        pos = 0
         sql = "SELECT SUM(iplayed) AS totplayed, records.stitle, artists.sname FROM tracks
                LEFT OUTER JOIN records ON tracks.rrecord=records.rrecord
                LEFT OUTER JOIN artists ON artists.rartist=records.rartist "
@@ -270,17 +288,15 @@ class Stats
             @f << "<h2>#{genre[GENRE_NAME]} Records Top Chart</h2><br /><p>"
             sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY records.rrecord ORDER BY totplayed DESC;"
         end
-        @f << '<table id="mytbl">'
+        new_table
         DBIntf::connection.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            pos += 1
-            @f << "#{select_color(pos)}<td>#{pos}</td><td>#{row[0]}</td><td>#{row[1]}</td><td>#{row[2]}</td></tr>"
+            new_row([@altr.counter+1, row[0], row[1], row[2]])
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def top_tracks(genre)
-        pos = 0
         if genre[GENRE_REF] == 0
             @f << "<h2>All Styles Tracks Top Chart</h2><br /><p>"
             sql = "SELECT rtrack, stitle, iplayed FROM tracks WHERE iplayed > 0 ORDER BY iplayed DESC;"
@@ -292,68 +308,56 @@ class Stats
                    WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} ORDER BY iplayed DESC;"
         end
         track_infos = TrackInfos.new
-        @f << '<table id="mytbl">'
+        new_table
         DBIntf::connection.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            pos += 1
             track_infos.load_track(row[0].to_i)
-            @f << select_color(pos)
-            @f << "<td>#{pos}</td><td>#{row[2]}</td><td>#{row[1]}</td><td>#{track_infos.seg_art.sname}</td><td>#{track_infos.record.stitle}</td>"
-            @f << "<td>#{track_infos.segment.stitle}</td>" unless track_infos.segment.stitle.empty?
-            @f << "</tr>"
+            new_row([@altr.counter+1, row[2], row[1], track_infos.seg_art.sname,
+                     track_infos.record.stitle, track_infos.segment.stitle])
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def top_rated_tracks
-        pos = 0
         track_infos = TrackInfos.new
         @f << '<h2>Most rated tracks</h2><br /><p>'
-        @f << '<table id="mytbl">'
+        new_table
         DBIntf::connection.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            pos += 1
             track_infos.load_track(row[0])
-            @f << "#{select_color(pos)}<td>#{pos}</td><td>#{Cdsdb::RATINGS[row[2]]}</td><td>#{row[1]}</td><td>#{track_infos.seg_art.sname}</td><td>#{track_infos.record.stitle}</td>"
-            @f << "<td>#{track_infos.segment.stitle}</td>)" unless track_info.segment.stitle.empty?
-            @f << "</tr>"
+            new_row([@altr.counter+1, Cdsdb::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
+                     track_infos.record.stitle, track_infos.segment.stitle])
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def gen_play_history
-        pos = 0
         track_infos = TrackInfos.new
         @f << '<h2>Play history</h2><br /><p>'
-        @f << '<table id="mytbl">'
+        new_table
         DBIntf::connection.execute("SELECT rtrack, stitle, ilastplayed FROM tracks WHERE ilastplayed > 0 ORDER BY ilastplayed DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            pos += 1
             track_infos.load_track(row[0])
-            @f << "#{select_color(pos)}<td>#{pos}</td><td>#{Time.at(row[2])}</td><td>#{row[1]}</td><td>#{track_infos.seg_art.sname}</td><td>#{track_infos.record.stitle}</td>"
-            @f << "<td>#{track_infos.segment.stitle}</td>)" unless track_info.segment.stitle.empty?
-            @f << "</tr>"
+            new_row([@altr.counter+1, Time.at(row[2]), row[1], track_infos.seg_art.sname,
+                     track_infos.record.stitle, track_infos.segment.stitle])
         end
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def played_tracks_stats
         @f << '<h2>Played tracks</h2><br /><p>'
-        @f << '<table id="mytbl">'
+        new_table
         tot_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
-        @f << "<tr><td>Played tracks total</td><td>#{tot_played}</td></tr>"
         never_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0")
-        @f << %{<tr class="alt"><td>Never played tracks</td><td>#{never_played}</td></tr>}
         diff_played = DBIntf::connection.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks")
-        @f << "<tr><td>Different played tracks</td><td>#{diff_played}</td></tr>"
-        i = 1
+        new_row(["Played tracks total", tot_played])
+        new_row(["Never played tracks", never_played])
+        new_row(["Distinct played tracks", diff_played])
         DBIntf::connection.execute("SELECT * FROM hostnames") { |host|
             host_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhostname=#{host[0]}")
-            i % 2 == 0 ? @f << "<tr>" : @f << %{<tr class="alt">}
-            @f << "<td>Played on #{host[1]}</td><td>#{host_played}</td></tr>"
-            i += 1
+            new_row(["Played on #{host[1]}", host_played])
         }
-        @f << "</table></p><hr /><br /><br />"
+        end_table("</p><hr /><br /><br />")
     end
 
     def cleanup
@@ -367,8 +371,9 @@ class Stats
 
         played_tracks_stats
         @genres.each { |genre| ripped_stats(genre) if genre[0] != 0 }
-        records_by_genre
-        records_by_artists
+#         records_by_genre
+#         records_by_artists
+        top_genres
 
         cleanup
     end
