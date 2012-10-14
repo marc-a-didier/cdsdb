@@ -61,9 +61,22 @@ class Navigator
         }
     end
 
+    def player_func
+        %{<script>
+            function playFunction(file, rtrack)
+            {
+                // document.getElementById(rtrack).style.color = "#ff0000";
+                var audio = '<audio autoplay src="/Music/'+file+'" controls width="300" height="42">Ca dejante...</audio>'
+                document.getElementById(rtrack).innerHTML = audio
+                //'<audio src="/Music/"+file controls width="300" height="42">Ca dejante...</audio>'
+            }
+          </script>
+         }
+    end
+
     def set_styles(styles = [])
         head = default_style;
-        styles.each { |style| head += self.send(style) } unless styles.empty?
+        styles.each { |style| head += self.send(style) }
         return head+"</head>"
     end
 
@@ -141,7 +154,7 @@ class Navigator
 
         path = @genre.sname+" > "+@artist.sname+" > "+@record.stitle
 
-        page = set_styles
+        page = set_styles([:player_func])
         page += %{<h1>Tracks</h1><br><h2>#{path}</h2><br><p><table border="2"}
         sql = %Q{SELECT tracks.rtrack, tracks.iorder, segments.rrecord FROM tracks
                  INNER JOIN segments ON tracks.rsegment=segments.rsegment
@@ -157,7 +170,9 @@ class Navigator
                 file_name.gsub!(Cfg::instance.music_dir, "")
                 page += %{<td><a href="/file?track=#{@track.rtrack}">Download</a></td>}
 #             page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
-                page += %{<td><audio src="/Music/#{URI::escape(file_name)}" controls width="300" height="42">Ca dejante...</audio><td/>}
+#                 page += %{<td><audio src="/Music/#{URI::escape(file_name)}" controls width="300" height="42">Ca dejante...</audio><td/>}
+                page += %{<td><button onclick="playFunction('#{file_name}', '#{@track.rtrack}')">Play</button></td>}
+                page += %{<td id="#{@track.rtrack}">Play zone</td>}
             end
             page += "</tr>"
         }
