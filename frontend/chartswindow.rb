@@ -286,7 +286,7 @@ class ChartsWindow < TopWindow
                     next if row[1] != ref
                     found = first_match = true
                     iter = @lsc.get_iter((i-1).to_s)
-                    can_exit = iter[COL_REF] == ref
+                    can_exit = iter[COL_REF] == ref #rank > old_rank correct the bug???
                 else
                     iter = @lsc.get_iter((i-1).to_s)
                 end
@@ -307,10 +307,10 @@ class ChartsWindow < TopWindow
             if @count_type == COUNT_PLAYED
                 iter[COL_PLAYED] = played.to_s
             else
-                if @view_type == VIEW_TRACKS || @view_type == VIEW_RECORDS
-                    iter[COL_PLAYED] = Utils::format_hr_length(played)
+                if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+                    iter[COL_PLAYED] = played.to_hr_length
                 else
-                    iter[COL_PLAYED] = Utils::format_day_length(played)
+                    iter[COL_PLAYED] = played.to_day_length
                 end
             end
             iter[COL_REF] = row[1]

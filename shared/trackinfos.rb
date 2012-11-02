@@ -45,12 +45,12 @@ class TrackInfos
         # If we have a compilation, the main dir is the record title as opposite to the standard case
         # where it's the artist name
         @dir = @record.compile? ?
-            File.join(Utils::clean_path(@record.stitle), Utils::clean_path(@seg_art.sname)) :
-            File.join(Utils::clean_path(@rec_art.sname), Utils::clean_path(@record.stitle))
+            File.join(@record.stitle.clean_path, @seg_art.sname.clean_path) :
+            File.join(@rec_art.sname.clean_path, @record.stitle.clean_path)
 
-        @fname = sprintf("%02d - %s", @track.iorder, Utils::clean_path(@title))
+        @fname = sprintf("%02d - %s", @track.iorder, @title.clean_path)
         @genre = DBUtils::name_from_id(@record.rgenre, DBIntf::TBL_GENRES)
-        @dir += "/"+Utils::clean_path(@segment.stitle) unless @segment.stitle.empty?
+        @dir += "/"+@segment.stitle.clean_path unless @segment.stitle.empty?
 
         return self
     end

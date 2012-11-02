@@ -14,7 +14,7 @@ class AudioDialog
         @glade[UIConsts::AUDIO_LBL_DALBUM].text = tags.album
         @glade[UIConsts::AUDIO_LBL_DTRACK].text = tags.track.to_s
         @glade[UIConsts::AUDIO_LBL_DYEAR].text = tags.year.to_s
-        @glade[UIConsts::AUDIO_LBL_DDURATION].text = Utils::format_ms_length(tags.length*1000)
+        @glade[UIConsts::AUDIO_LBL_DDURATION].text = (tags.length*1000).to_ms_length
         @glade[UIConsts::AUDIO_LBL_DGENRE].text = tags.genre
         @glade[UIConsts::AUDIO_ENTRY_COMMENT].text = tags.comment
 

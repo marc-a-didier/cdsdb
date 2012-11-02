@@ -48,13 +48,13 @@ puts "in init_handlers"
             control.text = DBUtils::name_from_id(dbs[field], field[1..-1]) if is_to
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = Utils::format_ms_length(dbs[field]) : dbs[field] = Utils::ms_length_from_str(control.text)
+            is_to ? control.text = dbs[field].to_ms_length : dbs[field] = control.text.to_ms_length
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = Utils::format_date(dbs[field]) : dbs[field] = Utils::parse_date(control.text)
+            is_to ? control.text = dbs[field].to_std_date : dbs[field] = control.text.to_date_from_utc
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = Utils::format_date(dbs[field], "Never") : dbs[field] = Utils::parse_date(control.text)
+            is_to ? control.text = dbs[field].to_std_date("Never") : dbs[field] = control.text.to_date_from_utc
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|
             is_to ? control.active = dbs[field] > 0 : dbs[field] = control.active? ? 1 : 0

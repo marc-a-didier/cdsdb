@@ -105,7 +105,7 @@ class CDEditorWindow
         iter[1] = track.title
         iter[2] = track.segment
         iter[3] = track.artist
-        iter[4] = Utils::format_ms_length(track.length)
+        iter[4] = track.length.to_ms_length
         @disc.length += track.length if @mode == MODE_FILE
     end
 

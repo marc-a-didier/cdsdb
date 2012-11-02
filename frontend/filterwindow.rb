@@ -105,8 +105,8 @@ class FilterWindow < TopWindow
             wc += " AND tracks.iplaytime <= #{len}"
         end
         if @mc.glade[FLT_EXP_PLAYDATES].expanded?
-            from_date = Utils::parse_date2(@mc.glade[FLT_ENTRY_FROMDATE].text)
-            to_date   = Utils::parse_date2(@mc.glade[FLT_ENTRY_TODATE].text)
+            from_date = @mc.glade[FLT_ENTRY_FROMDATE].text.to_date
+            to_date   = @mc.glade[FLT_ENTRY_TODATE].text.to_date
 #            to_date, from_date = from_date, to_date if to_date < from_date
 
             wc += " AND (SELECT idateplayed FROM logtracks WHERE logtracks.rtrack=tracks.rtrack" unless is_for_charts

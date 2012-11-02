@@ -111,12 +111,12 @@ class RecentItemsDialog
                 track_infos.get_track_infos(row[0])
                 iter[COL_PIX]   = IconsMgr::instance.get_cover(row[3], row[0], row[4], 64)
                 iter[COL_TITLE] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
-                iter[COL_DATE]  = Time.at(row[1]).strftime("%a %b %d %Y %H:%M:%S")+" @ "+row[2]
+                iter[COL_DATE]  = row[1].to_std_date+" @ "+row[2]
             else
                 iter[COL_PIX]   = IconsMgr::instance.get_cover(row[0], 0, row[4], 64)
                 iter[COL_TITLE] = "<b>"+CGI::escapeHTML(row[1])+"</b>\n"+
                                   "by <i>"+CGI::escapeHTML(row[2])+"</i>"
-                iter[COL_DATE]  = row[3] == 0 ? "Unknown" : Time.at(row[3]).to_s
+                iter[COL_DATE]  = row[3].to_std_date
             end
         end
     end

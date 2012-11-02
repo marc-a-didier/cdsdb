@@ -91,7 +91,7 @@ class RecordsBrowser < GenericBrowser
     def map_rec_row_to_entry(row, iter)
         iter[RTV_REF]    = row[REC_ROW_REF]
         iter[RTV_TITLE]  = row[REC_ROW_TITLE]
-        iter[RTV_PTIME]  = Utils::format_ms_length(row[REC_ROW_PTIME].to_i)
+        iter[RTV_PTIME]  = row[REC_ROW_PTIME].to_ms_length
         iter[RTV_RS_REF] = row[REC_ROW_RSEG]
     end
 
@@ -125,7 +125,7 @@ class RecordsBrowser < GenericBrowser
         else
             iter[RTV_TITLE] = row[SEG_ROW_TITLE].empty? ? row[SEG_ROW_RTITLE] : row[SEG_ROW_TITLE]
         end
-        iter[RTV_PTIME]  = Utils::format_ms_length(row[SEG_ROW_PTIME])
+        iter[RTV_PTIME]  = row[SEG_ROW_PTIME].to_ms_length
         iter[RTV_RS_REF] = iter.parent[RTV_REF]
     end
 

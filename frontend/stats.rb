@@ -125,7 +125,7 @@ class Stats
         @db_tots << DBIntf::connection.get_first_value("SELECT SUM(iplaytime) FROM records").to_i
 
         @genres << [0, "", 0, 0, 0, 0, 0, 0, 0, 0]
-        DBIntf::connection.execute("SELECT * FROM genres ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
+        DBIntf::connection.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
         @genres.each { |genre| @mc.tasks.update_progress(op_id); init_table(genre) }
         @genres.delete_if { |genre| genre[GENRE_TOT_TRACKS] == 0 } # Remove genres with no tracks
         @mc.tasks.end_progress(op_id)
@@ -136,7 +136,7 @@ class Stats
 
         new_table("General infos")
         new_row(["Total number of artists", @db_tots[DBTOTS_ARTISTS]])
-        new_row(["Total number of records", "#{@db_tots[DBTOTS_RECORDS]} - Play time: #{Utils::format_day_length(@db_tots[DBTOTS_PTIME])}"])
+        new_row(["Total number of records", "#{@db_tots[DBTOTS_RECORDS]} - Play time: #{@db_tots[DBTOTS_PTIME].to_day_length}"])
         new_row(["Total number of segments", @db_tots[DBTOTS_SEGS]])
         new_row(["Total number of tracks", @db_tots[DBTOTS_TRACKS]])
         end_table
@@ -147,7 +147,7 @@ class Stats
                 #Gtk.main_iteration while Gtk.events_pending?
                 @mc.tasks.update_progress(op_id)
                 @media[mediatype[1]] = [row[0], row[1]]
-                new_row([mediatype[1], row[0], Utils::format_day_length(row[1].to_i)])
+                new_row([mediatype[1], row[0], row[1].to_i.to_day_length])
             end
         end
         end_table
@@ -208,11 +208,11 @@ class Stats
         @genres.each { |genre|
             next if genre[GENRE_REF] == 0
             new_row([genre[GENRE_NAME], genre[GENRE_RIPPED], genre[GENRE_TOT_RECS],
-                     Utils::format_day_length(genre[GENRE_RIPTIME]), Utils::format_day_length(genre[GENRE_TOT_RECTIME])])
+                     genre[GENRE_RIPTIME].to_day_length, genre[GENRE_TOT_RECTIME].to_day_length])
         }
         genre = @genres[0]
         new_row(["Total", genre[GENRE_RIPPED], genre[GENRE_TOT_RECS],
-                 Utils::format_day_length(genre[GENRE_RIPTIME]), Utils::format_day_length(genre[GENRE_TOT_RECTIME])])
+                 genre[GENRE_RIPTIME].to_day_length, genre[GENRE_TOT_RECTIME].to_day_length])
         end_table
     end
 
@@ -225,7 +225,7 @@ class Stats
         DBIntf::connection.execute(sql) do |row|
             #Gtk.main_iteration while Gtk.events_pending?
             @mc.tasks.update_progress(op_id)
-            new_row([@altr.counter+1, row[2], row[0], Utils::format_day_length(row[1].to_i)])
+            new_row([@altr.counter+1, row[2], row[0], row[1].to_i.to_day_length])
         end
         end_table
         @mc.tasks.end_progress(op_id)
@@ -370,9 +370,9 @@ class Stats
         db_general_infos
 
         played_tracks_stats
-#         @genres.each { |genre| ripped_stats(genre) if genre[0] != 0 }
+#         @genres.each { |genre| ripped_stats(genre) }
 #         records_by_genre
-#         records_by_artists
+        records_by_artists
 #         top_genres
 #         @genres.each { |genre| top_artists(genre) }
 #         gen_play_history

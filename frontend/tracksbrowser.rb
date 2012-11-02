@@ -197,7 +197,7 @@ class TracksBrowser < GenericBrowser
         iter[TTV_TITLE]     = row[ROW_TITLE]
         #iter[TTV_TITLE]     = row[ROW_SEG_ORDER]+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != "0" && @mc.glade[UIConsts::MM_VIEW_TRACKINDEX].active?
         iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && @mc.glade[UIConsts::MM_VIEW_TRACKINDEX].active?
-        iter[TTV_PLAY_TIME] = Utils::format_ms_length(row[ROW_PLAY_TIME])
+        iter[TTV_PLAY_TIME] = row[ROW_PLAY_TIME].to_ms_length
         if @tv.columns[TTV_ART_OR_SEG].visible?
             iter[TTV_ART_OR_SEG] = @mc.artist.compile? ? row[ROW_ART_NAME] : row[ROW_SEG_TITLE]
         else

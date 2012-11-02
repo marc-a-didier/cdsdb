@@ -239,8 +239,8 @@ public
     end
 
     def plist_infos
-        @mc.glade[UIConsts::PL_LBL_TRACKS].text = "#{@tracks} tracks"
-        @mc.glade[UIConsts::PL_LBL_PTIME].text = Utils::format_hr_length(@ttime)
+        @mc.glade[UIConsts::PL_LBL_TRACKS].text = @tracks.to_s+" track".check_plural(@tracks)
+        @mc.glade[UIConsts::PL_LBL_PTIME].text = @ttime.to_hr_length
         @mc.glade[UIConsts::PL_LBL_ETA].text = "D.O.A."
     end
 
@@ -249,7 +249,7 @@ public
     end
 
     def update_ptime_label(rmg_time)
-        @mc.glade[UIConsts::PL_LBL_PTIME].text = "#{Utils::format_hr_length(rmg_time)} left of #{Utils::format_hr_length(@ttime)}"
+        @mc.glade[UIConsts::PL_LBL_PTIME].text = "#{rmg_time.to_hr_length} left of #{@ttime.to_hr_length}"
         @mc.glade[UIConsts::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime("%a %d, %H:%M")
     end
 
@@ -363,8 +363,7 @@ public
     end
 
     def do_add
-        exec_sql("INSERT INTO plists VALUES (#{DBUtils::get_last_id("plist")+1}, 'New Play List'), " \
-                 "0, #{Time.now.to_i}, 0;")
+        exec_sql(%{INSERT INTO plists VALUES (#{DBUtils::get_last_id('plist')+1}, 'New Play List', 0, #{Time.now.to_i}, 0);})
         update_tvpl
     end
 
@@ -518,7 +517,7 @@ public
             track_infos.get_track_infos(iter[TT_RTRACK])
             audio_file = Utils::audio_file_exists(track_infos).file_name
             dest_file = exp.remove_genre ? audio_file.sub(/^#{exp.src_folder}[0-9A-Za-z ']*\//, exp.dest_folder) : audio_file.sub(/^#{exp.src_folder}/, exp.dest_folder)
-            dest_file = Utils::make_fat_compliant(dest_file) if exp.fat_compat
+            dest_file = dest_file.make_fat_compliant if exp.fat_compat
             if File.exists?(dest_file)
                 puts "Export: file #{dest_file} already exists."
             else
@@ -582,7 +581,7 @@ public
                 iter[TT_TITLE] = row[TDB_STITLE].empty? ? row[TDB_TTITLE] : row[TDB_STITLE]+": "+row[TDB_TTITLE]
                 iter[TT_ARTIST] = row[TDB_ARTISTS]
                 iter[TT_RECORD] = row[TDB_RTITLE]
-                iter[TT_LENGTH] = Utils::format_ms_length(row[TDB_ILENGTH])
+                iter[TT_LENGTH] = row[TDB_ILENGTH].to_ms_length
                 iter[TT_MSLEN] = row[TDB_ILENGTH]
                 iter[TT_RTRACK] = row[TDB_RTRACK]
         end

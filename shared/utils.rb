@@ -21,7 +21,7 @@ class String
         return quantity < 2 ? self : self+"s"
     end
 
-    def ms_length
+    def to_ms_length
         m, s, ms = self.split(/[:,\.]/)
         return m.to_i*60*1000+s.to_i*1000+ms.to_i
     end
@@ -32,6 +32,28 @@ class String
 
     def make_fat_compliant
         return self.gsub(/[\*|\?|\\|\:|\<|\>|\"|\|]/, "_")
+    end
+
+#     def make_fat_compliant!
+#         self = make_fat_compliant
+#     end
+
+    def to_date_from_utc
+        begin
+            dt = (Time.at(DateTime.parse(self).to_time)-Time.now.utc_offset).to_i
+        rescue ArgumentError
+            dt = 0
+        end
+        return dt
+    end
+
+    def to_date
+        begin
+            dt = Time.at(Date.parse(self).to_time).to_i
+        rescue ArgumentError
+            dt = 0
+        end
+        return dt
     end
 end
 
@@ -64,7 +86,13 @@ class Numeric
         return sprintf("%d %s, %02d:%02d:%02d", d, "day".check_plural(d), h, m, s)
     end
 
-    def std_date_format(zero_msg = "Unknown")
+    def to_sec_length
+        m  = self/60
+        s  = self%60
+        return sprintf("%02d:%02d", m, s)
+    end
+
+    def to_std_date(zero_msg = "Unknown")
         return self == 0 ? zero_msg : Time.at(self).strftime("%a %b %d %Y %H:%M:%S")
     end
 end
@@ -80,76 +108,6 @@ class Utils
     AUDIO_EXTS = [".flac", ".ogg", ".mp3"]
 
     DOWNLOADING = "downloading"
-
-    def Utils::check_plural(word, quantity)
-        return quantity < 2 ? word : word+"s"
-    end
-
-    def Utils::clean_path(path)
-        return path.gsub(/[\/\<\>]/, "_")
-    end
-
-    def Utils::format_ms_length(ms_length)
-        m  = ms_length/60000
-        s  = (ms_length-m*60000)/1000
-        ms = ms_length-m*60000-s*1000
-        return sprintf("%02d:%02d.%03d", m, s, ms)
-    end
-
-    def Utils::format_sec_length(sec_length)
-        m  = sec_length/60
-        s  = sec_length-m*60
-        return sprintf("%02d:%02d", m, s)
-    end
-
-    def Utils::format_hr_length(ms_length)
-        hl = 60*60*1000
-        h = ms_length/hl
-        m = (ms_length-h*hl)/60000
-        s = (ms_length-h*hl-m*60000)/1000
-        return sprintf("%02d:%02d:%02d", h, m, s)
-    end
-
-    def Utils::format_day_length(ms_length)
-        hl = 60*60*1000
-        h = ms_length/hl
-        d = h/24
-        h = h-(d*24)
-        m = (ms_length-d*24*hl-h*hl)/60000
-        s = (ms_length-d*24*hl-h*hl-m*60000)/1000
-        return sprintf("%d %s, %02d:%02d:%02d", d, Utils::check_plural("day", d), h, m, s)
-    end
-
-    def Utils::ms_length_from_str(str)
-        m, s, ms = str.split(/[:,\.]/)
-        return m.to_i*60*1000+s.to_i*1000+ms.to_i
-    end
-
-    def Utils::parse_date(str)
-        begin
-            dt = (Time.at(DateTime.parse(str).to_time)-Time.now.utc_offset).to_i
-        rescue ArgumentError
-            dt = 0
-        end
-        return dt
-    end
-
-    def Utils::parse_date2(str)
-        begin
-            dt = Time.at(Date.parse(str).to_time).to_i
-        rescue ArgumentError
-            dt = 0
-        end
-        return dt
-    end
-
-    def Utils::format_date(date, zero_msg = "Unknown")
-        return date == 0 ? zero_msg : Time.at(date).strftime("%a %b %d %Y %H:%M:%S")
-    end
-
-    def Utils::make_fat_compliant(fname)
-        return fname.gsub(/[\*|\?|\\|\:|\<|\>|\"]/, "_") # y'a aussi |
-    end
 
     #
     # Methods intended to deal with the fact that files may now be anywhere on disk rather than just ../

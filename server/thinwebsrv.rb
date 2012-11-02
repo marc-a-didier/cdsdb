@@ -89,7 +89,7 @@ class Navigator
         page = set_styles([:main_title_style])
 
         page += %{<div class="center"><h2>Welcome to CDsDB!</h2>
-                  <p>#{artists} artists, #{records} records, #{tracks} tracks for #{Utils::format_day_length(play_time)} of non-stop music!</p>
+                  <p>#{artists} artists, #{records} records, #{tracks} tracks for #{play_time.to_day_length} of non-stop music!</p>
                   </div>}
         page += "<h1>Genres</h1><br><br><ul>"
         sql = "SELECT * FROM genres WHERE rgenre<>0 ORDER BY LOWER(sname)"
@@ -140,7 +140,7 @@ class Navigator
             page += %Q{<p class="ex1">Year: #{record.iyear}<br/>}
             page += %Q{Label: #{CGI::escapeHTML(DBUtils::name_from_id(record.rlabel, "label"))}<br/>}
             page += %Q{Catalog: #{record.scatalog}<br/>}
-            page += %Q{Play time: #{Utils::format_ms_length(record.iplaytime)}}
+            page += %Q{Play time: #{record.iplaytime.to_ms_length}}
             page += "</p>"
             page += "</td>"
             page += "</tr>"

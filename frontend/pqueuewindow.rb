@@ -162,7 +162,7 @@ class PQueueWindow < TopWindow
                     iter[0] = iter.path.to_s.to_i+1
                     iter[1] = IconsMgr::instance.get_cover(0, 0, 0, 64)
                     iter[2], extra.ptime = get_title_and_length(extra.fname)
-                    iter[3] = Utils::format_sec_length(extra.ptime/1000)
+                    iter[3] = (extra.ptime/1000).to_sec_length
                     iter[4] = extra
                 }
         end
@@ -182,7 +182,7 @@ class PQueueWindow < TopWindow
             iter[1] = IconsMgr::instance.get_cover(track_infos.record.rrecord, track_infos.track.rtrack,
                                                    track_infos.record.irecsymlink, 64)
             iter[2] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
-            iter[3] = Utils::format_sec_length(track_infos.track.iplaytime/1000)
+            iter[3] = (track_infos.track.iplaytime/1000).to_sec_length
             iter[4] = PQExtra.new(@internal_ref, track_infos.track.rtrack, track_infos.record.rrecord,
                                   track_infos.track.iplaytime, fname, track_infos.record.irecsymlink)
 
@@ -208,11 +208,11 @@ class PQueueWindow < TopWindow
     end
 
     def update_tracks_label
-        @mc.glade[UIConsts::PQ_LBL_TRACKS].text = @ntracks == 0 ?  "No track" : "#{@ntracks} #{Utils::check_plural("track", @ntracks)}"
+        @mc.glade[UIConsts::PQ_LBL_TRACKS].text = @ntracks == 0 ?  "No track" : "#{@ntracks} #{"track".check_plural(@ntracks)}"
     end
 
     def update_ptime_label(ptime)
-        @mc.glade[UIConsts::PQ_LBL_PTIME].text = @ntracks == 0 ? "00:00:00" : Utils::format_hr_length(ptime)
+        @mc.glade[UIConsts::PQ_LBL_PTIME].text = @ntracks == 0 ? "00:00:00" : ptime.to_hr_length
     end
 
     def update_eta_label(ptime)

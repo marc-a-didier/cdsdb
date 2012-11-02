@@ -495,15 +495,15 @@ p sql
 
         glade[UIConsts::ARTINFOS_LBL_RECS_COUNT].text = recs_infos[0].to_s
         glade[UIConsts::ARTINFOS_LBL_RECS_TRKS].text  = recs_infos[2].to_s
-        glade[UIConsts::ARTINFOS_LBL_RECS_PT].text    = Utils::format_day_length(recs_infos[1].to_i)
+        glade[UIConsts::ARTINFOS_LBL_RECS_PT].text    = recs_infos[1].to_i.to_day_length
 
         glade[UIConsts::ARTINFOS_LBL_COMP_COUNT].text = comp_infos[0].to_s
         glade[UIConsts::ARTINFOS_LBL_COMP_TRKS].text  = comp_infos[2].to_s
-        glade[UIConsts::ARTINFOS_LBL_COMP_PT].text    = Utils::format_day_length(comp_infos[1].to_i)
+        glade[UIConsts::ARTINFOS_LBL_COMP_PT].text    = comp_infos[1].to_i.to_day_length
 
         glade[UIConsts::ARTINFOS_LBL_TOT_COUNT].text = (recs_infos[0]+comp_infos[0]).to_s
         glade[UIConsts::ARTINFOS_LBL_TOT_TRKS].text  = (recs_infos[2]+comp_infos[2]).to_s
-        glade[UIConsts::ARTINFOS_LBL_TOT_PT].text    = Utils::format_day_length(recs_infos[1].to_i+comp_infos[1].to_i)
+        glade[UIConsts::ARTINFOS_LBL_TOT_PT].text    = (recs_infos[1].to_i+comp_infos[1].to_i).to_day_length
 
         glade[UIConsts::DLG_ART_INFOS].show.run
         glade[UIConsts::DLG_ART_INFOS].destroy

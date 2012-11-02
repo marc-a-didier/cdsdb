@@ -63,7 +63,7 @@ class RecordUI < RecordDBClass
         str += ", "+DBUtils::name_from_id(self.rgenre, "genre")
         str += ", "+self.isetorder.to_s+" of "+self.isetof.to_s if self.isetorder > 0
         str += ", "+DBUtils::name_from_id(self.rcollection, "collection") if self.rcollection != 0
-        str += ", "+Utils::format_ms_length(self.iplaytime)
+        str += ", "+self.iplaytime.to_ms_length
     end
 end
 
@@ -88,7 +88,7 @@ class SegmentUI < SegmentDBClass
         str  = "Segment "+self.iorder.to_s
         str += " "+self.stitle unless self.stitle.empty?
         str += " by "+DBUtils::name_from_id(self.rartist, "artist")
-        str += " "+Utils::format_ms_length(self.iplaytime)
+        str += " "+self.iplaytime.to_ms_length
     end
 end
 
@@ -126,8 +126,8 @@ class TrackUI < TrackDBClass
     def build_infos_string
         return "" unless self.valid?
         str  = UIConsts::RATINGS[self.irating]+", "
-        str += self.iplayed > 0 ? "played "+self.iplayed.to_s+Utils::check_plural(" time", self.iplayed)+" " : "never played, "
-        str += "(Last: "+Utils::format_date(self.ilastplayed)+"), " if self.ilastplayed != 0
+        str += self.iplayed > 0 ? "played "+self.iplayed.to_s+" time".check_plural(self.iplayed)+" " : "never played, "
+        str += "(Last: "+self.ilastplayed.to_std_date+"), " if self.ilastplayed != 0
         if self.itags == 0
             str += "no tags"
         else
