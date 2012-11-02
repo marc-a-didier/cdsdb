@@ -16,6 +16,59 @@ public
     end
 end
 
+class String
+    def check_plural(quantity)
+        return quantity < 2 ? self : self+"s"
+    end
+
+    def ms_length
+        m, s, ms = self.split(/[:,\.]/)
+        return m.to_i*60*1000+s.to_i*1000+ms.to_i
+    end
+
+    def clean_path
+        return self.gsub(/\//, "_")
+    end
+
+    def make_fat_compliant
+        return self.gsub(/[\*|\?|\\|\:|\<|\>|\"|\|]/, "_")
+    end
+end
+
+SEC_MS_LENGTH  = 1000
+MIN_MS_LENGTH  = 60*SEC_MS_LENGTH
+HOUR_MS_LENGTH = 60*MIN_MS_LENGTH
+
+class Numeric
+    def to_ms_length
+        m  = self/MIN_MS_LENGTH
+        s  = (self-m*MIN_MS_LENGTH)/SEC_MS_LENGTH
+        ms = self % SEC_MS_LENGTH
+        return sprintf("%02d:%02d.%03d", m, s, ms)
+    end
+
+    def to_hr_length
+        h = self/HOUR_MS_LENGTH
+        m = (self-h*HOUR_MS_LENGTH)/MIN_MS_LENGTH
+        s = (self-h*HOUR_MS_LENGTH-m*MIN_MS_LENGTH)/SEC_MS_LENGTH
+        return sprintf("%02d:%02d:%02d", h, m, s)
+    end
+
+    def to_day_length
+        h = self/HOUR_MS_LENGTH
+        d = h/24
+        h = h-(d*24)
+        r = self - d*24*HOUR_MS_LENGTH - h*HOUR_MS_LENGTH
+        m = r / MIN_MS_LENGTH
+        s = (r - m*MIN_MS_LENGTH)/SEC_MS_LENGTH
+        return sprintf("%d %s, %02d:%02d:%02d", d, "day".check_plural(d), h, m, s)
+    end
+
+    def std_date_format(zero_msg = "Unknown")
+        return self == 0 ? zero_msg : Time.at(self).strftime("%a %b %d %Y %H:%M:%S")
+    end
+end
+
 class Utils
 
     # Returned values by audio_file_exists
