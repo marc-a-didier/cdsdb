@@ -23,6 +23,8 @@ class ChartsWindow < TopWindow
     COL_PLAYED = 4
     COL_REF    = 5
 
+    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played)
+
     def initialize(mc)
         super(mc, UIConsts::CHARTS_WINDOW)
 
@@ -66,7 +68,7 @@ class ChartsWindow < TopWindow
 
         srenderer = Gtk::CellRendererText.new()
         @tvc = @mc.glade[UIConsts::CHARTS_TV]
-        # Columns: Entry, Rank, cover, title, played -- Hidden: rtrack
+        # Columns: Entry, Rank, cover, title, played -- Hidden: ref, sorting
         @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, String, Integer)
 
         pix = Gtk::CellRendererPixbuf.new
@@ -100,6 +102,8 @@ class ChartsWindow < TopWindow
         @tvc.columns[COL_TEXT].resizable = true
 
         @tvc.model = @lsc
+
+        @entries = []
     end
 
     def show_popup(widget, event)
@@ -136,6 +140,7 @@ class ChartsWindow < TopWindow
     def live_update(rtrack)
         #update_view(@view_type)
         # Get the appropriate (track, record or artist) reference from the track reference
+        track = TrackDBClass.new.ref_load(rtrack)
         ref = case @view_type
             when VIEW_TRACKS
                 rtrack
@@ -157,7 +162,8 @@ class ChartsWindow < TopWindow
                                                    "WHERE tracks.rtrack=#{rtrack};")
         end
 
-        load_view(@view_type, ref)
+#         load_view(@view_type, ref)
+        lazy_update(@view_type, ref, track)
 
         itr = nil
         @lsc.each { |model, path, iter| if iter[COL_REF] == ref then itr = iter; break; end }
@@ -168,18 +174,6 @@ class ChartsWindow < TopWindow
         @filter = where_clause
         load_view(@view_type, -1)
     end
-    
-#     def set_filter
-#         # Condition is inverted because the signal is received before the action takes place
-#         @filter = @mc.glade[CHARTS_MM_FILTER].active? ? @mc.filter.generate_filter(true) : ""
-#         load_view(@view_type, -1)
-# #         flt_gen = FilterGeneratorDialog.new
-# #         if flt_gen.show(FilterGeneratorDialog::MODE_FILTER) == Gtk::Dialog::RESPONSE_OK
-# #             @filter = flt_gen.get_filter(true)
-# #             load_view(@view_type, -1)
-# #         end
-# #         flt_gen.destroy
-#     end
 
     def generate_play_list
         rplist = DBUtils::get_last_id("plist")+1
@@ -198,16 +192,10 @@ class ChartsWindow < TopWindow
         # N.B: le join sur les records dans les vues par artiste et pays est necessaire si on utilise le filtre!!!
         #      (Juste pour me rappeler pourquoi je me demande pourquoi j'ai foutu ça alors qu'à priori y'a pas besoin)
         #
-		field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
-		field += " AS totplayed"
+        field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
+        field += " AS totplayed"
         case @view_type
             when VIEW_TRACKS
-#                 sql = %Q{SELECT #{field}, tracks.rtrack, tracks.rrecord, records.irecsymlink,
-#                         FROM tracks
-# 						INNER JOIN records ON tracks.rrecord=records.rrecord
-# 						INNER JOIN artists ON artists.rartist=records.rartist
-# 						INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
-# 						WHERE tracks.iplayed > 0 }
                 sql = %Q{SELECT #{field}, tracks.rtrack, tracks.rrecord, records.irecsymlink, tracks.stitle,
                                 segments.stitle, records.stitle, artists.sname, tracks.isegorder
                         FROM tracks
@@ -221,7 +209,7 @@ class ChartsWindow < TopWindow
                 sql = "SELECT #{field}, records.rrecord, records.stitle, records.irecsymlink, artists.sname FROM tracks " \
                       "INNER JOIN records ON tracks.rrecord=records.rrecord " \
                       "INNER JOIN artists ON artists.rartist=records.rartist " \
-		       "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
+                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
                       "WHERE tracks.iplayed > 0 "
                 group_by = "records.rrecord"
             when VIEW_ARTISTS
@@ -229,7 +217,7 @@ class ChartsWindow < TopWindow
                       "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
                       "INNER JOIN artists ON artists.rartist=segments.rartist " \
                       "INNER JOIN records ON tracks.rrecord=records.rrecord " \
-		       "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
+                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
                       "WHERE tracks.iplayed > 0 "
                 group_by = "artists.rartist"
             when VIEW_COUNTRIES
@@ -238,14 +226,14 @@ class ChartsWindow < TopWindow
                       "INNER JOIN artists ON artists.rartist=segments.rartist " \
                       "INNER JOIN records ON tracks.rrecord=records.rrecord " \
                       "INNER JOIN origins ON origins.rorigin=artists.rorigin " \
-		       "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
+                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
                       "WHERE tracks.iplayed > 0 " #AND origins.rorigin > 0 "
                 group_by = "artists.rorigin"
             when VIEW_MTYPES
                 sql = "SELECT #{field}, genres.rgenre, genres.sname FROM tracks " \
                       "INNER JOIN records ON tracks.rrecord=records.rrecord " \
                       "INNER JOIN genres ON records.rgenre=genres.rgenre " \
-		       "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
+                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
                       "WHERE tracks.iplayed > 0 " #AND records.rgenre > 0 "
                 group_by = "records.rgenre"
             when VIEW_LABELS
@@ -257,9 +245,69 @@ class ChartsWindow < TopWindow
                 group_by = "records.rlabel"
         end
         sql += @filter unless @filter.empty?
-        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{Cfg::instance.max_items};"
+        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{Cfg::instance.max_items+50};"
 # p sql
         return  sql
+    end
+
+    def load_charts
+        @entries.clear
+        i = rank = 0
+        last_played = -1
+        DBIntf::connection.execute(generate_sql) do |row|
+            entry = ChartEntry.new
+            entry.entry = i
+            entry.played = row[0].to_i
+            entry.ref = row[1]
+            i += 1
+            if entry.played != last_played
+                rank = i
+                last_played = entry.played
+            end
+            entry.rank = rank
+
+            case @view_type
+                when VIEW_TRACKS
+                    entry.pix   = IconsMgr::instance.get_cover(row[2], row[1], row[3], 64)
+                    entry.title = UIUtils::full_html_track_title(
+                                        Utils::make_track_title(0, row[4], row[8], row[5], @mc.show_segment_title?),
+                                        row[7], row[6])
+                when VIEW_RECORDS
+                    entry.pix   = IconsMgr::instance.get_cover(row[1], 0, row[3], 64)
+                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>\n"+
+                                        "by <i>"+CGI::escapeHTML(row[4])+"</i>"
+                when VIEW_ARTISTS
+                    entry.pix   = IconsMgr::instance.get_flag(row[3], 16)
+                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>"
+                when VIEW_COUNTRIES
+                    entry.pix   = IconsMgr::instance.get_flag(row[1], 16)
+                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>"
+                when VIEW_MTYPES, VIEW_LABELS
+                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>"
+            end
+            @entries << entry
+        end
+    end
+
+    def display_charts(is_reload)
+        @entries.each_with_index { |entry, i|
+            break if i == Cfg::instance.max_items
+            iter = is_reload ? @lsc.get_iter(i.to_s) : @lsc.append
+            iter[COL_ENTRY] = entry.entry+1
+            iter[COL_RANK]  = entry.rank.to_s
+            if @count_type == COUNT_PLAYED
+                iter[COL_PLAYED] = entry.played.to_s
+            else
+                if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+                    iter[COL_PLAYED] = entry.played.to_hr_length
+                else
+                    iter[COL_PLAYED] = entry.played.to_day_length
+                end
+            end
+            iter[COL_REF]  = entry.ref
+            iter[COL_PIX]  = entry.pix
+            iter[COL_TEXT] = entry.title
+        }
     end
 
     def load_view(view_type, ref = -1)
@@ -270,79 +318,44 @@ class ChartsWindow < TopWindow
             @view_type = view_type
         end
 
-
         @lsc.clear if ref == -1
 
-        found = can_exit = first_match = false
-        i = rank = 0
-        last_played = -1
+        load_charts
+        display_charts(false)
+
+        @tvc.columns_autosize if ref == -1
+ref == -1 ? puts("*** charts full load done ***\n") : puts("*** charts update done ***\n")
+        return
 #RubyProf.start
-        DBIntf::connection.execute(generate_sql) do |row|
-            i += 1
-            if ref == -1
-                iter = @lsc.append
-            else
-                if !found
-                    next if row[1] != ref
-                    found = first_match = true
-                    iter = @lsc.get_iter((i-1).to_s)
-                    can_exit = iter[COL_REF] == ref #rank > old_rank correct the bug???
-                else
-                    iter = @lsc.get_iter((i-1).to_s)
-                end
-            end
-
-            played = row[0].to_i
-            if played != last_played
-                rank = i
-                last_played = played
-            end
-            if first_match
-                first_match = false
-                rank = @lsc.get_iter((i-2).to_s)[COL_RANK] if i > 1 && played.to_s == @lsc.get_iter((i-2).to_s)[COL_PLAYED]
-            end
-
-            iter[COL_ENTRY] = i
-            iter[COL_RANK] = rank.to_s
-            if @count_type == COUNT_PLAYED
-                iter[COL_PLAYED] = played.to_s
-            else
-                if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
-                    iter[COL_PLAYED] = played.to_hr_length
-                else
-                    iter[COL_PLAYED] = played.to_day_length
-                end
-            end
-            iter[COL_REF] = row[1]
-            case view_type
-                when VIEW_TRACKS
-                    iter[COL_PIX]  = IconsMgr::instance.get_cover(row[2], iter[COL_REF], row[3], 64)
-                    iter[COL_TEXT] = UIUtils::full_html_track_title(
-                                        Utils::make_track_title(0, row[4], row[8], row[5], @mc.show_segment_title?),
-                                        row[7], row[6])
-                when VIEW_RECORDS
-                    iter[COL_PIX]  = IconsMgr::instance.get_cover(row[1], 0, row[3], 64)
-                    iter[COL_TEXT] = "<b>"+CGI::escapeHTML(row[2])+"</b>\n"+
-                                     "by <i>"+CGI::escapeHTML(row[4])+"</i>"
-                when VIEW_ARTISTS
-                    iter[COL_PIX]  = IconsMgr::instance.get_flag(row[3], 16)
-                    iter[COL_TEXT] = "<b>"+CGI::escapeHTML(row[2])+"</b>"
-                when VIEW_COUNTRIES
-                    iter[COL_PIX]  = IconsMgr::instance.get_flag(row[1], 16)
-                    iter[COL_TEXT] = "<b>"+CGI::escapeHTML(row[2])+"</b>"
-                when VIEW_MTYPES, VIEW_LABELS
-                    iter[COL_TEXT] = "<b>"+CGI::escapeHTML(row[2])+"</b>"
-            end
-            break if can_exit
-        end
 #result = RubyProf.stop
 #printer = RubyProf::FlatPrinter.new(result)
 # f = File.new("../../chartsprofile.txt", "a+")
 # printer.print(f, 0)
 # f.close
 #printer.print
-        @tvc.columns_autosize if ref == -1
-ref == -1 ? puts("*** charts full load done ***\n") : puts("*** charts update done ***\n")
+    end
+
+    #
+    # Lazy update works only for items already in charts
+    def lazy_update(view_type, ref, track)
+        pos = @entries.index { |ce| ce.ref == ref }
+        return unless pos
+
+        @entries[pos].played += @count_type == COUNT_PLAYED ? 1 : track.iplaytime
+        @entries.sort! { |ce1, ce2| ce2.played <=> ce1.played }
+
+        rank = 0
+        last_played = -1
+        @entries.each_with_index { |entry, i|
+            entry.entry = i
+            if entry.played != last_played
+                rank = i+1
+                last_played = entry.played
+            end
+            entry.rank = rank
+        }
+        display_charts(true)
+puts "*** lazy update done ***"
     end
 
     def show
