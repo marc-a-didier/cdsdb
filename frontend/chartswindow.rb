@@ -1,4 +1,16 @@
 
+#
+# From now the charts view is stored in an array that is used to feed the tree view
+# because the fucking tree view model is unusable to fulfill my needs.
+#
+# The main advantage of this method is that i don't need to re-execute the sql query
+# which takes a lot of time on each update. Times are directly set in the array and
+# the view redrawn.
+#
+# But it has the drawbacks of a cache mechanism. As long as a full reload from the
+# database is not made, changes in the database are not reflected in the charts.
+#
+
 class ChartsWindow < TopWindow
 
     include UIConsts
@@ -68,7 +80,7 @@ class ChartsWindow < TopWindow
 
         srenderer = Gtk::CellRendererText.new()
         @tvc = @mc.glade[UIConsts::CHARTS_TV]
-        # Columns: Entry, Rank, cover, title, played -- Hidden: ref, sorting
+        # Columns: Entry, Rank, cover, title, played -- Hidden: ref
         @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, String, Integer)
 
         pix = Gtk::CellRendererPixbuf.new
@@ -138,7 +150,6 @@ class ChartsWindow < TopWindow
     end
 
     def live_update(rtrack)
-        #update_view(@view_type)
         # Get the appropriate (track, record or artist) reference from the track reference
         track = TrackDBClass.new.ref_load(rtrack)
         ref = case @view_type
@@ -162,7 +173,6 @@ class ChartsWindow < TopWindow
                                                    "WHERE tracks.rtrack=#{rtrack};")
         end
 
-#         load_view(@view_type, ref)
         lazy_update(@view_type, ref, track)
 
         itr = nil
@@ -172,9 +182,12 @@ class ChartsWindow < TopWindow
 
     def set_filter(where_clause, must_join_logtracks = false)
         @filter = where_clause
-        load_view(@view_type, -1)
+        load_view(@view_type)
     end
 
+    #
+    # Generates a play plist from the current chart.
+    #
     def generate_play_list
         rplist = DBUtils::get_last_id("plist")+1
         DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
@@ -250,6 +263,9 @@ class ChartsWindow < TopWindow
         return  sql
     end
 
+    #
+    # Builds the cache array from the appropriate sql query
+    #
     def load_charts
         @entries.clear
         i = rank = 0
@@ -289,6 +305,10 @@ class ChartsWindow < TopWindow
         end
     end
 
+    #
+    # Dumps the cache array into the tree view model.
+    # If is_reload is true, iters are updated otherwise they're added.
+    #
     def display_charts(is_reload)
         @entries.each_with_index { |entry, i|
             break if i == Cfg::instance.max_items
@@ -310,7 +330,10 @@ class ChartsWindow < TopWindow
         }
     end
 
-    def load_view(view_type, ref = -1)
+    #
+    # Sets the columns titles and visibility and makes a snapshot of the database.
+    #
+    def load_view(view_type)
         if view_type != @view_type
             @tvc.columns[COL_PIX].visible = view_type != VIEW_MTYPES && view_type != VIEW_LABELS
             @tvc.columns[COL_TEXT].title = COLUMNS_TITLES[view_type]
@@ -318,13 +341,13 @@ class ChartsWindow < TopWindow
             @view_type = view_type
         end
 
-        @lsc.clear if ref == -1
+        @lsc.clear
 
         load_charts
         display_charts(false)
 
-        @tvc.columns_autosize if ref == -1
-ref == -1 ? puts("*** charts full load done ***\n") : puts("*** charts update done ***\n")
+        @tvc.columns_autosize
+puts("*** charts full load done ***")
         return
 #RubyProf.start
 #result = RubyProf.stop
@@ -336,7 +359,10 @@ ref == -1 ? puts("*** charts full load done ***\n") : puts("*** charts update do
     end
 
     #
-    # Lazy update works only for items already in charts
+    # Lazy update works only for items already in charts. The cache has more items
+    # than the view displays so it should be sufficient if a new track makes it
+    # to the top.
+    #
     def lazy_update(view_type, ref, track)
         pos = @entries.index { |ce| ce.ref == ref }
         return unless pos
@@ -355,7 +381,7 @@ ref == -1 ? puts("*** charts full load done ***\n") : puts("*** charts update do
             entry.rank = rank
         }
         display_charts(true)
-puts "*** lazy update done ***"
+puts "*** charts lazy update done ***"
     end
 
     def show
