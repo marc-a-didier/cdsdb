@@ -210,6 +210,32 @@ class RatingsRowProp < GenRowProp
     end
 end
 
+#
+# Attempt to add a view by records...
+#
+class RecordsRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        if level == 0
+            sql = %Q{SELECT records.stitle, artists.rartist, artists.sname, records.rrecord FROM records
+                     INNER JOIN artists ON records.rartist = artists.rartist
+                     ORDER BY LOWER(records.stitle);}
+            DBIntf::connection.execute(sql) { |row|
+                child = model.append(iter)
+                child[0] = row[1]
+#                 child[1] = '<span color="green">'+CGI::escapeHTML(row[0])+"</span>\n<i>"+CGI::escapeHTML(row[2])+"</i>"
+                child[1] = "<b>"+CGI::escapeHTML(row[0])+"</b>\nby <i>"+CGI::escapeHTML(row[2])+"</i>"
+                child[2] = iter[2]
+                child[3] = row[0]+"@@@"+row[3].to_s # Magouille magouille...
+            }
+        end
+        return ""
+    end
+
+    def sub_filter(iter)
+        return " #@where_fields = #{iter[3].split("@@@")[1]}" # Extract rrecord from the sort column
+    end
+end
+
 class ArtistsBrowser < GenericBrowser
 
     MB_TOP_LEVELS = [AllArtistsRowProp.new(1, "artists", 1, false, "", "All"),
@@ -217,9 +243,10 @@ class ArtistsBrowser < GenericBrowser
                      OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
                      TagsRowProp.new(4, "tags", 2, true, "tracks.itags", "Tags"),
                      LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
-                     RippedRowProp.new(6, "artists", 1, false, "records.rrecord", "Last ripped"),
+                     RippedRowProp.new(6, "artists", 1, true, "records.rrecord", "Last ripped"),
                      NeverRowProp.new(7, "tracks", 1, true, "tracks.iplayed", "Never played"),
-                     RatingsRowProp.new(8, "ratings", 2, true, "tracks.irating", "Rating")]
+                     RatingsRowProp.new(8, "ratings", 2, true, "tracks.irating", "Rating"),
+                     RecordsRowProp.new(9, "records", 1, true, "records.rrecord", "Records")]
 
     ATV_REF   = 0
     ATV_NAME  = 1
