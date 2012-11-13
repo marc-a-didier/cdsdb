@@ -57,7 +57,11 @@ class RecentItemsDialog
         @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             tracks = ""
-            DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_REF]};") { |row| tracks += ":"+row[0].to_s }
+            if @view_type == VIEW_PLAYED
+                tracks = ":"+@tv.selection.selected[COL_REF].to_s
+            else
+                DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_REF]};") { |row| tracks += ":"+row[0].to_s }
+            end
             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
         }
 
@@ -69,7 +73,7 @@ class RecentItemsDialog
         @filter = where_clause
         exec_sql(@view_type);
     end
-    
+
     def exec_sql(view_type)
         sql = case view_type
             when VIEW_ADDED
