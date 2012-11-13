@@ -32,13 +32,20 @@ class Stats
     DBTOTS_TRACKS  = 3
     DBTOTS_PTIME   = 4
 
-    TV_ITEMS = {"Played tracks" => [true, :played_tracks_stats],
-                "Rated and tagged tracks" => [true, :rating_tags_stats],
-                "Records by artists" => [true,  :records_by_artists],
-                "Records by genres" => [false, :records_by_genre],
+    TV_ITEMS = {"Played tracks" => [false, :played_tracks_stats],
+                "Rated and tagged tracks" => [false, :rating_tags_stats],
+
+                "Records by artists" => [false,  :records_by_artists],
+                "Records by genres" => [true, :records_by_genre],
+
                 "Last 1000 played" => [false, :gen_play_history],
-                "Top rated tracks" => [false, :top_rated_tracks],
-                "Top tracks by genre" => [false, :top_tracks] }
+
+                "Charts by genre" => [false, :top_genres],
+                "Charts by genre & artists" => [false, :charts_by_artists],
+                "Charts by genre & records" => [false, :charts_by_records],
+                "Charts by genre & tracks" => [false, :charts_by_tracks],
+
+                "List of rated tracks" => [false, :top_rated_tracks] }
 
     class ColorAlternator
 
@@ -85,7 +92,6 @@ class Stats
     end
 
     def init_globals(fname, title)
-        op_id = @mc.tasks.new_progress("Collecting basic infos")
         @f = File.new(fname, "w")
         @f << "<!DOCTYPE html><head>"
         @f << '<meta charset="UTF-8">'
@@ -134,14 +140,11 @@ class Stats
 
         @genres << [0, "", 0, 0, 0, 0, 0, 0, 0, 0]
         DBIntf::connection.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
-        @genres.each { |genre| @mc.tasks.update_progress(op_id); init_table(genre) }
+        @genres.each { |genre| init_table(genre) }
         @genres.delete_if { |genre| genre[GENRE_TOT_TRACKS] == 0 } # Remove genres with no tracks
-        @mc.tasks.end_progress(op_id)
     end
 
     def db_general_infos
-        op_id = @mc.tasks.new_progress("General infos")
-
         new_table("General infos")
         new_row(["Total number of artists", @db_tots[DBTOTS_ARTISTS]])
         new_row(["Total number of records", "#{@db_tots[DBTOTS_RECORDS]} - Play time: #{@db_tots[DBTOTS_PTIME].to_day_length}"])
@@ -153,14 +156,11 @@ class Stats
         DBIntf::connection.execute("SELECT * FROM medias;") do |mediatype|
             DBIntf::connection.execute("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia=#{mediatype[0]};") do |row|
                 #Gtk.main_iteration while Gtk.events_pending?
-                @mc.tasks.update_progress(op_id)
                 @media[mediatype[1]] = [row[0], row[1]]
                 new_row([mediatype[1], row[0], row[1].to_i.to_day_length])
             end
         end
         end_table
-
-        @mc.tasks.end_progress(op_id)
     end
 
     def init_table(genre)
@@ -225,18 +225,15 @@ class Stats
     end
 
     def records_by_artists
-        op_id = @mc.tasks.new_progress("Records by artists")
         sql = "SELECT COUNT(records.rrecord) AS nrecs, SUM(records.iplaytime), artists.sname FROM artists
                INNER JOIN records ON artists.rartist=records.rartist
                GROUP BY artists.rartist ORDER BY nrecs DESC;"
         new_table("Records by artists", ["Rank", "Artist", "Records", "Play time"])
         DBIntf::connection.execute(sql) do |row|
             #Gtk.main_iteration while Gtk.events_pending?
-            @mc.tasks.update_progress(op_id)
             new_row([@altr.counter+1, row[2], row[0], row[1].to_i.to_day_length])
         end
         end_table
-        @mc.tasks.end_progress(op_id)
     end
 
     def top_genres
@@ -326,7 +323,7 @@ class Stats
         DBIntf::connection.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
             track_infos.load_track(row[0])
-            new_row([@altr.counter+1, Cdsdb::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
+            new_row([@altr.counter+1, UIConsts::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
                      track_infos.record.stitle, track_infos.segment.stitle])
         end
         end_table
@@ -388,6 +385,18 @@ class Stats
         end_table
     end
 
+    def charts_by_artists
+        @genres.each { |genre| top_artists(genre) }
+    end
+
+    def charts_by_records
+        @genres.each { |genre| top_records(genre) }
+    end
+
+    def charts_by_tracks
+        @genres.each { |genre| top_tracks(genre) }
+    end
+
     def cleanup
         @f << "</body></html>"
         @f.close
@@ -411,7 +420,7 @@ class Stats
         tv.append_column(Gtk::TreeViewColumn.new("Stat", srenderer, :text => 1))
         TV_ITEMS.each { |key, value|
             iter = tv.model.append
-            iter[0] = value[0]
+            iter[0] = false
             iter[1] = key
         }
 
@@ -423,60 +432,21 @@ class Stats
         init_globals(Cfg::instance.rsrc_dir+"dbstats.html", "DB Statistics")
         db_general_infos
 
+        # Check to see if a selection needs the ripped records data
+        tv.model.each { |model, path, iter|
+            if iter[0] && TV_ITEMS[iter[1]][0]
+                @genres.each { |genre| ripped_stats(genre) if genre[0] != 0 }
+                break
+            end
+        }
+
         tv.model.each { |model, path, iter|
             self.send(TV_ITEMS[iter[1]][1]) if iter[0]
         }
 
-#         played_tracks_stats
-#         @genres.each { |genre| ripped_stats(genre) }
-#         records_by_genre
-#         records_by_artists
-#         top_genres
-#         @genres.each { |genre| top_artists(genre) }
-#         gen_play_history
-
         cleanup
+
         glade[UIConsts::DLG_STATS].destroy
-    end
-
-    def top_charts
-        init_globals(Cfg::instance.rsrc_dir+"charts.html", "Top Charts")
-        top_genres
-        @genres.each { |genre| top_artists(genre) }
-        @genres.each { |genre| top_records(genre) }
-        @genres.each { |genre| top_tracks(genre) }
-        cleanup
-    end
-
-    def play_history
-        init_globals(Cfg::instance.rsrc_dir+"playhistory.html", "Play History")
-        gen_play_history
-        cleanup
-    end
-
-    def ratings_stats
-        init_globals(Cfg::instance.rsrc_dir+"ratings.html", "Top Ratings")
-        top_rated_tracks
-        cleanup
-    end
-
-    def generate_stats
-        init_globals(Cfg::instance.rsrc_dir+"stats.html", "Global Statistics")
-        db_general_infos
-
-        @genres.each { |genre| ripped_stats(genre) if genre[0] != 0 }
-        records_by_genre
-        records_by_artists
-
-        top_genres
-        @genres.each { |genre| top_artists(genre) }
-        @genres.each { |genre| top_records(genre) }
-        @genres.each { |genre| top_tracks(genre) }
-
-        top_rated_tracks
-        play_history
-
-        cleanup
     end
 
 end

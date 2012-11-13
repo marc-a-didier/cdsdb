@@ -153,11 +153,7 @@ module UIConsts
     MM_TOOLS_EXPORTDB           = "mm_tools_exportdb"
     MM_TOOLS_GENREORDER		     = "mm_tools_genreorder"
     MM_TOOLS_RATINGSTEST	     = "mm_tools_testratings"
-    MM_TOOLS_FULLSTATS          = "mm_tools_fullstats"
-    MM_TOOLS_DBSTATS            = "mm_tools_dbstats"
-    MM_TOOLS_CHARTS             = "mm_tools_charts"
-    MM_TOOLS_PLAYHISTORY        = "mm_tools_playhistory"
-    MM_TOOLS_RATINGS            = "mm_tools_ratings"
+    MM_TOOLS_STATS              = "mm_tools_stats"
 
     # About menu
     MM_ABOUT                    = "about_imagemenuitem"

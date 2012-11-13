@@ -7,8 +7,8 @@
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Statistics</property>
     <property name="modal">True</property>
-    <property name="default_width">320</property>
-    <property name="default_height">260</property>
+    <property name="default_width">340</property>
+    <property name="default_height">280</property>
     <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
     <child internal-child="vbox">
@@ -73,6 +73,8 @@
               <object class="GtkTreeView" id="stats_tv">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="rules_hint">True</property>
+                <property name="enable_search">False</property>
               </object>
             </child>
           </object>

@@ -140,11 +140,7 @@ class MasterController
         @glade[UIConsts::MM_TOOLS_EXPORTDB].signal_connect(:activate)           { Utils::export_to_xml }
         @glade[UIConsts::MM_TOOLS_GENREORDER].signal_connect(:activate)         { DBReorderer.new.run }
         @glade[UIConsts::MM_TOOLS_RATINGSTEST].signal_connect(:activate)        { Utils::test_ratings }
-        @glade[UIConsts::MM_TOOLS_FULLSTATS].signal_connect(:activate)          { Stats.new(self).generate_stats }
-        @glade[UIConsts::MM_TOOLS_DBSTATS].signal_connect(:activate)            { Stats.new(self).db_stats }
-        @glade[UIConsts::MM_TOOLS_CHARTS].signal_connect(:activate)             { Stats.new(self).top_charts }
-        @glade[UIConsts::MM_TOOLS_PLAYHISTORY].signal_connect(:activate)        { Stats.new(self).play_history }
-        @glade[UIConsts::MM_TOOLS_RATINGS].signal_connect(:activate)            { Stats.new(self).ratings_stats }
+        @glade[UIConsts::MM_TOOLS_STATS].signal_connect(:activate)              { Stats.new(self).db_stats }
 
         @glade[UIConsts::MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
 
