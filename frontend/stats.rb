@@ -32,6 +32,14 @@ class Stats
     DBTOTS_TRACKS  = 3
     DBTOTS_PTIME   = 4
 
+    TV_ITEMS = {"Played tracks" => [true, :played_tracks_stats],
+                "Rated and tagged tracks" => [true, :rating_tags_stats],
+                "Records by artists" => [true,  :records_by_artists],
+                "Records by genres" => [false, :records_by_genre],
+                "Last 1000 played" => [false, :gen_play_history],
+                "Top rated tracks" => [false, :top_rated_tracks],
+                "Top tracks by genre" => [false, :top_tracks] }
+
     class ColorAlternator
 
         attr_reader :counter
@@ -360,24 +368,75 @@ class Stats
         end_table
     end
 
+    def rating_tags_stats
+        tot_rated = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE irating<>0;")
+        new_table("Rated tracks", ["Rating", "# of tracks"])
+        UIConsts::RATINGS.each_with_index { |rating, index|
+            rated = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE irating=#{index};")
+            new_row([rating, rated])
+        }
+        new_row(["Qualified total", tot_rated])
+        end_table
+
+        tot_tagged = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE itags<>0;")
+        new_table("Tagged tracks", ["Tags", "# of tracks"])
+        UIConsts::TAGS.each_with_index { |tag, index|
+            tagged = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE (itags & #{1 << index})<>0;")
+            new_row([tag, tagged])
+        }
+        new_row(["Tagged total", tot_tagged])
+        end_table
+    end
+
     def cleanup
         @f << "</body></html>"
         @f.close
     end
 
     def db_stats
+        glade = GTBld::load(UIConsts::DLG_STATS)
+        tv = glade[UIConsts::STATS_TV]
+
+        tv.model = Gtk::ListStore.new(TrueClass, String)
+
+        arenderer = Gtk::CellRendererToggle.new
+        arenderer.activatable = true
+        arenderer.signal_connect(:toggled) { |w, path|
+            iter = tv.model.get_iter(path)
+            iter[0] = !iter[0] if (iter)
+        }
+        srenderer = Gtk::CellRendererText.new()
+
+        tv.append_column(Gtk::TreeViewColumn.new("Select", arenderer, :active => 0))
+        tv.append_column(Gtk::TreeViewColumn.new("Stat", srenderer, :text => 1))
+        TV_ITEMS.each { |key, value|
+            iter = tv.model.append
+            iter[0] = value[0]
+            iter[1] = key
+        }
+
+        if glade[UIConsts::DLG_STATS].run != Gtk::Dialog::RESPONSE_OK
+            glade[UIConsts::DLG_STATS].destroy
+            return
+        end
+
         init_globals(Cfg::instance.rsrc_dir+"dbstats.html", "DB Statistics")
         db_general_infos
 
-        played_tracks_stats
+        tv.model.each { |model, path, iter|
+            self.send(TV_ITEMS[iter[1]][1]) if iter[0]
+        }
+
+#         played_tracks_stats
 #         @genres.each { |genre| ripped_stats(genre) }
 #         records_by_genre
-        records_by_artists
+#         records_by_artists
 #         top_genres
 #         @genres.each { |genre| top_artists(genre) }
 #         gen_play_history
 
         cleanup
+        glade[UIConsts::DLG_STATS].destroy
     end
 
     def top_charts

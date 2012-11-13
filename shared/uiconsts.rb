@@ -568,6 +568,13 @@ module UIConsts
     ARTINFOS_LBL_TOT_PT      = "tot_pt"
 
     #
+    # Stats dialog
+    #
+    DLG_STATS = "dlg_stats"
+
+    STATS_TV = "stats_tv"
+
+    #
     # Disabled controls when not in admin mode.
     #
     ADMIN_CTRLS = [ART_POPUP_ADD, ART_POPUP_DEL,
