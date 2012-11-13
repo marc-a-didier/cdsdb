@@ -8,7 +8,7 @@ class PQueueWindow < TopWindow
 
         @mc.glade[UIConsts::PM_PQ_REMOVE].signal_connect(:activate)     { |widget| do_del(widget, false) }
         @mc.glade[UIConsts::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
-        @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { @plq.clear; update_status }
+        @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { @plq.clear; update_status; @tvpq.columns_autosize }
         @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
             @mc.select_track(@tvpq.selection.selected[4].rtrack) if @tvpq.selection.selected
         }
