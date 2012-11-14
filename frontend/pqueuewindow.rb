@@ -82,21 +82,11 @@ class PQueueWindow < TopWindow
     end
 
     def shuffle
-        srand
-        count = 0
-        @plq.each { |model, path, iter| count += 1 }
-        return if count < 2
-        new_order = Array.new(count, -1)
-        used = Array.new(count, -1)
-        count.times { |i|
-            new_order[i] = rand(count) while used[new_order[i]] != -1
-            used[new_order[i]] = 0
-        }
-        # ce putain de truc marche plus depuis qu'on peut trier les colonnes...!!!
-        # Apres consultation de diverses doc, c'est impossible de remettre le sort a nil
-        # une fois qu'on a selectionne une colonne... donc impossible!
-        @tvpq.selection.unselect_path(@tvpq.cursor[0]) unless @tvpq.cursor.nil?
-        @plq.reorder(new_order)
+        order = []
+        @plq.each { |model, path, iter| order << path.to_s.to_i }
+        return if order.size < 2
+        @plq.reorder(order.shuffle!)
+        @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
     end
 
     def show_popup(widget, event)
