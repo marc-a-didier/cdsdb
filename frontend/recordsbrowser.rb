@@ -22,10 +22,29 @@ class RecordsBrowser < GenericBrowser
 
     attr_reader :record, :segment
 
+    RecQueryStruct = Struct.new(:seg_ref, :rec_title, :trks_ptime, :seg_title, :seg_rrecord)
+
+    class RecInfos
+
+        attr_accessor :query, :table
+
+        def initialize
+            @query = RecQueryStruct.new
+            @table = RecordDBClass.new
+        end
+
+        def store_query(row)
+            row.each_with_index { |data, i| @query[i] = data }
+p @query
+        end
+    end
+
+
     def initialize(mc)
         super(mc, mc.glade[UIConsts::RECORDS_TREEVIEW])
         @record = RecordUI.new(@mc.glade)
         @segment = SegmentUI.new(@mc.glade)
+        @rs = []
     end
 
     def setup
@@ -132,8 +151,11 @@ class RecordsBrowser < GenericBrowser
     # Fills the record tv with all entries matching current artist and filter
     def load_entries
         @tv.model.clear
+        @rs.clear
 
         DBIntf::connection.execute(generate_rec_sql) do |row|
+            @rs << RecInfos.new.store_query(row)
+
             iter = @tv.model.append(nil)
             map_rec_row_to_entry(row, iter)
 
