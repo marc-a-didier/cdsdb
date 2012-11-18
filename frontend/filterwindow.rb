@@ -92,8 +92,10 @@ class FilterWindow < TopWindow
 
         wc = ""
         if @mc.glade[FLT_EXP_PCOUNT].expanded?
-            wc += " AND tracks.iplayed >= #{@mc.glade[FLT_SPIN_MINP].value.round}"
-            wc += " AND tracks.iplayed <= #{@mc.glade[FLT_SPIN_MAXP].value.round}"
+            min = @mc.glade[FLT_SPIN_MINP].value.round
+            max = @mc.glade[FLT_SPIN_MAXP].value.round
+            wc += " AND tracks.iplayed >= #{min}"
+            wc += " AND tracks.iplayed <= #{max}" unless min > max
         end
         if @mc.glade[FLT_EXP_RATING].expanded?
             wc += " AND tracks.irating >= #{@mc.glade[FLT_CMB_MINRATING].active} AND tracks.irating <= #{@mc.glade[FLT_CMB_MAXRATING].active}"
@@ -118,9 +120,7 @@ class FilterWindow < TopWindow
 
         # Where clause on selected tags if any
         if @mc.glade[FLT_EXP_TAGS].expanded?
-            mask = 0
-            i = 1
-            @tv_tags.model.each { |model, path, iter| mask |= i if iter[0]; i <<= 1 }
+            mask = UIUtils::get_tags_mask(@tv_tags)
             unless mask == 0
                 wc += @mc.glade[FLT_CB_MATCHALL].active? ? " AND ((tracks.itags & #{mask}) = #{mask})" :
                                                            " AND ((tracks.itags & #{mask}) <> 0)"

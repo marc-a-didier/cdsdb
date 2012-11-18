@@ -89,6 +89,13 @@ class UIUtils
         }
     end
 
+    def self.get_tags_mask(tvt)
+        mask = 0
+        i = 1
+        tvt.model.each { |model, path, iter| mask |= i if iter[0]; i <<= 1 }
+        return mask
+    end
+
 
     #
     # Pix maps generator for button icons
