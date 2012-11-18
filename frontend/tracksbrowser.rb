@@ -2,7 +2,7 @@
 
 class TracksBrowser < GenericBrowser
 
-    TrackData = Struct.new(:ref_artist, :status)
+    TrackData = Struct.new(:ref_artist, :status, :pixk)
 
     TTV_REF         = 0
     TTV_PIX         = 1
@@ -203,7 +203,7 @@ class TracksBrowser < GenericBrowser
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-        iter[TTV_DATA]= TrackData.new(row[ROW_SEG_REF_ART], TRK_UNKOWN)
+        iter[TTV_DATA]= TrackData.new(row[ROW_SEG_REF_ART], TRK_UNKOWN, "")
     end
 
     def load_entries
@@ -343,11 +343,18 @@ p sql
     #   - second time with count_selected_rows 1
     #
     def on_selection_changed(widget)
-#puts "changed..."
         count = @tv.selection.count_selected_rows
+        return if count == 0
         if count == 1
             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-            @track.ref_load(iter[TTV_REF]).to_widgets_with_img(@mc.record)
+            # Skip if we're selecting the track that is already selected.
+            # Possible when clicking on the selection again and again.
+            return if iter[TTV_REF] == @track.rtrack
+
+puts "^^^ track changed ^^^"
+            iter[TTV_DATA].pixk = IconsMgr::instance.get_cover_key(@mc.record.rrecord, iter[TTV_REF], @mc.record.irecsymlink, 128) if iter[TTV_DATA].pixk.empty?
+            @track.pixk = iter[TTV_DATA].pixk
+            @track.ref_load(iter[TTV_REF]).to_widgets_with_cover(@mc.record)
 
             # Reload artist if artist changed from segment
             @mc.change_segment_artist(iter[TTV_DATA].ref_artist) if iter[TTV_DATA].ref_artist != @mc.segment.rartist
@@ -355,6 +362,7 @@ p sql
             # Reload segment if segment changed
             @mc.change_segment(@track.rsegment) if @track.rsegment != @mc.segment.rsegment
         elsif count > 1
+puts "^^^ multi select ^^^"
             [@track, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
             #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
         end
@@ -362,7 +370,8 @@ p sql
 
     def invalidate
         @tv.model.clear
-        @mc.glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(0, 0, 0, 128)
+#         @mc.glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(0, 0, 0, 128)
+        @mc.glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(IconsMgr::DEFAULT_128)
         @track.reset.to_widgets
     end
 

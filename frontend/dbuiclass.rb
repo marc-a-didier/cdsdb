@@ -35,12 +35,13 @@ class RecordUI < RecordDBClass
     include BaseUI
     include MainTabsUI
 
-    attr_reader :cover_file_name
+    attr_accessor :pixk
 
     def initialize(glade)
         super()
         @glade = glade
         init_baseui("rec_tab_")
+        @pixk = ""
     end
 
     def to_widgets
@@ -48,9 +49,13 @@ class RecordUI < RecordDBClass
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
     end
 
-    def to_widgets_with_img
-        @cover_file_name = Utils::get_cover_file_name(self.rrecord, 0, self.irecsymlink)
-        @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, 0, self.irecsymlink, 128)
+    def disp_cover
+        @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(@pixk)
+        return self
+    end
+
+    def to_widgets_with_cover
+        disp_cover
         return to_widgets
     end
 
@@ -97,10 +102,14 @@ class TrackUI < TrackDBClass
     include BaseUI
     include MainTabsUI
 
+    attr_accessor :pixk
+
     def initialize(glade)
         super()
         @glade = glade
-        @cover_file_name = ""
+#         @cover_file_name = ""
+        @curr_pix = ""
+        @pixk = ""
         init_baseui("trk_tab_")
     end
 
@@ -109,17 +118,22 @@ class TrackUI < TrackDBClass
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
     end
 
-    def to_widgets_with_img(record)
-        fname = IconsMgr::instance.track_cover(self.rrecord, self.rtrack)
-        if fname == ""
-            if record.cover_file_name != @cover_file_name
-                @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, 0, record.irecsymlink, 128)
-            end
-            @cover_file_name = record.cover_file_name
-        else
-            @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, self.rtrack, 0, 128)
-            @cover_file_name = fname
-        end
+    def to_widgets_with_cover(record)
+#         fname = IconsMgr::instance.track_cover(self.rrecord, self.rtrack)
+#         if fname == ""
+#             pixk = record.pixk
+#
+# #             if record.cover_file_name != @cover_file_name
+# #                 @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, 0, record.irecsymlink, 128)
+# #             end
+# #             @cover_file_name = record.cover_file_name
+#         else
+#             pixk = IconsMgr::instance.get_cover_key(self.rrecord, self.rtrack, 0, 128)
+# #             @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, self.rtrack, 0, 128)
+# #             @cover_file_name = fname
+#         end
+        @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(@pixk) if @pixk != @curr_pix
+        @curr_pix = @pixk
         return to_widgets
     end
 
@@ -275,7 +289,7 @@ class DBEditor
 
         response = @glade[DLG_DB_EDITOR].run
         if response == Gtk::Dialog::RESPONSE_OK
-            @editors.each { |editor| editor.from_widgets.sql_update } #.to_widgets(_with_img) ???
+            @editors.each { |editor| editor.from_widgets.sql_update } #.to_widgets(_with_cover) ???
         end
         @glade[DLG_DB_EDITOR].destroy
         return response

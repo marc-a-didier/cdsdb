@@ -44,7 +44,7 @@ class MasterController
 
 
         # Set cd image to default image
-        @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(0, 0, 0, 128)
+        @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(IconsMgr::DEFAULT_128)
 
         Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"player.png"))
         Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"pqueue.png"))
@@ -336,6 +336,10 @@ class MasterController
 
     def is_on_never_played?
         return @art_browser.is_on_never_played?
+    end
+
+    def is_on_compilations?
+        return @art_browser.is_on_compile?
     end
 
     def invalidate_tabs
