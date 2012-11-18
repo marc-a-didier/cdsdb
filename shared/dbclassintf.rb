@@ -109,8 +109,16 @@ public
         return @dbs == object.dbs
     end
 
+#     def =(object)
+#         @dbs = object.dbs.clone
+#     end
+
     def [](index)
         return @dbs[index]
+    end
+
+    def clone_dbs(object)
+        @dbs = object.dbs.clone
     end
 
     def disp_value(val)
