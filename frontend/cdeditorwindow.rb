@@ -59,7 +59,12 @@ class CDEditorWindow
     end
 
     def swap_artists_titles
-        @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
+#         @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
+        @tv.model.each { |model, path, iter|
+            artist, title = iter[1].split(" / ")
+            iter[1] = title
+            iter[3] = artist
+        }
     end
 
     def rip_tracks
@@ -73,7 +78,7 @@ class CDEditorWindow
             UIUtils::show_message("Faudrait p't'êt' sélectionner un format, non?", Gtk::MessageDialog::ERROR)
         end
     end
-    
+
     def generate_sql
         @disc.title = @glade[UIConsts::CDED_ENTRY_TITLE].text
         @disc.artist = @glade[UIConsts::CDED_ENTRY_ARTIST].text
