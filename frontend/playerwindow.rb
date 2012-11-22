@@ -4,9 +4,9 @@ PlayerData = Struct.new(:owner, :internal_ref, :fname, :rtrack, :rrecord, :irecs
 class PlayerWindow < TopWindow
 
     LEVEL_ELEMENT_NAME = "my_level_meter"
-    MINIMUM_LEVEL = -60.0   # the scale range will be from this value to 0 dB, has to be negative
-    METER_WIDTH = 100 #70        # the meter will be ... characters width
-    INTERVAL = 50000000    # how often update the meter? (in nanoseconds)
+    MINIMUM_LEVEL = -60.0  # The scale range will be from this value to 0 dB, has to be negative
+    METER_WIDTH = 100 #70
+    INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
 
     ELAPSED   = 0
     REMAINING = 1
@@ -40,7 +40,9 @@ class PlayerWindow < TopWindow
         @time_view_mode = ELAPSED
         @total_time = 0
 
-        @default_img = Cfg::instance.covers_dir+"default.png"
+        # Tooltip cache. Inited when a new track starts.
+        @tip_pix = nil
+        @tip_txt = nil
 
         init_player
     end
@@ -100,7 +102,7 @@ puts @player_data ? "[#{@player_data.rtrack.to_s}, #{@player_data.fname}]" : "[n
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{@default_img} 'CDs DB' 'End of play list'")
+                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{IconsMgr::instance.def_record_file} 'CDs DB' 'End of play list'")
             end
         else
             @track_infos.from_tags(@player_data.fname)
@@ -115,9 +117,11 @@ puts @player_data ? "[#{@player_data.rtrack.to_s}, #{@player_data.fname}]" : "[n
             setup_hscale
             if Cfg::instance.notifications?
                 file_name = Utils::get_cover_file_name(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink)
-                file_name = @default_img if file_name.empty?
+                file_name = IconsMgr::instance.def_record_file if file_name.empty?
                 system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{UIUtils::tags_html_track_title(@track_infos, "\n")}\"")
             end
+            @tip_pix = IconsMgr::instance.get_cover(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink, 128)
+            @tip_txt = UIUtils::tags_html_track_title(@track_infos, "\n")+"\n\n"
         end
     end
 
@@ -292,9 +296,12 @@ puts @player_data ? "[#{@player_data.rtrack.to_s}, #{@player_data.fname}]" : "[n
     end
 
     def show_tooltip(si, tool_tip)
-        tool_tip.set_icon(IconsMgr::instance.get_cover(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink, 128))
-        text = UIUtils::tags_html_track_title(TrackInfos.new.from_tags(@player_data.fname), "\n")
-        text += "\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
+#         tool_tip.set_icon(IconsMgr::instance.get_cover(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink, 128))
+#         text = UIUtils::tags_html_track_title(TrackInfos.new.from_tags(@player_data.fname), "\n")
+#         text += "\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
+#         tool_tip.set_markup(text)
+        tool_tip.set_icon(@tip_pix)
+        text = @tip_txt+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
         tool_tip.set_markup(text)
     end
 

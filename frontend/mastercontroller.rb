@@ -27,7 +27,11 @@ class MasterController
         @st_icon.stock = Gtk::Stock::CDROM
         if @st_icon.respond_to?(:has_tooltip=) # To keep compat with gtk2 < 2.16
             @st_icon.has_tooltip = true
-            @st_icon.signal_connect(:query_tooltip) { |si, x, y, is_kbd, tool_tip| show_tooltip(si, x, y, is_kbd, tool_tip); true }
+            @st_icon.signal_connect(:query_tooltip) { |si, x, y, is_kbd, tool_tip|
+                @player.playing? ? @player.show_tooltip(si, tool_tip) :
+                                   tool_tip.set_markup("\n<b>CDs DB: waiting for tracks to play...</b>\n")
+                true
+            }
         end
         @st_icon.signal_connect(:popup_menu) { |tray, button, time|
             @glade[UIConsts::TTPM_MENU].popup(nil, nil, button, time) { |menu, x, y, push_in| @st_icon.position_menu(menu) }
@@ -291,10 +295,6 @@ class MasterController
 
     def toggle_window_visibility(top_window)
         top_window.window.visible? ? top_window.hide : top_window.show
-    end
-
-    def show_tooltip(si, x, y, is_kbd, tool_tip)
-        @player.playing? ? @player.show_tooltip(si, tool_tip) : tool_tip.set_markup("\n<b>Not playing</b>\n")
     end
 
 
