@@ -26,6 +26,19 @@ class String
         return m.to_i*60*1000+s.to_i*1000+ms.to_i
     end
 
+    # Not a good idea to introduce a dep on CGI...
+    def to_html
+        return CGI::escapeHTML(self)
+    end
+
+    def to_html_bold
+        return "<b>"+self.to_html+"</b>"
+    end
+
+    def to_html_italic
+        return "<i>"+self.to_html+"</i>"
+    end
+
     def clean_path
         return self.gsub(/\//, "_")
     end

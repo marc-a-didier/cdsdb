@@ -213,6 +213,10 @@ end
 #
 # Attempt to add a view by records...
 #
+#
+# TODO: remplacer les magouilles par une classe/methode qui retourne le champ sur lequel on doit
+#       trier et/ou filter!!!
+#
 class RecordsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
@@ -295,7 +299,13 @@ class ArtistsBrowser < GenericBrowser
         }
 
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
-
+        @tv.signal_connect(:key_press_event) { |widget, event|
+            searching = !@tv.search_entry.nil?;
+            puts "searching=#{searching}";
+            false }
+#         @tv.signal_connect(:start_interactive_search) { |tv, data| puts "search started...".green }
+# puts "search entry=#{@tv.search_entry}"
+#         @tv.set_search_equal_func { |model, columnm, key, iter| puts "searching #{key}"; true }
 #         @tv.set_row_separator_func { |model, iter|
 #             model.iter_depth(iter) < iter[2].max_level
 #         }
@@ -411,6 +421,9 @@ puts "*** load new sub tree ***"
 
     def on_selection_changed(widget)
         @tvs = @tv.selection.selected
+puts "*** artists selection changed ***".cyan
+p @tvs
+        return if @tvs.nil?
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artist.reset
         else

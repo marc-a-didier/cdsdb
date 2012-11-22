@@ -118,8 +118,7 @@ class RecentItemsDialog
                 iter[COL_DATE]  = row[1].to_std_date+" @ "+row[2]
             else
                 iter[COL_PIX]   = IconsMgr::instance.get_cover(row[0], 0, row[4], 64)
-                iter[COL_TITLE] = "<b>"+CGI::escapeHTML(row[1])+"</b>\n"+
-                                  "by <i>"+CGI::escapeHTML(row[2])+"</i>"
+                iter[COL_TITLE] = row[1].to_html_bold+"\nby "+row[2].to_html_italic
                 iter[COL_DATE]  = row[3].to_std_date
             end
         end

@@ -76,6 +76,7 @@ class TracksBrowser < GenericBrowser
         @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         @tv.selection.mode = Gtk::SELECTION_MULTIPLE
         @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::TRK_POPUP_MENU) }
+#         @tv.signal_connect(:start_interactive_search, "mydata") { |tv, data| puts "search started...".green }
 
         @mc.glade[UIConsts::TRK_POPUP_EDIT].signal_connect(:activate)      { edit_track }
         @mc.glade[UIConsts::TRK_POPUP_ADD].signal_connect(:activate)       { on_trk_add }
@@ -351,7 +352,6 @@ p sql
             # Possible when clicking on the selection again and again.
             return if iter[TTV_REF] == @track.rtrack
 
-puts "^^^ track changed ^^^"
             iter[TTV_DATA].pixk = IconsMgr::instance.get_cover_key(@mc.record.rrecord, iter[TTV_REF], @mc.record.irecsymlink, 128) if iter[TTV_DATA].pixk.empty?
             @track.pixk = iter[TTV_DATA].pixk
             @track.ref_load(iter[TTV_REF]).to_widgets_with_cover(@mc.record)
@@ -362,7 +362,7 @@ puts "^^^ track changed ^^^"
             # Reload segment if segment changed
             @mc.change_segment(@track.rsegment) if @track.rsegment != @mc.segment.rsegment
         elsif count > 1
-puts "^^^ multi select ^^^"
+puts "--- multi select ---".magenta
             [@track, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
             #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
         end

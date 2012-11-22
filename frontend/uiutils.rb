@@ -109,9 +109,10 @@ class UIUtils
     # title is expected to be complete, with track number, title, seg order and seg title if any
     #
     def UIUtils::full_html_track_title(title, artist, record, separator = "\n")
-        return "<b>"+CGI::escapeHTML(title)+"</b>"+separator+
-                "by <i>"+CGI::escapeHTML(artist)+"</i>"+separator+
-                "from <i>"+CGI::escapeHTML(record)+"</i>"
+#         return "<b>"+CGI::escapeHTML(title)+"</b>"+separator+
+#                 "by <i>"+CGI::escapeHTML(artist)+"</i>"+separator+
+#                 "from <i>"+CGI::escapeHTML(record)+"</i>"
+        return title.to_html_bold+separator+"by "+artist.to_html_italic+separator+"from "+record.to_html_italic
     end
 
     # Builds an html track title from a DB track_infos, NOT tags track_infos

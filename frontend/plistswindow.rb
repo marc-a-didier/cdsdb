@@ -124,7 +124,7 @@ public
         @audio_file = ""
 
         set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
-        
+
         reset_player_track
     end
 
@@ -392,15 +392,6 @@ public
             end
         end
     end
-
-#     def do_generate
-#         flt_gen = FilterGeneratorDialog.new
-#         if flt_gen.show(FilterGeneratorDialog::MODE_PLAY_LIST) == Gtk::Dialog::RESPONSE_OK
-#             flt_gen.generate_play_list
-#             update_tvpl
-#         end
-#         flt_gen.destroy
-#     end
 
     def shuffle_play_list
         count = 0

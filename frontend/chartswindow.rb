@@ -290,16 +290,15 @@ class ChartsWindow < TopWindow
                                         row[7], row[6])
                 when VIEW_RECORDS
                     entry.pix   = IconsMgr::instance.get_cover(row[1], 0, row[3], 64)
-                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>\n"+
-                                        "by <i>"+CGI::escapeHTML(row[4])+"</i>"
+                    entry.title = row[2].to_html_bold+"\nby "+row[4].to_html_italic
                 when VIEW_ARTISTS
                     entry.pix   = IconsMgr::instance.get_flag(row[3], 16)
-                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>"
+                    entry.title = row[2].to_html_bold
                 when VIEW_COUNTRIES
                     entry.pix   = IconsMgr::instance.get_flag(row[1], 16)
-                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>"
+                    entry.title = row[2].to_html_bold
                 when VIEW_MTYPES, VIEW_LABELS
-                    entry.title = "<b>"+CGI::escapeHTML(row[2])+"</b>"
+                    entry.title = row[2].to_html_bold
             end
             @entries << entry
         end

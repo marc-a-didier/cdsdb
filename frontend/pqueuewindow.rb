@@ -101,9 +101,9 @@ class PQueueWindow < TopWindow
 
     def get_title_and_length(fname)
         tags = TagLib::File.new(fname)
-        title = "<b>"+tags.track.to_s+". "+CGI::escapeHTML(tags.title)+"</b>\n"+
-                "by <i>"+CGI::escapeHTML(tags.artist)+"</i>\n"+
-                "from <i>"+CGI::escapeHTML(tags.album)+"</i>"
+        title = (tags.track.to_s+". "+tags.title).to_html_bold+"\n"+
+                "by "+tags.artist.to_html_italic+"\n"+
+                "from "+tags.album.to_html_italic
         length = tags.length*1000
         tags.close
         return [title, length]

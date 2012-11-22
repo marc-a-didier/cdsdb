@@ -172,6 +172,10 @@ require './my_rr_lib'
 # TODO: ajouter rating & never played dans la view des artistes???
 
 # TODO: add a reload menu entry in artists popup
+# TODO: Corriger le bug des charts!!!
+# TODO: faire une fenetre avec des checks box pour selectionner les stats qu'on veut
+#       et ajouter des stats sur les tracks tagees et qualifiees.
+
 
 
 
@@ -198,7 +202,7 @@ require './my_rr_lib'
 
 # TODO: Colorer les artistes en fonction du nombre d'ecoutes, genre vert au rouge???
 
-# TODO: Corriger le bug des charts!!!
+# TODO: Trouver un moyen de disabler les signaux emis quand on fait une recherche incrementale!!!
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)
