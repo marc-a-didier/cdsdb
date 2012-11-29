@@ -3,9 +3,7 @@ class ImageCache
 
     include Singleton
 
-    DEFAULT_64   = "r0&64"
-    DEFAULT_128  = "r0&128"
-    DEFAULT_FLAG = "f0" #&16"
+    DEFAULT_FLAG  = "f0"
     DEFAULT_COVER = "r0"
 
     DEF_RECORD_FILE = "default.png"
@@ -23,7 +21,8 @@ class ImageCache
         @map[DEFAULT_COVER] = ImageData.new(DEF_RECORD_FILE,
                                             Gdk::Pixbuf.new(Cfg::instance.covers_dir+DEF_RECORD_FILE, SMALL_SIZE, SMALL_SIZE),
                                             Gdk::Pixbuf.new(Cfg::instance.covers_dir+DEF_RECORD_FILE, LARGE_SIZE, LARGE_SIZE))
-        @map[DEFAULT_FLAG] = ImageData.new(DEF_FLAG_FILE, Gdk::Pixbuf.new(Cfg::instance.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE), nil)
+#         @map[DEFAULT_FLAG] = ImageData.new(DEF_FLAG_FILE, Gdk::Pixbuf.new(Cfg::instance.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE), nil)
+        @map[DEFAULT_FLAG] = Gdk::Pixbuf.new(Cfg::instance.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE)
     end
 
     def has_key(key)
@@ -91,7 +90,53 @@ puts "--- ImageCache for key #{key} rerouted to default".green
             return Cfg::instance.covers_dir+@map[key].file_name
         end
     end
+
+    def get_map(key)
+        return @map[key]
+    end
+
+
+    def get_flag(rorigin)
+        key = "f"+rorigin.to_s
+        if @map[key].nil?
+puts "--- load flag for origin #{rorigin}".red
+            file = Cfg::instance.flags_dir+rorigin.to_s+".svg"
+            File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
+        end
+        return @map[key]
+    end
+
+    def default_record_file
+        return Cfg::instance.covers_dir+DEF_RECORD_FILE
+    end
+
+    def default_large_record
+        return @map[DEFAULT_COVER].large_pix
+    end
 end
+
+
+class TrackKeyCache
+
+    include Singleton
+
+    def initialize
+        @key_ref = {}
+    end
+
+    def has_key(pix_key)
+        return !@key_ref[pix_key].nil?
+    end
+
+    def get_ref_key(pix_key)
+        return @key_ref[pix_key]
+    end
+
+    def add_key(pix_key, ref_pix_key)
+        @key_ref[pix_key] = ref_pix_key
+    end
+end
+
 
 class CoverMgr
 
@@ -142,9 +187,12 @@ puts "### CoverMgr search TRACK disk access".brown
             return ImageCache.instance.load_cover(@pix_key, size, rrecord.to_s+"/"+File::basename(files[0]))
         else
             if record_in_cache?(rrecord, irecsymlink, size)
+                TrackKeyCache::instance.add_key("t"+rtrack.to_s, @pix_key)
                 return ImageCache.instance.pix(@pix_key, size)
             else
-                return load_record_cover(rrecord, irecsymlink, size)
+                load_record_cover(rrecord, irecsymlink, size)
+                TrackKeyCache::instance.add_key("t"+rtrack.to_s, @pix_key)
+                return ImageCache.instance.pix(@pix_key, size)
             end
         end
     end
@@ -156,6 +204,10 @@ puts "### CoverMgr search TRACK disk access".brown
         if ImageCache::instance.has_key(@pix_key)
             return ImageCache::instance.pix(@pix_key, size)
         else
+            if TrackKeyCache::instance.has_key(@pix_key)
+                @pix_key = TrackKeyCache::instance.get_ref_key(@pix_key)
+                return ImageCache::instance.pix(@pix_key, size)
+            end
             # We go to check if a file exist for this track.
             # If not, will return the record cover or the default cover
             return load_track_cover(rtrack, rrecord, irecsymlink, size)

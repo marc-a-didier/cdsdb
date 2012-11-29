@@ -259,6 +259,7 @@ module UIConsts
     SEARCH_DIALOG       = "search_dialog"
     SRCH_DLG_BTN_SEARCH = "srch_dlg_btn_search"
     SRCH_DLG_BTN_SHOW   = "srch_dlg_btn_show"
+    SRCH_DLG_BTN_CLOSE  = "srch_dlg_btn_close"
     SRCH_DLG_TV         = "srch_dlg_tv"
     SRCH_DLG_RB_TRACK   = "srch_dlg_rb_track"
     SRCH_DLG_RB_LYRICS  = "srch_dlg_rb_lyrics"

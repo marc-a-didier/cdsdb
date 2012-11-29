@@ -206,6 +206,9 @@ require './my_rr_lib'
 # TODO: Trouver un moyen de disabler les signaux emis quand on fait une recherche incrementale!!!
 # TODO: remplacer les strings drag-data-get par un TrackMgr!!!
 
+# TODO: Faire pour la base comme pour les images: une map qui enregistre une dbclass pour
+#       chaque entree qu'on veut cacher + sa pix_key!!!
+
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)

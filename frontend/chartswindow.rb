@@ -103,14 +103,6 @@ class ChartsWindow < TopWindow
             if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
                 selection_data.set(Gdk::Selection::TYPE_STRING, "charts:message:get_charts_selection")
             end
-#                 if @view_type == VIEW_TRACKS
-#                     selection_data.set(Gdk::Selection::TYPE_STRING, ":"+@tvc.selection.selected[COL_REF].to_s)
-#                 else
-#                     tracks = ""
-#                     DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tvc.selection.selected[COL_REF]};") { |row| tracks += ":"+row[0].to_s }
-#                     selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
-#                 end
-#             end
         }
 
         @tvc.columns[COL_TEXT].resizable = true
@@ -141,10 +133,7 @@ class ChartsWindow < TopWindow
         stores = []
         ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-            # There's no column that contains the ChartEntry struct, so we have to search on something
             stores << @entries[@tvc.selection.selected[COL_ENTRY]-1].uistore
-#             stores << @entries[@tvc.selection.selected.path.to_s.to_i].uistore
-#             @entries.each { |entry| if entry.ref == ref; stores << entry.uistore; break; end }
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
             DBIntf::connection.execute(sql) { |row| stores << UIStore.new.load_track(row[0]) }
@@ -154,55 +143,43 @@ class ChartsWindow < TopWindow
 
     def enqueue
         @mc.pqueue.enqueue2(get_selection)
-#         if @view_type == VIEW_TRACKS
-#             @mc.pqueue.enqueue(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
-#         else
-#             DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tvc.selection.selected[COL_REF]};") do |row|
-#                 @mc.pqueue.enqueue(row[0])
-#             end
-#         end
     end
 
     def enqueue_multiple_tracks
         return if @tvc.selection.selected.nil?
 
-        stores = []
-        selection = @tvc.selection.selected[COL_ENTRY]
-        @lsc.each { |mode, path, iter| stores << @entries[iter[COL_ENTRY]-1].uistore if iter[COL_ENTRY] >= selection }
-#         @lsc.each { |mode, path, iter| @mc.pqueue.enqueue(iter[COL_REF]) if path.to_s.to_i >= selection }
-        @mc.pqueue.enqueue2(stores)
+        selection = @tvc.selection.selected[COL_ENTRY]-1
+        @entries.each { |entry|
+            @mc.pqueue.enqueue2([entry.uistore]) if entry.entry >= selection
+            break if entry.entry >= Cfg::instance.max_items
+        }
     end
 
-    def live_update(rtrack)
+    def live_update(uistore)
         # Get the appropriate (track, record or artist) reference from the track reference
-        track = TrackDBClass.new.ref_load(rtrack)
         ref = case @view_type
             when VIEW_TRACKS
-                rtrack
+                uistore.track.rtrack
             when VIEW_RECORDS
-                DBIntf::connection.get_first_value("SELECT rrecord FROM tracks WHERE rtrack=#{rtrack};")
+                uistore.track.rrecord
             when VIEW_ARTISTS
-                DBIntf::connection.get_first_value("SELECT segments.rartist FROM segments INNER JOIN tracks ON tracks.rsegment=segments.rsegment " \
-                                                   "WHERE tracks.rtrack=#{rtrack};")
+                uistore.segment.rartist
             when VIEW_COUNTRIES
-                DBIntf::connection.get_first_value("SELECT artists.rorigin FROM artists " \
-                                                   "INNER JOIN segments ON artists.rartist=segments.rartist " \
-                                                   "INNER JOIN tracks ON tracks.rsegment=segments.rsegment " \
-                                                   "WHERE tracks.rtrack=#{rtrack};")
+                uistore.artist.rorigin
             when VIEW_MTYPES
-                DBIntf::connection.get_first_value("SELECT records.rgenre FROM records INNER JOIN tracks ON tracks.rrecord=records.rrecord " \
-                                                   "WHERE tracks.rtrack=#{rtrack};")
+                uistore.record.rgenre
             when VIEW_LABELS
-                DBIntf::connection.get_first_value("SELECT records.rlabel FROM records INNER JOIN tracks ON tracks.rrecord=records.rrecord " \
-                                                   "WHERE tracks.rtrack=#{rtrack};")
+                uistore.record.rlabel
         end
 
-        lazy_update(@view_type, ref, track)
+        lazy_update(@view_type, ref, uistore.track)
 
-        itr = nil
-        @lsc.each { |model, path, iter| if iter[COL_REF] == ref then itr = iter; break; end }
-        @tvc.set_cursor(itr.path, nil, false) unless itr.nil?
+        # Cannot use the if as a modifier, iter is considered as undeclared...
+        if iter = @tvc.find_ref(ref, COL_REF)
+            @tvc.set_cursor(iter.path, nil, false)
+        end
     end
+
 
     def set_filter(where_clause, must_join_logtracks = false)
         @filter = where_clause
@@ -305,39 +282,31 @@ class ChartsWindow < TopWindow
                 last_played = entry.played
             end
             entry.rank = rank
+
+            # If view is other than tracks or record, the entry is fully loaded in this loop
+            if ![VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+                entry.title = row[2].to_html_bold
+                entry.pix   = ImageCache::instance.get_flag(row[3]) if @view_type == VIEW_ARTISTS
+                entry.pix   = ImageCache::instance.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
+            end
+
             @entries << entry
         end
+
+        # Done if not tracks or records charts
+        return if ![VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
 
         # Pix and title loading are in another loop because making db accesses while reading
         # the result set of the query greatly speeds the things down...
         @entries.each { |entry|
-            case @view_type
-                when VIEW_TRACKS
-                    entry.uistore = UIStore.new.load_track(entry.ref)
-                    entry.pix   = entry.uistore.small_track_cover
-                    entry.title = entry.uistore.html_track_title_no_track_num(@mc.show_segment_title?)
-#                     entry.pix   = IconsMgr::instance.get_cover(row[2], row[1], row[3], 64)
-#                     entry.pix   = cover.track_pix(row[1], row[2], row[3], 64)
-#                     entry.title = UIUtils::full_html_track_title(
-#                                         Utils::make_track_title(0, row[4], row[8], row[5], @mc.show_segment_title?),
-#                                         row[7], row[6])
-                when VIEW_RECORDS
-                    entry.uistore = UIStore.new.load_record(entry.ref) #.load_artist_from_record
-                    entry.pix   = entry.uistore.small_record_cover
-                    entry.title = entry.uistore.html_record_title
-#                     entry.title = entry.uistore.record.stitle.to_html_bold + "\nby " +
-#                                   entry.uistore.artist.sname.to_html_italic
-#                     entry.pix   = IconsMgr::instance.get_cover(row[1], 0, row[3], 64)
-#                     entry.pix   = cover.record_pix(row[1], row[3], 64)
-#                     entry.title = row[2].to_html_bold+"\nby "+row[4].to_html_italic
-                when VIEW_ARTISTS
-                    entry.pix   = IconsMgr::instance.get_flag(row[3], 16)
-                    entry.title = row[2].to_html_bold
-                when VIEW_COUNTRIES
-                    entry.pix   = IconsMgr::instance.get_flag(row[1], 16)
-                    entry.title = row[2].to_html_bold
-                when VIEW_MTYPES, VIEW_LABELS
-                    entry.title = row[2].to_html_bold
+            if @view_type == VIEW_TRACKS
+                entry.uistore = UIStore.new.load_track(entry.ref)
+                entry.pix     = entry.uistore.small_track_cover
+                entry.title   = entry.uistore.html_track_title_no_track_num(@mc.show_segment_title?)
+            else
+                entry.uistore = UIStore.new.load_record(entry.ref)
+                entry.pix     = entry.uistore.small_record_cover
+                entry.title   = entry.uistore.html_record_title
             end
         }
     end

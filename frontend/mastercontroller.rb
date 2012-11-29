@@ -48,7 +48,7 @@ class MasterController
 
 
         # Set cd image to default image
-        @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(IconsMgr::DEFAULT_128)
+        @glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
 
         Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"player.png"))
         Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"pqueue.png"))
@@ -98,6 +98,7 @@ class MasterController
 
         # Stores the recent items window object
         @recent_items = nil
+        @search_dlg   = nil
 
         # Set windows icons
         @pqueue.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"pqueue.png")
@@ -121,7 +122,7 @@ class MasterController
         #@glade[UIConsts::MM_FILE_SAVE].signal_connect(:activate)        { on_save_item }
         @glade[UIConsts::MM_FILE_QUIT].signal_connect(:activate)        { clean_up; Gtk.main_quit }
 
-        @glade[UIConsts::MM_EDIT_SEARCH].signal_connect(:activate)      { SearchDialog.new(self).run }
+        @glade[UIConsts::MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = SearchDialog.new(self).run }
         @glade[UIConsts::MM_EDIT_PREFS].signal_connect(:activate)       { PrefsDialog.new.run; @tasks.check_config }
 
 
@@ -449,6 +450,10 @@ class MasterController
         return @charts.get_selection
     end
 
+    def get_search_selection
+        return @search_dlg.get_selection
+    end
+
     # Return status/track infos of track track_index from the track browser, that is what is
     # currently displayed, NOT by searching in the db.
     def get_track_status(track_index = 1)
@@ -479,29 +484,30 @@ puts "*** save memos called"
         end
     end
 
-    def notify_played(rtrack, host = "")
-        return if rtrack == 0 # If rtrack is 0 the track has been dropped into the pq from the file system
+    def notify_played(uistore, host = "")
+        # If rtrack is -1 the track has been dropped into the pq from the file system
+        return if uistore.track.rtrack == -1 || uistore.track.banned?
 
-        # This line would be more efficient but i'm afraid of threading problems that could arise...
-        #ltrack = track.rtrack == track ? track : TrackDBClass.new.ref_load(rtrack)
-        ltrack = TrackDBClass.new.ref_load(rtrack)
-        return if ltrack.banned?
 
         # Update local database AND remote database if in client mode
         host = Socket::gethostname if host == ""
-        DBUtils::update_track_stats(rtrack, host)
-        Thread.new { MusicClient.new.update_stats(rtrack) } if Cfg::instance.remote? && rtrack != -1
-        Thread.new { @charts.live_update(rtrack) } if Cfg::instance.live_charts_update? && @charts.window.visible?
+        DBUtils::update_track_stats(uistore.track.rtrack, host)
+
+        Thread.new { MusicClient.new.update_stats(uistore.track.rtrack) } if Cfg::instance.remote?
+
+        Thread.new { @charts.live_update(uistore) } if Cfg::instance.live_charts_update? && @charts.window.visible?
+
         # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
-#         track.ref_load(rtrack).to_widgets if track.rtrack == rtrack
-        @trk_browser.update_infos(rtrack) #if track.rtrack == rtrack
-        if @glade[UIConsts::MM_VIEW_UPDATENP].active? && rtrack != -1
-            if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
-                @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
-            end
-        end
+        @trk_browser.update_infos(uistore.reload_track_cache.track.rtrack)
+
+#         if @glade[UIConsts::MM_VIEW_UPDATENP].active?
+#             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
+#                 @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
+#             end
+#         end
     end
 
+    # TODO: replace all select_xxx first param with an uistore
     def select_artist(rartist, force_reload = false)
         #@art_browser.position_to(rartist) if self.artist.rartist != rartist || force_reload
         @art_browser.select_artist(rartist) if self.artist.rartist != rartist || force_reload

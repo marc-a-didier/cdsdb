@@ -153,7 +153,7 @@ class TracksBrowser < GenericBrowser
 
             download_enabled = false
             @tv.selection.selected_each { |model, path, iter|
-                if iter[TTV_DATA].audio_status == FILE_ON_SERVER
+                if iter[TTV_DATA].audio_status == Utils::FILE_ON_SERVER
                     download_enabled = true
                     break
                 end
@@ -349,10 +349,8 @@ p sql
     # Emitted by master controller when the current displayed track has been played
     # Must check if track is in current record because of the cache
     def update_infos(rtrack)
-        return if rtrack == -1
-
         if iter = find_ref(rtrack)
-            iter[TTV_DATA].load_track(rtrack)
+#             iter[TTV_DATA].load_track(rtrack)
             @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
         end
     end
@@ -392,8 +390,7 @@ puts "--- multi select ---".magenta
 
     def invalidate
         @tv.model.clear
-#         @mc.glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(0, 0, 0, 128)
-        @mc.glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(IconsMgr::DEFAULT_128)
+        @mc.glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
         @track.reset.to_widgets
     end
 

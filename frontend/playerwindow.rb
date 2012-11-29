@@ -98,11 +98,11 @@ class PlayerWindow < TopWindow
     end
 
     def play_track
-puts @player_data ? "[#{@player_data.uistore.track.rtrack.to_s}, #{@player_data.uistore.audio_file}]" : "[nil]"
+puts @player_data ? "[#{@player_data.uistore.track.rtrack}, #{@player_data.uistore.audio_file}]" : "[nil]"
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{IconsMgr::instance.def_record_file} 'CDs DB' 'End of play list'")
+                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{ImageCache::instance.default_record_file} 'CDs DB' 'End of play list'")
             end
         else
 #             @track_infos.from_tags(@player_data.uicache.music_file)
@@ -117,18 +117,19 @@ puts @player_data ? "[#{@player_data.uistore.track.rtrack.to_s}, #{@player_data.
 # p @player_data.uicache.music_file
             @playbin.play
             setup_hscale
+            @tip_pix = @player_data.uistore.large_track_cover
             if Cfg::instance.notifications?
                 file_name = @player_data.uistore.cover_file_name
                 system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uistore.html_track_title(true)}\"")
             end
-            @tip_pix = @player_data.uistore.large_track_cover
+#             @tip_pix = @player_data.uistore.large_track_cover
         end
     end
 
     def next_track(has_ended = false)
         @player_data.owner.notify_played(@player_data) if @player_data
 
-        @mc.notify_played(@player_data.uistore.track.rtrack) if has_ended
+        @mc.notify_played(@player_data.uistore) if has_ended
 
         @player_data = @mc.get_next_track(true)
 

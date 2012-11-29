@@ -47,7 +47,7 @@ class UIStore < BasicDataStore
 #     attr_reader :track, :cover
 
     def initialize
-        super()
+        super
         @cover   = CoverMgr.new
     end
 
@@ -64,19 +64,19 @@ class UIStore < BasicDataStore
     end
 
     def large_track_cover
-        return @cover.track_pix(track.rtrack, track.rrecord, record.irecsymlink, IconsMgr::LARGE_SIZE)
+        return @cover.track_pix(track.rtrack, track.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE)
     end
 
     def small_track_cover
-        return @cover.track_pix(track.rtrack, track.rrecord, record.irecsymlink, IconsMgr::SMALL_SIZE)
+        return @cover.track_pix(track.rtrack, track.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE)
     end
 
     def large_record_cover
-        return @cover.record_pix(record.rrecord, record.irecsymlink, IconsMgr::LARGE_SIZE)
+        return @cover.record_pix(record.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE)
     end
 
     def small_record_cover
-        return @cover.record_pix(record.rrecord, record.irecsymlink, IconsMgr::SMALL_SIZE)
+        return @cover.record_pix(record.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE)
     end
 
     def cover_key
@@ -130,8 +130,7 @@ class UIStore < BasicDataStore
     end
 
     def html_record_title(separator = "\n")
-        artist.ref_load(record.rartist) unless artist.rartist == record.rartist
-        return record.stitle.to_html_bold + separator + "by "+artist.sname.to_html_italic
+        return record.stitle.to_html_bold + separator + "by "+record_artist.sname.to_html_italic
     end
 end
 

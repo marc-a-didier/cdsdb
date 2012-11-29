@@ -1,74 +1,119 @@
 
 # Data access helper for low level classes like the server
 
+#
+# DBCache stores DB rows in hashes whose key is the row primary key
+#
+# It automatically load rows from DB when the refered row is not already in cache.
+#
+class DBCache
+
+    include Singleton
+
+    def initialize
+        @artists  = {}
+        @records  = {}
+        @segments = {}
+        @tracks   = {}
+    end
+
+    def artist(rartist)
+        @artists[rartist] = ArtistDBClass.new.ref_load(rartist) if @artists[rartist].nil?
+        return @artists[rartist]
+    end
+
+    def record(rrecord)
+        @records[rrecord] = RecordDBClass.new.ref_load(rrecord) if @records[rrecord].nil?
+        return @records[rrecord]
+    end
+
+    def segment(rsegment)
+        @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment) if @segments[rsegment].nil?
+        return @segments[rsegment]
+    end
+
+    def track(rtrack)
+        @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
+        return @tracks[rtrack]
+    end
+end
+
+
+
 class BasicDataStore
 
     attr_accessor :audio_file, :audio_status
 
     def initialize
-        @track   = nil #TrackDBClass.new
-#         @track.ref_load(rtrack) unless rtrack == 0
-        @segment = nil
-        @record  = nil
-        @artist  = nil # Consider it's the SEGMENT artist
+        @rtrack   = nil #TrackDBClass.new
+        @rsegment = nil
+        @rrecord  = nil
+        @rartist  = nil # Consider it's the SEGMENT artist
 
         @audio_file = ""
         @audio_status = Utils::FILE_UNKNOWN
     end
 
+
+    # Alias for DBCache.instance
+    def cache
+        return DBCache.instance
+    end
+
     def track
-        return @track? @track : @track = TrackDBClass.new
+        return cache.track(@rtrack)
     end
 
     def segment
-        if @segment.nil?
-            @segment = SegmentDBClass.new
-            @segment.ref_load(track.rsegment) #if @track
-        end
-        return @segment
+        @rsegment = cache.segment(track.rsegment).rsegment if @rsegment.nil?
+        return cache.segment(@rsegment)
     end
 
     def record
-        if @record.nil?
-            @record = RecordDBClass.new
-            @record.ref_load(track.rrecord) #if @track
-        end
-        return @record
+        @rrecord = cache.record(track.rrecord).rrecord if @rrecord.nil?
+        return cache.record(@rrecord)
     end
 
-    def artist
-        if @artist.nil?
-            @artist = ArtistDBClass.new
-            @artist.ref_load(segment.rartist) #if @segment
-        end
-        return @artist
+    def segment_artist
+        @rartist = cache.artist(segment.rartist).rartist if @rartist.nil? || @rartist != cache.segment(@rsegment).rartist
+        return cache.artist(@rartist)
     end
+
+    def record_artist
+        @rartist = cache.artist(record.rartist).rartist if @rartist.nil? || @rartist != cache.record(@rrecord).rartist
+        return cache.artist(@rartist)
+    end
+
+    alias :artist :segment_artist
+
+
 
     def load_track(rtrack)
-        track.ref_load(rtrack)
+        @rtrack = rtrack
         return self
     end
 
     def load_segment(rsegment)
-        segment.ref_load(rsegment)
+        @rsegment = rsegment
         return self
     end
 
     def load_record(rrecord)
-        record.ref_load(rrecord)
+        @rrecord = rrecord
         return self
     end
 
     def load_artist(rartist)
-        artist.ref_load(rartist)
+        @rartist = rartist
         return self
     end
 
-    def load_artist_from_record
-        artist.ref_load(record.rartist)
+    def reload_track_cache
+        cache.track(@rtrack).sql_load
         return self
     end
 
+    # WARNING: does not work anymore. must find a way to bring it back to life!!!
     def load_from_tags(file_name)
         @audio_file = file_name
         @audio_status = Utils::FILE_OK
