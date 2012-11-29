@@ -1,7 +1,8 @@
 
 class PQueueWindow < TopWindow
 
-    PQExtra = Struct.new(:internal_ref, :rtrack, :rrecord, :ptime, :fname, :irecsymlink)
+#     PQExtra = Struct.new(:internal_ref, :rtrack, :rrecord, :ptime, :fname, :irecsymlink)
+    PQData = Struct.new(:internal_ref, :uistore)
 
     def initialize(mc)
         super(mc, UIConsts::PQUEUE_WINDOW)
@@ -10,7 +11,7 @@ class PQueueWindow < TopWindow
         @mc.glade[UIConsts::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
         @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { @plq.clear; update_status; @tvpq.columns_autosize }
         @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
-            @mc.select_track(@tvpq.selection.selected[4].rtrack) if @tvpq.selection.selected
+            @mc.select_track(@tvpq.selection.selected[4].uistore.track.rtrack) if @tvpq.selection.selected
         }
         @mc.glade[UIConsts::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
 
@@ -51,11 +52,12 @@ class PQueueWindow < TopWindow
 
         @tvpq.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvpq.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            tracks = "pqueue"
-            @tvpq.selection.selected_each { |model, path, iter|
-                tracks += ":"+iter[4].rtrack.to_s
-            }
-            selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
+            selection_data.set(Gdk::Selection::TYPE_STRING, "pqueue:message:get_pqueue_selection")
+#             tracks = "pqueue:message:get_pqueue_selection"
+#             @tvpq.selection.selected_each { |model, path, iter|
+#                 tracks += ":"+iter[4].internal_ref.to_s #rtrack.to_s
+#             }
+#             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
         }
 
         @play_time = 0
@@ -109,6 +111,11 @@ class PQueueWindow < TopWindow
         return [title, length]
     end
 
+    # Play queue is not in multi-select mode
+    def get_selection
+        return [@tvpq.selection.selected[4].uistore]
+    end
+
     def on_drag_received(widget, context, x, y, data, info, time)
 #p info
 #   p *data
@@ -119,49 +126,50 @@ class PQueueWindow < TopWindow
 #   p data.uris
         case info
             when 700 #DragType::BROWSER_SELECTION
-                is_reordering = false
-                data.text.split(":").each_with_index { |track, i|
-                    if i == 0
-                        is_reordering = track == "pqueue"
-                    elsif is_reordering
-                        itr = nil
-                        @plq.each { |model, path, iter| if iter[4].rtrack == track.to_i then itr = iter; break end }
-                        if itr
-                            r = @tvpq.get_dest_row(x, y)
-                            if r.nil?
-                                iter = @plq.append
-                            else
-                                pos = r[0].to_s.to_i
-                                pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
-                                iter = @plq.insert(pos)
-                            end
-                            @plq.n_columns.times { |i| iter[i] = itr[i] }
-                            @plq.remove(itr)
+                sender, type, call_back = data.text.split(":")
+                if sender == "pqueue" # -> reordering
+                    iref = @tvpq.selection.selected[4].internal_ref
+                    itr = nil
+                    @plq.each { |model, path, iter| if iter[4].internal_ref == iref then itr = iter; break end }
+                    if itr
+                        r = @tvpq.get_dest_row(x, y)
+                        if r.nil?
+                            iter = @plq.append
+                        else
+                            pos = r[0].to_s.to_i
+                            pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
+                            iter = @plq.insert(pos)
                         end
-                    else
-                        enqueue(track.to_i)
+                        @plq.n_columns.times { |i| iter[i] = itr[i] }
+                        @plq.remove(itr)
                     end
-                }
+                else
+                    if type == "message"
+puts "message received, calling back"
+                        enqueue2(@mc.send(call_back))
+                    end
+                end
 
             when 105 #DragType::URI_LIST
                 data.uris.each { |uri|
                     @internal_ref += 1
                     iter = @plq.append
-                    extra = PQExtra.new(@internal_ref, 0, 0, 0, URI::unescape(uri).sub(/^file:\/\//, ""), 0)
+                    data = PQData.new(@internal_ref, UIStore.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
 
                     iter[0] = iter.path.to_s.to_i+1
-                    iter[1] = IconsMgr::instance.get_cover(0, 0, 0, 64)
-                    iter[2], extra.ptime = get_title_and_length(extra.fname)
-                    iter[3] = (extra.ptime/1000).to_sec_length
-                    iter[4] = extra
+                    iter[1] = data.uistore.small_track_cover
+                    iter[2] = data.uistore.html_track_title(@mc.show_segment_title?)
+                    iter[3] = (data.uistore.track.iplaytime/1000).to_sec_length
+                    iter[4] = data
                 }
         end
-        Gtk::Drag.finish(context, true, false, Time.now.to_i) #,time)
+        Gtk::Drag.finish(context, true, false, Time.now.to_i)
         update_status
         return true
     end
 
     def enqueue(rtrack)
+        cover = CoverMgr.new
         track_infos = TrackInfos.new.get_track_infos(rtrack)
         fname = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
         unless fname.empty?
@@ -169,8 +177,10 @@ class PQueueWindow < TopWindow
             iter = @plq.append
 
             iter[0] = iter.path.to_s.to_i+1
-            iter[1] = IconsMgr::instance.get_cover(track_infos.record.rrecord, track_infos.track.rtrack,
-                                                   track_infos.record.irecsymlink, 64)
+#             iter[1] = IconsMgr::instance.get_cover(track_infos.record.rrecord, track_infos.track.rtrack,
+#                                                    track_infos.record.irecsymlink, 64)
+            iter[1] = cover.track_pix(track_infos.track.rtrack, track_infos.record.rrecord,
+                                      track_infos.record.irecsymlink, ImageCache::SMALL_SIZE)
             iter[2] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
             iter[3] = (track_infos.track.iplaytime/1000).to_sec_length
             iter[4] = PQExtra.new(@internal_ref, track_infos.track.rtrack, track_infos.record.rrecord,
@@ -180,10 +190,31 @@ class PQueueWindow < TopWindow
         end
     end
 
+    def enqueue2(uistores)
+        uistores.each { |store|
+#             store.setup_audio_file
+            # La c'est la merde... si une track est dropee depuis les charts, p.e, on sait
+            # pas le status. Faudrait aller verfier sur le serveur.
+            store.get_audio_file(self, @mc.tasks)
+            unless store.audio_status == Utils::FILE_NOT_FOUND
+                @internal_ref += 1
+                iter = @plq.append
+
+                iter[0] = iter.path.to_s.to_i+1
+                iter[1] = store.small_track_cover
+                iter[2] = store.html_track_title(@mc.show_segment_title?)
+                iter[3] = (store.track.iplaytime/1000).to_sec_length
+                iter[4] = PQData.new(@internal_ref, store)
+            end
+        }
+
+        update_status
+    end
+
     def dwl_file_name_notification(rtrack, file_name)
         @plq.each { |model, path, iter|
-            if iter[4].rtrack == rtrack
-                iter[4].fname = file_name
+            if iter[4].uistore.track.rtrack == rtrack
+                iter[4].uistore.set_audio_file(file_name) # Also sets the status to FILE_OK
                 @mc.update_track_icon(rtrack)
                 break
             end
@@ -192,7 +223,7 @@ class PQueueWindow < TopWindow
 
     def update_status
         @play_time = @ntracks = 0
-        @plq.each { |model, path, iter| @ntracks += 1; @play_time += iter[4].ptime }
+        @plq.each { |model, path, iter| @ntracks += 1; @play_time += iter[4].uistore.track.iplaytime }
         update_tracks_label
         update_ptime_label(@play_time)
     end
@@ -236,10 +267,14 @@ class PQueueWindow < TopWindow
 
     def get_next_track
         entry = player_data = nil
-        @plq.each { |model, path, iter| unless iter[4].fname == Utils::DOWNLOADING then entry = iter; break; end }
+        @plq.each { |model, path, iter|
+            unless iter[4].uistore.audio_status == Utils::FILE_ON_SERVER
+                entry = iter
+                break
+            end
+        }
         if entry
-            player_data = PlayerData.new(self, entry[4].internal_ref, entry[4].fname,
-                                         entry[4].rtrack, entry[4].rrecord, entry[4].irecsymlink)
+            player_data = PlayerData.new(self, entry[4].internal_ref, entry[4].uistore)
         else
             @mc.glade[UIConsts::PQ_LBL_ETA].text = "D.O.A."
         end

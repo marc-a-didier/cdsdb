@@ -35,7 +35,7 @@ class ChartsWindow < TopWindow
     COL_PLAYED = 4
     COL_REF    = 5
 
-    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played)
+    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :uistore)
 
     def initialize(mc)
         super(mc, UIConsts::CHARTS_WINDOW)
@@ -101,14 +101,16 @@ class ChartsWindow < TopWindow
         @tvc.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvc.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
-                if @view_type == VIEW_TRACKS
-                    selection_data.set(Gdk::Selection::TYPE_STRING, ":"+@tvc.selection.selected[COL_REF].to_s)
-                else
-                    tracks = ""
-                    DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tvc.selection.selected[COL_REF]};") { |row| tracks += ":"+row[0].to_s }
-                    selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
-                end
+                selection_data.set(Gdk::Selection::TYPE_STRING, "charts:message:get_charts_selection")
             end
+#                 if @view_type == VIEW_TRACKS
+#                     selection_data.set(Gdk::Selection::TYPE_STRING, ":"+@tvc.selection.selected[COL_REF].to_s)
+#                 else
+#                     tracks = ""
+#                     DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tvc.selection.selected[COL_REF]};") { |row| tracks += ":"+row[0].to_s }
+#                     selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
+#                 end
+#             end
         }
 
         @tvc.columns[COL_TEXT].resizable = true
@@ -133,20 +135,42 @@ class ChartsWindow < TopWindow
         PlayHistoryDialog.new(self).show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
     end
 
-    def enqueue
+    def get_selection
+        return [] if @tvc.selection.selected.nil?
+
+        stores = []
+        ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-            @mc.pqueue.enqueue(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+            # There's no column that contains the ChartEntry struct, so we have to search on something
+            stores << @entries[@tvc.selection.selected[COL_ENTRY]-1].uistore
+#             stores << @entries[@tvc.selection.selected.path.to_s.to_i].uistore
+#             @entries.each { |entry| if entry.ref == ref; stores << entry.uistore; break; end }
         else
-            DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tvc.selection.selected[COL_REF]};") do |row|
-                @mc.pqueue.enqueue(row[0])
-            end
+            sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
+            DBIntf::connection.execute(sql) { |row| stores << UIStore.new.load_track(row[0]) }
         end
+        return stores
+    end
+
+    def enqueue
+        @mc.pqueue.enqueue2(get_selection)
+#         if @view_type == VIEW_TRACKS
+#             @mc.pqueue.enqueue(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+#         else
+#             DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tvc.selection.selected[COL_REF]};") do |row|
+#                 @mc.pqueue.enqueue(row[0])
+#             end
+#         end
     end
 
     def enqueue_multiple_tracks
         return if @tvc.selection.selected.nil?
-        selection = @tvc.selection.selected.path.to_s.to_i
-        @lsc.each { |mode, path, iter| @mc.pqueue.enqueue(iter[COL_REF]) if path.to_s.to_i >= selection }
+
+        stores = []
+        selection = @tvc.selection.selected[COL_ENTRY]
+        @lsc.each { |mode, path, iter| stores << @entries[iter[COL_ENTRY]-1].uistore if iter[COL_ENTRY] >= selection }
+#         @lsc.each { |mode, path, iter| @mc.pqueue.enqueue(iter[COL_REF]) if path.to_s.to_i >= selection }
+        @mc.pqueue.enqueue2(stores)
     end
 
     def live_update(rtrack)
@@ -281,16 +305,31 @@ class ChartsWindow < TopWindow
                 last_played = entry.played
             end
             entry.rank = rank
+            @entries << entry
+        end
 
+        # Pix and title loading are in another loop because making db accesses while reading
+        # the result set of the query greatly speeds the things down...
+        @entries.each { |entry|
             case @view_type
                 when VIEW_TRACKS
-                    entry.pix   = IconsMgr::instance.get_cover(row[2], row[1], row[3], 64)
-                    entry.title = UIUtils::full_html_track_title(
-                                        Utils::make_track_title(0, row[4], row[8], row[5], @mc.show_segment_title?),
-                                        row[7], row[6])
+                    entry.uistore = UIStore.new.load_track(entry.ref)
+                    entry.pix   = entry.uistore.small_track_cover
+                    entry.title = entry.uistore.html_track_title_no_track_num(@mc.show_segment_title?)
+#                     entry.pix   = IconsMgr::instance.get_cover(row[2], row[1], row[3], 64)
+#                     entry.pix   = cover.track_pix(row[1], row[2], row[3], 64)
+#                     entry.title = UIUtils::full_html_track_title(
+#                                         Utils::make_track_title(0, row[4], row[8], row[5], @mc.show_segment_title?),
+#                                         row[7], row[6])
                 when VIEW_RECORDS
-                    entry.pix   = IconsMgr::instance.get_cover(row[1], 0, row[3], 64)
-                    entry.title = row[2].to_html_bold+"\nby "+row[4].to_html_italic
+                    entry.uistore = UIStore.new.load_record(entry.ref) #.load_artist_from_record
+                    entry.pix   = entry.uistore.small_record_cover
+                    entry.title = entry.uistore.html_record_title
+#                     entry.title = entry.uistore.record.stitle.to_html_bold + "\nby " +
+#                                   entry.uistore.artist.sname.to_html_italic
+#                     entry.pix   = IconsMgr::instance.get_cover(row[1], 0, row[3], 64)
+#                     entry.pix   = cover.record_pix(row[1], row[3], 64)
+#                     entry.title = row[2].to_html_bold+"\nby "+row[4].to_html_italic
                 when VIEW_ARTISTS
                     entry.pix   = IconsMgr::instance.get_flag(row[3], 16)
                     entry.title = row[2].to_html_bold
@@ -300,8 +339,7 @@ class ChartsWindow < TopWindow
                 when VIEW_MTYPES, VIEW_LABELS
                     entry.title = row[2].to_html_bold
             end
-            @entries << entry
-        end
+        }
     end
 
     #

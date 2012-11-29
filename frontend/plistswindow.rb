@@ -9,8 +9,7 @@ private
     TT_ARTIST = 4
     TT_RECORD = 5
     TT_LENGTH = 6
-    TT_MSLEN  = 7 # Hidden column
-    TT_RTRACK = 8 # Hidden column
+    TT_DATA   = 7 # Stores the cache
 
     TDB_RPLTRACK = 0
     TDB_RPLIST   = 1
@@ -41,7 +40,7 @@ public
         @mc.glade[UIConsts::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
         @mc.glade[UIConsts::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
         @mc.glade[UIConsts::PM_PL_SHOWINBROWSER].signal_connect(:activate) {
-            @mc.select_track(@pts.get_iter(@tvpt.selection.selected_rows[0])[TT_RTRACK])
+            @mc.select_track(@pts.get_iter(@tvpt.selection.selected_rows[0])[TT_DATA].track.rtrack)
         }
 
         @mc.glade[UIConsts::PL_MB_NEW].signal_connect(:activate)           { do_add }
@@ -81,7 +80,7 @@ public
         @tvpl.signal_connect(:cursor_changed) { on_pl_change }
 
         @tvpt = @mc.glade[UIConsts::TV_PLTRACKS]
-        @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Integer, Integer)
+        @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class)
         #col_names = ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"]
         #col_names.size.times { |i|
         ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index { |name, i|
@@ -102,11 +101,7 @@ public
 
         @tvpt.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvpt.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            tracks = "plist"
-            @tvpt.selection.selected_each { |model, path, iter|
-                tracks += ":"+iter[TT_RTRACK].to_s
-            }
-            selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
+            selection_data.set(Gdk::Selection::TYPE_STRING, "plist:message:get_plist_selection")
         }
 
         @tvpt.model = @pts
@@ -172,39 +167,48 @@ public
     end
 
     def on_drag_received(widget, context, x, y, data, info, time)
+        # Returns directly if data don't come from a CDs DB browser
         if info != 700 || @tvpl.selection.selected.nil? #DragType::BROWSER_SELECTION
-            Gtk::Drag.finish(context, false, false, Time.now.to_i) #,time)
+            Gtk::Drag.finish(context, false, false, Time.now.to_i)
             return false
         end
-        is_reordering = false
-        data.text.split(":").each_with_index { |track, i|
-            if i == 0
-                is_reordering = track == "plist"
-            elsif is_reordering
-                itr = nil
-                @pts.each { |model, path, iter| if iter[TT_RTRACK] == track.to_i then itr = iter; break end }
-                if itr
-                    r = @tvpt.get_dest_row(x, y)
-                    if r.nil?
-                        iter = @pts.append
-                    else
-                        pos = r[0].to_s.to_i
-                        pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
-                        iter = @pts.insert(pos)
-                    end
-                    @pts.n_columns.times { |i| iter[i] = itr[i] }
-                    @pts.remove(itr)
+
+        sender, type, call_back = data.text.split(":")
+        if sender == "plist" # -> reordering
+            iref = @tvpt.selection.selected[4].track.rtrack
+            itr = nil
+            @pts.each { |model, path, iter| if iter[TT_DATA].track.rtrack == track.to_i then itr = iter; break end }
+            if itr
+                r = @tvpt.get_dest_row(x, y)
+                if r.nil?
+                    iter = @pts.append
+                else
+                    pos = r[0].to_s.to_i
+                    pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
+                    iter = @pts.insert(pos)
                 end
-            else
-                add_to_plist(@current_pl.rplist, track.to_i)
+                @pts.n_columns.times { |i| iter[i] = itr[i] }
+                @pts.remove(itr)
             end
-        }
-        if is_reordering
+        else
+            @mc.send(call_back).each { |uistore|
+                add_to_plist(@current_pl.rplist, uistore.track.rtrack)
+            }
+        end
+
+        if sender == "plist" # Have to renumber because of a reordering
             renumber_tracks_list_store
             @pt_changed = true
         end
-        Gtk::Drag.finish(context, true, false, Time.now.to_i) #,time)
+
+        Gtk::Drag.finish(context, true, false, Time.now.to_i)
         return true
+    end
+
+    def get_selection
+        stores = []
+        @tvpt.selection.selected_each { |model, path, iter| stores << iter[TT_DATA] }
+        return stores
     end
 
     def reorder_pltracks(col_id)
@@ -266,28 +270,43 @@ public
     def dwl_file_name_notification(rtrack, file_name)
         @audio_file = file_name
         @mc.update_track_icon(rtrack)
+        @tvpt.each { |model, path, iter|
+            if iter[TT_DATA].track.rtrack == rtrack
+                iter[TT_DATA].set_audio_file(file_name) # Also sets the status to FILE_OK
+                break
+            end
+        }
     end
 
     def get_audio_file
-        iter = @pts.get_iter(@curr_track.to_s)
-        if iter.nil?
-            reset_player_track
-            return nil
+        while true
+            iter = @pts.get_iter(@curr_track.to_s)
+            if iter.nil?
+                reset_player_track
+                return nil
+            end
+
+            @tvpt.set_cursor(iter.path, nil, false)
+            if iter[TT_DATA].get_audio_file(self, @mc.tasks) == Utils::FILE_NOT_FOUND
+                @curr_track += 1
+            else
+                break
+            end
         end
 
-        @tvpt.set_cursor(iter.path, nil, false)
-        rtrack = iter[TT_RTRACK]
-        track_infos = TrackInfos.new.get_track_infos(rtrack)
-        @audio_file = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
-        while @audio_file == Utils::DOWNLOADING
+
+#         track_infos = TrackInfos.new.get_track_infos(rtrack)
+#         @audio_file = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
+        while iter[TT_DATA].audio_status == Utils::FILE_ON_SERVER
             Gtk.main_iteration while Gtk.events_pending?
             sleep(0.1)
         end
+#         iter[TT_DATA].set_audio_file(@audio_file)
         @remaining_time = 0
-        @pts.each { |model, path, iter| @remaining_time += iter[7] if @curr_track <= path.to_s.to_i }
+        @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
         update_tracks_label
         update_ptime_label(@remaining_time)
-        return PlayerData.new(self, @curr_track, @audio_file, track_infos.track.rtrack, track_infos.record.rrecord, track_infos.record.irecsymlink)
+        return PlayerData.new(self, @curr_track, iter[TT_DATA])
     end
 
     def reset_player_track
@@ -328,7 +347,7 @@ public
         p DBIntf::connection.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM pltracks where rplist=8;")
         return
         @pts.each do |model, path, iter|
-            row = DBIntf::connection.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_RTRACK]};")
+            row = DBIntf::connection.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_DATA].track.rtrack};")
             p iter if row.nil?
         end
     end
@@ -339,7 +358,7 @@ public
     end
 
     def on_pl_change
-		return if @tvpl.selection.selected.nil?
+        return if @tvpl.selection.selected.nil?
         ask_save_if_changed
         reset_player_track
         @current_pl.ref_load(@tvpl.selection.selected[0])
@@ -414,7 +433,7 @@ public
     end
 
     def enqueue_track
-        @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue(iter[TT_RTRACK]) }
+        @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue2(iter[TT_DATA]) }
     end
 
     def show_infos(is_popup)
@@ -422,7 +441,7 @@ public
             if @mc.glade[UIConsts::PM_PL_ADD].sensitive?
                 PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected
             else
-                TrackEditor.new(@pts.get_iter(@tvpt.selection.selected_rows[0])[TT_RTRACK]).run if @tvpt.selection.count_selected_rows > 0
+                TrackEditor.new(@pts.get_iter(@tvpt.selection.selected_rows[0][TT_DATA]).track.rrtrack).run if @tvpt.selection.count_selected_rows > 0
             end
         else
             PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected
@@ -505,7 +524,7 @@ public
 
         track_infos = TrackInfos.new
         @pts.each { |model, path, iter|
-            track_infos.get_track_infos(iter[TT_RTRACK])
+            track_infos.get_track_infos(iter[TT_DATA].track.rtrack)
             audio_file = Utils::audio_file_exists(track_infos).file_name
             dest_file = exp.remove_genre ? audio_file.sub(/^#{exp.src_folder}[0-9A-Za-z ']*\//, exp.dest_folder) : audio_file.sub(/^#{exp.src_folder}/, exp.dest_folder)
             dest_file = dest_file.make_fat_compliant if exp.fat_compat
@@ -532,14 +551,10 @@ public
 
     def position_browser(rpltrack)
         rplist = DBIntf::connection.get_first_value("SELECT rplist FROM pltracks WHERE rpltrack=#{rpltrack};")
-        sel_path = nil
-        @pls.each { |model, path, iter| if iter[0] == rplist then sel_path = path; break; end }
-        return if sel_path.nil?
-        @tvpl.set_cursor(sel_path, nil, false)
-        sel_path = nil
-        @pts.each { |model, path, iter| if iter[0] == rpltrack then sel_path = path; break; end }
-        return if sel_path.nil?
-        @tvpt.set_cursor(sel_path, nil, false)
+        if sel_iter = @tvpl.find_ref(rplist)
+            @tvpl.set_cursor(sel_iter.path, nil, false)
+            @tvpt.set_cursor(sel_iter.path, nil, false) if sel_iter = @tvpt.find_ref(rpltrack)
+        end
     end
 
     def update_tvpl
@@ -569,12 +584,18 @@ public
                 iter[TT_REF] = row[TDB_RPLTRACK]
                 iter[TT_ORDER] = row[TDB_IORDER]
                 iter[TT_TRACK] = row[TDB_TORDER]
+                iter[TT_DATA]  = UIStore.new.load_track(row[TDB_RTRACK])
+                # The cache slows a lot down the things.
+                # Better to stay the old way when loadinfg a big play list
+#                 iter[TT_TITLE] = iter[TT_DATA].segment.stitle.empty? ? iter[TT_DATA].track.stitle : iter[TT_DATA].segment.stitle+": "+iter[TT_DATA].track.stitle
+#                 iter[TT_ARTIST] = iter[TT_DATA].artist.sname
+#                 iter[TT_RECORD] = iter[TT_DATA].record.stitle
+#                 iter[TT_LENGTH] = iter[TT_DATA].track.iplaytime.to_ms_length
+
                 iter[TT_TITLE] = row[TDB_STITLE].empty? ? row[TDB_TTITLE] : row[TDB_STITLE]+": "+row[TDB_TTITLE]
                 iter[TT_ARTIST] = row[TDB_ARTISTS]
                 iter[TT_RECORD] = row[TDB_RTITLE]
                 iter[TT_LENGTH] = row[TDB_ILENGTH].to_ms_length
-                iter[TT_MSLEN] = row[TDB_ILENGTH]
-                iter[TT_RTRACK] = row[TDB_RTRACK]
         end
         update_tracks_time_infos
         @tvpt.columns_autosize

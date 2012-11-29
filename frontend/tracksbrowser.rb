@@ -2,7 +2,8 @@
 
 class TracksBrowser < GenericBrowser
 
-    TrackData = Struct.new(:ref_artist, :status, :pixk)
+#     TrackData = Struct.new(:ref_artist, :status, :pixk)
+#     TrackData = Struct.new(:status, :uistore)
 
     TTV_REF         = 0
     TTV_PIX         = 1
@@ -66,8 +67,8 @@ class TracksBrowser < GenericBrowser
                                      [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
                                      Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            tracks = ""
-            @tv.selection.selected_each { |model, path, iter| tracks += ":"+iter[0].to_s }
+            tracks = "tracks:message:get_tracks_selection"
+#             @tv.selection.selected_each { |model, path, iter| tracks += ":"+iter[0].to_s }
             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
         }
 
@@ -152,7 +153,7 @@ class TracksBrowser < GenericBrowser
 
             download_enabled = false
             @tv.selection.selected_each { |model, path, iter|
-                if iter[TTV_DATA].status == TRK_ON_SERVER
+                if iter[TTV_DATA].audio_status == FILE_ON_SERVER
                     download_enabled = true
                     break
                 end
@@ -204,7 +205,9 @@ class TracksBrowser < GenericBrowser
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-        iter[TTV_DATA]= TrackData.new(row[ROW_SEG_REF_ART], TRK_UNKOWN, "")
+#         iter[TTV_DATA]= TrackData.new(row[ROW_SEG_REF_ART], TRK_UNKOWN, "")
+#         iter[TTV_DATA]= TrackData.new(TRK_UNKOWN, UIStore.new.load_track(iter[TTV_REF]))
+        iter[TTV_DATA]= UIStore.new.load_track(iter[TTV_REF])
     end
 
     def load_entries
@@ -238,11 +241,17 @@ class TracksBrowser < GenericBrowser
         map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@track.rtrack)), position_to(@track.rtrack))
     end
 
-    # Returns an array of the the currently visible tracks
+    def get_selection
+        stores = []
+        @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
+        return stores
+    end
+
+    # Returns a list of the the currently visible tracks
     def get_tracks_list
-        tracks = []
-        @tv.model.each { |model, path, iter| tracks << iter[TTV_REF] }
-        return tracks
+        stores = []
+        @tv.model.each { |model, path, iter| stores << iter[TTV_DATA] }
+        return stores
     end
 
     # Returns a string formatted for drag & drop of the currently visible tracks
@@ -266,7 +275,7 @@ p sql
         itr = nil
         i = 0
         @tv.model.each { |model, path, iter| i += 1; itr = iter if i == track_index }
-        return itr ? itr[TTV_DATA].status : TracksBrowser::TRK_NOT_FOUND
+        return itr ? itr[TTV_DATA].audio_status : Utils::FILE_NOT_FOUND
     end
 
     def get_track_infos(track_index = 1)
@@ -302,10 +311,11 @@ p sql
         check_on_server = false
 
         # Get local files first and stores the state of each track
-        track_mgr = TrackInfos.new
+#         track_mgr = TrackInfos.new
         @tv.model.each { |model, path, iter|
-            iter[TTV_DATA].status = Utils::audio_file_exists(track_mgr.get_track_infos(iter[TTV_REF])).status
-            check_on_server = true if iter[TTV_DATA].status == Utils::FILE_NOT_FOUND
+            check_on_server = true if iter[TTV_DATA].setup_audio_file == Utils::FILE_NOT_FOUND
+#             iter[TTV_DATA].status = Utils::audio_file_exists(track_mgr.get_track_infos(iter[TTV_REF])).status
+#             check_on_server = true if iter[TTV_DATA].audio_status == Utils::FILE_NOT_FOUND
         }
 
         # If client mode and some or all files not found, ask if present on the server
@@ -316,13 +326,13 @@ p sql
             # Replace each file not found state with server state
             MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
                 iter = @tv.model.get_iter(i.to_s)
-                iter[TTV_DATA].status = TRK_ON_SERVER if (iter[TTV_DATA].status == Utils::FILE_NOT_FOUND) && found != '0'
+                iter[TTV_DATA].audio_status = Utils::FILE_ON_SERVER if (iter[TTV_DATA].audio_status == Utils::FILE_NOT_FOUND) && found != '0'
             }
         end
 
         # Update tracks icons
         @tv.model.each { |model, path, iter|
-            iter[TTV_PIX] = @tv.render_icon(@stocks[iter[TTV_DATA].status], Gtk::IconSize::MENU)
+            iter[TTV_PIX] = @tv.render_icon(@stocks[iter[TTV_DATA].audio_status], Gtk::IconSize::MENU)
         }
     end
 
@@ -330,11 +340,20 @@ p sql
     # Update the track icon when the download is finished
     #
     def update_track_icon(rtrack)
-        itr = nil
-        @tv.model.each { |model, path, iter| if iter[TTV_REF] == rtrack then itr = iter; break; end }
-        if itr
-            itr[TTV_DATA].status = TRK_FOUND
-            itr[TTV_PIX] = @tv.render_icon(@stocks[TRK_FOUND], Gtk::IconSize::MENU)
+        if iter = find_ref(rtrack)
+            iter[TTV_DATA].audio_status = Utis::FILE_OK
+            iter[TTV_PIX] = @tv.render_icon(@stocks[Utils::FILE_OK], Gtk::IconSize::MENU)
+        end
+    end
+
+    # Emitted by master controller when the current displayed track has been played
+    # Must check if track is in current record because of the cache
+    def update_infos(rtrack)
+        return if rtrack == -1
+
+        if iter = find_ref(rtrack)
+            iter[TTV_DATA].load_track(rtrack)
+            @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
         end
     end
 
@@ -346,22 +365,25 @@ p sql
     def on_selection_changed(widget)
         count = @tv.selection.count_selected_rows
         return if count == 0
+
         if count == 1
             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
             return if iter[TTV_REF] == @track.rtrack
 
-            iter[TTV_DATA].pixk = IconsMgr::instance.get_cover_key(@mc.record.rrecord, iter[TTV_REF], @mc.record.irecsymlink, 128) if iter[TTV_DATA].pixk.empty?
-            @track.pixk = iter[TTV_DATA].pixk
-            @track.ref_load(iter[TTV_REF]).to_widgets_with_cover(@mc.record)
+#             iter[TTV_DATA].pixk = IconsMgr::instance.get_cover_key(@mc.record.rrecord, iter[TTV_REF], @mc.record.irecsymlink, 128) if iter[TTV_DATA].pixk.empty?
+#             @track.pixk = iter[TTV_DATA].pixk
+#             @track.ref_load(iter[TTV_REF]).to_widgets_with_cover(@mc.record)
+            @track.clone_dbs(iter[TTV_DATA].track).to_widgets_with_cover(iter[TTV_DATA])
 
             # Reload artist if artist changed from segment
-            @mc.change_segment_artist(iter[TTV_DATA].ref_artist) if iter[TTV_DATA].ref_artist != @mc.segment.rartist
+#             @mc.change_segment_artist(iter[TTV_DATA].ref_artist) if iter[TTV_DATA].ref_artist != @mc.segment.rartist
+            @mc.change_segment_artist(iter[TTV_DATA].segment.rartist) if iter[TTV_DATA].segment.rartist != @mc.segment.rartist
 
             # Reload segment if segment changed
             @mc.change_segment(@track.rsegment) if @track.rsegment != @mc.segment.rsegment
-        elsif count > 1
+        else
 puts "--- multi select ---".magenta
             [@track, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
             #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
@@ -456,14 +478,14 @@ puts "--- multi select ---".magenta
         # Make it thread safe: if in client mode, stores what may change if user changes selection
         # before all requests are made to the server.
         # Juste supposin'... that the loop will finish before any user interaction...
-        tracks = []
+        stores = []
         if is_from
             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-            begin tracks << iter[TTV_REF] end while iter.next!
+            begin stores << iter[TTV_DATA] end while iter.next!
         else
-            @tv.selection.selected_each { |model, path, iter| tracks << iter[TTV_REF] }
+            @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
         end
-        tracks.each { |rtrack| @mc.pqueue.enqueue(rtrack) }
+        tracks.each { |rtrack| @mc.pqueue.enqueue2(stores) }
     end
 
 
@@ -484,19 +506,19 @@ puts "--- multi select ---".magenta
     end
 
     def on_download_trk
-        tracks = []
-        @tv.selection.selected_each { |model, path, iter| tracks << iter[TTV_REF] if iter[TTV_DATA].status == TRK_ON_SERVER }
-        tracks.each { |rtrack|
-            Utils::search_and_get_audio_file(self, @mc.tasks, TrackInfos.new.get_track_infos(rtrack))
+        @tv.selection.selected_each { |model, path, iter|
+            if iter[TTV_DATA].audio_status == Utils::FILE_ON_SERVER
+                iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
+            end
         }
     end
 
     def download_tracks(use_selection)
-        tracks = []
         meth = use_selection ? @tv.selection.method(:selected_each) : @tv.model.method(:each)
-        meth.call { |model, path, iter| tracks << iter[TTV_REF] if iter[TTV_DATA].status == TRK_ON_SERVER }
-        tracks.each { |rtrack|
-            Utils::search_and_get_audio_file(self, @mc.tasks, TrackInfos.new.get_track_infos(rtrack))
+        meth.call { |model, path, iter|
+            if iter[TTV_DATA].audio_status == Utils::FILE_ON_SERVER
+                iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
+            end
         }
     end
 

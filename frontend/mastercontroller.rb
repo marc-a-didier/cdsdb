@@ -96,6 +96,9 @@ class MasterController
         @filter   = FilterWindow.new(self)
         @memos    = MemosWindow.new(self)
 
+        # Stores the recent items window object
+        @recent_items = nil
+
         # Set windows icons
         @pqueue.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"pqueue.png")
         @player.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"player.png")
@@ -126,9 +129,10 @@ class MasterController
         @glade[UIConsts::MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
         @glade[UIConsts::MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 
-        @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { RecentItemsDialog.new(self, 0).run }
-        @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { RecentItemsDialog.new(self, 1).run }
-        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { RecentItemsDialog.new(self, 2).run }
+        # Faudra revoir, on peut ouvrir plusieurs fenetre des recent items en meme temps...
+        @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { @recent_items = RecentItemsDialog.new(self, 0).run }
+        @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { @recent_items = RecentItemsDialog.new(self, 1).run }
+        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { @recent_items = RecentItemsDialog.new(self, 2).run }
 
         @glade[UIConsts::MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
@@ -414,15 +418,35 @@ class MasterController
 
 
     def enqueue_record
-        @trk_browser.get_tracks_list.each { |rtrack| @pqueue.enqueue(rtrack) }
+        @pqueue.enqueue2(@trk_browser.get_tracks_list)
     end
 
     def download_tracks
         @trk_browser.download_tracks(false)
     end
 
-    def get_drag_tracks
-        return @trk_browser.get_drag_tracks
+    def get_tracks_list
+        return @trk_browser.get_tracks_list
+    end
+
+    def get_tracks_selection
+        return @trk_browser.get_selection
+    end
+
+    def get_plist_selection
+        return @plists.get_selection
+    end
+
+    def get_pqueue_selection
+        return @pqueue.get_selection
+    end
+
+    def get_recent_selection
+        return @recent_items.get_selection
+    end
+
+    def get_charts_selection
+        return @charts.get_selection
     end
 
     # Return status/track infos of track track_index from the track browser, that is what is
@@ -466,11 +490,12 @@ puts "*** save memos called"
         # Update local database AND remote database if in client mode
         host = Socket::gethostname if host == ""
         DBUtils::update_track_stats(rtrack, host)
-        Thread.new { MusicClient.new.update_stats(rtrack) } if Cfg::instance.remote?
+        Thread.new { MusicClient.new.update_stats(rtrack) } if Cfg::instance.remote? && rtrack != -1
         Thread.new { @charts.live_update(rtrack) } if Cfg::instance.live_charts_update? && @charts.window.visible?
         # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
-        track.ref_load(rtrack).to_widgets if track.rtrack == rtrack
-        if @glade[UIConsts::MM_VIEW_UPDATENP].active?
+#         track.ref_load(rtrack).to_widgets if track.rtrack == rtrack
+        @trk_browser.update_infos(rtrack) #if track.rtrack == rtrack
+        if @glade[UIConsts::MM_VIEW_UPDATENP].active? && rtrack != -1
             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
                 @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
             end

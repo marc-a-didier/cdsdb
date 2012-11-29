@@ -59,14 +59,14 @@ class RecordsBrowser < GenericBrowser
 
     class RecInfos
 
-        attr_accessor :query, :entry, :segs, :rseg, :pixk
+        attr_accessor :query, :entry, :segs, :rseg #, :pixk
 
         def initialize
             @query = RecQueryStruct.new
             @entry = RecordDBClass.new
             @rseg  = SegmentDBClass.new
             @segs  = []
-            @pixk  = "" # Key for record pix map
+#             @pixk  = "" # Key for record pix map
         end
 
         def store_query(row)
@@ -112,7 +112,7 @@ class RecordsBrowser < GenericBrowser
 
         @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            selection_data.set(Gdk::Selection::TYPE_STRING, @mc.get_drag_tracks)
+            selection_data.set(Gdk::Selection::TYPE_STRING, "records:message:get_tracks_list")
         }
         @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::REC_POPUP_MENU) }
@@ -251,8 +251,8 @@ class RecordsBrowser < GenericBrowser
             else
                 @record.clone_dbs(iter[RTV_RS_REF].entry)
                 @segment.clone_dbs(iter[RTV_RS_REF].rseg)
-                iter[RTV_RS_REF].pixk = IconsMgr::instance.get_cover_key(@record.rrecord, 0, @record.irecsymlink, 128) if iter[RTV_RS_REF].pixk.empty?
-                @record.pixk = iter[RTV_RS_REF].pixk
+#                 iter[RTV_RS_REF].pixk = IconsMgr::instance.get_cover_key(@record.rrecord, 0, @record.irecsymlink, 128) if iter[RTV_RS_REF].pixk.empty?
+#                 @record.pixk = iter[RTV_RS_REF].pixk
 #                 @segment.ref_load(iter[RTV_RS_REF].query.seg_ref)
 #                 @record.ref_load(iter[RTV_REF])
 #                 @segment.ref_load(iter[RTV_RS_REF].query.seg_ref)
@@ -263,7 +263,6 @@ class RecordsBrowser < GenericBrowser
     def load_entries_select_first
         load_entries
         @tv.selection.select_iter(@tv.model.iter_first) if @tv.model.iter_first
-puts "@@@ select first @@@"
         return self
     end
 
@@ -290,6 +289,7 @@ puts "+++ record selection changed +++"
     end
 
     def load_segment(rsegment, update_infos = false)
+        # !! Should update the cache too !!
         @segment.ref_load(rsegment)
         @segment.to_widgets if update_infos
     end

@@ -33,6 +33,7 @@ require '../shared/uiconsts'
 require '../shared/cfg'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
+require '../shared/dbcache.rb'
 require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/trackinfos'
@@ -203,6 +204,8 @@ require './my_rr_lib'
 # TODO: Colorer les artistes en fonction du nombre d'ecoutes, genre vert au rouge???
 
 # TODO: Trouver un moyen de disabler les signaux emis quand on fait une recherche incrementale!!!
+# TODO: remplacer les strings drag-data-get par un TrackMgr!!!
+
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)

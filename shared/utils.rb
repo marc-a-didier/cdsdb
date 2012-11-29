@@ -135,6 +135,8 @@ class Utils
     FILE_NOT_FOUND = 0
     FILE_OK        = 1
     FILE_MISPLACED = 2
+    FILE_ON_SERVER = 3
+    FILE_UNKNOWN   = 4
 
     # The order matters if the same track is ripped in various format, prefered format first
     AUDIO_EXTS = [".flac", ".ogg", ".mp3"]
@@ -295,6 +297,23 @@ class Utils
     end
 
 
+    def Utils::search_and_get_audio_file2(emitter, tasks, dbcache)
+        # If client mode and no local store, download any way in the mfiles directory
+        if Cfg::instance.remote? && !Cfg::instance.local_store?
+             tasks.new_track_download(emitter, dbcache.track.stitle, dbcache.track.rtrack)
+             return DOWNLOADING
+        end
+
+        fname = Utils::audio_file_exists(dbcache).file_name
+
+        # If client mode with local store download file from server if not found on disk
+        if fname.empty? && Cfg::instance.remote? && Cfg::instance.local_store?
+            tasks.new_track_download(emitter, dbcache.track.stitle, dbcache.track.rtrack)
+            return DOWNLOADING
+        end
+        return fname
+    end
+
     #
     # Check the existence of a file match for a given track.
     #
@@ -439,17 +458,13 @@ print "Checking #{file}\n"
     #
 
     def Utils::get_cover_file_name(rrecord, rtrack, irecsymlink)
-        file = []
+        # Can't assign irecsymlink to rrecord because if there's a track cover it won't find it
+        files = []
         dir = Cfg::instance.covers_dir+rrecord.to_s
-        file = Dir[dir+File::SEPARATOR+rtrack.to_s+".*"] if rtrack != 0 && File::directory?(dir)
-        file = Dir[dir+".*"] if file.size == 0
-        file = Dir[Cfg::instance.covers_dir+irecsymlink.to_s+".*"] if irecsymlink != 0 && file.size == 0
-        return file.size > 0 ? file[0] : ""
-#         if file.size > 0
-#             return file[0]
-#         else
-#             return Cfg::instance.covers_dir+"default.png"
-#         end
+        files = Dir[dir+"/"+rtrack.to_s+".*"] if rtrack != 0 && File::directory?(dir)
+        files = Dir[dir+".*"] if files.size == 0
+        files = Dir[Cfg::instance.covers_dir+irecsymlink.to_s+".*"] if irecsymlink != 0 && files.size == 0
+        return files.size > 0 ? files[0] : ""
     end
 
     def Utils::set_cover(url, rartist, recrartist, rrecord, rtrack)

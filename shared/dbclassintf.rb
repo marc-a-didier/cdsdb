@@ -119,6 +119,7 @@ public
 
     def clone_dbs(object)
         @dbs = object.dbs.clone
+        return self
     end
 
     def disp_value(val)

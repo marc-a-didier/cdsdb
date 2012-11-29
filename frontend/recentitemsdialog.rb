@@ -9,7 +9,7 @@ class RecentItemsDialog
     COL_PIX   = 1
     COL_TITLE = 2
     COL_DATE  = 3
-    COL_REF   = 4
+    COL_DATA  = 4
 
     def initialize(mc, view_type)
         @mc = mc
@@ -29,16 +29,19 @@ class RecentItemsDialog
         @glade[UIConsts::RCTITM_BTN_CLOSE].signal_connect(:clicked) { puts "closing"; @mc.reset_filter_receiver; @dlg.destroy }
 
         @glade[UIConsts::RCTITM_BTN_SHOW].signal_connect(:clicked) {
-            meth = @view_type == VIEW_PLAYED ? @mc.method(:select_track) : @mc.method(:select_record)
-            meth.call(@tv.selection.selected[COL_REF]) if @tv.selection.selected
+            if @view_type == VIEW_PLAYED
+                @mc.select_track(@tv.selection.selected[COL_DATA].track.rtrack) if @tv.selection.selected
+            else
+                @mc.select_record(@tv.selection.selected[COL_DATA].record.rrecord) if @tv.selection.selected
+            end
         }
 
         @tv = @glade[UIConsts::RCTITM_TV]
 
         srenderer = Gtk::CellRendererText.new()
 
-        # Columns: Entry, cover, title, date, Record ref (hidden)
-        @tv.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Integer)
+        # Columns: Entry, cover, title, date, UIStore (hidden)
+        @tv.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
 
         pix = Gtk::CellRendererPixbuf.new
         pixcol = Gtk::TreeViewColumn.new("Cover")
@@ -56,17 +59,22 @@ class RecentItemsDialog
 
         @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            tracks = ""
-            if @view_type == VIEW_PLAYED
-                tracks = ":"+@tv.selection.selected[COL_REF].to_s
-            else
-                DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_REF]};") { |row| tracks += ":"+row[0].to_s }
-            end
-            selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
+            selection_data.set(Gdk::Selection::TYPE_STRING, "recent:message:get_recent_selection")
         }
 
         @view_type = view_type
         exec_sql(@view_type)
+    end
+
+    def get_selection
+        stores = []
+        if @view_type == VIEW_PLAYED
+            stores << @tv.selection.selected[COL_DATA]
+        else
+            sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_REF]};"
+            DBIntf::connection.execute(sql) { |row| stores << UIStore.new.load_track(row[0]) }
+        end
+        return stores
     end
 
     def set_filter(where_clause, must_join_logtracks = false)
@@ -102,22 +110,22 @@ class RecentItemsDialog
                    ORDER BY logtracks.idateplayed DESC LIMIT #{Cfg::instance.max_items};}
         end
 
-        track_infos = TrackInfos.new # Only needed for recent tracks
         @tv.model.clear
         i = 0
         DBIntf::connection.execute(sql) do |row|
             i += 1
             iter = @tv.model.append
             iter[COL_ENTRY] = i
-            iter[COL_REF] = row[0]
+            iter[COL_DATA] = UIStore.new
 
             if @view_type == VIEW_PLAYED
-                track_infos.get_track_infos(row[0])
-                iter[COL_PIX]   = IconsMgr::instance.get_cover(row[3], row[0], row[4], 64)
-                iter[COL_TITLE] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
+                iter[COL_DATA].load_track(row[0])
+                iter[COL_PIX]   = iter[COL_DATA].small_track_cover
+                iter[COL_TITLE] = iter[COL_DATA].html_track_title(@mc.show_segment_title?)
                 iter[COL_DATE]  = row[1].to_std_date+" @ "+row[2]
             else
-                iter[COL_PIX]   = IconsMgr::instance.get_cover(row[0], 0, row[4], 64)
+                iter[COL_DATA].load_record(row[0])
+                iter[COL_PIX]   = iter[COL_DATA].small_record_cover
                 iter[COL_TITLE] = row[1].to_html_bold+"\nby "+row[2].to_html_italic
                 iter[COL_DATE]  = row[3].to_std_date
             end
@@ -126,5 +134,6 @@ class RecentItemsDialog
 
     def run
         @dlg.show
+        return self
     end
 end

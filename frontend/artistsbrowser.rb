@@ -299,10 +299,10 @@ class ArtistsBrowser < GenericBrowser
         }
 
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
-        @tv.signal_connect(:key_press_event) { |widget, event|
-            searching = !@tv.search_entry.nil?;
-            puts "searching=#{searching}";
-            false }
+#         @tv.signal_connect(:key_press_event) { |widget, event|
+#             searching = !@tv.search_entry.nil?;
+#             puts "searching=#{searching}";
+#             false }
 #         @tv.signal_connect(:start_interactive_search) { |tv, data| puts "search started...".green }
 # puts "search entry=#{@tv.search_entry}"
 #         @tv.set_search_equal_func { |model, columnm, key, iter| puts "searching #{key}"; true }
@@ -421,9 +421,8 @@ puts "*** load new sub tree ***"
 
     def on_selection_changed(widget)
         @tvs = @tv.selection.selected
-puts "*** artists selection changed ***".cyan
-p @tvs
         return if @tvs.nil?
+puts "*** artists selection changed ***".cyan
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artist.reset
         else

@@ -1,5 +1,6 @@
 
-PlayerData = Struct.new(:owner, :internal_ref, :fname, :rtrack, :rrecord, :irecsymlink)
+# PlayerData = Struct.new(:owner, :internal_ref, :fname, :rtrack, :rrecord, :irecsymlink)
+PlayerData = Struct.new(:owner, :internal_ref, :uistore)
 
 class PlayerWindow < TopWindow
 
@@ -42,7 +43,6 @@ class PlayerWindow < TopWindow
 
         # Tooltip cache. Inited when a new track starts.
         @tip_pix = nil
-        @tip_txt = nil
 
         init_player
     end
@@ -98,37 +98,37 @@ class PlayerWindow < TopWindow
     end
 
     def play_track
-puts @player_data ? "[#{@player_data.rtrack.to_s}, #{@player_data.fname}]" : "[nil]"
+puts @player_data ? "[#{@player_data.uistore.track.rtrack.to_s}, #{@player_data.uistore.audio_file}]" : "[nil]"
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?
                 system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{IconsMgr::instance.def_record_file} 'CDs DB' 'End of play list'")
             end
         else
-            @track_infos.from_tags(@player_data.fname)
-            @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = UIUtils::tags_html_track_title(@track_infos, " ")
+#             @track_infos.from_tags(@player_data.uicache.music_file)
+#             @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = UIUtils::tags_html_track_title(@track_infos, " ")
+            @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uistore.html_track_title(false, " ")
             @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
             @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
             @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = true
             @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
             reinit_player
-            @source.location = @player_data.fname
+            @source.location = @player_data.uistore.audio_file
+# p @player_data.uicache.music_file
             @playbin.play
             setup_hscale
             if Cfg::instance.notifications?
-                file_name = Utils::get_cover_file_name(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink)
-                file_name = IconsMgr::instance.def_record_file if file_name.empty?
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{UIUtils::tags_html_track_title(@track_infos, "\n")}\"")
+                file_name = @player_data.uistore.cover_file_name
+                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uistore.html_track_title(true)}\"")
             end
-            @tip_pix = IconsMgr::instance.get_cover(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink, 128)
-            @tip_txt = UIUtils::tags_html_track_title(@track_infos, "\n")+"\n\n"
+            @tip_pix = @player_data.uistore.large_track_cover
         end
     end
 
     def next_track(has_ended = false)
         @player_data.owner.notify_played(@player_data) if @player_data
 
-        @mc.notify_played(@player_data.rtrack) if has_ended
+        @mc.notify_played(@player_data.uistore.track.rtrack) if has_ended
 
         @player_data = @mc.get_next_track(true)
 
@@ -296,12 +296,8 @@ puts @player_data ? "[#{@player_data.rtrack.to_s}, #{@player_data.fname}]" : "[n
     end
 
     def show_tooltip(si, tool_tip)
-#         tool_tip.set_icon(IconsMgr::instance.get_cover(@player_data.rrecord, @player_data.rtrack, @player_data.irecsymlink, 128))
-#         text = UIUtils::tags_html_track_title(TrackInfos.new.from_tags(@player_data.fname), "\n")
-#         text += "\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
-#         tool_tip.set_markup(text)
         tool_tip.set_icon(@tip_pix)
-        text = @tip_txt+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
+        text = @player_data.uistore.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
         tool_tip.set_markup(text)
     end
 

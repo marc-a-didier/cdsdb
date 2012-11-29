@@ -30,6 +30,112 @@ public
     end
 end
 
+# A bit of treeview extension...
+class Gtk::TreeView
+
+    def find_ref(ref, column = 0)
+        model.each { |model, path, iter| return iter if iter[column] == ref }
+        return nil
+    end
+
+end
+
+# Extends BasicDataStore to add UI related functions like covers, html titles, etc...
+
+class UIStore < BasicDataStore
+
+#     attr_reader :track, :cover
+
+    def initialize
+        super()
+        @cover   = CoverMgr.new
+    end
+
+
+    def init_from_tags(file_name)
+        load_from_tags(file_name)
+        # Should set the cover to default.
+        return self
+    end
+
+
+    def cover_file_name
+        return @cover.file_name(track.rtrack, track.rrecord, record.irecsymlink)
+    end
+
+    def large_track_cover
+        return @cover.track_pix(track.rtrack, track.rrecord, record.irecsymlink, IconsMgr::LARGE_SIZE)
+    end
+
+    def small_track_cover
+        return @cover.track_pix(track.rtrack, track.rrecord, record.irecsymlink, IconsMgr::SMALL_SIZE)
+    end
+
+    def large_record_cover
+        return @cover.record_pix(record.rrecord, record.irecsymlink, IconsMgr::LARGE_SIZE)
+    end
+
+    def small_record_cover
+        return @cover.record_pix(record.rrecord, record.irecsymlink, IconsMgr::SMALL_SIZE)
+    end
+
+    def cover_key
+        return @cover.pix_key
+    end
+
+
+    def get_audio_file(emitter, tasks)
+        # Try to find a local file if status is unknown
+        setup_audio_file if @audio_status == Utils::FILE_UNKNOWN
+
+        # If status is not found, exit. May be add code to check if on server...
+        return @audio_status if @audio_status == Utils::FILE_NOT_FOUND
+
+        # If status is on server, get the remote file. It can only come from the tracks browser.
+        # If file is coming from charts, play list or any other, the track won't be downloaded.
+        return get_remote_audio_file(emitter, tasks) if @audio_status == Utils::FILE_ON_SERVER
+    end
+
+    def get_remote_audio_file(emitter, tasks)
+        if Cfg::instance.remote? && Cfg::instance.local_store?
+            tasks.new_track_download(emitter, track.stitle, track.rtrack)
+            @audio_status = Utils::FILE_ON_SERVER
+        else
+            @audio_status = Utils::FILE_NOT_FOUND
+        end
+        return @audio_status
+    end
+
+
+    def make_track_title(want_segment_title, want_track_number = true)
+        title = ""
+        title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
+        if want_segment_title
+            title += segment.stitle+" - " unless segment.stitle.empty?
+            title += track.isegorder.to_s+". " unless track.isegorder == 0
+        end
+        return title+track.stitle
+    end
+
+    def html_track_title(want_segment_title, separator = "\n")
+        return make_track_title(want_segment_title).to_html_bold + separator +
+               "by "+artist.sname.to_html_italic + separator +
+               "from "+record.stitle.to_html_italic
+    end
+
+    def html_track_title_no_track_num(want_segment_title, separator = "\n")
+        return make_track_title(want_segment_title, false).to_html_bold + separator +
+               "by "+artist.sname.to_html_italic + separator +
+               "from "+record.stitle.to_html_italic
+    end
+
+    def html_record_title(separator = "\n")
+        artist.ref_load(record.rartist) unless artist.rartist == record.rartist
+        return record.stitle.to_html_bold + separator + "by "+artist.sname.to_html_italic
+    end
+end
+
+
 class UIUtils
 
     #
