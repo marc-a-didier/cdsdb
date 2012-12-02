@@ -1,4 +1,9 @@
 
+#
+# Stores pix map of covers into a struct that points to the large and small image.
+# Also the stores the base file name of the image.
+# Flags are handled the old way (copy from IconsMgr).
+#
 class ImageCache
 
     include Singleton
@@ -116,6 +121,10 @@ puts "--- load flag for origin #{rorigin}".red
 end
 
 
+#
+# TrackKeyCache goal is to map a key for a track cover to it's record image
+# if the track has no cover for itself.
+#
 class TrackKeyCache
 
     include Singleton
@@ -138,27 +147,14 @@ class TrackKeyCache
 end
 
 
-class CoverMgr
-
-    attr_reader :pix_key
-
-    def initialize
-        reset
-    end
-
-    def reset
-        @pix_key = ""
-    end
-
-    # Returns the full file name for the cover to display.
-    # Use @pix_key to search in cache but does NOT change @pix_key!!!
-    def file_name(rtrack, rrecord, irecsymlink)
-        @pix_key = "t"+rtrack.to_s
-        if !ImageCache::instance.has_key(@pix_key)
-            load_track_cover(rtrack, rrecord, irecsymlink, ImageCache::SMALL_SIZE)
-        end
-        return ImageCache::instance.full_name(@pix_key)
-    end
+#
+# Module that handle search and caching of image for a track and/or record.
+# It feeds the ImageCache with asked for tracks/records and maintains
+# the TrackKeyCache hash to speed search for track covers.
+#
+# The including classes must have a @pix_key string member.
+#
+module CoverMgr
 
     def record_in_cache?(rrecord, irecsymlink, size)
         record = irecsymlink unless irecsymlink == 0
@@ -197,123 +193,152 @@ puts "### CoverMgr search TRACK disk access".brown
         end
     end
 
-    def track_pix(rtrack, rrecord, irecsymlink, size)
-        return ImageCache::instance.pix(@pix_key, size) unless @pix_key.empty?
 
+    #
+    # Only these 3 methods should be called, the other are for private use.
+    #
+    # They should be called only of @pix_key is empty. It's faster to get the pix
+    # directly from the cache from @pix_key.
+    #
+    def track_pix(rtrack, rrecord, irecsymlink, size)
         @pix_key = "t"+rtrack.to_s
-        if ImageCache::instance.has_key(@pix_key)
+        if TrackKeyCache::instance.has_key(@pix_key)
+            @pix_key = TrackKeyCache::instance.get_ref_key(@pix_key)
             return ImageCache::instance.pix(@pix_key, size)
-        else
-            if TrackKeyCache::instance.has_key(@pix_key)
-                @pix_key = TrackKeyCache::instance.get_ref_key(@pix_key)
-                return ImageCache::instance.pix(@pix_key, size)
-            end
-            # We go to check if a file exist for this track.
-            # If not, will return the record cover or the default cover
-            return load_track_cover(rtrack, rrecord, irecsymlink, size)
         end
+        # We go to check if a file exist for this track.
+        # If not, will return the record cover or the default cover
+        return load_track_cover(rtrack, rrecord, irecsymlink, size)
     end
 
     def record_pix(rrecord, irecsymlink, size)
-        return ImageCache::instance.pix(@pix_key, size) unless @pix_key.empty?
-
         if record_in_cache?(rrecord, irecsymlink, size)
             return ImageCache::instance.pix(@pix_key, size)
         else
             return load_record_cover(rrecord, irecsymlink, size)
         end
     end
-end
 
-class IconsMgr # TODO: rename to ImageCache
-
-    include Singleton
-
-    DEFAULT_64   = "r0&64"
-    DEFAULT_128  = "r0&128"
-    DEFAULT_FLAG = "f0&16"
-
-    FLAG_SIZE  =  16
-    SMALL_SIZE =  64
-    LARGE_SIZE = 128
-
-    def initialize
-        @map = Hash.new
-        @map[DEFAULT_64]   = Gdk::Pixbuf.new(def_record_file, SMALL_SIZE, SMALL_SIZE)
-        @map[DEFAULT_128]  = Gdk::Pixbuf.new(def_record_file, LARGE_SIZE, LARGE_SIZE)
-        @map[DEFAULT_FLAG] = Gdk::Pixbuf.new(def_flag_file,   FLAG_SIZE,  FLAG_SIZE)
-    end
-
-    def def_record_file
-        return Cfg::instance.covers_dir+"default.png"
-    end
-
-    def def_flag_file
-        return Cfg::instance.flags_dir+"default.svg"
-    end
-
-    def track_cover(rrecord, rtrack)
-puts "--- IconsMgr check TRACK file ---".brown
-        file = Dir[Cfg::instance.covers_dir+rrecord.to_s+"/"+rtrack.to_s+".*"]
-        return file.size == 0 ? "" : file[0]
-    end
-
-    def build_mapid(rrecord, rtrack, irecsymlink, size)
-        file_name = ""
-        unless rtrack == 0
-            map_id = "t"+rtrack.to_s+"&"+size.to_s
-            return map_id if @map[map_id]
-            fname = track_cover(rrecord, rtrack)
-            unless fname.empty?
-                @map[map_id] = Gdk::Pixbuf.new(fname, size, size)
-                return map_id
+    # Returns the full file name for the cover to display.
+    def file_name(rtrack, rrecord, irecsymlink)
+        @pix_key = "t"+rtrack.to_s
+        if !ImageCache::instance.has_key(@pix_key)
+            if TrackKeyCache::instance.has_key(@pix_key)
+                @pix_key = TrackKeyCache::instance.get_ref_key(@pix_key)
+            else
+                load_track_cover(rtrack, rrecord, irecsymlink, ImageCache::SMALL_SIZE)
             end
         end
-        rrecord = irecsymlink unless irecsymlink == 0
-        map_id = "r"+rrecord.to_s+"&"+size.to_s
-        if @map[map_id].nil?
-            file_name = Utils::get_cover_file_name(rrecord, 0, 0)
-puts "--- IconsMgr RECORD disk access size=#{size} ---".red
-            # Uncomment next line and comment the line after to get more disk access vs hash size...
-            # file_name.empty? ? map_id = "r0&"+size.to_s : @map[map_id] = Gdk::Pixbuf.new(file_name, size, size)
-            @map[map_id] = file_name.empty? ? @map["r0&"+size.to_s] : Gdk::Pixbuf.new(file_name, size, size)
-puts "--- IconsMgr map size=#{@map.size} ---".cyan
+        return ImageCache::instance.full_name(@pix_key)
+    end
+end
+
+
+#
+# Extends AudioLink and include CoverMgr to add UI related functions
+# like covers, html titles, etc...
+#
+class UILink < AudioLink
+
+    include CoverMgr
+
+    def initialize
+        super
+
+        reset
+    end
+
+    def reset
+        super
+
+        @pix_key = ""
+
+        return self
+    end
+
+    def init_from_tags(file_name)
+        load_from_tags(file_name)
+        @pix_key = ImageCache::DEFAULT_COVER
+        return self
+    end
+
+
+    def cover_file_name
+        @pix_key.empty? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :
+                          ImageCache::instance.full_name(@pix_key)
+    end
+
+    def large_track_cover
+        @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE) :
+                          ImageCache::instance.pix(@pix_key, ImageCache::LARGE_SIZE)
+    end
+
+    def small_track_cover
+        @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE) :
+                          ImageCache::instance.pix(@pix_key, ImageCache::SMALL_SIZE)
+    end
+
+    def large_record_cover
+        @pix_key.empty? ? record_pix(track.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE) :
+                          ImageCache::instance.pix(@pix_key, ImageCache::LARGE_SIZE)
+    end
+
+    def small_record_cover
+        @pix_key.empty? ? record_pix(track.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE) :
+                          ImageCache::instance.pix(@pix_key, ImageCache::SMALL_SIZE)
+    end
+
+    def cover_key
+        return @pix_key
+    end
+
+
+    def get_audio_file(emitter, tasks)
+        # Try to find a local file if status is unknown
+        setup_audio_file if @audio_status == AudioLink::UNKNOWN
+
+        # If status is not found, exit. May be add code to check if on server...
+        return @audio_status if @audio_status == AudioLink::NOT_FOUND
+
+        # If status is on server, get the remote file. It can only come from the tracks browser.
+        # If file is coming from charts, play list or any other, the track won't be downloaded.
+        return get_remote_audio_file(emitter, tasks) if @audio_status == AudioLink::ON_SERVER
+    end
+
+    def get_remote_audio_file(emitter, tasks)
+        if Cfg::instance.remote? && Cfg::instance.local_store?
+            tasks.new_track_download(emitter, track.stitle, track.rtrack)
+            @audio_status = AudioLink::ON_SERVER
+        else
+            @audio_status = AudioLink::NOT_FOUND
         end
-        return map_id
+        return @audio_status
     end
 
-    def get_cover(rrecord, rtrack, irecsymlink, size)
-        return @map[build_mapid(rrecord, rtrack, irecsymlink, size)]
-    end
 
-    def get_cover_key(rrecord, rtrack, irecsymlink, size)
-        return build_mapid(rrecord, rtrack, irecsymlink, size)
-    end
-
-    def get_flag(rorigin, size)
-        map_id = "f"+rorigin.to_s+"&"+size.to_s
-        if @map[map_id].nil?
-            file = Cfg::instance.flags_dir+rorigin.to_s+".svg"
-            File.exists?(file) ? @map[map_id] = Gdk::Pixbuf.new(file, size, size) : map_id = DEFAULT_FLAG
+    def make_track_title(want_segment_title, want_track_number = true)
+        title = ""
+        title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
+        if want_segment_title
+            title += segment.stitle+" - " unless segment.stitle.empty?
+            title += track.isegorder.to_s+". " unless track.isegorder == 0
         end
-        return @map[map_id]
+        return title+track.stitle
     end
 
-    def get_pix(hash_key)
-        return @map[hash_key]
+    def html_track_title(want_segment_title, separator = "\n")
+        return make_track_title(want_segment_title).to_html_bold + separator +
+               "by "+artist.sname.to_html_italic + separator +
+               "from "+record.stitle.to_html_italic
     end
 
-    def has_key(partial_key, size)
-        return !@map[partial_key+"&"+size.to_s].nil?
+    def html_track_title_no_track_num(want_segment_title, separator = "\n")
+        return make_track_title(want_segment_title, false).to_html_bold + separator +
+               "by "+artist.sname.to_html_italic + separator +
+               "from "+record.stitle.to_html_italic
     end
 
-    def pix(partial_key, size, file_name)
-        key = partial_key+"&"+size.to_s
-#         @map[key] = Gdk::Pixbuf.new(file_name, size, size) unless @map[key]
-        unless @map[key]
-            @map[key] = Gdk::Pixbuf.new(file_name, size, size)
-puts "--- IconsMgr image LOADED from #{file_name} size=#{@map.size}".red
-        end
-        return @map[key]
+    def html_record_title(separator = "\n")
+        return record.stitle.to_html_bold + separator + "by "+record_artist.sname.to_html_italic
     end
 end

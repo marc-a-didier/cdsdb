@@ -158,21 +158,21 @@ puts wc
     def generate_play_list
         wc = generate_filter
         wc = " WHERE "+wc[5..-1] unless wc.empty?
-        sql = "SELECT tracks.rtrack, tracks.iplayed, tracks.irating, tracks.stitle, tracks.iplaytime, records.rgenre FROM tracks " \
+        sql = "SELECT tracks.rtrack FROM tracks " \
               "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
 puts sql
         f = File.new(Cfg::instance.rsrc_dir+"genpl.txt", "w")
 
         max_played = 0
         tracks = []
-        track_infos = TrackInfos.new
+        dblink = AudioLink.new
         DBIntf.connection.execute(sql) do |row|
             # Skip tracks which aren't ripped
-            next if Utils::audio_file_exists(track_infos.get_track_infos(row[0])).status == Utils::FILE_NOT_FOUND
+            next if dblink.reset.load_track(row[0]).setup_audio_file == AudioLink::NOT_FOUND
 
-            max_played = row[1] if row[1] > max_played
-            tracks << [0.0, row[0], row[1].to_f, row[2].to_f/6.0*100.0, row[3]]
-            f << row[0] << " - " << row[1] << " - " << row[2] << " - " << row[3] << "\n"
+            max_played = dblink.track.iplayed if dblink.track.iplayed > max_played
+            tracks << [0.0, row[0], dblink.track.iplayed.to_f, dblink.track.irating.to_f/6.0*100.0, dblink.track.stitle]
+            f << row[0] << " - " << dblink.track.iplayed << " - " << dblink.track.irating << " - " << dblink.track.stitle << "\n"
         end
         f.puts
 

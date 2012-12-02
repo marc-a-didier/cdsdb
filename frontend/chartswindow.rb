@@ -35,7 +35,7 @@ class ChartsWindow < TopWindow
     COL_PLAYED = 4
     COL_REF    = 5
 
-    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :uistore)
+    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :uilink)
 
     def initialize(mc)
         super(mc, UIConsts::CHARTS_WINDOW)
@@ -70,8 +70,8 @@ class ChartsWindow < TopWindow
         @mc.glade[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
         @mc.glade[CHARTS_PM_SHOWINDB].signal_connect(:activate) {
             case @view_type
-                when VIEW_TRACKS  then @mc.select_track(@tvc.selection.selected[COL_REF])
-                when VIEW_RECORDS then @mc.select_record(@tvc.selection.selected[COL_REF])
+                when VIEW_TRACKS  then @mc.select_track(entry_from_selection.uilink)
+                when VIEW_RECORDS then @mc.select_record(entry_from_selection.uilink)
                 when VIEW_ARTISTS then @mc.select_artist(@tvc.selection.selected[COL_REF])
             end
         }
@@ -123,6 +123,10 @@ class ChartsWindow < TopWindow
         end
     end
 
+    def entry_from_selection
+        return @entries[@tvc.selection.selected[COL_ENTRY]-1]
+    end
+
     def show_history
         PlayHistoryDialog.new(self).show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
     end
@@ -133,10 +137,10 @@ class ChartsWindow < TopWindow
         stores = []
         ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-            stores << @entries[@tvc.selection.selected[COL_ENTRY]-1].uistore
+            stores << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            DBIntf::connection.execute(sql) { |row| stores << UIStore.new.load_track(row[0]) }
+            DBIntf::connection.execute(sql) { |row| stores << UILink.new.load_track(row[0]) }
         end
         return stores
     end
@@ -150,29 +154,29 @@ class ChartsWindow < TopWindow
 
         selection = @tvc.selection.selected[COL_ENTRY]-1
         @entries.each { |entry|
-            @mc.pqueue.enqueue2([entry.uistore]) if entry.entry >= selection
+            @mc.pqueue.enqueue2([entry.uilink]) if entry.entry >= selection
             break if entry.entry >= Cfg::instance.max_items
         }
     end
 
-    def live_update(uistore)
+    def live_update(uilink)
         # Get the appropriate (track, record or artist) reference from the track reference
         ref = case @view_type
             when VIEW_TRACKS
-                uistore.track.rtrack
+                uilink.track.rtrack
             when VIEW_RECORDS
-                uistore.track.rrecord
+                uilink.track.rrecord
             when VIEW_ARTISTS
-                uistore.segment.rartist
+                uilink.segment.rartist
             when VIEW_COUNTRIES
-                uistore.artist.rorigin
+                uilink.artist.rorigin
             when VIEW_MTYPES
-                uistore.record.rgenre
+                uilink.record.rgenre
             when VIEW_LABELS
-                uistore.record.rlabel
+                uilink.record.rlabel
         end
 
-        lazy_update(@view_type, ref, uistore.track)
+        lazy_update(@view_type, ref, uilink.track)
 
         # Cannot use the if as a modifier, iter is considered as undeclared...
         if iter = @tvc.find_ref(ref, COL_REF)
@@ -300,13 +304,13 @@ class ChartsWindow < TopWindow
         # the result set of the query greatly speeds the things down...
         @entries.each { |entry|
             if @view_type == VIEW_TRACKS
-                entry.uistore = UIStore.new.load_track(entry.ref)
-                entry.pix     = entry.uistore.small_track_cover
-                entry.title   = entry.uistore.html_track_title_no_track_num(@mc.show_segment_title?)
+                entry.uilink = UILink.new.load_track(entry.ref)
+                entry.pix     = entry.uilink.small_track_cover
+                entry.title   = entry.uilink.html_track_title_no_track_num(@mc.show_segment_title?)
             else
-                entry.uistore = UIStore.new.load_record(entry.ref)
-                entry.pix     = entry.uistore.small_record_cover
-                entry.title   = entry.uistore.html_record_title
+                entry.uilink = UILink.new.load_record(entry.ref)
+                entry.pix     = entry.uilink.small_record_cover
+                entry.title   = entry.uilink.html_record_title
             end
         }
     end
@@ -376,7 +380,7 @@ puts("*** charts full load done ***")
         @entries[pos].played += @count_type == COUNT_PLAYED ? 1 : track.iplaytime
         @entries.sort! { |ce1, ce2| ce2.played <=> ce1.played }
 
-        rank = 0
+        rank = pos = 0
         last_played = -1
         @entries.each_with_index { |entry, i|
             entry.entry = i
@@ -385,8 +389,9 @@ puts("*** charts full load done ***")
                 last_played = entry.played
             end
             entry.rank = rank
+            pos = entry.entry if entry.ref == ref
         }
-        display_charts(true)
+        display_charts(true) if pos < Cfg::instance.max_items
 puts "*** charts lazy update done ***"
     end
 

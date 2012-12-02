@@ -40,7 +40,7 @@ public
         @mc.glade[UIConsts::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
         @mc.glade[UIConsts::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
         @mc.glade[UIConsts::PM_PL_SHOWINBROWSER].signal_connect(:activate) {
-            @mc.select_track(@pts.get_iter(@tvpt.selection.selected_rows[0])[TT_DATA].track.rtrack)
+            @mc.select_track(@pts.get_iter(@tvpt.selection.selected_rows[0])[TT_DATA])
         }
 
         @mc.glade[UIConsts::PL_MB_NEW].signal_connect(:activate)           { do_add }
@@ -191,8 +191,8 @@ public
                 @pts.remove(itr)
             end
         else
-            @mc.send(call_back).each { |uistore|
-                add_to_plist(@current_pl.rplist, uistore.track.rtrack)
+            @mc.send(call_back).each { |uilink|
+                add_to_plist(@current_pl.rplist, uilink.track.rtrack)
             }
         end
 
@@ -287,7 +287,7 @@ public
             end
 
             @tvpt.set_cursor(iter.path, nil, false)
-            if iter[TT_DATA].get_audio_file(self, @mc.tasks) == Utils::FILE_NOT_FOUND
+            if iter[TT_DATA].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
                 @curr_track += 1
             else
                 break
@@ -297,7 +297,7 @@ public
 
 #         track_infos = TrackInfos.new.get_track_infos(rtrack)
 #         @audio_file = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
-        while iter[TT_DATA].audio_status == Utils::FILE_ON_SERVER
+        while iter[TT_DATA].audio_status == AudioLink::ON_SERVER
             Gtk.main_iteration while Gtk.events_pending?
             sleep(0.1)
         end
@@ -584,7 +584,7 @@ public
                 iter[TT_REF] = row[TDB_RPLTRACK]
                 iter[TT_ORDER] = row[TDB_IORDER]
                 iter[TT_TRACK] = row[TDB_TORDER]
-                iter[TT_DATA]  = UIStore.new.load_track(row[TDB_RTRACK])
+                iter[TT_DATA]  = UILink.new.load_track(row[TDB_RTRACK])
                 # The cache slows a lot down the things.
                 # Better to stay the old way when loadinfg a big play list
 #                 iter[TT_TITLE] = iter[TT_DATA].segment.stitle.empty? ? iter[TT_DATA].track.stitle : iter[TT_DATA].segment.stitle+": "+iter[TT_DATA].track.stitle

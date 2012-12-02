@@ -361,9 +361,9 @@ class MasterController
     end
 
     def change_view_mode
-        lrtrack = @trk_browser.track.rtrack
+        uilink = @trk_browser.get_current_uilink
         @art_browser.reload
-        select_track(lrtrack) unless lrtrack == -1
+        select_track(uilink) if uilink
     end
 
     def set_dbrefs_visibility
@@ -396,11 +396,11 @@ class MasterController
     #
     def set_filter(where_clause, must_join_logtracks)
         if (where_clause != @main_filter)
-            lrtrack = @trk_browser.track.rtrack
+            uilink = @trk_browser.get_current_uilink
             @must_join_logtracks = must_join_logtracks
             @main_filter = where_clause
             @art_browser.reload
-            select_track(lrtrack) unless lrtrack == -1
+            select_track(uilink) if uilink
         end
     end
 
@@ -414,7 +414,7 @@ class MasterController
         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils::exec_batch(batch, Socket::gethostname)
         @art_browser.reload
-        select_record(record.get_last_id) # The best guess to find the imported record
+        select_record(UILink.new.load_record(record.get_last_id)) # The best guess to find the imported record
     end
 
 
@@ -484,21 +484,21 @@ puts "*** save memos called"
         end
     end
 
-    def notify_played(uistore, host = "")
+    def notify_played(uilink, host = "")
         # If rtrack is -1 the track has been dropped into the pq from the file system
-        return if uistore.track.rtrack == -1 || uistore.track.banned?
+        return if uilink.track.rtrack == -1 || uilink.track.banned?
 
 
         # Update local database AND remote database if in client mode
         host = Socket::gethostname if host == ""
-        DBUtils::update_track_stats(uistore.track.rtrack, host)
+        DBUtils::update_track_stats(uilink.track.rtrack, host)
 
-        Thread.new { MusicClient.new.update_stats(uistore.track.rtrack) } if Cfg::instance.remote?
+        Thread.new { MusicClient.new.update_stats(uilink.track.rtrack) } if Cfg::instance.remote?
 
-        Thread.new { @charts.live_update(uistore) } if Cfg::instance.live_charts_update? && @charts.window.visible?
+        Thread.new { @charts.live_update(uilink) } if Cfg::instance.live_charts_update? && @charts.window.visible?
 
         # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
-        @trk_browser.update_infos(uistore.reload_track_cache.track.rtrack)
+        @trk_browser.update_infos(uilink.reload_track_cache.track.rtrack)
 
 #         if @glade[UIConsts::MM_VIEW_UPDATENP].active?
 #             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
@@ -507,32 +507,29 @@ puts "*** save memos called"
 #         end
     end
 
-    # TODO: replace all select_xxx first param with an uistore
+
     def select_artist(rartist, force_reload = false)
-        #@art_browser.position_to(rartist) if self.artist.rartist != rartist || force_reload
         @art_browser.select_artist(rartist) if self.artist.rartist != rartist || force_reload
     end
 
-    def select_record(rrecord, force_reload = false)
-        lrecord = RecordDBClass.new.ref_load(rrecord)
-        select_artist(lrecord.rartist)
-        @rec_browser.select_record(rrecord) if self.record.rrecord != rrecord || force_reload
+    def select_record(uilink, force_reload = false)
+        select_artist(uilink.record.rartist)
+        @rec_browser.select_record(uilink.record.rrecord) if self.record.rrecord != uilink.record.rrecord || force_reload
     end
 
-    def select_segment(rsegment, force_reload = false)
-        lsegment = SegmentDBClass.new.ref_load(rsegment)
-        select_record(lsegment.rrecord)
-        @rec_browser.select_segment_from_record_selection(rsegment) # if self.segment.rsegment != rsegment || force_reload
+    def select_segment(uilink, force_reload = false)
+        uilink.load_record(uilink.segment.rrecord)
+        select_record(uilink)
+        @rec_browser.select_segment_from_record_selection(uilink.segment.rsegment) # if self.segment.rsegment != rsegment || force_reload
     end
 
-    def select_track(rtrack, force_reload = false)
-        ltrack = TrackDBClass.new.ref_load(rtrack)
-        lrecord = RecordDBClass.new.ref_load(ltrack.rrecord)
-        rartist = lrecord.rartist == 0 && !view_compile? ? SegmentDBClass.new.ref_load(ltrack.rsegment).rartist : lrecord.rartist
+    def select_track(uilink, force_reload = false)
+        rartist = uilink.record.rartist == 0 && !view_compile? ? uilink.segment.rartist : uilink.record.rartist
         select_artist(rartist)
-        @rec_browser.select_record(ltrack.rrecord) if self.record.rrecord != ltrack.rrecord || force_reload
-        @trk_browser.position_to(rtrack) if self.track.rtrack != rtrack || force_reload
+        @rec_browser.select_record(uilink.track.rrecord) if self.record.rrecord != uilink.track.rrecord || force_reload
+        @trk_browser.position_to(uilink.track.rtrack) if self.track.rtrack != uilink.track.rtrack || force_reload
     end
+
 
     def zoom_rec_image
         cover_name = Utils::get_cover_file_name(record.rrecord, track.rtrack, record.irecsymlink)

@@ -6,6 +6,7 @@
 #
 # It automatically load rows from DB when the refered row is not already in cache.
 #
+
 class DBCache
 
     include Singleton
@@ -39,19 +40,23 @@ class DBCache
 end
 
 
-
-class BasicDataStore
-
-    attr_accessor :audio_file, :audio_status
+#
+# This class keeps references to the primary key of its tables and makes
+# load on demand into the cache.
+#
+class DBCacheLink
 
     def initialize
-        @rtrack   = nil #TrackDBClass.new
+        reset
+    end
+
+    def reset
+        @rtrack   = nil
         @rsegment = nil
         @rrecord  = nil
         @rartist  = nil # Consider it's the SEGMENT artist
 
-        @audio_file = ""
-        @audio_status = Utils::FILE_UNKNOWN
+        return self
     end
 
 
@@ -112,11 +117,41 @@ class BasicDataStore
         cache.track(@rtrack).sql_load
         return self
     end
+end
+
+
+#
+# Provides audio files handling goodness
+#
+class AudioLink < DBCacheLink
+
+    NOT_FOUND = 0 # Local audio file not found and/or not on server
+    OK        = 1 # Local audio file found where expected to be
+    MISPLACED = 2 # Local audio file found but NOT where it should be
+    ON_SERVER = 3 # No local file but available from server
+    UNKNOWN   = 4 # Should be default value, no check has been made
+
+    attr_accessor :audio_file, :audio_status
+
+    def initialize
+        super
+
+        reset
+    end
+
+    def reset
+        super
+
+        @audio_file = ""
+        @audio_status = UNKNOWN
+
+        return self
+    end
 
     # WARNING: does not work anymore. must find a way to bring it back to life!!!
     def load_from_tags(file_name)
         @audio_file = file_name
-        @audio_status = Utils::FILE_OK
+        @audio_status = OK
 
         # Reinit all members and set all to invalid since there's no link with the DB
         # Hope the garbage collector is well done...
@@ -138,14 +173,15 @@ class BasicDataStore
         return self
     end
 
+    # Force the audio file to a specific name. The status is set to OK
+    # as we may guess the file really exists.
     def set_audio_file(file_name)
         @audio_file = file_name
-        @audio_status = Utils::FILE_OK
+        @audio_status = OK
     end
 
-    def setup_audio_file
-        return @audio_status unless @audio_file.empty?
-
+    # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
+    def build_audio_file_name
         # If we have a segment, find the intra-segment order. If segmented and isegorder is 0, then the track
         # is alone in its segment.
         track_pos = 0
@@ -168,31 +204,41 @@ class BasicDataStore
         dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
 
         @audio_file = Cfg::instance.music_dir+genre+"/"+dir+"/"+fname
-        @audio_status = audio_file_status(dir, fname)
-
-        return @audio_status
     end
 
-    def audio_file_status(dir, fname)
+    def setup_audio_file
+        return @audio_status unless @audio_file.empty?
+
+        build_audio_file_name
+        return @audio_status = search_audio_file
+    end
+
+    # Search the Music directory for a file matching the theoretical file name.
+    # If no match at first attempt, search in each first level directory of the Music directory.
+    # Returns the status of for the file.
+    # If a matching file is found, set the full name to the match.
+    def search_audio_file
         Utils::AUDIO_EXTS.each { |ext|
             if File::exists?(@audio_file+ext)
                 @audio_file += ext
-                return Utils::FILE_OK
+                return OK
             end
         }
 
-        file = "/"+dir+"/"+fname
+        # Remove the root dir & genre dir to get the appropriate sub dir
+        file = @audio_file.sub(Cfg::instance.music_dir, "")
+        file.sub!(file.split("/")[0], "")
+# p file
         Dir[Cfg::instance.music_dir+"*"].each { |entry|
             next if !FileTest::directory?(entry)
             Utils::AUDIO_EXTS.each { |ext|
                 if File::exists?(entry+file+ext)
                     @audio_file = entry+file+ext
-                    return Utils::FILE_MISPLACED
+                    return MISPLACED
                 end
             }
         }
-        return Utils::FILE_NOT_FOUND
+        return NOT_FOUND
     end
-
 
 end

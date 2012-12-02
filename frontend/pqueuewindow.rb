@@ -2,7 +2,7 @@
 class PQueueWindow < TopWindow
 
 #     PQExtra = Struct.new(:internal_ref, :rtrack, :rrecord, :ptime, :fname, :irecsymlink)
-    PQData = Struct.new(:internal_ref, :uistore)
+    PQData = Struct.new(:internal_ref, :uilink)
 
     def initialize(mc)
         super(mc, UIConsts::PQUEUE_WINDOW)
@@ -11,7 +11,7 @@ class PQueueWindow < TopWindow
         @mc.glade[UIConsts::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
         @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { @plq.clear; update_status; @tvpq.columns_autosize }
         @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
-            @mc.select_track(@tvpq.selection.selected[4].uistore.track.rtrack) if @tvpq.selection.selected
+            @mc.select_track(@tvpq.selection.selected[4].uilink) if @tvpq.selection.selected
         }
         @mc.glade[UIConsts::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
 
@@ -113,7 +113,7 @@ class PQueueWindow < TopWindow
 
     # Play queue is not in multi-select mode
     def get_selection
-        return [@tvpq.selection.selected[4].uistore]
+        return [@tvpq.selection.selected[4].uilink]
     end
 
     def on_drag_received(widget, context, x, y, data, info, time)
@@ -154,12 +154,12 @@ puts "message received, calling back"
                 data.uris.each { |uri|
                     @internal_ref += 1
                     iter = @plq.append
-                    data = PQData.new(@internal_ref, UIStore.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
+                    data = PQData.new(@internal_ref, UILink.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
 
                     iter[0] = iter.path.to_s.to_i+1
-                    iter[1] = data.uistore.small_track_cover
-                    iter[2] = data.uistore.html_track_title(@mc.show_segment_title?)
-                    iter[3] = (data.uistore.track.iplaytime/1000).to_sec_length
+                    iter[1] = data.uilink.small_track_cover
+                    iter[2] = data.uilink.html_track_title(@mc.show_segment_title?)
+                    iter[3] = (data.uilink.track.iplaytime/1000).to_sec_length
                     iter[4] = data
                 }
         end
@@ -190,13 +190,13 @@ puts "message received, calling back"
         end
     end
 
-    def enqueue2(uistores)
-        uistores.each { |store|
+    def enqueue2(uilinks)
+        uilinks.each { |store|
 #             store.setup_audio_file
             # La c'est la merde... si une track est dropee depuis les charts, p.e, on sait
             # pas le status. Faudrait aller verfier sur le serveur.
             store.get_audio_file(self, @mc.tasks)
-            unless store.audio_status == Utils::FILE_NOT_FOUND
+            unless store.audio_status == AudioLink::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
 
@@ -213,8 +213,8 @@ puts "message received, calling back"
 
     def dwl_file_name_notification(rtrack, file_name)
         @plq.each { |model, path, iter|
-            if iter[4].uistore.track.rtrack == rtrack
-                iter[4].uistore.set_audio_file(file_name) # Also sets the status to FILE_OK
+            if iter[4].uilink.track.rtrack == rtrack
+                iter[4].uilink.set_audio_file(file_name) # Also sets the status to FILE_OK
                 @mc.update_track_icon(rtrack)
                 break
             end
@@ -223,7 +223,7 @@ puts "message received, calling back"
 
     def update_status
         @play_time = @ntracks = 0
-        @plq.each { |model, path, iter| @ntracks += 1; @play_time += iter[4].uistore.track.iplaytime }
+        @plq.each { |model, path, iter| @ntracks += 1; @play_time += iter[4].uilink.track.iplaytime }
         update_tracks_label
         update_ptime_label(@play_time)
     end
@@ -268,13 +268,13 @@ puts "message received, calling back"
     def get_next_track
         entry = player_data = nil
         @plq.each { |model, path, iter|
-            unless iter[4].uistore.audio_status == Utils::FILE_ON_SERVER
+            unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
                 entry = iter
                 break
             end
         }
         if entry
-            player_data = PlayerData.new(self, entry[4].internal_ref, entry[4].uistore)
+            player_data = PlayerData.new(self, entry[4].internal_ref, entry[4].uilink)
         else
             @mc.glade[UIConsts::PQ_LBL_ETA].text = "D.O.A."
         end

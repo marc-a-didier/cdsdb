@@ -33,13 +33,14 @@ require '../shared/uiconsts'
 require '../shared/cfg'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
-require '../shared/dbcache.rb'
+require '../shared/dbcachemgr'
 require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/trackinfos'
 
 require './multi_drag_treeview'
 
+require './uicachemgr'
 require './uiutils'
 
 require './topwindow'
@@ -66,7 +67,6 @@ require './searchdialog'
 require './chartswindow'
 require './recentitemsdialog'
 require './trkplistsdialog'
-require './iconsmgr'
 
 require './musicclient'
 
@@ -208,6 +208,9 @@ require './my_rr_lib'
 
 # TODO: Faire pour la base comme pour les images: une map qui enregistre une dbclass pour
 #       chaque entree qu'on veut cacher + sa pix_key!!!
+
+# TODO: Ajouter un mecanisme trace qui par sur stdout par defaut ou un fichier plutot que balancer des
+#       puts n'importe ou.
 
 
 # Peu realistes:

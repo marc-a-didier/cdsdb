@@ -1,6 +1,6 @@
 
 # PlayerData = Struct.new(:owner, :internal_ref, :fname, :rtrack, :rrecord, :irecsymlink)
-PlayerData = Struct.new(:owner, :internal_ref, :uistore)
+PlayerData = Struct.new(:owner, :internal_ref, :uilink)
 
 class PlayerWindow < TopWindow
 
@@ -98,7 +98,7 @@ class PlayerWindow < TopWindow
     end
 
     def play_track
-puts @player_data ? "[#{@player_data.uistore.track.rtrack}, #{@player_data.uistore.audio_file}]" : "[nil]"
+puts @player_data ? "[#{@player_data.uilink.track.rtrack}, #{@player_data.uilink.audio_file}]" : "[nil]"
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?
@@ -107,29 +107,27 @@ puts @player_data ? "[#{@player_data.uistore.track.rtrack}, #{@player_data.uisto
         else
 #             @track_infos.from_tags(@player_data.uicache.music_file)
 #             @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = UIUtils::tags_html_track_title(@track_infos, " ")
-            @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uistore.html_track_title(false, " ")
+            @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uilink.html_track_title(false, " ")
             @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
             @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
             @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = true
             @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
             reinit_player
-            @source.location = @player_data.uistore.audio_file
-# p @player_data.uicache.music_file
+            @source.location = @player_data.uilink.audio_file
             @playbin.play
             setup_hscale
-            @tip_pix = @player_data.uistore.large_track_cover
+            @tip_pix = @player_data.uilink.large_track_cover
             if Cfg::instance.notifications?
-                file_name = @player_data.uistore.cover_file_name
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uistore.html_track_title(true)}\"")
+                file_name = @player_data.uilink.cover_file_name
+                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uilink.html_track_title(true)}\"")
             end
-#             @tip_pix = @player_data.uistore.large_track_cover
         end
     end
 
     def next_track(has_ended = false)
         @player_data.owner.notify_played(@player_data) if @player_data
 
-        @mc.notify_played(@player_data.uistore) if has_ended
+        @mc.notify_played(@player_data.uilink) if has_ended
 
         @player_data = @mc.get_next_track(true)
 
@@ -298,7 +296,7 @@ puts @player_data ? "[#{@player_data.uistore.track.rtrack}, #{@player_data.uisto
 
     def show_tooltip(si, tool_tip)
         tool_tip.set_icon(@tip_pix)
-        text = @player_data.uistore.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
+        text = @player_data.uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
         tool_tip.set_markup(text)
     end
 

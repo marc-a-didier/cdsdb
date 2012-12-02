@@ -3,7 +3,7 @@
 class TracksBrowser < GenericBrowser
 
 #     TrackData = Struct.new(:ref_artist, :status, :pixk)
-#     TrackData = Struct.new(:status, :uistore)
+#     TrackData = Struct.new(:status, :uilink)
 
     TTV_REF         = 0
     TTV_PIX         = 1
@@ -153,7 +153,7 @@ class TracksBrowser < GenericBrowser
 
             download_enabled = false
             @tv.selection.selected_each { |model, path, iter|
-                if iter[TTV_DATA].audio_status == Utils::FILE_ON_SERVER
+                if iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
                     download_enabled = true
                     break
                 end
@@ -206,8 +206,8 @@ class TracksBrowser < GenericBrowser
             iter[TTV_ART_OR_SEG] = ""
         end
 #         iter[TTV_DATA]= TrackData.new(row[ROW_SEG_REF_ART], TRK_UNKOWN, "")
-#         iter[TTV_DATA]= TrackData.new(TRK_UNKOWN, UIStore.new.load_track(iter[TTV_REF]))
-        iter[TTV_DATA]= UIStore.new.load_track(iter[TTV_REF])
+#         iter[TTV_DATA]= TrackData.new(TRK_UNKOWN, UILink.new.load_track(iter[TTV_REF]))
+        iter[TTV_DATA]= UILink.new.load_track(iter[TTV_REF])
     end
 
     def load_entries
@@ -275,7 +275,7 @@ p sql
         itr = nil
         i = 0
         @tv.model.each { |model, path, iter| i += 1; itr = iter if i == track_index }
-        return itr ? itr[TTV_DATA].audio_status : Utils::FILE_NOT_FOUND
+        return itr ? itr[TTV_DATA].audio_status : AudioLink::NOT_FOUND
     end
 
     def get_track_infos(track_index = 1)
@@ -311,22 +311,19 @@ p sql
         check_on_server = false
 
         # Get local files first and stores the state of each track
-#         track_mgr = TrackInfos.new
         @tv.model.each { |model, path, iter|
-            check_on_server = true if iter[TTV_DATA].setup_audio_file == Utils::FILE_NOT_FOUND
-#             iter[TTV_DATA].status = Utils::audio_file_exists(track_mgr.get_track_infos(iter[TTV_REF])).status
-#             check_on_server = true if iter[TTV_DATA].audio_status == Utils::FILE_NOT_FOUND
+            check_on_server = true if iter[TTV_DATA].setup_audio_file == AudioLink::NOT_FOUND
         }
 
         # If client mode and some or all files not found, ask if present on the server
-        if Cfg::instance.remote? && check_on_server #states.detect { |state| state == Utils::FILE_NOT_FOUND }
+        if Cfg::instance.remote? && check_on_server
             # Save track list to avoid threading problems
             tracks = ""
             @tv.model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
             # Replace each file not found state with server state
             MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
                 iter = @tv.model.get_iter(i.to_s)
-                iter[TTV_DATA].audio_status = Utils::FILE_ON_SERVER if (iter[TTV_DATA].audio_status == Utils::FILE_NOT_FOUND) && found != '0'
+                iter[TTV_DATA].audio_status = AudioLink::ON_SERVER if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
             }
         end
 
@@ -336,13 +333,17 @@ p sql
         }
     end
 
+    def get_current_uilink
+        return @tv.selection.count_selected_rows > 0 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
+    end
+
     #
     # Update the track icon when the download is finished
     #
     def update_track_icon(rtrack)
         if iter = find_ref(rtrack)
-            iter[TTV_DATA].audio_status = Utis::FILE_OK
-            iter[TTV_PIX] = @tv.render_icon(@stocks[Utils::FILE_OK], Gtk::IconSize::MENU)
+            iter[TTV_DATA].audio_status = AudioLink::OK
+            iter[TTV_PIX] = @tv.render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
         end
     end
 
@@ -350,7 +351,6 @@ p sql
     # Must check if track is in current record because of the cache
     def update_infos(rtrack)
         if iter = find_ref(rtrack)
-#             iter[TTV_DATA].load_track(rtrack)
             @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
         end
     end
@@ -482,7 +482,7 @@ puts "--- multi select ---".magenta
         else
             @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
         end
-        tracks.each { |rtrack| @mc.pqueue.enqueue2(stores) }
+        @mc.pqueue.enqueue2(stores)
     end
 
 
@@ -493,7 +493,8 @@ puts "--- multi select ---".magenta
             # TODO: review this code. It's useless or poorly coded
             load_entries
             @track.sql_load
-            @mc.select_track(@track.rtrack)
+            # TODO: a revoir urgement!
+            @mc.select_track(get_current_uilink)
         end
     end
 
@@ -504,7 +505,7 @@ puts "--- multi select ---".magenta
 
     def on_download_trk
         @tv.selection.selected_each { |model, path, iter|
-            if iter[TTV_DATA].audio_status == Utils::FILE_ON_SERVER
+            if iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
         }
@@ -513,7 +514,7 @@ puts "--- multi select ---".magenta
     def download_tracks(use_selection)
         meth = use_selection ? @tv.selection.method(:selected_each) : @tv.model.method(:each)
         meth.call { |model, path, iter|
-            if iter[TTV_DATA].audio_status == Utils::FILE_ON_SERVER
+            if iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
         }

@@ -95,18 +95,18 @@ class SearchDialog
             else
                 iter[1] = row[0].to_html_bold+" from "+row[1].to_html_italic+" by "+row[2].to_html_italic
             end
-            iter[2] = UIStore.new.load_track(row[3]) if search_track?
-            iter[2] = UIStore.new.load_segment(row[3]) if search_segment?
-            iter[2] = UIStore.new.load_record(row[3]) if search_record?
+            iter[2] = UILink.new.load_track(row[3]) if search_track?
+            iter[2] = UILink.new.load_segment(row[3]) if search_segment?
+            iter[2] = UILink.new.load_record(row[3]) if search_record?
         end
     end
 
     def do_show
-        return unless @tv.selection.selected_rows
-        uistore = @ls.get_iter(@tv.selection.selected_rows[0])[2]
-        @mc.select_segment(uistore.segment.rsegment) if search_segment?
-        @mc.select_record(uistore.record.rrecord) if search_record?
-        @mc.select_track(uistore.track.rtrack) if search_track?
+        return unless @tv.selection.count_selected_rows > 0
+        uilink = @ls.get_iter(@tv.selection.selected_rows[0])[2]
+        @mc.select_segment(uilink) if search_segment?
+        @mc.select_record(uilink) if search_record?
+        @mc.select_track(uilink) if search_track?
     end
 
     def run

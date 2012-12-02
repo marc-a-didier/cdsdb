@@ -30,9 +30,9 @@ class RecentItemsDialog
 
         @glade[UIConsts::RCTITM_BTN_SHOW].signal_connect(:clicked) {
             if @view_type == VIEW_PLAYED
-                @mc.select_track(@tv.selection.selected[COL_DATA].track.rtrack) if @tv.selection.selected
+                @mc.select_track(@tv.selection.selected[COL_DATA]) if @tv.selection.selected
             else
-                @mc.select_record(@tv.selection.selected[COL_DATA].record.rrecord) if @tv.selection.selected
+                @mc.select_record(@tv.selection.selected[COL_DATA]) if @tv.selection.selected
             end
         }
 
@@ -40,7 +40,7 @@ class RecentItemsDialog
 
         srenderer = Gtk::CellRendererText.new()
 
-        # Columns: Entry, cover, title, date, UIStore (hidden)
+        # Columns: Entry, cover, title, date, UILink (hidden)
         @tv.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
 
         pix = Gtk::CellRendererPixbuf.new
@@ -72,7 +72,7 @@ class RecentItemsDialog
             stores << @tv.selection.selected[COL_DATA]
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_REF]};"
-            DBIntf::connection.execute(sql) { |row| stores << UIStore.new.load_track(row[0]) }
+            DBIntf::connection.execute(sql) { |row| stores << UILink.new.load_track(row[0]) }
         end
         return stores
     end
@@ -116,7 +116,7 @@ class RecentItemsDialog
             i += 1
             iter = @tv.model.append
             iter[COL_ENTRY] = i
-            iter[COL_DATA] = UIStore.new
+            iter[COL_DATA] = UILink.new
 
             if @view_type == VIEW_PLAYED
                 iter[COL_DATA].load_track(row[0])
