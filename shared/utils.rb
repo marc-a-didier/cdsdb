@@ -16,6 +16,22 @@ public
     end
 end
 
+
+class Trace
+
+    include Singleton
+
+    attr_reader :trace
+
+    def initialize
+        @trace = Logger.new(STDOUT)
+    end
+
+    def self.log
+        return instance.trace
+    end
+end
+
 class String
     def check_plural(quantity)
         return quantity < 2 ? self : self+"s"

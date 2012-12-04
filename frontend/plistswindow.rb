@@ -175,9 +175,9 @@ public
 
         sender, type, call_back = data.text.split(":")
         if sender == "plist" # -> reordering
-            iref = @tvpt.selection.selected[4].track.rtrack
-            itr = nil
-            @pts.each { |model, path, iter| if iter[TT_DATA].track.rtrack == track.to_i then itr = iter; break end }
+#             iref = @tvpt.selection.selected[4].track.rtrack
+            itr = find_ref(@tvpt.selection.selected[0])
+#             @pts.each { |model, path, iter| if iter[TT_REF] == track.to_i then itr = iter; break end }
             if itr
                 r = @tvpt.get_dest_row(x, y)
                 if r.nil?

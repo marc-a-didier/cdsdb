@@ -40,13 +40,13 @@ class ImageCache
         data = @map[key]
         if size == SMALL_SIZE
             if data.small_pix.nil?
-puts "### ImageCache check pix load small from cache".brown
+Trace.log.debug "ImageCache check pix load small from cache".brown
                 data.small_pix = Gdk::Pixbuf.new(Cfg::instance.covers_dir+data.file_name, size, size)
             end
             return data.small_pix
         else
             if data.large_pix.nil?
-puts "### ImageCache check pix load large from cache".brown
+Trace.log.debug "ImageCache check pix load large from cache".brown
                 data.large_pix = Gdk::Pixbuf.new(Cfg::instance.covers_dir+data.file_name, size, size)
             end
             return data.large_pix
@@ -56,7 +56,7 @@ puts "### ImageCache check pix load large from cache".brown
     def load_cover(key, size, file_name)
         unless @map[key]
             fname = Cfg::instance.covers_dir+file_name
-puts "--- ImageCache load_cover from #{fname} size=#{@map.size+1}".red
+Trace.log.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
             if size == SMALL_SIZE
                 @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
                 return @map[key].small_pix
@@ -70,7 +70,7 @@ puts "--- ImageCache load_cover from #{fname} size=#{@map.size+1}".red
     end
 
     def set_default_pix(key, size)
-puts "--- ImageCache for key #{key} rerouted to default".green
+Trace.log.debug "ImageCache for key #{key} rerouted to default".green
         if key[0] == "f"
             @map[key] = ImageData.new(DEF_FLAG_FILE, @map[DEFAULT_FLAG].small_pix, nil)
         else
@@ -104,7 +104,7 @@ puts "--- ImageCache for key #{key} rerouted to default".green
     def get_flag(rorigin)
         key = "f"+rorigin.to_s
         if @map[key].nil?
-puts "--- load flag for origin #{rorigin}".red
+Trace.log.debug "--- load flag for origin #{rorigin}".red
             file = Cfg::instance.flags_dir+rorigin.to_s+".svg"
             File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
         end
@@ -143,6 +143,7 @@ class TrackKeyCache
 
     def add_key(pix_key, ref_pix_key)
         @key_ref[pix_key] = ref_pix_key
+Trace.log.debug "TrackKeyCache added key #{pix_key}, size=#{@key_ref.size}".red
     end
 end
 
@@ -168,7 +169,7 @@ module CoverMgr
         rrecord = irecsymlink unless irecsymlink == 0
 
         files = Dir[Cfg::instance.covers_dir+rrecord.to_s+".*"]
-puts "### CoverMgr search RECORD disk access".red
+Trace.log.debug "CoverMgr search RECORD disk access".red
         if files.size > 0
             return ImageCache::instance.load_cover(@pix_key, size, File::basename(files[0]))
         else
@@ -178,7 +179,7 @@ puts "### CoverMgr search RECORD disk access".red
 
     def load_track_cover(rtrack, rrecord, irecsymlink, size)
         files = Dir[Cfg::instance.covers_dir+rrecord.to_s+"/"+rtrack.to_s+".*"]
-puts "### CoverMgr search TRACK disk access".brown
+Trace.log.debug "CoverMgr search TRACK disk access".brown
         if files.size > 0
             return ImageCache.instance.load_cover(@pix_key, size, rrecord.to_s+"/"+File::basename(files[0]))
         else
@@ -279,12 +280,12 @@ class UILink < AudioLink
     end
 
     def large_record_cover
-        @pix_key.empty? ? record_pix(track.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE) :
+        @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE) :
                           ImageCache::instance.pix(@pix_key, ImageCache::LARGE_SIZE)
     end
 
     def small_record_cover
-        @pix_key.empty? ? record_pix(track.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE) :
+        @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE) :
                           ImageCache::instance.pix(@pix_key, ImageCache::SMALL_SIZE)
     end
 

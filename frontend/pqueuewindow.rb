@@ -126,7 +126,7 @@ class PQueueWindow < TopWindow
 #   p data.uris
         case info
             when 700 #DragType::BROWSER_SELECTION
-                sender, type, call_back = data.text.split(":")
+                sender, type, call_back, param = data.text.split(":")
                 if sender == "pqueue" # -> reordering
                     iref = @tvpq.selection.selected[4].internal_ref
                     itr = nil
@@ -146,7 +146,7 @@ class PQueueWindow < TopWindow
                 else
                     if type == "message"
 puts "message received, calling back"
-                        enqueue2(@mc.send(call_back))
+                        param ? enqueue2(@mc.send(call_back, param.to_i)) : enqueue2(@mc.send(call_back))
                     end
                 end
 

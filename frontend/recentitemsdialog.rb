@@ -22,11 +22,13 @@ class RecentItemsDialog
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         @dlg.add_events( Gdk::Event::FOCUS_CHANGE)
         @dlg.signal_connect(:focus_in_event) { |widget, event| @mc.filter_receiver = self; false }
-        @dlg.signal_connect(:delete_event)   { puts "delete received"; @mc.reset_filter_receiver; @dlg.destroy; false }
+#         @dlg.signal_connect(:delete_event)   { puts "delete received"; @mc.reset_filter_receiver; @dlg.destroy; false }
+        @dlg.signal_connect(:delete_event)   { notify_and_close; false }
 
         # J'aimerais bien piger une fois comment on envoie un delete_event a la fenetre!!!
         #@glade["recrec_btn_close"].signal_connect(:clicked) { @dlg.delete } # @dlg.signal_emit(:delete_event, Gdk::Event.new(Gdk::Event::DESTROY)) }
-        @glade[UIConsts::RCTITM_BTN_CLOSE].signal_connect(:clicked) { puts "closing"; @mc.reset_filter_receiver; @dlg.destroy }
+#         @glade[UIConsts::RCTITM_BTN_CLOSE].signal_connect(:clicked) { puts "closing"; @mc.reset_filter_receiver; @dlg.destroy }
+        @glade[UIConsts::RCTITM_BTN_CLOSE].signal_connect(:clicked) { notify_and_close }
 
         @glade[UIConsts::RCTITM_BTN_SHOW].signal_connect(:clicked) {
             if @view_type == VIEW_PLAYED
@@ -59,11 +61,21 @@ class RecentItemsDialog
 
         @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            selection_data.set(Gdk::Selection::TYPE_STRING, "recent:message:get_recent_selection")
+            selection_data.set(Gdk::Selection::TYPE_STRING, "recent:message:get_recent_selection:#{@view_type}")
         }
 
         @view_type = view_type
         exec_sql(@view_type)
+    end
+
+    def present
+        @dlg.present
+    end
+
+    def notify_and_close
+        @mc.reset_filter_receiver
+        @mc.recent_items_closed(self)
+        @dlg.destroy
     end
 
     def get_selection
@@ -71,7 +83,7 @@ class RecentItemsDialog
         if @view_type == VIEW_PLAYED
             stores << @tv.selection.selected[COL_DATA]
         else
-            sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_REF]};"
+            sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
             DBIntf::connection.execute(sql) { |row| stores << UILink.new.load_track(row[0]) }
         end
         return stores
@@ -121,7 +133,7 @@ class RecentItemsDialog
             if @view_type == VIEW_PLAYED
                 iter[COL_DATA].load_track(row[0])
                 iter[COL_PIX]   = iter[COL_DATA].small_track_cover
-                iter[COL_TITLE] = iter[COL_DATA].html_track_title(@mc.show_segment_title?)
+                iter[COL_TITLE] = iter[COL_DATA].html_track_title_no_track_num(@mc.show_segment_title?)
                 iter[COL_DATE]  = row[1].to_std_date+" @ "+row[2]
             else
                 iter[COL_DATA].load_record(row[0])

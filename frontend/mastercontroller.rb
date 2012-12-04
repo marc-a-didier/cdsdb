@@ -19,6 +19,10 @@ class MasterController
     attr_accessor :filter_receiver
 
 
+    RECENT_ADDED  = 0
+    RECENT_RIPPED = 1
+    RECENT_PLAYED = 2
+
     def initialize(path_or_data, root, domain)
         @glade = GTBld.main
 
@@ -97,7 +101,7 @@ class MasterController
         @memos    = MemosWindow.new(self)
 
         # Stores the recent items window object
-        @recent_items = nil
+        @recents = [nil, nil, nil] # Pointer to recent added/ripped/played
         @search_dlg   = nil
 
         # Set windows icons
@@ -131,9 +135,9 @@ class MasterController
         @glade[UIConsts::MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 
         # Faudra revoir, on peut ouvrir plusieurs fenetre des recent items en meme temps...
-        @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { @recent_items = RecentItemsDialog.new(self, 0).run }
-        @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { @recent_items = RecentItemsDialog.new(self, 1).run }
-        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { @recent_items = RecentItemsDialog.new(self, 2).run }
+        @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { handle_recent_items(RECENT_ADDED)  }
+        @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { handle_recent_items(RECENT_RIPPED) }
+        @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { handle_recent_items(RECENT_PLAYED) }
 
         @glade[UIConsts::MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
@@ -218,7 +222,7 @@ class MasterController
         # Load artists entries
         @art_browser.load_entries
 
-        # At least, we're ready to go!
+        # At last, we're ready to go!
         @glade[UIConsts::MAIN_WINDOW].icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"audio-cd.png")
         @glade[UIConsts::MAIN_WINDOW].show
     end
@@ -257,6 +261,15 @@ class MasterController
         is_ok = Utils::set_cover(data.uris[0], artist.rartist, record.rartist, record.rrecord, track.rtrack) if info == 105 #DragType::URI_LIST
         Gtk::Drag.finish(context, is_ok, false, Time.now.to_i)
         return true
+    end
+
+    def handle_recent_items(item)
+        @recents[item] ? @recents[item].present : @recents[item] = RecentItemsDialog.new(self, item).run
+    end
+
+    def recent_items_closed(sender)
+#         @recents.each { |dialog| dialog = nil if dialog == sender }
+        (RECENT_ADDED..RECENT_PLAYED).each { |i| @recents[i] = nil if @recents[i] == sender }
     end
 
     #
@@ -426,11 +439,11 @@ class MasterController
         @trk_browser.download_tracks(false)
     end
 
-    def get_tracks_list
+    def get_tracks_list # Returns all visible tracks
         return @trk_browser.get_tracks_list
     end
 
-    def get_tracks_selection
+    def get_tracks_selection # Returns only selected tracks
         return @trk_browser.get_selection
     end
 
@@ -442,8 +455,9 @@ class MasterController
         return @pqueue.get_selection
     end
 
-    def get_recent_selection
-        return @recent_items.get_selection
+    def get_recent_selection(param)
+        # TODO: Marche plus depuis que c'est un array!! A revoir!!
+        return @recents[param].get_selection
     end
 
     def get_charts_selection
