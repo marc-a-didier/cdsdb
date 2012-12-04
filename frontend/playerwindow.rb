@@ -99,14 +99,13 @@ class PlayerWindow < TopWindow
 
     def play_track
 puts @player_data ? "[#{@player_data.uilink.track.rtrack}, #{@player_data.uilink.audio_file}]" : "[nil]"
+        @tip_pix = nil
         if @player_data.nil?
             reset_player
             if Cfg::instance.notifications?
                 system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{ImageCache::instance.default_record_file} 'CDs DB' 'End of play list'")
             end
         else
-#             @track_infos.from_tags(@player_data.uicache.music_file)
-#             @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = UIUtils::tags_html_track_title(@track_infos, " ")
             @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uilink.html_track_title(false, " ")
             @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
             @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
@@ -116,7 +115,6 @@ puts @player_data ? "[#{@player_data.uilink.track.rtrack}, #{@player_data.uilink
             @source.location = @player_data.uilink.audio_file
             @playbin.play
             setup_hscale
-            @tip_pix = @player_data.uilink.large_track_cover
             if Cfg::instance.notifications?
                 file_name = @player_data.uilink.cover_file_name
                 system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uilink.html_track_title(true)}\"")
@@ -295,6 +293,7 @@ puts @player_data ? "[#{@player_data.uilink.track.rtrack}, #{@player_data.uilink
     end
 
     def show_tooltip(si, tool_tip)
+        @tip_pix = @player_data.uilink.large_track_cover if @tip_pix.nil?
         tool_tip.set_icon(@tip_pix)
         text = @player_data.uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
         tool_tip.set_markup(text)
