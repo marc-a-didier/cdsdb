@@ -482,7 +482,7 @@ puts "--- multi select ---".magenta
         else
             @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
         end
-        @mc.pqueue.enqueue2(stores)
+        @mc.pqueue.enqueue(stores)
     end
 
 

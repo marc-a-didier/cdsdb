@@ -98,7 +98,14 @@ class PlayerWindow < TopWindow
     end
 
     def play_track
-puts @player_data ? "[#{@player_data.uilink.track.rtrack}, #{@player_data.uilink.audio_file}]" : "[nil]"
+        # Debug info
+        if @player_data
+            @player_data.uilink.tags.nil? ? print("[#{@player_data.uilink.track.rtrack}") : print("[0")
+            puts(", #{@player_data.uilink.audio_file}]")
+        else
+            puts("[nil]")
+        end
+
         @tip_pix = nil
         if @player_data.nil?
             reset_player
@@ -106,7 +113,7 @@ puts @player_data ? "[#{@player_data.uilink.track.rtrack}, #{@player_data.uilink
                 system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{ImageCache::instance.default_record_file} 'CDs DB' 'End of play list'")
             end
         else
-            @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uilink.html_track_title(false, " ")
+            @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uilink.html_track_title_no_track_num(false, " ")
             @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
             @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
             @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = true

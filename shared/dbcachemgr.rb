@@ -120,6 +120,8 @@ class DBCacheLink
 end
 
 
+TagsData = Struct.new(:artist, :album, :title, :track, :length, :year, :genre)
+
 #
 # Provides audio files handling goodness
 #
@@ -132,6 +134,7 @@ class AudioLink < DBCacheLink
     UNKNOWN   = 4 # Should be default value, no check has been made
 
     attr_accessor :audio_file, :audio_status
+    attr_reader   :tags
 
     def initialize
         super
@@ -144,6 +147,7 @@ class AudioLink < DBCacheLink
 
         @audio_file = ""
         @audio_status = UNKNOWN
+        @tags = nil
 
         return self
     end
@@ -153,21 +157,9 @@ class AudioLink < DBCacheLink
         @audio_file = file_name
         @audio_status = OK
 
-        # Reinit all members and set all to invalid since there's no link with the DB
-        # Hope the garbage collector is well done...
-        @track   = TrackDBClass.new
-        @segment = SegmentDBClass.new
-        @record  = RecordDBClass.new
-        @artist  = ArtistDBClass.new
-
         tags = TagLib::File.new(file_name)
-        @artist.sname    = tags.artist
-        @record.stitle   = tags.album
-        @track.stitle    = tags.title
-        @track.iorder    = tags.track
-        @track.iplaytime = tags.length*1000
-        @record.iyear    = tags.year
-        # @genre           = tags.genre # ignore, no way to handle it
+        @tags = TagsData.new(tags.artist, tags.album, tags.title, tags.track,
+                             tags.length*1000, tags.year, tags.genre)
         tags.close
 
         return self

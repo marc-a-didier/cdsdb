@@ -313,23 +313,6 @@ class Utils
     end
 
 
-    def Utils::search_and_get_audio_file2(emitter, tasks, dbcache)
-        # If client mode and no local store, download any way in the mfiles directory
-        if Cfg::instance.remote? && !Cfg::instance.local_store?
-             tasks.new_track_download(emitter, dbcache.track.stitle, dbcache.track.rtrack)
-             return DOWNLOADING
-        end
-
-        fname = Utils::audio_file_exists(dbcache).file_name
-
-        # If client mode with local store download file from server if not found on disk
-        if fname.empty? && Cfg::instance.remote? && Cfg::instance.local_store?
-            tasks.new_track_download(emitter, dbcache.track.stitle, dbcache.track.rtrack)
-            return DOWNLOADING
-        end
-        return fname
-    end
-
     #
     # Check the existence of a file match for a given track.
     #

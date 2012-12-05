@@ -433,7 +433,7 @@ public
     end
 
     def enqueue_track
-        @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue2(iter[TT_DATA]) }
+        @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue([iter[TT_DATA]]) }
     end
 
     def show_infos(is_popup)

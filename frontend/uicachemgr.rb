@@ -118,7 +118,7 @@ Trace.log.debug "--- load flag for origin #{rorigin}".red
     def default_large_record
         return @map[DEFAULT_COVER].large_pix
     end
-    
+
     def preload_tracks_cover
         Dir[Cfg::instance.covers_dir+"*"].each { |entry|
             next unless File::directory?(entry)
@@ -222,8 +222,8 @@ class UILink < AudioLink
         return self
     end
 
-    def init_from_tags(file_name)
-        load_from_tags(file_name)
+    def load_from_tags(file_name)
+        super
         @pix_key = ImageCache::DEFAULT_COVER
         return self
     end
@@ -284,24 +284,34 @@ class UILink < AudioLink
 
     def make_track_title(want_segment_title, want_track_number = true)
         title = ""
-        title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
-        if want_segment_title
-            title += segment.stitle+" - " unless segment.stitle.empty?
-            title += track.isegorder.to_s+". " unless track.isegorder == 0
+        if @tags.nil?
+            title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
+            if want_segment_title
+                title += segment.stitle+" - " unless segment.stitle.empty?
+                title += track.isegorder.to_s+". " unless track.isegorder == 0
+            end
+            title += track.stitle
+        else
+            title += @tags.track.to_s+". " if want_track_number
+            title += @tags.title
         end
-        return title+track.stitle
+        return title
     end
 
     def html_track_title(want_segment_title, separator = "\n")
-        return make_track_title(want_segment_title).to_html_bold + separator +
-               "by "+artist.sname.to_html_italic + separator +
-               "from "+record.stitle.to_html_italic
+        title = make_track_title(want_segment_title).to_html_bold + separator +"by "
+        title += @tags.nil? ? artist.sname.to_html_italic : @tags.artist.to_html_italic
+        title += separator + "from "
+        title += @tags.nil? ? record.stitle.to_html_italic : @tags.album.to_html_italic
+        return title
     end
 
     def html_track_title_no_track_num(want_segment_title, separator = "\n")
-        return make_track_title(want_segment_title, false).to_html_bold + separator +
-               "by "+artist.sname.to_html_italic + separator +
-               "from "+record.stitle.to_html_italic
+        title = make_track_title(want_segment_title, false).to_html_bold + separator +"by "
+        title += @tags.nil? ? artist.sname.to_html_italic : @tags.artist.to_html_italic
+        title += separator + "from "
+        title += @tags.nil? ? record.stitle.to_html_italic : @tags.album.to_html_italic
+        return title
     end
 
     def html_record_title(separator = "\n")

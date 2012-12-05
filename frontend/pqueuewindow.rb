@@ -146,7 +146,7 @@ class PQueueWindow < TopWindow
                 else
                     if type == "message"
 puts "message received, calling back"
-                        param ? enqueue2(@mc.send(call_back, param.to_i)) : enqueue2(@mc.send(call_back))
+                        param ? enqueue(@mc.send(call_back, param.to_i)) : enqueue(@mc.send(call_back))
                     end
                 end
 
@@ -159,7 +159,7 @@ puts "message received, calling back"
                     iter[0] = iter.path.to_s.to_i+1
                     iter[1] = data.uilink.small_track_cover
                     iter[2] = data.uilink.html_track_title(@mc.show_segment_title?)
-                    iter[3] = (data.uilink.track.iplaytime/1000).to_sec_length
+                    iter[3] = (data.uilink.tags.length/1000).to_sec_length
                     iter[4] = data
                 }
         end
@@ -168,43 +168,43 @@ puts "message received, calling back"
         return true
     end
 
-    def enqueue(rtrack)
-        cover = CoverMgr.new
-        track_infos = TrackInfos.new.get_track_infos(rtrack)
-        fname = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
-        unless fname.empty?
-            @internal_ref += 1
-            iter = @plq.append
+#     def enqueue(rtrack)
+#         cover = CoverMgr.new
+#         track_infos = TrackInfos.new.get_track_infos(rtrack)
+#         fname = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
+#         unless fname.empty?
+#             @internal_ref += 1
+#             iter = @plq.append
+#
+#             iter[0] = iter.path.to_s.to_i+1
+# #             iter[1] = IconsMgr::instance.get_cover(track_infos.record.rrecord, track_infos.track.rtrack,
+# #                                                    track_infos.record.irecsymlink, 64)
+#             iter[1] = cover.track_pix(track_infos.track.rtrack, track_infos.record.rrecord,
+#                                       track_infos.record.irecsymlink, ImageCache::SMALL_SIZE)
+#             iter[2] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
+#             iter[3] = (track_infos.track.iplaytime/1000).to_sec_length
+#             iter[4] = PQExtra.new(@internal_ref, track_infos.track.rtrack, track_infos.record.rrecord,
+#                                   track_infos.track.iplaytime, fname, track_infos.record.irecsymlink)
+#
+#             update_status
+#         end
+#     end
 
-            iter[0] = iter.path.to_s.to_i+1
-#             iter[1] = IconsMgr::instance.get_cover(track_infos.record.rrecord, track_infos.track.rtrack,
-#                                                    track_infos.record.irecsymlink, 64)
-            iter[1] = cover.track_pix(track_infos.track.rtrack, track_infos.record.rrecord,
-                                      track_infos.record.irecsymlink, ImageCache::SMALL_SIZE)
-            iter[2] = UIUtils::html_track_title(track_infos, @mc.show_segment_title?)
-            iter[3] = (track_infos.track.iplaytime/1000).to_sec_length
-            iter[4] = PQExtra.new(@internal_ref, track_infos.track.rtrack, track_infos.record.rrecord,
-                                  track_infos.track.iplaytime, fname, track_infos.record.irecsymlink)
-
-            update_status
-        end
-    end
-
-    def enqueue2(uilinks)
-        uilinks.each { |store|
-#             store.setup_audio_file
+    def enqueue(uilinks)
+        uilinks.each { |uilink|
+#             uilink.setup_audio_file
             # La c'est la merde... si une track est dropee depuis les charts, p.e, on sait
             # pas le status. Faudrait aller verfier sur le serveur.
-            store.get_audio_file(self, @mc.tasks)
-            unless store.audio_status == AudioLink::NOT_FOUND
+            uilink.get_audio_file(self, @mc.tasks)
+            unless uilink.audio_status == AudioLink::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
 
                 iter[0] = iter.path.to_s.to_i+1
-                iter[1] = store.small_track_cover
-                iter[2] = store.html_track_title(@mc.show_segment_title?)
-                iter[3] = (store.track.iplaytime/1000).to_sec_length
-                iter[4] = PQData.new(@internal_ref, store)
+                iter[1] = uilink.small_track_cover
+                iter[2] = uilink.html_track_title(@mc.show_segment_title?)
+                iter[3] = (uilink.track.iplaytime/1000).to_sec_length
+                iter[4] = PQData.new(@internal_ref, uilink)
             end
         }
 
@@ -223,7 +223,10 @@ puts "message received, calling back"
 
     def update_status
         @play_time = @ntracks = 0
-        @plq.each { |model, path, iter| @ntracks += 1; @play_time += iter[4].uilink.track.iplaytime }
+        @plq.each { |model, path, iter|
+            @ntracks += 1
+            @play_time += iter[4].uilink.tags.nil? ? iter[4].uilink.track.iplaytime : iter[4].uilink.tags.length
+        }
         update_tracks_label
         update_ptime_label(@play_time)
     end

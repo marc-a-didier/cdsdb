@@ -433,7 +433,7 @@ class MasterController
 
 
     def enqueue_record
-        @pqueue.enqueue2(@trk_browser.get_tracks_list)
+        @pqueue.enqueue(@trk_browser.get_tracks_list)
     end
 
     def download_tracks
@@ -501,7 +501,7 @@ puts "*** save memos called"
 
     def notify_played(uilink, host = "")
         # If rtrack is -1 the track has been dropped into the pq from the file system
-        return if uilink.track.rtrack == -1 || uilink.track.banned?
+        return if uilink.tags || uilink.track.rtrack == -1 || uilink.track.banned?
 
 
         # Update local database AND remote database if in client mode

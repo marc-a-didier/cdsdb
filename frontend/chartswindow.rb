@@ -146,7 +146,7 @@ class ChartsWindow < TopWindow
     end
 
     def enqueue
-        @mc.pqueue.enqueue2(get_selection)
+        @mc.pqueue.enqueue(get_selection)
     end
 
     def enqueue_multiple_tracks
@@ -154,7 +154,7 @@ class ChartsWindow < TopWindow
 
         selection = @tvc.selection.selected[COL_ENTRY]-1
         @entries.each { |entry|
-            @mc.pqueue.enqueue2([entry.uilink]) if entry.entry >= selection
+            @mc.pqueue.enqueue([entry.uilink]) if entry.entry >= selection
             break if entry.entry >= Cfg::instance.max_items
         }
     end
