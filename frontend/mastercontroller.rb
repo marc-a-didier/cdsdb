@@ -53,6 +53,7 @@ class MasterController
 
         # Set cd image to default image
         @glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
+        ImageCache.instance.preload_tracks_cover
 
         Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"player.png"))
         Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"pqueue.png"))

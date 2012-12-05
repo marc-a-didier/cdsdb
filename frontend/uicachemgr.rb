@@ -118,34 +118,20 @@ Trace.log.debug "--- load flag for origin #{rorigin}".red
     def default_large_record
         return @map[DEFAULT_COVER].large_pix
     end
-end
-
-
-#
-# TrackKeyCache goal is to map a key for a track cover to it's record image
-# if the track has no cover for itself.
-#
-class TrackKeyCache
-
-    include Singleton
-
-    def initialize
-        @key_ref = {}
-    end
-
-    def has_key(pix_key)
-        return !@key_ref[pix_key].nil?
-    end
-
-    def get_ref_key(pix_key)
-        return @key_ref[pix_key]
-    end
-
-    def add_key(pix_key, ref_pix_key)
-        @key_ref[pix_key] = ref_pix_key
-Trace.log.debug "TrackKeyCache added key #{pix_key}, size=#{@key_ref.size}".red
+    
+    def preload_tracks_cover
+        Dir[Cfg::instance.covers_dir+"*"].each { |entry|
+            next unless File::directory?(entry)
+            Dir[entry+"/*"].each { |file|
+                next if File::directory?(file)
+                key =  "t"+File::basename(file).gsub(File::extname(file), "")
+                @map[key] = ImageData.new(file.gsub(Cfg::instance.covers_dir, ""), nil, nil)
+Trace.log.debug("Key #{key} added, file=#{@map[key].file_name}")
+           }
+        }
     end
 end
+
 
 
 #
@@ -158,7 +144,7 @@ end
 module CoverMgr
 
     def record_in_cache?(rrecord, irecsymlink, size)
-        record = irecsymlink unless irecsymlink == 0
+        rrecord = irecsymlink unless irecsymlink == 0
         @pix_key = "r"+rrecord.to_s
         return ImageCache::instance.has_key(@pix_key)
     end
@@ -177,23 +163,6 @@ Trace.log.debug "CoverMgr search RECORD disk access".red
         end
     end
 
-    def load_track_cover(rtrack, rrecord, irecsymlink, size)
-        files = Dir[Cfg::instance.covers_dir+rrecord.to_s+"/"+rtrack.to_s+".*"]
-Trace.log.debug "CoverMgr search TRACK disk access".brown
-        if files.size > 0
-            return ImageCache.instance.load_cover(@pix_key, size, rrecord.to_s+"/"+File::basename(files[0]))
-        else
-            if record_in_cache?(rrecord, irecsymlink, size)
-                TrackKeyCache::instance.add_key("t"+rtrack.to_s, @pix_key)
-                return ImageCache.instance.pix(@pix_key, size)
-            else
-                load_record_cover(rrecord, irecsymlink, size)
-                TrackKeyCache::instance.add_key("t"+rtrack.to_s, @pix_key)
-                return ImageCache.instance.pix(@pix_key, size)
-            end
-        end
-    end
-
 
     #
     # Only these 3 methods should be called, the other are for private use.
@@ -203,13 +172,11 @@ Trace.log.debug "CoverMgr search TRACK disk access".brown
     #
     def track_pix(rtrack, rrecord, irecsymlink, size)
         @pix_key = "t"+rtrack.to_s
-        if TrackKeyCache::instance.has_key(@pix_key)
-            @pix_key = TrackKeyCache::instance.get_ref_key(@pix_key)
+        if ImageCache::instance.has_key(@pix_key)
             return ImageCache::instance.pix(@pix_key, size)
+        else
+            return record_pix(rrecord, irecsymlink, size)
         end
-        # We go to check if a file exist for this track.
-        # If not, will return the record cover or the default cover
-        return load_track_cover(rtrack, rrecord, irecsymlink, size)
     end
 
     def record_pix(rrecord, irecsymlink, size)
@@ -224,10 +191,8 @@ Trace.log.debug "CoverMgr search TRACK disk access".brown
     def file_name(rtrack, rrecord, irecsymlink)
         @pix_key = "t"+rtrack.to_s
         if !ImageCache::instance.has_key(@pix_key)
-            if TrackKeyCache::instance.has_key(@pix_key)
-                @pix_key = TrackKeyCache::instance.get_ref_key(@pix_key)
-            else
-                load_track_cover(rtrack, rrecord, irecsymlink, ImageCache::SMALL_SIZE)
+            if !record_in_cache?(rrecord, irecsymlink)
+                load_record_cover(rrecord, irecsymlink, ImageCache::SMALL_SIZE)
             end
         end
         return ImageCache::instance.full_name(@pix_key)
