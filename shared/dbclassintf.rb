@@ -237,6 +237,16 @@ class PListDBClass < DBClassIntf
 end
 
 
+GenreDBS = Struct.new(:rgenre, :sname)
+
+class GenreDBClass < DBClassIntf
+
+    def initialize
+        super(GenreDBS.new)
+    end
+
+end
+
 def test
     art = ArtistDBClass.new
     art2 = ArtistDBClass.new
