@@ -419,10 +419,16 @@ puts "--- multi select ---".magenta
     def on_tag_file
         return if @tv.selection.count_selected_rows != 1
         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-        fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
-        dir = fname.empty? ? "" : File::dirname(fname)
-        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, dir)
-        Utils::tag_and_move_file(file, TrackInfos.new.get_track_infos(@track.rtrack)) unless file.empty?
+        return if iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
+
+        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, File::dirname(iter[TTV_DATA].audio_file))
+        iter[TTV_DATA].tag_and_move_file(file) unless file.empty?
+
+#         fname = iter[TTV_DATA].audio_file
+#         fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
+#         dir = fname.empty? ? "" : File::dirname(fname)
+#         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, dir)
+#         Utils::tag_and_move_file(file, TrackInfos.new.get_track_infos(@track.rtrack)) unless file.empty?
     end
 
     def on_update_playtime
@@ -530,13 +536,12 @@ puts "--- multi select ---".magenta
             return nil
         end
 
-        # Multi-threading... Si on change de disque ou de morceau pendant que le client charge le morceau
-        # iter[0] (rtrack) n'est soit plus valide, soit nil et ca fait crasher l'update des stats.
-        # Raison pour laquelle iter[0] est sauve dans rtrack avant de le retourner au player
-        rtrack = iter[TTV_REF]
-        audio_file = Utils::search_and_get_audio_file(self, @mc.tasks, TrackInfos.new.get_track_infos(rtrack))
-        return PlayerData.new(self, @curr_track, audio_file, rtrack, @mc.record.rrecord)
-        #return [audio_file, rtrack, @mc.record.rrecord]
+        # TODO: Faudrait voir pour gerer le cas ou on download du serveur...
+        if iter[TTV_DATA].get_audio_file(self, @mc.tasks) == AudioLink::OK
+            return PlayerData.new(self, @curr_track, iter[TTV_DATA])
+        else
+            return nil
+        end
     end
 
     def notify_played(player_data)

@@ -16,6 +16,7 @@ class DBCache
         @records  = {}
         @segments = {}
         @tracks   = {}
+        @genres   = {}
     end
 
     def artist(rartist)
@@ -37,6 +38,11 @@ class DBCache
         @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
         return @tracks[rtrack]
     end
+
+    def genre(rgenre)
+        @genres[rgenre] = GenreDBClass.new.ref_load(rgenre) if @genres[rgenre].nil?
+        return @genres[rgenre]
+    end
 end
 
 
@@ -55,6 +61,7 @@ class DBCacheLink
         @rsegment = nil
         @rrecord  = nil
         @rartist  = nil # Consider it's the SEGMENT artist
+        @rgenre   = nil
 
         return self
     end
@@ -91,6 +98,11 @@ class DBCacheLink
 
     alias :artist :segment_artist
 
+    def genre
+        @rgenre = cache.genre(record.rgenre).rgenre if @rgenre.nil?
+        return cache.genre(@rgenre)
+    end
+
 
 
     def load_track(rtrack)
@@ -113,13 +125,18 @@ class DBCacheLink
         return self
     end
 
+    def load_genre(rgenre)
+        @rgenre = rgenre
+        return self
+    end
+
     def reload_track_cache
         cache.track(@rtrack).sql_load
         return self
     end
 end
 
-
+# Tags are back to life. BUT I should find a better way!
 TagsData = Struct.new(:artist, :album, :title, :track, :length, :year, :genre)
 
 #
@@ -152,7 +169,6 @@ class AudioLink < DBCacheLink
         return self
     end
 
-    # WARNING: does not work anymore. must find a way to bring it back to life!!!
     def load_from_tags(file_name)
         @audio_file = file_name
         @audio_status = OK
@@ -192,10 +208,11 @@ class AudioLink < DBCacheLink
         end
 
         fname = sprintf("%02d - %s", track.iorder, title.clean_path)
-        genre = DBUtils::name_from_id(record.rgenre, DBIntf::TBL_GENRES)
+#         genre = DBUtils::name_from_id(record.rgenre, DBIntf::TBL_GENRES)
         dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
 
-        @audio_file = Cfg::instance.music_dir+genre+"/"+dir+"/"+fname
+#         @audio_file = Cfg::instance.music_dir+genre+"/"+dir+"/"+fname
+        @audio_file = Cfg::instance.music_dir+genre.sname+"/"+dir+"/"+fname
     end
 
     def setup_audio_file
@@ -203,6 +220,12 @@ class AudioLink < DBCacheLink
 
         build_audio_file_name
         return @audio_status = search_audio_file
+    end
+
+    # Returns the file name without the music dir and genre
+    def track_dir
+        file = @audio_file.sub(Cfg::instance.music_dir, "")
+        return file.sub(file.split("/")[0], "")
     end
 
     # Search the Music directory for a file matching the theoretical file name.
@@ -218,8 +241,9 @@ class AudioLink < DBCacheLink
         }
 
         # Remove the root dir & genre dir to get the appropriate sub dir
-        file = @audio_file.sub(Cfg::instance.music_dir, "")
-        file.sub!(file.split("/")[0], "")
+#         file = @audio_file.sub(Cfg::instance.music_dir, "")
+#         file.sub!(file.split("/")[0], "")
+        file = track_dir
 # p file
         Dir[Cfg::instance.music_dir+"*"].each { |entry|
             next if !FileTest::directory?(entry)
@@ -233,4 +257,47 @@ class AudioLink < DBCacheLink
         return NOT_FOUND
     end
 
+    def make_track_title(want_segment_title, want_track_number = true)
+        title = ""
+        if @tags.nil?
+            title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
+            if want_segment_title
+                title += segment.stitle+" - " unless segment.stitle.empty?
+                title += track.isegorder.to_s+". " unless track.isegorder == 0
+            end
+            title += track.stitle
+        else
+            title += @tags.track.to_s+". " if want_track_number
+            title += @tags.title
+        end
+        return title
+    end
+
+    def tag_file(file_name)
+        tags = TagLib::File.new(file_name)
+        tags.artist = artist.sname
+        tags.album  = record.stitle
+        tags.title  = make_track_title(true, false) # Want segment title but no track number
+        tags.track  = track.iorder
+        tags.year   = record.iyear
+        tags.genre  = genre.sname
+        tags.save
+        tags.close
+    end
+
+    def tag_and_move_file(file_name)
+        # Re-tags the original file
+        tag_file(file_name)
+
+        # Build the new name since some data used to build it may have changed
+        build_audio_file_name
+        @audio_file += File::extname(file_name)
+
+        # Move the original file to it's new location
+        root_dir = Cfg::instance.music_dir+genre.sname+File::SEPARATOR
+        FileUtils.mkpath(root_dir+File::dirname(track_dir))
+        FileUtils.mv(file_name, @audio_file)
+        Log.instance.info("Source #{file_name} tagged and moved to "+@audio_file)
+        Utils::remove_dirs(File.dirname(file_name))
+    end
 end

@@ -88,6 +88,14 @@ Trace.log.debug "ImageCache for key #{key} rerouted to default".green
         return @map[key].file_name
     end
 
+    def set_file_name(key, file_name)
+        if @map[key].nil?
+            @map[key] = ImageData.new(file_name, nil, nil)
+        else # should never get there.
+            @map[key].file_name = file_name
+        end
+    end
+
     def full_name(key)
         if key[0] == "f"
             return Cfg::instance.flags_dir+@map[key].file_name
@@ -143,23 +151,24 @@ end
 #
 module CoverMgr
 
-    def record_in_cache?(rrecord, irecsymlink, size)
-        rrecord = irecsymlink unless irecsymlink == 0
-        @pix_key = "r"+rrecord.to_s
+    def record_in_cache?(rrecord, irecsymlink)
+        @pix_key = irecsymlink == 0 ? "r"+rrecord.to_s : "r"+irecsymlink.to_s
         return ImageCache::instance.has_key(@pix_key)
+    end
+
+    def get_cover_file_name
+        files = Dir[Cfg::instance.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
+Trace.log.debug "CoverMgr search key #{@pix_key} - disk access".red
+        return files.size > 0 ? File::basename(files[0]) : ImageCache::DEF_RECORD_FILE
     end
 
     # @pix_key is set by record_in_cache? since we always check the hash before the file system
     def load_record_cover(rrecord, irecsymlink, size)
-        # Assign sym link if any
-        rrecord = irecsymlink unless irecsymlink == 0
-
-        files = Dir[Cfg::instance.covers_dir+rrecord.to_s+".*"]
-Trace.log.debug "CoverMgr search RECORD disk access".red
-        if files.size > 0
-            return ImageCache::instance.load_cover(@pix_key, size, File::basename(files[0]))
-        else
+        file = get_cover_file_name
+        if file == ImageCache::DEF_RECORD_FILE
             return ImageCache::instance.set_default_pix(@pix_key, size)
+        else
+            return ImageCache::instance.load_cover(@pix_key, size, file)
         end
     end
 
@@ -180,7 +189,7 @@ Trace.log.debug "CoverMgr search RECORD disk access".red
     end
 
     def record_pix(rrecord, irecsymlink, size)
-        if record_in_cache?(rrecord, irecsymlink, size)
+        if record_in_cache?(rrecord, irecsymlink)
             return ImageCache::instance.pix(@pix_key, size)
         else
             return load_record_cover(rrecord, irecsymlink, size)
@@ -190,10 +199,8 @@ Trace.log.debug "CoverMgr search RECORD disk access".red
     # Returns the full file name for the cover to display.
     def file_name(rtrack, rrecord, irecsymlink)
         @pix_key = "t"+rtrack.to_s
-        if !ImageCache::instance.has_key(@pix_key)
-            if !record_in_cache?(rrecord, irecsymlink)
-                load_record_cover(rrecord, irecsymlink, ImageCache::SMALL_SIZE)
-            end
+        if !ImageCache::instance.has_key(@pix_key) && !record_in_cache?(rrecord, irecsymlink)
+            ImageCache::instance.set_file_name(@pix_key, get_cover_file_name)
         end
         return ImageCache::instance.full_name(@pix_key)
     end
@@ -281,22 +288,6 @@ class UILink < AudioLink
         return @audio_status
     end
 
-
-    def make_track_title(want_segment_title, want_track_number = true)
-        title = ""
-        if @tags.nil?
-            title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
-            if want_segment_title
-                title += segment.stitle+" - " unless segment.stitle.empty?
-                title += track.isegorder.to_s+". " unless track.isegorder == 0
-            end
-            title += track.stitle
-        else
-            title += @tags.track.to_s+". " if want_track_number
-            title += @tags.title
-        end
-        return title
-    end
 
     def html_track_title(want_segment_title, separator = "\n")
         title = make_track_title(want_segment_title).to_html_bold + separator +"by "

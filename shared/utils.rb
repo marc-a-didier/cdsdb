@@ -295,22 +295,22 @@ class Utils
     #
     # Returns the file name if found, an empty string otherwise
     #
-    def Utils::search_and_get_audio_file(emitter, tasks, track_infos)
-        # If client mode and no local store, download any way in the mfiles directory
-        if Cfg::instance.remote? && !Cfg::instance.local_store?
-             tasks.new_track_download(emitter, track_info.track.stitle, track_info.track.rtrack)
-             return DOWNLOADING
-        end
-
-        fname = Utils::audio_file_exists(track_infos).file_name
-
-        # If client mode with local store download file from server if not found on disk
-        if fname.empty? && Cfg::instance.remote? && Cfg::instance.local_store?
-            tasks.new_track_download(emitter, track_infos.track.stitle, track_infos.track.rtrack)
-            return DOWNLOADING
-        end
-        return fname
-    end
+#     def Utils::search_and_get_audio_file(emitter, tasks, track_infos)
+#         # If client mode and no local store, download any way in the mfiles directory
+#         if Cfg::instance.remote? && !Cfg::instance.local_store?
+#              tasks.new_track_download(emitter, track_info.track.stitle, track_info.track.rtrack)
+#              return DOWNLOADING
+#         end
+#
+#         fname = Utils::audio_file_exists(track_infos).file_name
+#
+#         # If client mode with local store download file from server if not found on disk
+#         if fname.empty? && Cfg::instance.remote? && Cfg::instance.local_store?
+#             tasks.new_track_download(emitter, track_infos.track.stitle, track_infos.track.rtrack)
+#             return DOWNLOADING
+#         end
+#         return fname
+#     end
 
 
     #
