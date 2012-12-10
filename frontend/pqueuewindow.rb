@@ -145,7 +145,7 @@ class PQueueWindow < TopWindow
                     end
                 else
                     if type == "message"
-puts "message received, calling back"
+Trace.log.debug("message received, calling back #{call_back}")
                         param ? enqueue(@mc.send(call_back, param.to_i)) : enqueue(@mc.send(call_back))
                     end
                 end

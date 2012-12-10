@@ -282,7 +282,7 @@ class Utils
         track_infos = TrackInfos.new
         i = 0
         DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
-            yield
+#             yield
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], track_infos.get_track_infos(row[0]))
             i += 1
         end

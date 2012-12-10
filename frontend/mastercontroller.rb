@@ -259,7 +259,8 @@ class MasterController
 
     def on_urls_received(widget, context, x, y, data, info, time)
         is_ok = false
-        is_ok = Utils::set_cover(data.uris[0], artist.rartist, record.rartist, record.rrecord, track.rtrack) if info == 105 #DragType::URI_LIST
+#         is_ok = Utils::set_cover(data.uris[0], artist.rartist, record.rartist, record.rrecord, track.rtrack) if info == 105
+        is_ok = @trk_browser.set_cover(data.uris[0]) if info == 105 #DragType::URI_LIST
         Gtk::Drag.finish(context, is_ok, false, Time.now.to_i)
         return true
     end

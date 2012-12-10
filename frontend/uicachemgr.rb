@@ -276,6 +276,7 @@ class UILink < AudioLink
         # If status is on server, get the remote file. It can only come from the tracks browser.
         # If file is coming from charts, play list or any other, the track won't be downloaded.
         return get_remote_audio_file(emitter, tasks) if @audio_status == AudioLink::ON_SERVER
+        return AudioLink::NOT_FOUND
     end
 
     def get_remote_audio_file(emitter, tasks)
@@ -288,6 +289,36 @@ class UILink < AudioLink
         return @audio_status
     end
 
+
+    def set_cover(url, is_compile)
+        fname = URI::unescape(url)
+        return false unless fname.match(/^file:\/\//) # We may get http urls...
+
+        fname.sub!(/^file:\/\//, "")
+        if record.rartist == 0 && !is_compile
+            # We're on a track of a compilation but not on the Compilations
+            # so we assign the file to the track rather than the record
+            cover_file = Cfg::instance.covers_dir+record.rrecord.to_s
+            File::mkpath(cover_file)
+            cover_file += File::SEPARATOR+track.rtrack.to_s+File::extname(fname)
+            ex_name = cover_file+File::SEPARATOR+"ex"+track.rtrack.to_s+File::extname(fname)
+        else
+            # Assign file to record
+            cover_file = Cfg::instance.covers_dir+record.rrecord.to_s+File::extname(fname)
+            ex_name = Cfg::instance.covers_dir+"ex"+record.rrecord.to_s+File::extname(fname)
+        end
+        if File::exists?(cover_file)
+            File::unlink(ex_name) if File::exists?(ex_name)
+            FileUtils::mv(cover_file, ex_name)
+        end
+        #File::unlink(cover_file) if File::exists?(cover_file)
+        FileUtils::mv(fname, cover_file)
+
+        # Force the cache to reload new image
+        load_record_cover(record.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE)
+
+        return true
+    end
 
     def html_track_title(want_segment_title, separator = "\n")
         title = make_track_title(want_segment_title).to_html_bold + separator +"by "

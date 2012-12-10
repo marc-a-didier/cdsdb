@@ -422,15 +422,17 @@ p row
             @record.disp_cover
             @segment.to_widgets
         else
-            @record.to_widgets_with_cover
+            @record.to_widgets
         end
     end
 
     def on_rec_edit
-        @tv.selection.selected.parent ? DBEditor.new(@mc, @segment).run : DBEditor.new(@mc, @record).run
-        @tv.selection.selected[RTV_RS_REF].entry.sql_load # Won't work if pk changed in the editor
-        load_rec_and_seg(@tv.selection.selected)
-        update_infos_widgets
+        resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @segment).run : DBEditor.new(@mc, @record).run
+        if resp == Gtk::Dialog::RESPONSE_OK
+            @tv.selection.selected[RTV_RS_REF].entry.sql_load # Won't work if pk changed in the editor
+            load_rec_and_seg(@tv.selection.selected)
+            update_infos_widgets
+        end
     end
 
     def on_rec_add
@@ -466,15 +468,13 @@ p row
     end
 
     def on_tag_dir
-        default_dir = case @mc.get_track_status(1)
-            when TracksBrowser::TRK_NOT_FOUND,
-                 TracksBrowser::TRK_ON_SERVER then Cfg::instance.rip_dir
-            when TracksBrowser::TRK_FOUND,
-                 TracksBrowser::TRK_MISPLACED then @mc.get_track_infos(1).get_full_dir
-        end
+        audio_status = @mc.get_track_status(1)
+        return if audio_status == AudioLink::UNKNOWN
+        default_dir = audio_status == AudioLink::NOT_FOUND ? Cfg::instance.rip_dir : @mc.get_track_infos(1).get_full_dir
+#         default_dir = Cfg::instance.rip_dir
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
-            expected, found = Utils::tag_and_move_dir(dir, @record.rrecord) { Gtk.main_iteration while Gtk.events_pending? }
+            expected, found = AudioLink.new.load_record(@record.rrecord).tag_and_move_dir(dir)
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
 #             elsif dir.match(/\/rip\//)

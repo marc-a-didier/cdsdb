@@ -394,6 +394,13 @@ puts "--- multi select ---".magenta
         @track.reset.to_widgets
     end
 
+    def set_cover(url)
+        return if @tv.selection.count_selected_rows == 0
+        iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+        iter[TTV_DATA].set_cover(url, @mc.artist.compile?)
+        @track.to_widgets_with_cover(iter[TTV_DATA])
+    end
+
     def on_trk_add
         @track.add_new(@mc.record.rrecord, @mc.segment.rsegment)
         rtrack = @track.rtrack # load_entries generates a selection changed event, so rtrack must be saved
