@@ -26,31 +26,47 @@ class RecordsBrowser < GenericBrowser
 
     class SegInfos
 
-        attr_accessor :query, :entry
+        attr_accessor :query, :uilink #:entry
 
         def initialize
-            @query = SegQueryStruct.new
-            @entry = SegmentDBClass.new
+            @query = nil #SegQueryStruct.new
+            @uilink = UILink.new #SegmentDBClass.new
         end
 
         def store_query(row)
-            row.each_with_index { |data, i| @query[i] = data }
-            @entry.ref_load(@query.seg_ref)
+            @query = row
+            @uilink.load_segment(@query[0])
+#             row.each_with_index { |data, i| @query[i] = data }
+#             @entry.ref_load(@query.seg_ref)
             return self
         end
 
         def to_tv_iter(mc, iter)
-            record = iter.parent[RTV_RS_REF] # Get record infos from parent
-            iter[RTV_REF] = @entry.rsegment
+#             record = iter.parent[RTV_RS_REF] # Get record infos from parent
+            @uilink.load_record(@uilink.segment.rrecord)
+            iter[RTV_REF] = @uilink.segment.rsegment
             # If viewing compilation and disc not segmented, display artist's name rather than segment title
-            if mc.is_on_compilations? && !record.entry.segmented? # not segmented
-                iter[RTV_TITLE] = @query.art_name
+            if mc.is_on_compilations? && !@uilink.record.segmented? # not segmented
+                iter[RTV_TITLE] = @query[2]
             else
-                iter[RTV_TITLE] = @entry.stitle.empty? ? record.entry.stitle : @entry.stitle
+#                 iter[RTV_TITLE] = @entry.stitle.empty? ? record.stitle : @entry.stitle
+                iter[RTV_TITLE] = @uilink.segment.stitle.empty? ? iter.parent[RTV_TITLE] : @uilink.segment.stitle
             end
-            iter[RTV_PTIME]  = @query.trks_ptime.to_ms_length
+            iter[RTV_PTIME]  = @query[1].to_ms_length
             iter[RTV_RS_REF] = self
             return self
+# #             record = iter.parent[RTV_RS_REF] # Get record infos from parent
+#             iter[RTV_REF] = @entry.rsegment
+#             # If viewing compilation and disc not segmented, display artist's name rather than segment title
+#             if mc.is_on_compilations? && !record.entry.segmented? # not segmented
+#                 iter[RTV_TITLE] = @query.art_name
+#             else
+# #                 iter[RTV_TITLE] = @entry.stitle.empty? ? record.stitle : @entry.stitle
+#                 iter[RTV_TITLE] = @entry.stitle.empty? ? iter.parent[RTV_TITLE] : @entry.stitle
+#             end
+#             iter[RTV_PTIME]  = @query.trks_ptime.to_ms_length
+#             iter[RTV_RS_REF] = self
+#             return self
         end
     end
 
@@ -59,20 +75,23 @@ class RecordsBrowser < GenericBrowser
 
     class RecInfos
 
-        attr_accessor :query, :entry, :segs, :rseg #, :pixk
+        attr_accessor :query, :uilink, :segs #, :rseg
 
         def initialize
-            @query = RecQueryStruct.new
-            @entry = RecordDBClass.new
-            @rseg  = SegmentDBClass.new
+            @query = nil #RecQueryStruct.new
+            @uilink = UILink.new #RecordDBClass.new
+            @rseg  = -1 #SegmentDBClass.new
             @segs  = []
-#             @pixk  = "" # Key for record pix map
         end
 
         def store_query(row)
-            row.each_with_index { |data, i| @query[i] = data }
-            @entry.ref_load(@query.seg_rrecord)
-            @rseg.ref_load(@query.seg_ref)
+#             row.each_with_index { |data, i| @query[i] = data }
+#             @entry.ref_load(@query.seg_rrecord)
+#             @rseg.ref_load(@query.seg_ref)
+            @query = row
+            @uilink.load_record(@query[2])
+            @uilink.load_segment(@query[0])
+#             @rseg = @query[0]
             return self
         end
 
@@ -81,9 +100,12 @@ class RecordsBrowser < GenericBrowser
         end
 
         def to_tv_iter(iter)
-            iter[RTV_REF]    = @entry.rrecord
-            iter[RTV_TITLE]  = @entry.stitle
-            iter[RTV_PTIME]  = @query.trks_ptime.to_ms_length
+#             iter[RTV_REF]    = @entry.rrecord
+#             iter[RTV_TITLE]  = @entry.stitle
+#             iter[RTV_PTIME]  = @query.trks_ptime.to_ms_length
+            iter[RTV_REF]    = @uilink.record.rrecord
+            iter[RTV_TITLE]  = @uilink.record.stitle
+            iter[RTV_PTIME]  = @query[1].to_ms_length
             iter[RTV_RS_REF] = self
             return self
         end
@@ -244,13 +266,17 @@ class RecordsBrowser < GenericBrowser
             @segment.reset
         else
             if iter.parent
-                @record.clone_dbs(iter.parent[RTV_RS_REF].entry)
-                @segment.clone_dbs(iter[RTV_RS_REF].entry)
+                @record.clone_dbs(iter.parent[RTV_RS_REF].uilink.record)
+                @segment.clone_dbs(iter[RTV_RS_REF].uilink.segment)
+#                 @record.clone_dbs(iter.parent[RTV_RS_REF].entry)
+#                 @segment.clone_dbs(iter[RTV_RS_REF].entry)
 #                 @record.ref_load(iter.parent[RTV_REF])
 #                 @segment.ref_load(iter[RTV_REF])
             else
-                @record.clone_dbs(iter[RTV_RS_REF].entry)
-                @segment.clone_dbs(iter[RTV_RS_REF].rseg)
+                @record.clone_dbs(iter[RTV_RS_REF].uilink.record)
+                @segment.clone_dbs(iter[RTV_RS_REF].uilink.segment) #rseg)
+#                 @record.clone_dbs(iter[RTV_RS_REF].entry)
+#                 @segment.clone_dbs(iter[RTV_RS_REF].query[0]) #rseg)
 #                 iter[RTV_RS_REF].pixk = IconsMgr::instance.get_cover_key(@record.rrecord, 0, @record.irecsymlink, 128) if iter[RTV_RS_REF].pixk.empty?
 #                 @record.pixk = iter[RTV_RS_REF].pixk
 #                 @segment.ref_load(iter[RTV_RS_REF].query.seg_ref)
@@ -429,7 +455,8 @@ p row
     def on_rec_edit
         resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @segment).run : DBEditor.new(@mc, @record).run
         if resp == Gtk::Dialog::RESPONSE_OK
-            @tv.selection.selected[RTV_RS_REF].entry.sql_load # Won't work if pk changed in the editor
+#             @tv.selection.selected[RTV_RS_REF].entry.sql_load # Won't work if pk changed in the editor
+            @tv.selection.selected[RTV_RS_REF].uilink # TODO: .???.sql_load # Won't work if pk changed in the editor
             load_rec_and_seg(@tv.selection.selected)
             update_infos_widgets
         end
