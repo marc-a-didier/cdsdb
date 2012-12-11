@@ -391,7 +391,7 @@ class ArtistsBrowser < GenericBrowser
 
         return if iter.first_child && iter.first_child[0] != -1 && !force_reload
 
-puts "*** load new sub tree ***"
+Trace.log.debug("*** load new sub tree ***")
         # Making the first column the sort column greatly speeds up things AND makes sure that the
         # fake item is first in the store.
         @tvm.set_sort_column_id(0)
@@ -422,7 +422,7 @@ puts "*** load new sub tree ***"
     def on_selection_changed(widget)
         @tvs = @tv.selection.selected
         return if @tvs.nil?
-puts "*** artists selection changed ***".cyan
+Trace.log.debug("artists selection changed".cyan)
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artist.reset
         else

@@ -269,7 +269,7 @@ class RecordsBrowser < GenericBrowser
     def on_selection_changed(widget)
         # @tv.selection.selected == nil probably means the previous selection is deselected...
         return if @tv.selection.selected.nil?
-puts "+++ record selection changed +++"
+Trace.log.debug("record selection changed")
         load_rec_and_seg(@tv.selection.selected)
 
         if @record.valid?

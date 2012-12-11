@@ -54,19 +54,19 @@ Trace.log.debug "ImageCache check pix load large from cache".brown
     end
 
     def load_cover(key, size, file_name)
-        unless @map[key]
-            fname = Cfg::instance.covers_dir+file_name
+#         unless @map[key]
+        fname = Cfg::instance.covers_dir+file_name
 Trace.log.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
-            if size == SMALL_SIZE
-                @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
-                return @map[key].small_pix
-            else
-                @map[key] = ImageData.new(file_name, nil, Gdk::Pixbuf.new(fname, size, size))
-                return @map[key].large_pix
-            end
+        if size == SMALL_SIZE
+            @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
+            return @map[key].small_pix
+        else
+            @map[key] = ImageData.new(file_name, nil, Gdk::Pixbuf.new(fname, size, size))
+            return @map[key].large_pix
         end
+#         end
 
-        return check_pix_from_cache(key, size)
+#         return check_pix_from_cache(key, size)
     end
 
     def set_default_pix(key, size)

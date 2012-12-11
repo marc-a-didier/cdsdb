@@ -483,7 +483,7 @@ class MasterController
 
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
-puts "*** save memos called"
+Trace.log.debug("*** save memos called")
         [record, segment, track, artist].each { |uiclass| uiclass.from_widgets.sql_update }
     end
 
@@ -589,7 +589,7 @@ puts "*** save memos called"
             file = DBIntf::build_db_name
             File.unlink(file+".back") if File.exists?(file+".back")
             srv_db_version = MusicClient.new.get_server_db_version
-puts("new db version=#{srv_db_version}")
+Trace.log.debug("new db version=#{srv_db_version}")
             DBIntf::disconnect
             if srv_db_version == Cfg::instance.db_version
                 FileUtils.mv(file, file+".back")

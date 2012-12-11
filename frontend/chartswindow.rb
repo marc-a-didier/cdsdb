@@ -357,7 +357,7 @@ class ChartsWindow < TopWindow
         display_charts(false)
 
         @tvc.columns_autosize
-puts("*** charts full load done ***")
+Trace.log.debug("*** charts full load done ***")
         return
 #RubyProf.start
 #result = RubyProf.stop
@@ -392,7 +392,7 @@ puts("*** charts full load done ***")
             pos = entry.entry if entry.ref == ref
         }
         display_charts(true) if pos < Cfg::instance.max_items
-puts "*** charts lazy update done ***"
+Trace.log.debug("*** charts lazy update done ***")
     end
 
     def show
