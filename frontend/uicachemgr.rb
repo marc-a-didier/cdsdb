@@ -292,7 +292,7 @@ class UILink < AudioLink
 
     def set_cover(url, is_compile)
         fname = URI::unescape(url)
-        return false unless fname.match(/^file:\/\//) # We may get http urls...
+        return self unless fname.match(/^file:\/\//) # We may get http urls...
 
         fname.sub!(/^file:\/\//, "")
         if record.rartist == 0 && !is_compile
@@ -317,7 +317,7 @@ class UILink < AudioLink
         # Force the cache to reload new image
         load_record_cover(record.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE)
 
-        return true
+        return self
     end
 
     def html_track_title(want_segment_title, separator = "\n")

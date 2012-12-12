@@ -35,13 +35,11 @@ class RecordUI < RecordDBClass
     include BaseUI
     include MainTabsUI
 
-#     attr_accessor :pixk
 
     def initialize(glade)
         super()
         @glade = glade
         init_baseui("rec_tab_")
-#         @pixk = ""
     end
 
     def to_widgets
@@ -49,16 +47,6 @@ class RecordUI < RecordDBClass
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
     end
 
-    # Cover management is under full track management control
-#     def disp_cover
-#         @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(@pixk)
-#         return self
-#     end
-#
-#     def to_widgets_with_cover
-#         disp_cover
-#         return to_widgets
-#     end
 
     def build_infos_string
         return "" unless self.valid?
@@ -103,15 +91,19 @@ class TrackUI < TrackDBClass
     include BaseUI
     include MainTabsUI
 
-    attr_accessor :pixk
+    attr_reader :uilink
 
     def initialize(glade)
         super()
         @glade = glade
-#         @cover_file_name = ""
         @curr_pix_key = ""
-        @pixk = ""
+        @uilink = nil
         init_baseui("trk_tab_")
+    end
+
+    def set_uilink(uilink)
+        @uilink = uilink
+        return clone_dbs(uilink.track) # self
     end
 
     def to_widgets
@@ -119,23 +111,9 @@ class TrackUI < TrackDBClass
         return to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
     end
 
-    def to_widgets_with_cover(trk_mgr)
-#         fname = IconsMgr::instance.track_cover(self.rrecord, self.rtrack)
-#         if fname == ""
-#             pixk = record.pixk
-#
-# #             if record.cover_file_name != @cover_file_name
-# #                 @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, 0, record.irecsymlink, 128)
-# #             end
-# #             @cover_file_name = record.cover_file_name
-#         else
-#             pixk = IconsMgr::instance.get_cover_key(self.rrecord, self.rtrack, 0, 128)
-# #             @glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_cover(self.rrecord, self.rtrack, 0, 128)
-# #             @cover_file_name = fname
-#         end
-        #@glade[UIConsts::REC_IMAGE].pixbuf = IconsMgr::instance.get_pix(@pixk) if @pixk != @curr_pix
-        @glade[UIConsts::REC_IMAGE].pixbuf = trk_mgr.large_track_cover if trk_mgr.cover_key.empty? || trk_mgr.cover_key != @curr_pix_key
-        @curr_pix_key = trk_mgr.cover_key
+    def to_widgets_with_cover #(trk_mgr)
+        @glade[UIConsts::REC_IMAGE].pixbuf = @uilink.large_track_cover if @uilink.cover_key.empty? || @uilink.cover_key != @curr_pix_key
+        @curr_pix_key = @uilink.cover_key
         return to_widgets
     end
 

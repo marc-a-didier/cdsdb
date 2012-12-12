@@ -2,8 +2,6 @@
 
 class TracksBrowser < GenericBrowser
 
-#     TrackData = Struct.new(:ref_artist, :status, :pixk)
-#     TrackData = Struct.new(:status, :uilink)
 
     TTV_REF         = 0
     TTV_PIX         = 1
@@ -12,7 +10,6 @@ class TracksBrowser < GenericBrowser
     TTV_PLAY_TIME   = 4
     TTV_ART_OR_SEG  = 5
     TTV_DATA        = 6
-    #TTV_REF_ART     = 6
 
     ROW_REF         = 0
     ROW_ORDER       = 1
@@ -91,8 +88,11 @@ class TracksBrowser < GenericBrowser
         @mc.glade[UIConsts::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
 
         @mc.glade[UIConsts::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
-            file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(@track.rtrack)).file_name
-            file.empty? ? UIUtils::show_message("File not found!", Gtk::MessageDialog::ERROR) : AudioDialog.new.show(file)
+            if @track.valid? && @track.uilink.playable?
+                AudioDialog.new.show(@track.uilink.audio_file)
+            else
+                UIUtils::show_message("File not found!", Gtk::MessageDialog::ERROR)
+            end
         }
         @mc.glade[UIConsts::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
             PlayHistoryDialog.new.show_track(@track.rtrack)
@@ -197,7 +197,6 @@ class TracksBrowser < GenericBrowser
         iter[TTV_REF]       = row[ROW_REF]
         iter[TTV_ORDER]     = row[ROW_ORDER]
         iter[TTV_TITLE]     = row[ROW_TITLE]
-        #iter[TTV_TITLE]     = row[ROW_SEG_ORDER]+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != "0" && @mc.glade[UIConsts::MM_VIEW_TRACKINDEX].active?
         iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && @mc.glade[UIConsts::MM_VIEW_TRACKINDEX].active?
         iter[TTV_PLAY_TIME] = row[ROW_PLAY_TIME].to_ms_length
         if @tv.columns[TTV_ART_OR_SEG].visible?
@@ -205,8 +204,6 @@ class TracksBrowser < GenericBrowser
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-#         iter[TTV_DATA]= TrackData.new(row[ROW_SEG_REF_ART], TRK_UNKOWN, "")
-#         iter[TTV_DATA]= TrackData.new(TRK_UNKOWN, UILink.new.load_track(iter[TTV_REF]))
         iter[TTV_DATA]= UILink.new.load_track(iter[TTV_REF])
     end
 
@@ -254,13 +251,6 @@ class TracksBrowser < GenericBrowser
         return stores
     end
 
-    # Returns a string formatted for drag & drop of the currently visible tracks
-    def get_drag_tracks
-        tracks = ""
-        @tv.model.each { |model, path, iter| tracks += ":"+iter[TTV_REF].to_s }
-        return tracks
-    end
-
     def set_track_field(field, value, to_all)
         sql = "UPDATE tracks SET #{field}=#{value} WHERE rtrack IN ("
         meth = to_all ? @tv.model.method(:each) : @tv.selection.method(:selected_each)
@@ -271,38 +261,16 @@ p sql
         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
     end
 
-    def get_track_status(track_index = 1)
-        itr = nil
-        i = 0
-        @tv.model.each { |model, path, iter| i += 1; itr = iter if i == track_index }
-        return itr ? itr[TTV_DATA].audio_status : AudioLink::NOT_FOUND
+    def get_current_uilink
+#         return @tv.selection.count_selected_rows > 0 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
+        return @track.valid? ? @track.uilink : nil
     end
 
-    def get_track_infos(track_index = 1)
-        itr = nil
-        i = 0
-        @tv.model.each { |model, path, iter| i += 1; itr = iter if i == track_index }
-        return itr ? TrackInfos.new.get_track_infos(itr[TTV_REF]) : nil
+    def get_track_uilink(track_index)
+        itr = @tv.model.get_iter(track_index.to_s)
+        return itr ? itr[TTV_DATA] : nil
     end
 
-#     def set_tags(tags)
-#         set_track_field("itags", tags, false)
-#         sql = "UPDATE tracks SET itags=#{tags} WHERE rtrack IN ("
-#         @tv.selection.selected_each { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
-#         sql[-1] = ")"
-#         DBUtils::threaded_client_sql(sql)
-#         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
-#     end
-
-#     def set_rating(rating)
-#         set_track_field("irating", rating, false)
-#         sql = "UPDATE tracks SET irating=#{rating} WHERE rtrack IN ("
-#         @tv.selection.selected_each { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
-#         sql[-1] = ")"
-#         p sql
-#         DBUtils::threaded_client_sql(sql)
-#         @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
-#     end
 
     def check_for_audio_file
         # If client mode, it's much too slow to check track by track if it exists on server
@@ -333,10 +301,6 @@ p sql
         }
     end
 
-    def get_current_uilink
-        return @tv.selection.count_selected_rows > 0 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
-    end
-
     #
     # Update the track icon when the download is finished
     #
@@ -351,7 +315,8 @@ p sql
     # Must check if track is in current record because of the cache
     def update_infos(rtrack)
         if iter = find_ref(rtrack)
-            @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
+#             @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
+            @track.set_uilink(iter[TTV_DATA]).to_widgets if @track.rtrack == rtrack
         end
     end
 
@@ -370,19 +335,17 @@ p sql
             # Possible when clicking on the selection again and again.
             return if iter[TTV_REF] == @track.rtrack
 
-#             iter[TTV_DATA].pixk = IconsMgr::instance.get_cover_key(@mc.record.rrecord, iter[TTV_REF], @mc.record.irecsymlink, 128) if iter[TTV_DATA].pixk.empty?
-#             @track.pixk = iter[TTV_DATA].pixk
-#             @track.ref_load(iter[TTV_REF]).to_widgets_with_cover(@mc.record)
-            @track.clone_dbs(iter[TTV_DATA].track).to_widgets_with_cover(iter[TTV_DATA])
+#             @track.clone_dbs(iter[TTV_DATA].track).to_widgets_with_cover(iter[TTV_DATA])
+            @track.set_uilink(iter[TTV_DATA]).to_widgets_with_cover
 
             # Reload artist if artist changed from segment
-#             @mc.change_segment_artist(iter[TTV_DATA].ref_artist) if iter[TTV_DATA].ref_artist != @mc.segment.rartist
-            @mc.change_segment_artist(iter[TTV_DATA].segment.rartist) if iter[TTV_DATA].segment.rartist != @mc.segment.rartist
+#             @mc.change_segment_artist(iter[TTV_DATA].segment.rartist) if iter[TTV_DATA].segment.rartist != @mc.segment.rartist
+            @mc.change_segment_artist(@track.uilink.segment.rartist) if @track.uilink.segment.rartist != @mc.segment.rartist
 
             # Reload segment if segment changed
             @mc.change_segment(@track.rsegment) if @track.rsegment != @mc.segment.rsegment
         else
-puts "--- multi select ---".magenta
+Trace.log.debug("--- multi select ---".magenta)
             [@track, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
             #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
         end
@@ -395,10 +358,11 @@ puts "--- multi select ---".magenta
     end
 
     def set_cover(url)
-        return if @tv.selection.count_selected_rows == 0
-        iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-        iter[TTV_DATA].set_cover(url, @mc.artist.compile?)
-        @track.to_widgets_with_cover(iter[TTV_DATA])
+        @track.uilink.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @track.valid?
+#         return if @tv.selection.count_selected_rows == 0
+#         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+#         iter[TTV_DATA].set_cover(url, @mc.artist.compile?)
+#         @track.to_widgets_with_cover(iter[TTV_DATA])
     end
 
     def on_trk_add
@@ -428,7 +392,7 @@ puts "--- multi select ---".magenta
         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
         return if iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
 
-        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, File::dirname(iter[TTV_DATA].audio_file))
+        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, iter[TTV_DATA].full_dir)
         iter[TTV_DATA].tag_and_move_file(file) unless file.empty?
 
 #         fname = iter[TTV_DATA].audio_file

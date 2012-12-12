@@ -134,6 +134,16 @@ class DBCacheLink
         cache.track(@rtrack).sql_load
         return self
     end
+
+    def reload_record_cache
+        cache.record(@rrecord).sql_load
+        return self
+    end
+
+    def reload_segment_cache
+        cache.segment(@rsegment).sql_load
+        return self
+    end
 end
 
 # Tags are back to life. BUT I should find a better way!
@@ -226,6 +236,14 @@ class AudioLink < DBCacheLink
     def track_dir
         file = @audio_file.sub(Cfg::instance.music_dir, "")
         return file.sub(file.split("/")[0], "")
+    end
+
+    def full_dir
+        return File.dirname(@audio_file)
+    end
+
+    def playable?
+        return @audio_status == OK || @audio_status == MISPLACED
     end
 
     # Search the Music directory for a file matching the theoretical file name.

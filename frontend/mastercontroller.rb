@@ -470,14 +470,8 @@ class MasterController
         return @search_dlg.get_selection
     end
 
-    # Return status/track infos of track track_index from the track browser, that is what is
-    # currently displayed, NOT by searching in the db.
-    def get_track_status(track_index = 1)
-        return @trk_browser.get_track_status(track_index)
-    end
-
-    def get_track_infos(track_index = 1)
-        return @trk_browser.get_track_infos(track_index)
+    def get_track_uilink(track_index)
+        return @trk_browser.get_track_uilink(track_index)
     end
 
 
