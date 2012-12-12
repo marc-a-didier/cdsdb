@@ -2,121 +2,18 @@
 
 class RecordsBrowser < GenericBrowser
 
-    RTV_REF     = 0
-    RTV_TITLE   = 1
-    RTV_PTIME   = 2
-    RTV_RS_REF  = 3
-
-#     REC_ROW_RSEG    = 0
-#     REC_ROW_TITLE   = 1
-#     REC_ROW_PTIME   = 2
-#     REC_ROW_STITLE  = 3
-#     REC_ROW_REF     = 4
-#
-#     SEG_ROW_REF     = 0
-#     SEG_ROW_TITLE   = 1
-#     SEG_ROW_PTIME   = 2
-#     SEG_ROW_ANAME   = 3
-#     SEG_ROW_RTITLE  = 4
-#     SEG_ROW_RISSEG  = 5
+    RTV_REF   = 0
+    RTV_TITLE = 1
+    RTV_PTIME = 2
+    RTV_DBLNK = 3
 
     attr_reader :record, :segment
-
-    SegQueryStruct = Struct.new(:seg_ref, :trks_ptime, :art_name)
-
-    class SegInfos
-
-        attr_accessor :query, :uilink #:entry
-
-        def initialize
-            @query = nil #SegQueryStruct.new
-            @uilink = UILink.new #SegmentDBClass.new
-        end
-
-        def store_query(row)
-            @query = row
-            @uilink.load_segment(@query[0])
-#             row.each_with_index { |data, i| @query[i] = data }
-#             @entry.ref_load(@query.seg_ref)
-            return self
-        end
-
-        def to_tv_iter(mc, iter)
-#             record = iter.parent[RTV_RS_REF] # Get record infos from parent
-            @uilink.load_record(@uilink.segment.rrecord)
-            iter[RTV_REF] = @uilink.segment.rsegment
-            # If viewing compilation and disc not segmented, display artist's name rather than segment title
-            if mc.is_on_compilations? && !@uilink.record.segmented? # not segmented
-                iter[RTV_TITLE] = @query[2]
-            else
-#                 iter[RTV_TITLE] = @entry.stitle.empty? ? record.stitle : @entry.stitle
-                iter[RTV_TITLE] = @uilink.segment.stitle.empty? ? iter.parent[RTV_TITLE] : @uilink.segment.stitle
-            end
-            iter[RTV_PTIME]  = @query[1].to_ms_length
-            iter[RTV_RS_REF] = self
-            return self
-# #             record = iter.parent[RTV_RS_REF] # Get record infos from parent
-#             iter[RTV_REF] = @entry.rsegment
-#             # If viewing compilation and disc not segmented, display artist's name rather than segment title
-#             if mc.is_on_compilations? && !record.entry.segmented? # not segmented
-#                 iter[RTV_TITLE] = @query.art_name
-#             else
-# #                 iter[RTV_TITLE] = @entry.stitle.empty? ? record.stitle : @entry.stitle
-#                 iter[RTV_TITLE] = @entry.stitle.empty? ? iter.parent[RTV_TITLE] : @entry.stitle
-#             end
-#             iter[RTV_PTIME]  = @query.trks_ptime.to_ms_length
-#             iter[RTV_RS_REF] = self
-#             return self
-        end
-    end
-
-
-    RecQueryStruct = Struct.new(:seg_ref, :trks_ptime, :seg_rrecord)
-
-    class RecInfos
-
-        attr_accessor :query, :uilink, :segs #, :rseg
-
-        def initialize
-            @query = nil #RecQueryStruct.new
-            @uilink = UILink.new #RecordDBClass.new
-            @rseg  = -1 #SegmentDBClass.new
-            @segs  = []
-        end
-
-        def store_query(row)
-#             row.each_with_index { |data, i| @query[i] = data }
-#             @entry.ref_load(@query.seg_rrecord)
-#             @rseg.ref_load(@query.seg_ref)
-            @query = row
-            @uilink.load_record(@query[2])
-            @uilink.load_segment(@query[0])
-#             @rseg = @query[0]
-            return self
-        end
-
-        def add_segment(row)
-            @segs << SegInfos.new.store_query(row)
-        end
-
-        def to_tv_iter(iter)
-#             iter[RTV_REF]    = @entry.rrecord
-#             iter[RTV_TITLE]  = @entry.stitle
-#             iter[RTV_PTIME]  = @query.trks_ptime.to_ms_length
-            iter[RTV_REF]    = @uilink.record.rrecord
-            iter[RTV_TITLE]  = @uilink.record.stitle
-            iter[RTV_PTIME]  = @query[1].to_ms_length
-            iter[RTV_RS_REF] = self
-            return self
-        end
-    end
 
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::RECORDS_TREEVIEW])
         @record = RecordUI.new(@mc.glade)
         @segment = SegmentUI.new(@mc.glade)
-        @rs = [] # Records store
     end
 
     def setup
@@ -160,8 +57,6 @@ class RecordsBrowser < GenericBrowser
     # Generate required sql to load all records or a specific record (rrecord != 1) for the current artist
     # accounting for applied filter
     def generate_rec_sql(rrecord = -1)
-#         sql = "SELECT segments.rsegment, records.stitle, SUM(tracks.iplaytime), segments.stitle, segments.rrecord FROM tracks " \
-#         sql = "SELECT segments.rsegment, records.rartist, SUM(tracks.iplaytime), segments.rartist, segments.rrecord FROM tracks " \
         sql = "SELECT segments.rsegment, SUM(tracks.iplaytime), segments.rrecord FROM tracks " \
                 "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
                 "INNER JOIN records ON records.rrecord=segments.rrecord " \
@@ -180,24 +75,10 @@ class RecordsBrowser < GenericBrowser
         return sql
     end
 
-    # Fills record tv entry with an sql result row
-#     def map_rec_row_to_entry(row, iter)
-#         iter[RTV_REF]    = row.table.rrecord
-#         iter[RTV_TITLE]  = row.table.stitle
-#         iter[RTV_PTIME]  = row.query.trks_ptime.to_ms_length
-#         iter[RTV_RS_REF] = row #.query.seg_ref
-#
-# #         iter[RTV_REF]    = row[REC_ROW_REF]
-# #         iter[RTV_TITLE]  = row[REC_ROW_TITLE]
-# #         iter[RTV_PTIME]  = row[REC_ROW_PTIME].to_ms_length
-# #         iter[RTV_RS_REF] = row[REC_ROW_RSEG]
-#     end
 
     # Generate required sql to load all segments or a specific segment (rsegment != 1) of the given record
     # accounting for applied filter
     def generate_seg_sql(rrecord, rsegment = -1)
-#         sql = "SELECT segments.rsegment, segments.stitle, SUM(tracks.iplaytime), artists.sname, " \
-#                      "records.stitle, records.iissegmented FROM tracks "\
         sql = "SELECT segments.rsegment, SUM(tracks.iplaytime), artists.sname FROM tracks " \
                 "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
                 "INNER JOIN records ON records.rrecord=tracks.rrecord " \
@@ -215,42 +96,19 @@ class RecordsBrowser < GenericBrowser
         return sql
     end
 
-    # Fills segment tv entry with an sql result row
-#     def map_seg_row_to_entry(row, iter)
-#         record = iter.parent[RTV_RS_REF] # Get record infos from parent
-#         iter[RTV_REF] = row.table.rsegment
-#         # If viewing compilation and disc not segmented, display artist's name rather than segment title
-#         if record.table.compile? && record.table.segmented? # not segmented
-#             iter[RTV_TITLE] = row.table.stitle.empty? ? record.table.stitle : row.table.stitle
-#         else
-#             iter[RTV_TITLE] = row.query.art_name
-#         end
-#         iter[RTV_PTIME]  = row.query.trks_ptime.to_ms_length
-#         iter[RTV_RS_REF] = row #iter.parent[RTV_REF]
-#
-# #         iter[RTV_REF] = row[SEG_ROW_REF]
-# #         # If viewing compilation and disc not segmented, display artist's name rather than segment title
-# #         if @mc.artist.compile? && row[SEG_ROW_RISSEG] == 0 # not segmented
-# #             iter[RTV_TITLE] = row[SEG_ROW_ANAME]
-# #         else
-# #             iter[RTV_TITLE] = row[SEG_ROW_TITLE].empty? ? row[SEG_ROW_RTITLE] : row[SEG_ROW_TITLE]
-# #         end
-# #         iter[RTV_PTIME]  = row[SEG_ROW_PTIME].to_ms_length
-# #         iter[RTV_RS_REF] = iter.parent[RTV_REF]
-#     end
 
     # Fills the record tv with all entries matching current artist and filter
     def load_entries
         @tv.model.clear
-        @rs.clear
 
         DBIntf::connection.execute(generate_rec_sql) do |row|
             iter = @tv.model.append(nil)
-            @rs << RecInfos.new.store_query(row).to_tv_iter(iter)
 
-#             iter = @tv.model.append(nil)
-#             map_rec_row_to_entry(@rs.last, iter)
-#             map_rec_row_to_entry(row, iter)
+            dblink = DBCacheLink.new.load_record(row[2]).load_segment(row[0])
+            iter[RTV_REF]   = dblink.record.rrecord
+            iter[RTV_TITLE] = dblink.record.stitle
+            iter[RTV_PTIME] = row[1].to_ms_length
+            iter[RTV_DBLNK] = dblink
 
             # Add a fake entry to have the arrow indicator
             @tv.model.append(iter)
@@ -260,29 +118,13 @@ class RecordsBrowser < GenericBrowser
         return self
     end
 
-    def load_rec_and_seg(iter)
+    def update_ui_handlers(iter)
         if iter.nil?
             @record.reset
             @segment.reset
         else
-            if iter.parent
-                @record.clone_dbs(iter.parent[RTV_RS_REF].uilink.record)
-                @segment.clone_dbs(iter[RTV_RS_REF].uilink.segment)
-#                 @record.clone_dbs(iter.parent[RTV_RS_REF].entry)
-#                 @segment.clone_dbs(iter[RTV_RS_REF].entry)
-#                 @record.ref_load(iter.parent[RTV_REF])
-#                 @segment.ref_load(iter[RTV_REF])
-            else
-                @record.clone_dbs(iter[RTV_RS_REF].uilink.record)
-                @segment.clone_dbs(iter[RTV_RS_REF].uilink.segment) #rseg)
-#                 @record.clone_dbs(iter[RTV_RS_REF].entry)
-#                 @segment.clone_dbs(iter[RTV_RS_REF].query[0]) #rseg)
-#                 iter[RTV_RS_REF].pixk = IconsMgr::instance.get_cover_key(@record.rrecord, 0, @record.irecsymlink, 128) if iter[RTV_RS_REF].pixk.empty?
-#                 @record.pixk = iter[RTV_RS_REF].pixk
-#                 @segment.ref_load(iter[RTV_RS_REF].query.seg_ref)
-#                 @record.ref_load(iter[RTV_REF])
-#                 @segment.ref_load(iter[RTV_RS_REF].query.seg_ref)
-            end
+            @record.clone_dbs(iter[RTV_DBLNK].record)
+            @segment.clone_dbs(iter[RTV_DBLNK].segment)
         end
     end
 
@@ -296,12 +138,9 @@ class RecordsBrowser < GenericBrowser
         # @tv.selection.selected == nil probably means the previous selection is deselected...
         return if @tv.selection.selected.nil?
 Trace.log.debug("record selection changed")
-        load_rec_and_seg(@tv.selection.selected)
+        update_ui_handlers(@tv.selection.selected)
 
         if @record.valid?
-            # We must force display of record widgets for the image because if a segment
-            # is selected from another record, the image is not refreshed
-#             @record.to_widgets_with_cover
             # Redraw segment only if on a segment or the infos string will overwrite the record infos
             if @tv.selection.selected.parent
                 @segment.to_widgets
@@ -314,8 +153,9 @@ Trace.log.debug("record selection changed")
         @mc.record_changed #if @record.valid?
     end
 
+
+    # Called from master controller to keep tracks synched
     def load_segment(rsegment, update_infos = false)
-        # !! Should update the cache too !!
         @segment.ref_load(rsegment)
         @segment.to_widgets if update_infos
     end
@@ -350,35 +190,6 @@ Trace.log.debug("record selection changed")
         return iter
     end
 
-#     def update_entry(object)
-#         ref = object.row_ref
-#         if row_visible?(ref)
-#             sql = object.kind_of?(RecordDBClass) ? generate_rec_sql(ref) : generate_seg_sql(@record.rrecord, ref)
-#             iter = position_to(ref)
-#             row = DBIntf::connection.get_first_row(sql)
-#             object.kind_of?(RecordDBClass) ? map_rec_row_to_entry(row, iter) : map_seg_row_to_entry(row, iter)
-#         end
-#     end
-
-#     def update_tv_entry(object)
-#         return unless row_visible?(object.dbs[0])
-#         ref = object.dbs[0]
-#         curr_iter = @tv.selection.selected
-#         iter = find_ref(ref)
-#         sql = object.kind_of?(RecordDBClass) ? generate_rec_sql(ref) : generate_seg_sql(object.rrecord, ref)
-#         iter = position_to(ref) if !curr_iter && curr_iter != iter
-#         row = DBIntf::connection.get_first_row(sql)
-#         if row
-#             object.kind_of?(RecordDBClass) ? map_rec_row_to_entry(row, iter) : map_seg_row_to_entry(row, iter)
-#         else
-#             @tv.model.remove(iter)
-#         end
-#     end
-
-#     def update_from_gui(object)
-#         object.from_widgets.sql_update
-#         update_entry(object)
-#     end
 
     # Returns true if we should check if we can remove the artist from the never played sub tree.
     # WARNING: The only case where we're sure that it should not be removed is when there are still tracks,
@@ -401,7 +212,6 @@ p row
 
     def invalidate
         @tv.model.clear
-        @rs.clear
         @record.reset.to_widgets
         @segment.reset.to_widgets
     end
@@ -409,34 +219,26 @@ p row
     def is_on_record
         return true if @tv.selection.selected.nil?
         return @tv.selection.selected.parent.nil?
-        #return @tv.model.get_iter(@tv.cursor[RTV_REF]).parent.nil?
     end
-
-#     def edit_record
-#         rec = RecordEditor.new(@record.rrecord).run if @record.valid?
-#         if (rec)
-#             update_tv_entry(@record.ref_load(rec.rrecord).to_widgets)
-#         end
-#     end
-#
-#     def edit_segment
-#         seg = SegmentEditor.new(@segment.rsegment).run if @segment.valid?
-#         if (seg)
-#             @segment.ref_load(seg.rsegment)
-#             update_tv_entry(@segment)
-#             @segment.to_widgets
-#             #select_segment(@segment.rsegment)
-#         end
-#     end
 
     # Fills all children of a record (its segments)
     def on_row_expanded(widget, iter, path)
         fchild = remove_children_but_first(iter)
         DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
-            iter[RTV_RS_REF].add_segment(row)
-#             map_seg_row_to_entry(row, @tv.model.append(iter))
-#             map_seg_row_to_entry(iter[RTV_RS_REF].segs.last, @tv.model.append(iter))
-            iter[RTV_RS_REF].segs.last.to_tv_iter(@mc, @tv.model.append(iter))
+            child = @tv.model.append(iter)
+
+            dblink = DBCacheLink.new.load_segment(row[0])
+            dblink.load_record(dblink.segment.rrecord)
+
+            child[RTV_REF] = dblink.segment.rsegment
+            # If viewing compilation and disc not segmented, display artist's name rather than segment title
+            if @mc.is_on_compilations? && !dblink.record.segmented?
+                child[RTV_TITLE] = row[2]
+            else
+                child[RTV_TITLE] = dblink.segment.stitle.empty? ? child.parent[RTV_TITLE] : dblink.segment.stitle
+            end
+            child[RTV_PTIME] = row[1].to_ms_length
+            child[RTV_DBLNK] = dblink
         }
         @tv.model.remove(fchild) if fchild
     end
@@ -455,9 +257,9 @@ p row
     def on_rec_edit
         resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @segment).run : DBEditor.new(@mc, @record).run
         if resp == Gtk::Dialog::RESPONSE_OK
-#             @tv.selection.selected[RTV_RS_REF].entry.sql_load # Won't work if pk changed in the editor
-            @tv.selection.selected[RTV_RS_REF].uilink # TODO: .???.sql_load # Won't work if pk changed in the editor
-            load_rec_and_seg(@tv.selection.selected)
+            # Won't work if pk changed in the editor...
+            @tv.selection.selected[RTV_DBLNK].reload_segment_cache.reload_record_cache
+            # update_ui_handlers(@tv.selection.selected) Useless since working directly on @segment or @record
             update_infos_widgets
         end
     end
@@ -495,18 +297,18 @@ p row
     end
 
     def on_tag_dir
-        audio_status = @mc.get_track_status(1)
-        return if audio_status == AudioLink::UNKNOWN
-        default_dir = audio_status == AudioLink::NOT_FOUND ? Cfg::instance.rip_dir : @mc.get_track_infos(1).get_full_dir
-#         default_dir = Cfg::instance.rip_dir
+        uilink = @mc.get_track_uilink(0)
+        return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
+
+        default_dir = uilink.playable? ? uilink.full_dir : Cfg::instance.rip_dir
+
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
             expected, found = AudioLink.new.load_record(@record.rrecord).tag_and_move_dir(dir)
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
-#             elsif dir.match(/\/rip\//)
             elsif dir.match(Cfg::instance.rip_dir)
-                # Set the ripped date only if processing files from my own rip directory...
+                # Set the ripped date only if processing files from the rip directory.
                 DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@record.rrecord};")
             end
         end
