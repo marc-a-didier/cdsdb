@@ -331,11 +331,11 @@ class MasterController
     end
 
     def record
-        return @rec_browser.record
+        return @rec_browser.reclnk.record
     end
 
     def segment
-        return @rec_browser.segment
+        return @rec_browser.reclnk.segment
     end
 
     def is_on_record
@@ -343,7 +343,7 @@ class MasterController
     end
 
     def track
-        return @trk_browser.track
+        return @trk_browser.trklnk.track
     end
 
     def artist_changed
@@ -390,7 +390,7 @@ class MasterController
     # This method is called by the tracks browser when the record is a compile
     # or is segmented in order to keep the artist/segment in sync with the track.
     def change_segment(rsegment)
-        @rec_browser.load_segment(rsegment)
+#         @rec_browser.load_segment(rsegment)
     end
 
     def change_segment_artist(rartist)

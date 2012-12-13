@@ -64,6 +64,10 @@ class GenericBrowser
         return fchild
     end
 
+    def remove_children(iter)
+        @tv.model.remove(iter.first_child) while iter.first_child
+    end
+
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view except in admin mode

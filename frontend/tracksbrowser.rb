@@ -26,11 +26,12 @@ class TracksBrowser < GenericBrowser
     TRK_ON_SERVER = 3
     TRK_UNKOWN    = 4
 
-    attr_reader :track
+    attr_reader :trklnk
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::TRACKS_TREEVIEW])
-        @track = TrackUI.new(@mc.glade)
+#         @track = TrackUI.new #(@mc.glade)
+        @trklnk = nil #TrackUI.new
 
         @stocks = [Gtk::Stock::NO, Gtk::Stock::YES, Gtk::Stock::DIALOG_WARNING,
                    Gtk::Stock::NETWORK, Gtk::Stock::DIALOG_QUESTION]
@@ -41,7 +42,7 @@ class TracksBrowser < GenericBrowser
         if Cfg::instance.admin?
             renderer.editable = true
             # Reset the text to the true title of the track to remove segment index if any.
-            renderer.signal_connect(:editing_started) { |cell, editable, path| editable.text = @track.stitle }
+            renderer.signal_connect(:editing_started) { |cell, editable, path| editable.text = @trklnk.track.stitle }
             renderer.signal_connect(:edited) { |widget, path, new_text| on_trk_name_edited(widget, path, new_text) }
         end
 
@@ -88,17 +89,17 @@ class TracksBrowser < GenericBrowser
         @mc.glade[UIConsts::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
 
         @mc.glade[UIConsts::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
-            if @track.valid? && @track.uilink.playable?
-                AudioDialog.new.show(@track.uilink.audio_file)
+            if @trklnk.track.valid? && @trklnk.playable?
+                AudioDialog.new.show(@trklnk.audio_file)
             else
                 UIUtils::show_message("File not found!", Gtk::MessageDialog::ERROR)
             end
         }
         @mc.glade[UIConsts::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
-            PlayHistoryDialog.new.show_track(@track.rtrack)
+            PlayHistoryDialog.new.show_track(@trklnk.track.rtrack)
         }
         @mc.glade[UIConsts::TRK_POPUP_CONTPL].signal_connect(:activate) {
-            TrkPListsDialog.new(@mc, @track.rtrack).run
+            TrkPListsDialog.new(@mc, @trklnk.track.rtrack).run
         }
 
         # Current track index in browser when it's the player provider
@@ -115,11 +116,11 @@ class TracksBrowser < GenericBrowser
             sub_menu = @mc.glade[UIConsts::TRK_POPUP_SEGASS].submenu
             @mc.glade[UIConsts::TRK_POPUP_SEGASS].remove_submenu
             sub_menu.destroy if sub_menu
-            if @track.rrecord != 0 && @mc.record.valid? #if 0 no tracks in the tree-view
+            if @trklnk.track.rrecord != 0 && @mc.record.valid? #if 0 no tracks in the tree-view
                 smtpm = Gtk::Menu.new
                 items = []
                 if @mc.record.segmented?
-                    DBIntf::connection.execute("SELECT stitle FROM segments WHERE rrecord=#{@track.rrecord}") { |row|
+                    DBIntf::connection.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") { |row|
                         items << Gtk::MenuItem.new(row[0], false)
                         items.last.signal_connect(:activate) { |widget| on_trk_segment_assign(widget) }
                         smtpm.append(items.last)
@@ -204,7 +205,7 @@ class TracksBrowser < GenericBrowser
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-        iter[TTV_DATA]= UILink.new.load_track(iter[TTV_REF])
+        iter[TTV_DATA] = TrackUI.new.load_track(iter[TTV_REF])
     end
 
     def load_entries
@@ -235,7 +236,7 @@ class TracksBrowser < GenericBrowser
     end
 
     def update_entry
-        map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@track.rtrack)), position_to(@track.rtrack))
+        map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@trklnk.track.rtrack)), position_to(@trklnk.track.rtrack))
     end
 
     def get_selection
@@ -258,12 +259,12 @@ class TracksBrowser < GenericBrowser
         sql[-1] = ")"
 p sql
         DBUtils::threaded_client_sql(sql)
-        @track.sql_load.to_widgets if @track.valid? # @track is invalid if multiple selection was made
+        @trklnk.track.sql_load.to_widgets if @trklnk.track.valid? # @track is invalid if multiple selection was made
     end
 
     def get_current_uilink
 #         return @tv.selection.count_selected_rows > 0 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
-        return @track.valid? ? @track.uilink : nil
+        return @trklnk #.track.valid? ? @trklnk : nil
     end
 
     def get_track_uilink(track_index)
@@ -316,7 +317,8 @@ p sql
     def update_infos(rtrack)
         if iter = find_ref(rtrack)
 #             @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
-            @track.set_uilink(iter[TTV_DATA]).to_widgets if @track.rtrack == rtrack
+            @trklnk = iter[TTV_DATA]
+            @trklnk.to_widgets if @trklnk.track.rtrack == rtrack
         end
     end
 
@@ -329,24 +331,27 @@ p sql
         count = @tv.selection.count_selected_rows
         return if count == 0
 
+Trace.log.debug("track selection changed.".green)
         if count == 1
             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
-            return if iter[TTV_REF] == @track.rtrack
+            return if @trklnk && iter[TTV_REF] == @trklnk.track.rtrack
 
 #             @track.clone_dbs(iter[TTV_DATA].track).to_widgets_with_cover(iter[TTV_DATA])
-            @track.set_uilink(iter[TTV_DATA]).to_widgets_with_cover
+#             @track.set_uilink(iter[TTV_DATA]).to_widgets_with_cover
+            @trklnk = iter[TTV_DATA]
+            @trklnk.to_widgets_with_cover
 
             # Reload artist if artist changed from segment
 #             @mc.change_segment_artist(iter[TTV_DATA].segment.rartist) if iter[TTV_DATA].segment.rartist != @mc.segment.rartist
-            @mc.change_segment_artist(@track.uilink.segment.rartist) if @track.uilink.segment.rartist != @mc.segment.rartist
+            @mc.change_segment_artist(@trklnk.segment.rartist) if @trklnk.segment.rartist != @mc.segment.rartist
 
             # Reload segment if segment changed
-            @mc.change_segment(@track.rsegment) if @track.rsegment != @mc.segment.rsegment
+#             @mc.change_segment(@trklnk.track.rsegment) if @trklnk.track.rsegment != @mc.segment.rsegment
         else
 Trace.log.debug("--- multi select ---".magenta)
-            [@track, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
+            [@trklnk, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
             #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
         end
     end
@@ -354,11 +359,11 @@ Trace.log.debug("--- multi select ---".magenta)
     def invalidate
         @tv.model.clear
         @mc.glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
-        @track.reset.to_widgets
+        @trklnk.track.reset.to_widgets if @trklnk
     end
 
     def set_cover(url)
-        @track.uilink.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @track.valid?
+        @trklnk.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @trklnk.track.valid?
 #         return if @tv.selection.count_selected_rows == 0
 #         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
 #         iter[TTV_DATA].set_cover(url, @mc.artist.compile?)

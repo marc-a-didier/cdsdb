@@ -12,11 +12,14 @@ class DBCache
     include Singleton
 
     def initialize
-        @artists  = {}
-        @records  = {}
-        @segments = {}
-        @tracks   = {}
-        @genres   = {}
+        @artists     = {}
+        @records     = {}
+        @segments    = {}
+        @tracks      = {}
+        @genres      = {}
+        @labels      = {}
+        @medias      = {}
+        @collections = {}
     end
 
     def artist(rartist)
@@ -42,6 +45,21 @@ class DBCache
     def genre(rgenre)
         @genres[rgenre] = GenreDBClass.new.ref_load(rgenre) if @genres[rgenre].nil?
         return @genres[rgenre]
+    end
+
+    def label(rlabel)
+        @labels[rlabel] = LabelDBClass.new.ref_load(rlabel) if @labels[rlabel].nil?
+        return @labels[rlabel]
+    end
+
+    def media(rmedia)
+        @medias[rmedia] = MediaDBClass.new.ref_load(rmedia) if @medias[rmedia].nil?
+        return @medias[rmedia]
+    end
+
+    def collection(rcollection)
+        @collections[rcollection] = CollectionDBClass.new.ref_load(rcollection) if @collections[rcollection].nil?
+        return @collections[rcollection]
     end
 end
 
@@ -103,6 +121,11 @@ class DBCacheLink
         return cache.genre(@rgenre)
     end
 
+#     def label
+#         @rlabel = cache.label(record.rlabel).rlabel if @rlabel.nil?
+#         return cache.label(@rlabel)
+#     end
+
 
 
     def load_track(rtrack)
@@ -129,6 +152,11 @@ class DBCacheLink
         @rgenre = rgenre
         return self
     end
+
+#     def load_label(rlabel)
+#         @rgenre = rlabel
+#         return self
+#     end
 
     def reload_track_cache
         cache.track(@rtrack).sql_load
@@ -229,7 +257,9 @@ class AudioLink < DBCacheLink
         return @audio_status unless @audio_file.empty?
 
         build_audio_file_name
-        return @audio_status = search_audio_file
+        @audio_status = search_audio_file
+Trace.log.debug("setup returns #{@audio_status}")
+        return @audio_status
     end
 
     # Returns the file name without the music dir and genre
@@ -251,9 +281,11 @@ class AudioLink < DBCacheLink
     # Returns the status of for the file.
     # If a matching file is found, set the full name to the match.
     def search_audio_file
+Trace.log.debug("searching for file #{@audio_file}".cyan)
         Utils::AUDIO_EXTS.each { |ext|
             if File::exists?(@audio_file+ext)
                 @audio_file += ext
+# Trace.log.debug("found file #{@audio_file}")
                 return OK
             end
         }

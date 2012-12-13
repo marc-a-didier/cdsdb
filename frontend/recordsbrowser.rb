@@ -7,13 +7,13 @@ class RecordsBrowser < GenericBrowser
     RTV_PTIME = 2
     RTV_DBLNK = 3
 
-    attr_reader :record, :segment
+    attr_reader :reclnk, :seglnk
 
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::RECORDS_TREEVIEW])
-        @record = RecordUI.new(@mc.glade)
-        @segment = SegmentUI.new(@mc.glade)
+        @reclnk = nil #RecordUI.new #(@mc.glade)
+#         @seglnk = nil #SegmentUI.new #(@mc.glade)
     end
 
     def setup
@@ -46,9 +46,9 @@ class RecordsBrowser < GenericBrowser
         @mc.glade[UIConsts::REC_POPUP_TAGDIR].signal_connect(:activate)   { on_tag_dir }
         @mc.glade[UIConsts::REC_POPUP_ENQUEUE].signal_connect(:activate)  { @mc.enqueue_record }
         @mc.glade[UIConsts::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
-        @mc.glade[UIConsts::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils::assign_track_seg_order(@record.rrecord) }
+        @mc.glade[UIConsts::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils::assign_track_seg_order(@reclnk.record.rrecord) }
         @mc.glade[UIConsts::REC_POPUP_PHISTORY].signal_connect(:activate) {
-            PlayHistoryDialog.new.show_record(@record.rrecord)
+            PlayHistoryDialog.new.show_record(@reclnk.record.rrecord)
         }
 
         return super
@@ -104,14 +104,15 @@ class RecordsBrowser < GenericBrowser
         DBIntf::connection.execute(generate_rec_sql) do |row|
             iter = @tv.model.append(nil)
 
-            dblink = DBCacheLink.new.load_record(row[2]).load_segment(row[0])
+#             dblink = DBCacheLink.new.load_record(row[2]).load_segment(row[0])
+            dblink = RecordUI.new.load_record(row[2]).load_segment(row[0])
             iter[RTV_REF]   = dblink.record.rrecord
             iter[RTV_TITLE] = dblink.record.stitle
             iter[RTV_PTIME] = row[1].to_ms_length
             iter[RTV_DBLNK] = dblink
 
             # Add a fake entry to have the arrow indicator
-            @tv.model.append(iter)
+            @tv.model.append(iter)[RTV_REF] = -1
         end
         @tv.columns_autosize
 
@@ -120,11 +121,14 @@ class RecordsBrowser < GenericBrowser
 
     def update_ui_handlers(iter)
         if iter.nil?
-            @record.reset
-            @segment.reset
+            @reclnk.record.reset
+            @reclnk.segment.reset
         else
-            @record.clone_dbs(iter[RTV_DBLNK].record)
-            @segment.clone_dbs(iter[RTV_DBLNK].segment)
+#             @reclnk.clone_dbs(iter[RTV_DBLNK].record)
+#             @segment.clone_dbs(iter[RTV_DBLNK].segment)
+#             @reclnk.set_dblink(iter[RTV_DBLNK])
+            @reclnk = iter[RTV_DBLNK]
+#             @seglnk = iter[RTV_DBLNK]
         end
     end
 
@@ -140,24 +144,24 @@ class RecordsBrowser < GenericBrowser
 Trace.log.debug("record selection changed")
         update_ui_handlers(@tv.selection.selected)
 
-        if @record.valid?
+        if @reclnk.record.valid?
             # Redraw segment only if on a segment or the infos string will overwrite the record infos
             if @tv.selection.selected.parent
-                @segment.to_widgets
+                @reclnk.to_widgets(false)
                 # Change artist infos if we're browsing a compile subtree
-                @mc.change_segment_artist(@segment.rartist) if @mc.artist.compile?
+                @mc.change_segment_artist(@reclnk.segment.rartist) if @mc.artist.compile?
             else
-                @record.to_widgets
+                @reclnk.to_widgets(true)
             end
         end
-        @mc.record_changed #if @record.valid?
+        @mc.record_changed #if @reclnk.valid?
     end
 
 
     # Called from master controller to keep tracks synched
     def load_segment(rsegment, update_infos = false)
-        @segment.ref_load(rsegment)
-        @segment.to_widgets if update_infos
+        @reclnk.segment.ref_load(rsegment)
+        @reclnk.to_widgets(false) if update_infos
     end
 
     def select_record(rrecord)
@@ -212,8 +216,8 @@ p row
 
     def invalidate
         @tv.model.clear
-        @record.reset.to_widgets
-        @segment.reset.to_widgets
+        @reclnk.record.reset.to_widgets(true) if @reclnk
+#         @seglnk.segment.reset.to_widgets if @seglnk
     end
 
     def is_on_record
@@ -223,11 +227,14 @@ p row
 
     # Fills all children of a record (its segments)
     def on_row_expanded(widget, iter, path)
-        fchild = remove_children_but_first(iter)
+        return if iter.first_child && iter.first_child[RTV_REF] != -1
+
+#         fchild = remove_children_but_first(iter)
+#         remove_children(iter)
         DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             child = @tv.model.append(iter)
 
-            dblink = DBCacheLink.new.load_segment(row[0])
+            dblink = RecordUI.new.load_segment(row[0])
             dblink.load_record(dblink.segment.rrecord)
 
             child[RTV_REF] = dblink.segment.rsegment
@@ -240,43 +247,43 @@ p row
             child[RTV_PTIME] = row[1].to_ms_length
             child[RTV_DBLNK] = dblink
         }
-        @tv.model.remove(fchild) if fchild
+        @tv.model.remove(iter.first_child)
     end
 
     def update_infos_widgets
         return unless @tv.selection.selected
 
         if @tv.selection.selected.parent
-            @record.disp_cover
-            @segment.to_widgets
+            @reclnk.disp_cover
+            @reclnk.to_widgets(false)
         else
-            @record.to_widgets
+            @reclnk.to_widgets(true)
         end
     end
 
     def on_rec_edit
-        resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @segment).run : DBEditor.new(@mc, @record).run
+        resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @reclnk.segment).run : DBEditor.new(@mc, @reclnk.record).run
         if resp == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
             @tv.selection.selected[RTV_DBLNK].reload_segment_cache.reload_record_cache
-            # update_ui_handlers(@tv.selection.selected) Useless since working directly on @segment or @record
+            # update_ui_handlers(@tv.selection.selected) Useless since working directly on @seglnk or @reclnk
             update_infos_widgets
         end
     end
 
     def on_rec_add
-        @record.add_new(@mc.artist.rartist)
-        @segment.add_new(@mc.artist.rartist, @record.rrecord)
-        TrackDBClass.new.add_new(@record.rrecord, @segment.rsegment)
-        load_entries.position_to(@record.rrecord, 0)
+        @reclnk.record.add_new(@mc.artist.rartist)
+        @reclnk.segment.add_new(@mc.artist.rartist, @reclnk.record.rrecord)
+        TrackDBClass.new.add_new(@reclnk.record.rrecord, @reclnk.segment.rsegment)
+        load_entries.position_to(@reclnk.record.rrecord, 0)
         @mc.record_changed
     end
 
     def on_seg_add
-        @segment.add_new(@mc.artist.rartist, @record.rrecord)
-        TrackDBClass.new.add_new(@record.rrecord, @segment.rsegment)
+        @segment.add_new(@mc.artist.rartist, @reclnk.rrecord)
+        TrackDBClass.new.add_new(@reclnk.rrecord, @segment.rsegment)
         #rsegment = @segment.rsegment
-        load_entries.position_to(@record.rrecord, @segment.rsegment)
+        load_entries.position_to(@reclnk.rrecord, @segment.rsegment)
         #iter = @tv.selection.selected
         #on_row_expanded(self, iter, iter.path)
         #position_to(rsegment)
@@ -293,7 +300,7 @@ p row
     end
 
     def on_cp_title_to_segs
-        DBUtils::log_exec("UPDATE segments SET stitle=#{@record.stitle.to_sql} WHERE rrecord=#{@record.rrecord}")
+        DBUtils::log_exec("UPDATE segments SET stitle=#{@reclnk.stitle.to_sql} WHERE rrecord=#{@reclnk.rrecord}")
     end
 
     def on_tag_dir
@@ -304,12 +311,12 @@ p row
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
-            expected, found = AudioLink.new.load_record(@record.rrecord).tag_and_move_dir(dir)
+            expected, found = AudioLink.new.load_record(@reclnk.record.rrecord).tag_and_move_dir(dir)
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
             elsif dir.match(Cfg::instance.rip_dir)
                 # Set the ripped date only if processing files from the rip directory.
-                DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@record.rrecord};")
+                DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@reclnk.record.rrecord};")
             end
         end
     end

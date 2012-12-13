@@ -247,6 +247,36 @@ class GenreDBClass < DBClassIntf
 
 end
 
+LabelDBS = Struct.new(:rlabel, :sname)
+
+class LabelDBClass < DBClassIntf
+
+    def initialize
+        super(LabelDBS.new)
+    end
+
+end
+
+MediaDBS = Struct.new(:rmedia, :sname)
+
+class MediaDBClass < DBClassIntf
+
+    def initialize
+        super(MediaDBS.new)
+    end
+
+end
+
+CollectionDBS = Struct.new(:rcollection, :sname)
+
+class CollectionDBClass < DBClassIntf
+
+    def initialize
+        super(CollectionDBS.new)
+    end
+
+end
+
 def test
     art = ArtistDBClass.new
     art2 = ArtistDBClass.new
