@@ -239,6 +239,7 @@ class TracksBrowser < GenericBrowser
         map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@trklnk.track.rtrack)), position_to(@trklnk.track.rtrack))
     end
 
+    # Returns an array of the browser selected tracks
     def get_selection
         stores = []
         @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
@@ -260,6 +261,11 @@ class TracksBrowser < GenericBrowser
 p sql
         DBUtils::threaded_client_sql(sql)
         @trklnk.track.sql_load.to_widgets if @trklnk.track.valid? # @track is invalid if multiple selection was made
+    end
+
+    # Returns the uilink for the current browser selection. Returns nil if no or multi selection
+    def selected_track
+        return @tv.selection.count_selected_rows == 1 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
     end
 
     def get_current_uilink
@@ -313,13 +319,11 @@ p sql
     end
 
     # Emitted by master controller when the current displayed track has been played
-    # Must check if track is in current record because of the cache
+    # Update only it track is currently selected.
     def update_infos(rtrack)
-        if iter = find_ref(rtrack)
-#             @track.clone_dbs(iter[TTV_DATA].track).to_widgets if @track.rtrack == rtrack
-            @trklnk = iter[TTV_DATA]
-            @trklnk.to_widgets if @trklnk.track.rtrack == rtrack
-        end
+        @trklnk.to_widgets if selected_track == @trklnk
+#         @trklnk.to_widgets if @tv.selection.count_selected_rows == 1 &&
+#                               @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] == @trklnk
     end
 
     #
@@ -331,16 +335,18 @@ p sql
         count = @tv.selection.count_selected_rows
         return if count == 0
 
-Trace.log.debug("track selection changed.".green)
-        if count == 1
-            iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+# Trace.log.debug("track selection changed.".green)
+        uilink = selected_track
+        if uilink
+#             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
-            return if @trklnk && iter[TTV_REF] == @trklnk.track.rtrack
+            return if @trklnk && @trklnk == uilink #iter[TTV_DATA]
+Trace.log.debug("track selection changed.".green)
 
 #             @track.clone_dbs(iter[TTV_DATA].track).to_widgets_with_cover(iter[TTV_DATA])
 #             @track.set_uilink(iter[TTV_DATA]).to_widgets_with_cover
-            @trklnk = iter[TTV_DATA]
+            @trklnk = uilink #iter[TTV_DATA]
             @trklnk.to_widgets_with_cover
 
             # Reload artist if artist changed from segment
@@ -393,12 +399,13 @@ Trace.log.debug("--- multi select ---".magenta)
     end
 
     def on_tag_file
-        return if @tv.selection.count_selected_rows != 1
-        iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-        return if iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
+        uilink = selected_track
+        return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
+#         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+#         return if iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
 
-        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, iter[TTV_DATA].full_dir)
-        iter[TTV_DATA].tag_and_move_file(file) unless file.empty?
+        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, uilink.full_dir)
+        uilink.tag_and_move_file(file) unless file.empty?
 
 #         fname = iter[TTV_DATA].audio_file
 #         fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
