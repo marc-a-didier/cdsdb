@@ -258,7 +258,7 @@ class AudioLink < DBCacheLink
 
         build_audio_file_name
         @audio_status = search_audio_file
-Trace.log.debug("setup returns #{@audio_status}")
+# Trace.log.debug("setup returns #{@audio_status}")
         return @audio_status
     end
 
@@ -281,7 +281,7 @@ Trace.log.debug("setup returns #{@audio_status}")
     # Returns the status of for the file.
     # If a matching file is found, set the full name to the match.
     def search_audio_file
-Trace.log.debug("searching for file #{@audio_file}".cyan)
+# Trace.log.debug("searching for file #{@audio_file}".cyan)
         Utils::AUDIO_EXTS.each { |ext|
             if File::exists?(@audio_file+ext)
                 @audio_file += ext
@@ -382,6 +382,7 @@ Trace.log.debug("searching for file #{@audio_file}".cyan)
         i = 0
         DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
             load_track(row[0])
+            load_segment(track.rsegment)
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0])
             i += 1
         end
