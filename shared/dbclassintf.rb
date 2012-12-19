@@ -247,6 +247,7 @@ class GenreDBClass < DBClassIntf
 
 end
 
+
 LabelDBS = Struct.new(:rlabel, :sname)
 
 class LabelDBClass < DBClassIntf
@@ -256,6 +257,7 @@ class LabelDBClass < DBClassIntf
     end
 
 end
+
 
 MediaDBS = Struct.new(:rmedia, :sname)
 
@@ -267,6 +269,7 @@ class MediaDBClass < DBClassIntf
 
 end
 
+
 CollectionDBS = Struct.new(:rcollection, :sname)
 
 class CollectionDBClass < DBClassIntf
@@ -277,28 +280,13 @@ class CollectionDBClass < DBClassIntf
 
 end
 
-def test
-    art = ArtistDBClass.new
-    art2 = ArtistDBClass.new
-p art
-    art.rartist = 1218
-    art.sql_load
-p art
-    #art.reset
-    #p art
-    art.sname = "bordel"
-    art.sql_update
-    art.sql_add
-    art.sql_del
-p art2
-#     art.swebsite="www.bordel.com"
-#     art.rorigin=200
-#     art.sql_update
-#     art.rartist = 8888
-#     art.sname = "test #1"
-#     art.swebsite = "wwww.ducon.com"
-#     art.rorigin = 999
-#     art.mnotes = "ceci est un test de merde"
-#     art.sql_add
-#     art.sql_del
+
+OriginDBS = Struct.new(:rorigin, :sname)
+
+class OriginDBClass < DBClassIntf
+
+    def initialize
+        super(OriginDBS.new)
+    end
+
 end

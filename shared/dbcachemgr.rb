@@ -20,6 +20,7 @@ class DBCache
         @labels      = {}
         @medias      = {}
         @collections = {}
+        @origins     = {}
     end
 
     def artist(rartist)
@@ -76,6 +77,17 @@ Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
     def collection(rcollection)
         @collections[rcollection] = CollectionDBClass.new.ref_load(rcollection) if @collections[rcollection].nil?
         return @collections[rcollection]
+    end
+
+    def origin(rorigin)
+        @origins[rorigin] = OriginDBClass.new.ref_load(rorigin) if @origins[rorigin].nil?
+        return @origins[rorigin]
+    end
+
+    def clear
+        [@artists, @records, @segments, @tracks,
+         @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
+Trace.log.debug("ALL CACHES cleared")
     end
 end
 
