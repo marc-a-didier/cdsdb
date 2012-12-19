@@ -227,10 +227,9 @@ p row
 
     # Fills all children of a record (its segments)
     def on_row_expanded(widget, iter, path)
+        # Exit if row has already been loaded, children are already there
         return if iter.first_child && iter.first_child[RTV_REF] != -1
 
-#         fchild = remove_children_but_first(iter)
-#         remove_children(iter)
         DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             child = @tv.model.append(iter)
 
@@ -250,24 +249,13 @@ p row
         @tv.model.remove(iter.first_child)
     end
 
-    def update_infos_widgets
-        return unless @tv.selection.selected
-
-        if @tv.selection.selected.parent
-            @reclnk.disp_cover
-            @reclnk.to_widgets(false)
-        else
-            @reclnk.to_widgets(true)
-        end
-    end
-
     def on_rec_edit
         resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @reclnk.segment).run : DBEditor.new(@mc, @reclnk.record).run
         if resp == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
             @tv.selection.selected[RTV_DBLNK].reload_segment_cache.reload_record_cache
-            # update_ui_handlers(@tv.selection.selected) Useless since working directly on @seglnk or @reclnk
-            update_infos_widgets
+            # update_ui_handlers(@tv.selection.selected)
+            @reclnk.to_widgets(!@tv.selection.selected.parent)
         end
     end
 

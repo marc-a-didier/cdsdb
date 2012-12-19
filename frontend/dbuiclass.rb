@@ -31,23 +31,23 @@ class ArtistUI < ArtistDBClass
 end
 
 # class RecordUI < RecordDBClass
-# 
+#
 #     include BaseUI
 #     include MainTabsUI
-# 
-# 
+#
+#
 #     def initialize(glade)
 #         super()
 #         @glade = glade
 #         init_baseui("rec_tab_")
 #     end
-# 
+#
 #     def to_widgets
 #         super
 #         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
 #     end
-# 
-# 
+#
+#
 #     def build_infos_string
 #         return "" unless self.valid?
 #         str  = DBUtils::name_from_id(self.rmedia, "media")
@@ -84,7 +84,7 @@ class RecordUI < DBCacheLink #RecordDBClass
         str += ", "+cache.collection(record.rcollection).sname if record.rcollection != 0
         str += ", "+record.iplaytime.to_ms_length
     end
-    
+
     def build_seg_infos_string
         return "" unless segment.valid?
         str  = "Segment "+segment.iorder.to_s
@@ -95,21 +95,21 @@ class RecordUI < DBCacheLink #RecordDBClass
 end
 
 # class SegmentUI < SegmentDBClass
-# 
+#
 #     include BaseUI
 #     include MainTabsUI
-# 
+#
 #     def initialize(glade)
 #         super()
 #         @glade = glade
 #         init_baseui("seg_tab_")
 #     end
-# 
+#
 #     def to_widgets
 #         super
 #         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
 #     end
-# 
+#
 #     def build_infos_string
 #         return "" unless self.valid?
 #         str  = "Segment "+self.iorder.to_s
@@ -140,12 +140,12 @@ class SegmentUI < DBCacheLink #SegmentDBClass
 end
 
 # class TrackUI < TrackDBClass
-# 
+#
 #     include BaseUI
 #     include MainTabsUI
-# 
+#
 #     attr_reader :uilink
-# 
+#
 #     def initialize(glade)
 #         super()
 #         @glade = glade
@@ -153,23 +153,23 @@ end
 #         @uilink = nil
 #         init_baseui("trk_tab_")
 #     end
-# 
+#
 #     def set_uilink(uilink)
 #         @uilink = uilink
 #         return clone_dbs(uilink.track) # self
 #     end
-# 
+#
 #     def to_widgets
 #         super
 #         return to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
 #     end
-# 
+#
 #     def to_widgets_with_cover #(trk_mgr)
 #         @glade[UIConsts::REC_IMAGE].pixbuf = @uilink.large_track_cover if @uilink.cover_key.empty? || @uilink.cover_key != @curr_pix_key
 #         @curr_pix_key = @uilink.cover_key
 #         return to_widgets
 #     end
-# 
+#
 #     def build_infos_string
 #         return "" unless self.valid?
 #         str  = UIConsts::RATINGS[self.irating]+", "
@@ -354,10 +354,11 @@ class DBEditor
         @editors << TrackEditor.new(@glade, mc.track.rtrack)
         @editors.each { |editor| editor.to_widgets }
 
-        @glade[DBED_NBOOK].page = 0 if initiating_class.instance_of?(ArtistUI)
-        @glade[DBED_NBOOK].page = 1 if initiating_class.instance_of?(RecordUI)
-        @glade[DBED_NBOOK].page = 2 if initiating_class.instance_of?(SegmentUI)
-        @glade[DBED_NBOOK].page = 3 if initiating_class.instance_of?(TrackUI)
+        # TODO: a revoir!!! maintenant que rec & seg sont dans la meme ui...
+        @glade[DBED_NBOOK].page = 0 if initiating_class.kind_of?(ArtistDBClass)
+        @glade[DBED_NBOOK].page = 1 if initiating_class.kind_of?(RecordDBClass)
+        @glade[DBED_NBOOK].page = 2 if initiating_class.kind_of?(SegmentDBClass)
+        @glade[DBED_NBOOK].page = 3 if initiating_class.kind_of?(TrackDBClass)
     end
 
     def run
@@ -365,7 +366,7 @@ class DBEditor
 
         response = @glade[DLG_DB_EDITOR].run
         if response == Gtk::Dialog::RESPONSE_OK
-            @editors.each { |editor| editor.from_widgets.sql_update } #.to_widgets(_with_cover) ???
+            @editors.each { |uiclass| uiclass.from_widgets.sql_update }
         end
         @glade[DLG_DB_EDITOR].destroy
         return response
