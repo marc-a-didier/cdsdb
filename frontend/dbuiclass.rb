@@ -69,6 +69,8 @@ class RecordUI < DBCacheLink #RecordDBClass
 
     def to_widgets(is_record)
         GTBld.main[UIConsts::MW_INFLBL_RECORD].text = is_record ? build_rec_infos_string : build_seg_infos_string
+        GTBld.main[UIConsts::MEMO_RECORD].buffer.text  = record.mnotes.to_memo
+        GTBld.main[UIConsts::MEMO_SEGMENT].buffer.text = segment.mnotes.to_memo
         return self
     end
 
@@ -126,7 +128,7 @@ class SegmentUI < DBCacheLink #SegmentDBClass
     end
 
     def to_widgets
-        GTBld.main[UIConsts::MW_INFLBL_RECORD].text = build_infos_string
+        GTBld.main[UIConsts::MW_INFLBL_RECORD].text    = build_infos_string
         return self
     end
 
@@ -203,7 +205,8 @@ class TrackUI < UILink #TrackDBClass
 #     end
 
     def to_widgets
-        GTBld.main[UIConsts::MW_INFLBL_TRACK].text = build_infos_string
+        GTBld.main[UIConsts::MW_INFLBL_TRACK].text   = build_infos_string
+        GTBld.main[UIConsts::MEMO_TRACK].buffer.text = track.mnotes.to_memo
         return self
     end
 
