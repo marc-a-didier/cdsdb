@@ -496,7 +496,7 @@ Trace.log.debug("*** save memos called")
 
     def notify_played(uilink, host = "")
         # If rtrack is -1 the track has been dropped into the pq from the file system
-        return if uilink.tags || uilink.track.rtrack == -1 || uilink.track.banned?
+        return if uilink.track.rtrack == -1 || uilink.track.banned?
 
 
         # Update local database AND remote database if in client mode
@@ -591,6 +591,7 @@ Trace.log.debug("new db version=#{srv_db_version}")
                 Prefs::instance.save_db_version(srv_db_version)
             end
             FileUtils.mv(file_name, DBIntf::build_db_name)
+            DBCache.instance.clear
         end
     end
 
