@@ -23,22 +23,38 @@ class DBCache
     end
 
     def artist(rartist)
-        @artists[rartist] = ArtistDBClass.new.ref_load(rartist) if @artists[rartist].nil?
+#         @artists[rartist] = ArtistDBClass.new.ref_load(rartist) if @artists[rartist].nil?
+        if @artists[rartist].nil?
+            @artists[rartist] = ArtistDBClass.new.ref_load(rartist)
+Trace.log.debug("Artist cache loaded key #{rartist}, size=#{@artists.size}")
+        end
         return @artists[rartist]
     end
 
     def record(rrecord)
-        @records[rrecord] = RecordDBClass.new.ref_load(rrecord) if @records[rrecord].nil?
+#         @records[rrecord] = RecordDBClass.new.ref_load(rrecord) if @records[rrecord].nil?
+        if @records[rrecord].nil?
+            @records[rrecord] = RecordDBClass.new.ref_load(rrecord)
+Trace.log.debug("Record cache loaded key #{rrecord}, size=#{@records.size}")
+        end
         return @records[rrecord]
     end
 
     def segment(rsegment)
-        @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment) if @segments[rsegment].nil?
+#         @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment) if @segments[rsegment].nil?
+        if @segments[rsegment].nil?
+            @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment)
+Trace.log.debug("Segment cache loaded key #{rsegment}, size=#{@segments.size}")
+        end
         return @segments[rsegment]
     end
 
     def track(rtrack)
-        @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
+#         @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
+        if @tracks[rtrack].nil?
+            @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
+Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
+        end
         return @tracks[rtrack]
     end
 
