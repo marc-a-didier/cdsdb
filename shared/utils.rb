@@ -42,6 +42,10 @@ class String
         return m.to_i*60*1000+s.to_i*1000+ms.to_i
     end
 
+    def to_memo
+        return self.gsub(/\\n/, "\n")
+    end
+
     # Not a good idea to introduce a dep on CGI...
     def to_html
         return CGI::escapeHTML(self)

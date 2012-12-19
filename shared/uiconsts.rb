@@ -176,7 +176,11 @@ module UIConsts
     #
     # Memos window controls
     #
-    MEMO_NBOOK  =   "memo_nbook"
+    MEMO_NBOOK   = "memo_nbook"
+    MEMO_RECORD  = "rec_tab_txtview_mnotes"
+    MEMO_SEGMENT = "seg_tab_txtview_mnotes"
+    MEMO_TRACK   = "trk_tab_txtview_mnotes"
+    MEMO_ARTIST  = "art_tab_txtview_mnotes"
 
 
 
