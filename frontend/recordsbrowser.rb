@@ -121,8 +121,8 @@ class RecordsBrowser < GenericBrowser
 
     def update_ui_handlers(iter)
         if iter.nil?
-            @reclnk.record.reset
-            @reclnk.segment.reset
+            @reclnk.reset
+#             @reclnk.segment.reset
         else
 #             @reclnk.clone_dbs(iter[RTV_DBLNK].record)
 #             @segment.clone_dbs(iter[RTV_DBLNK].segment)
@@ -160,7 +160,8 @@ Trace.log.debug("record selection changed")
 
     # Called from master controller to keep tracks synched
     def load_segment(rsegment, update_infos = false)
-        @reclnk.segment.ref_load(rsegment)
+#         @reclnk.segment.ref_load(rsegment)
+        @reclnk.load_segment(rsegment)
         @reclnk.to_widgets(false) if update_infos
     end
 
@@ -216,7 +217,7 @@ p row
 
     def invalidate
         @tv.model.clear
-        @reclnk.record.reset.to_widgets(true) if @reclnk
+        @reclnk.reset.to_widgets(true) if @reclnk
 #         @seglnk.segment.reset.to_widgets if @seglnk
     end
 

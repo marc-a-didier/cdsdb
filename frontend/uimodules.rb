@@ -40,7 +40,7 @@ module BaseUI
     @@handlers = []
 
     def init_handlers
-puts "in init_handlers"
+Trace.log.debug("in init_handlers")
         @@handlers << Proc.new { |control, dbs, field, is_to|
             is_to ? control.text = dbs[field].to_s : dbs[field] = control.text.to_i
         }
@@ -79,7 +79,7 @@ puts "in init_handlers"
     end
 
     def init_baseui(prefix)
-puts "in init_baseui: prefix=#{prefix}"
+Trace.log.debug("in init_baseui: prefix=#{prefix}")
         @controls = {}
 
         init_handlers if @@handlers.size == 0

@@ -7,76 +7,48 @@
 # The next classes handle the interaction with the tabs of the main window
 #
 #
-class ArtistUI < ArtistDBClass
-
-    include BaseUI
-    include MainTabsUI
-
-    def initialize(glade)
-        super()
-        @glade = glade
-        init_baseui("art_tab_")
-    end
-
-    def to_widgets
-        super
-        return to_infos_widget(@glade[UIConsts::MW_INFLBL_ARTIST])
-    end
-
-    def build_infos_string
-        return "" if not self.valid? or self.rorigin == 0
-        str  = DBUtils::name_from_id(self.rorigin, "origin")
-        return str
-    end
-end
-
-# class RecordUI < RecordDBClass
-#
-#     include BaseUI
-#     include MainTabsUI
-#
-#
-#     def initialize(glade)
-#         super()
-#         @glade = glade
-#         init_baseui("rec_tab_")
-#     end
-#
-#     def to_widgets
-#         super
-#         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
-#     end
-#
-#
-#     def build_infos_string
-#         return "" unless self.valid?
-#         str  = DBUtils::name_from_id(self.rmedia, "media")
-#         str += self.iyear == 0 ? ", Unknown" : ", "+self.iyear.to_s
-#         str += ", "+DBUtils::name_from_id(self.rlabel, "label")
-#         str += ", "+self.scatalog unless self.scatalog.empty?
-#         str += ", "+DBUtils::name_from_id(self.rgenre, "genre")
-#         str += ", "+self.isetorder.to_s+" of "+self.isetof.to_s if self.isetorder > 0
-#         str += ", "+DBUtils::name_from_id(self.rcollection, "collection") if self.rcollection != 0
-#         str += ", "+self.iplaytime.to_ms_length
-#     end
-# end
-
-class RecordUI < DBCacheLink #RecordDBClass
+class ArtistUI < DBCacheLink
 
     def initialize
         super
     end
 
+    def valid?
+        return !@rartist.nil?
+    end
+
+    def to_widgets
+        GTBld.main[UIConsts::MW_INFLBL_ARTIST].text = build_infos_string
+        GTBld.main[UIConsts::MEMO_ARTIST].buffer.text = valid? ? artist.mnotes.to_memo : ""
+    end
+
+    def build_infos_string
+        return "" if !valid? || artist.rorigin == 0
+        return cache.origin(artist.rorigin).sname
+    end
+end
+
+
+class RecordUI < DBCacheLink
+
+    def initialize
+        super
+    end
+
+    def valid?
+        return !@rrecord.nil?
+    end
+
     def to_widgets(is_record)
         GTBld.main[UIConsts::MW_INFLBL_RECORD].text = is_record ? build_rec_infos_string : build_seg_infos_string
-        GTBld.main[UIConsts::MEMO_RECORD].buffer.text  = record.mnotes.to_memo
-        GTBld.main[UIConsts::MEMO_SEGMENT].buffer.text = segment.mnotes.to_memo
+        GTBld.main[UIConsts::MEMO_RECORD].buffer.text  = valid? ? record.mnotes.to_memo : ""
+        GTBld.main[UIConsts::MEMO_SEGMENT].buffer.text = valid? ? segment.mnotes.to_memo : ""
         return self
     end
 
 
     def build_rec_infos_string
-        return "" unless record.valid?
+        return "" unless valid?
         str  = cache.media(record.rmedia).sname
         str += record.iyear == 0 ? ", Unknown" : ", "+record.iyear.to_s
         str += ", "+cache.label(record.rlabel).sname
@@ -88,7 +60,7 @@ class RecordUI < DBCacheLink #RecordDBClass
     end
 
     def build_seg_infos_string
-        return "" unless segment.valid?
+        return "" unless valid?
         str  = "Segment "+segment.iorder.to_s
         str += " "+segment.stitle unless segment.stitle.empty?
         str += " by "+artist.sname #DBUtils::name_from_id(self.rartist, "artist")
@@ -96,120 +68,24 @@ class RecordUI < DBCacheLink #RecordDBClass
     end
 end
 
-# class SegmentUI < SegmentDBClass
-#
-#     include BaseUI
-#     include MainTabsUI
-#
-#     def initialize(glade)
-#         super()
-#         @glade = glade
-#         init_baseui("seg_tab_")
-#     end
-#
-#     def to_widgets
-#         super
-#         return to_infos_widget(@glade[UIConsts::MW_INFLBL_RECORD])
-#     end
-#
-#     def build_infos_string
-#         return "" unless self.valid?
-#         str  = "Segment "+self.iorder.to_s
-#         str += " "+self.stitle unless self.stitle.empty?
-#         str += " by "+DBUtils::name_from_id(self.rartist, "artist")
-#         str += " "+self.iplaytime.to_ms_length
-#     end
-# end
 
-class SegmentUI < DBCacheLink #SegmentDBClass
+class TrackUI < UILink
 
     def initialize
         super
     end
 
-    def to_widgets
-        GTBld.main[UIConsts::MW_INFLBL_RECORD].text    = build_infos_string
-        return self
+    def valid?
+        return !@rtrack.nil?
     end
-
-    def build_infos_string
-        return "" unless segment.valid?
-        str  = "Segment "+segment.iorder.to_s
-        str += " "+segment.stitle unless segment.stitle.empty?
-        str += " by "+artist.sname #DBUtils::name_from_id(self.rartist, "artist")
-        str += " "+segment.iplaytime.to_ms_length
-    end
-end
-
-# class TrackUI < TrackDBClass
-#
-#     include BaseUI
-#     include MainTabsUI
-#
-#     attr_reader :uilink
-#
-#     def initialize(glade)
-#         super()
-#         @glade = glade
-#         @curr_pix_key = ""
-#         @uilink = nil
-#         init_baseui("trk_tab_")
-#     end
-#
-#     def set_uilink(uilink)
-#         @uilink = uilink
-#         return clone_dbs(uilink.track) # self
-#     end
-#
-#     def to_widgets
-#         super
-#         return to_infos_widget(@glade[UIConsts::MW_INFLBL_TRACK])
-#     end
-#
-#     def to_widgets_with_cover #(trk_mgr)
-#         @glade[UIConsts::REC_IMAGE].pixbuf = @uilink.large_track_cover if @uilink.cover_key.empty? || @uilink.cover_key != @curr_pix_key
-#         @curr_pix_key = @uilink.cover_key
-#         return to_widgets
-#     end
-#
-#     def build_infos_string
-#         return "" unless self.valid?
-#         str  = UIConsts::RATINGS[self.irating]+", "
-#         str += self.iplayed > 0 ? "played "+self.iplayed.to_s+" time".check_plural(self.iplayed)+" " : "never played, "
-#         str += "(Last: "+self.ilastplayed.to_std_date+"), " if self.ilastplayed != 0
-#         if self.itags == 0
-#             str += "no tags"
-#         else
-#             str += "tagged as "
-#             UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (self.itags & (1 << i)) != 0 }
-#         end
-#         return str
-#     end
-# end
-
-class TrackUI < UILink #TrackDBClass
-
-#     attr_reader :uilink
-
-    def initialize
-        super
-#         @glade = GTBld.main
-#         @curr_pix_key = ""
-#         @uilink = nil
-#         init_baseui("trk_tab_") Can't set memos anymore!!!
-    end
-
-#     def set_uilink(uilink)
-#         @uilink = uilink
-#         return clone_dbs(uilink.track) # ->self
-#     end
 
     def to_widgets
         GTBld.main[UIConsts::MW_INFLBL_TRACK].text   = build_infos_string
-        GTBld.main[UIConsts::MEMO_TRACK].buffer.text = track.mnotes.to_memo
+        GTBld.main[UIConsts::MEMO_TRACK].buffer.text = valid? ? track.mnotes.to_memo : ""
         return self
     end
 
+    # TODO: find a way to not redraw image each time if not changed
     def to_widgets_with_cover
         GTBld.main[UIConsts::REC_IMAGE].pixbuf = large_track_cover if cover_key.empty? #|| cover_key != @curr_pix_key
 #         @curr_pix_key = cover_key
@@ -217,7 +93,7 @@ class TrackUI < UILink #TrackDBClass
     end
 
     def build_infos_string
-        return "" unless track.valid?
+        return "" unless valid?
         str  = UIConsts::RATINGS[track.irating]+", "
         str += track.iplayed > 0 ? "played "+track.iplayed.to_s+" time".check_plural(track.iplayed)+" " : "never played, "
         str += "(Last: "+track.ilastplayed.to_std_date+"), " if track.ilastplayed != 0

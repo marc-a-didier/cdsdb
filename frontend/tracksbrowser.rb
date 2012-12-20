@@ -358,7 +358,7 @@ p sql
 #             @mc.change_segment(@trklnk.track.rsegment) if @trklnk.track.rsegment != @mc.segment.rsegment
         else
 Trace.log.debug("--- multi select ---".magenta)
-            [@trklnk, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
+            #[@trklnk, @mc.record, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
             #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
         end
     end
@@ -366,7 +366,7 @@ Trace.log.debug("--- multi select ---".magenta)
     def invalidate
         @tv.model.clear
         @mc.glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
-        @trklnk.track.reset.to_widgets if @trklnk
+        @trklnk.reset.to_widgets if @trklnk
     end
 
     def set_cover(url)

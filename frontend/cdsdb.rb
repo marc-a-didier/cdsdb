@@ -37,6 +37,7 @@ require '../shared/dbcachemgr'
 require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/trackinfos'
+require '../shared/audiolink'
 
 require './multi_drag_treeview'
 

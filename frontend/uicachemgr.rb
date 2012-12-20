@@ -217,22 +217,17 @@ class UILink < AudioLink
 
     def initialize
         super
-
         reset
     end
 
     def reset
-        super
-
         @pix_key = ""
-
-        return self
+        return super
     end
 
     def load_from_tags(file_name)
-        super
         @pix_key = ImageCache::DEFAULT_COVER
-        return self
+        return super
     end
 
 
@@ -322,7 +317,7 @@ class UILink < AudioLink
 
     def html_track_title(want_segment_title, separator = "\n")
         title = make_track_title(want_segment_title).to_html_bold + separator +"by "
-        title += @tags.nil? ? artist.sname.to_html_italic : @tags.artist.to_html_italic
+        title += @tags.nil? ? segment_artist.sname.to_html_italic : @tags.artist.to_html_italic
         title += separator + "from "
         title += @tags.nil? ? record.stitle.to_html_italic : @tags.album.to_html_italic
         return title
@@ -330,7 +325,7 @@ class UILink < AudioLink
 
     def html_track_title_no_track_num(want_segment_title, separator = "\n")
         title = make_track_title(want_segment_title, false).to_html_bold + separator +"by "
-        title += @tags.nil? ? artist.sname.to_html_italic : @tags.artist.to_html_italic
+        title += @tags.nil? ? segment_artist.sname.to_html_italic : @tags.artist.to_html_italic
         title += separator + "from "
         title += @tags.nil? ? record.stitle.to_html_italic : @tags.album.to_html_italic
         return title

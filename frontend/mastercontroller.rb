@@ -327,7 +327,7 @@ class MasterController
     # selection of the other browsers and notify the mc when a selection has changed.
     #
     def artist
-        return @art_browser.artist
+        return @art_browser.artist.artist
     end
 
     def record
@@ -393,6 +393,7 @@ class MasterController
 #         @rec_browser.load_segment(rsegment)
     end
 
+    # Called when browsing compilations to display the current artist infos
     def change_segment_artist(rartist)
         @art_browser.update_segment_artist(rartist)
     end

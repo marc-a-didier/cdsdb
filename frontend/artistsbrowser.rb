@@ -264,8 +264,8 @@ class ArtistsBrowser < GenericBrowser
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::ARTISTS_TREEVIEW])
-        @artist = ArtistUI.new(@mc.glade)
-        @seg_art = ArtistUI.new(@mc.glade)
+        @artist = ArtistUI.new #(@mc.glade)
+        @seg_art = ArtistUI.new #(@mc.glade)
     end
 
     def setup
@@ -338,7 +338,7 @@ class ArtistsBrowser < GenericBrowser
 
     def reload
         load_entries
-        @mc.no_selection if position_to(@artist.rartist).nil?
+        @mc.no_selection if position_to(@artist.artist.rartist).nil?
         return self
     end
 
@@ -426,7 +426,7 @@ Trace.log.debug("artists selection changed".cyan)
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artist.reset
         else
-            @artist.ref_load(@tvs[ATV_REF])
+            @artist.load_artist(@tvs[ATV_REF])
         end
         @artist.to_widgets
         @artist.valid? ? @mc.artist_changed : @mc.invalidate_tabs
@@ -443,8 +443,8 @@ Trace.log.debug("artists selection changed".cyan)
     end
 
     def on_art_popup_add
-        @artist.add_new
-        load_entries.position_to(@artist.rartist)
+        @artist.artist.add_new
+        load_entries.position_to(@artist.artist.rartist)
     end
 
     def on_art_popup_del
@@ -458,13 +458,13 @@ Trace.log.debug("artists selection changed".cyan)
     def on_artist_edited(widget, path, new_text)
         if @tvs[ATV_NAME] != new_text
             @tvs[ATV_NAME] = new_text
-            @artist.sname = new_text
-            @artist.sql_update.to_widgets
+            @artist.artist.sname = new_text
+            @artist.artist.sql_update.to_widgets
         end
     end
 
     def update_segment_artist(rartist)
-        @seg_art.ref_load(rartist).to_widgets
+        @seg_art.load_artist(rartist).to_widgets
     end
 
     def is_on_compile?
