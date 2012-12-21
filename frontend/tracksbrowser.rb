@@ -253,16 +253,18 @@ class TracksBrowser < GenericBrowser
     end
 
     def set_track_field(field, value, to_all)
-        sql = "UPDATE tracks SET #{field}=#{value} WHERE rtrack IN ("
         meth = to_all ? @tv.model.method(:each) : @tv.selection.method(:selected_each)
+
+        sql = "UPDATE tracks SET #{field}=#{value} WHERE rtrack IN ("
         meth.call { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
         sql[-1] = ")"
 p sql
         DBUtils::threaded_client_sql(sql)
-        if @trklnk.track.valid? # @track is invalid if multiple selection was made
-            @trklnk.track.sql_load
-            @trklnk.to_widgets
-        end
+
+        # Refresh the cache
+        meth.call { |model, path, iter| iter[TTV_DATA].track.sql_load }
+        
+        @trklnk.to_widgets if @trklnk.valid? # @track is invalid if multiple selection was made
     end
 
     def get_current_uilink

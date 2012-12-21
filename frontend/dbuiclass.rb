@@ -49,21 +49,30 @@ class RecordUI < DBCacheLink
 
     def build_rec_infos_string
         return "" unless valid?
-        str  = cache.media(record.rmedia).sname
-        str += record.iyear == 0 ? ", Unknown" : ", "+record.iyear.to_s
+        rec = cache.record(@rrecord) # Cache of the cache!!!
+        str  = cache.media(rec.rmedia).sname
+        str += rec.iyear == 0 ? ", Unknown" : ", "+rec.iyear.to_s
         str += ", "+cache.label(record.rlabel).sname
-        str += ", "+record.scatalog unless record.scatalog.empty?
+        str += ", "+rec.scatalog unless rec.scatalog.empty?
         str += ", "+genre.sname
-        str += ", "+record.isetorder.to_s+" of "+record.isetof.to_s if record.isetorder > 0
-        str += ", "+cache.collection(record.rcollection).sname if record.rcollection != 0
-        str += ", "+record.iplaytime.to_ms_length
+        str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
+        str += ", "+cache.collection(rec.rcollection).sname if rec.rcollection != 0
+        str += ", "+rec.iplaytime.to_ms_length
+#         str  = cache.media(record.rmedia).sname
+#         str += record.iyear == 0 ? ", Unknown" : ", "+record.iyear.to_s
+#         str += ", "+cache.label(record.rlabel).sname
+#         str += ", "+record.scatalog unless record.scatalog.empty?
+#         str += ", "+genre.sname
+#         str += ", "+record.isetorder.to_s+" of "+record.isetof.to_s if record.isetorder > 0
+#         str += ", "+cache.collection(record.rcollection).sname if record.rcollection != 0
+#         str += ", "+record.iplaytime.to_ms_length
     end
 
     def build_seg_infos_string
         return "" unless valid?
         str  = "Segment "+segment.iorder.to_s
         str += " "+segment.stitle unless segment.stitle.empty?
-        str += " by "+artist.sname #DBUtils::name_from_id(self.rartist, "artist")
+        str += " by "+segment_artist.sname
         str += " "+segment.iplaytime.to_ms_length
     end
 end
@@ -94,16 +103,27 @@ class TrackUI < UILink
 
     def build_infos_string
         return "" unless valid?
-        str  = UIConsts::RATINGS[track.irating]+", "
-        str += track.iplayed > 0 ? "played "+track.iplayed.to_s+" time".check_plural(track.iplayed)+" " : "never played, "
-        str += "(Last: "+track.ilastplayed.to_std_date+"), " if track.ilastplayed != 0
-        if track.itags == 0
+        trk = cache.track(@rtrack) # Cache of the cache!!!
+        str  = UIConsts::RATINGS[trk.irating]+", "
+        str += trk.iplayed > 0 ? "played "+trk.iplayed.to_s+" time".check_plural(trk.iplayed)+" " : "never played, "
+        str += "(Last: "+trk.ilastplayed.to_std_date+"), " if trk.ilastplayed != 0
+        if trk.itags == 0
             str += "no tags"
         else
             str += "tagged as "
-            UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (track.itags & (1 << i)) != 0 }
+            UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
         end
         return str
+#         str  = UIConsts::RATINGS[track.irating]+", "
+#         str += track.iplayed > 0 ? "played "+track.iplayed.to_s+" time".check_plural(track.iplayed)+" " : "never played, "
+#         str += "(Last: "+track.ilastplayed.to_std_date+"), " if track.ilastplayed != 0
+#         if track.itags == 0
+#             str += "no tags"
+#         else
+#             str += "tagged as "
+#             UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (track.itags & (1 << i)) != 0 }
+#         end
+#         return str
     end
 end
 
