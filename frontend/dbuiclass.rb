@@ -22,6 +22,12 @@ class ArtistUI < DBCacheLink
         GTBld.main[UIConsts::MEMO_ARTIST].buffer.text = valid? ? artist.mnotes.to_memo : ""
     end
 
+    def from_widgets
+        artist.mnotes = GTBld.main[UIConsts::MEMO_ARTIST].buffer.text.to_dbstring
+        artist.sql_update
+        return self
+    end
+
     def build_infos_string
         return "" if !valid? || artist.rorigin == 0
         return cache.origin(artist.rorigin).sname
@@ -46,6 +52,13 @@ class RecordUI < DBCacheLink
         return self
     end
 
+    def from_widgets
+        record.mnotes = GTBld.main[UIConsts::MEMO_RECORD].buffer.text.to_dbstring
+        record.sql_update
+        segment.mnotes = GTBld.main[UIConsts::MEMO_SEGMENT].buffer.text.to_dbstring
+        segment.sql_update
+        return self
+    end
 
     def build_rec_infos_string
         return "" unless valid?
@@ -99,6 +112,12 @@ class TrackUI < UILink
         GTBld.main[UIConsts::REC_IMAGE].pixbuf = large_track_cover if cover_key.empty? #|| cover_key != @curr_pix_key
 #         @curr_pix_key = cover_key
         return to_widgets
+    end
+
+    def from_widgets
+        track.mnotes = GTBld.main[UIConsts::MEMO_TRACK].buffer.text.to_dbstring
+        track.sql_update
+        return self
     end
 
     def build_infos_string

@@ -76,6 +76,7 @@ public
         if sql[-1] != " "
             sql = sql[0..-2]+" "+generate_where_on_pk+";" # Remove last ,
             DBUtils::client_sql(sql)
+Trace.log.debug("DB update : #{sql}".red)
         end
         return self
     end
@@ -108,10 +109,6 @@ public
     def ==(object)
         return @dbs == object.dbs
     end
-
-#     def =(object)
-#         @dbs = object.dbs.clone
-#     end
 
     def [](index)
         return @dbs[index]

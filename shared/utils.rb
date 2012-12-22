@@ -42,8 +42,14 @@ class String
         return m.to_i*60*1000+s.to_i*1000+ms.to_i
     end
 
+    # Replaces \n in string with true lf to display in memo
     def to_memo
         return self.gsub(/\\n/, "\n")
+    end
+
+    # Replaces lf in string with litteral \n to store in the db
+    def to_dbstring
+        return self.gsub(/\n/, '\n')
     end
 
     # Not a good idea to introduce a dep on CGI...

@@ -458,8 +458,8 @@ class MasterController
         return @pqueue.get_selection
     end
 
+    # Only selection message with parameter to know from which recent items we deal with
     def get_recent_selection(param)
-        # TODO: Marche plus depuis que c'est un array!! A revoir!!
         return @recents[param].get_selection
     end
 
@@ -476,10 +476,12 @@ class MasterController
     end
 
 
+    # Called when typing ctrl+s from the memo window
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
+        # Segment is handled in record class
 Trace.log.debug("*** save memos called")
-        [record, segment, track, artist].each { |uiclass| uiclass.from_widgets.sql_update }
+        [@art_browser.artist, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
     end
 
     def on_import_audio_file
