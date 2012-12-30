@@ -29,7 +29,7 @@ class RecordsBrowser < GenericBrowser
         @tv.selection.mode = Gtk::SELECTION_SINGLE
         #@tv.selection.mode = Gtk::SELECTION_BROWSE
 
-        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             selection_data.set(Gdk::Selection::TYPE_STRING, "records:message:get_tracks_list")
         }
@@ -104,8 +104,8 @@ class RecordsBrowser < GenericBrowser
         DBIntf::connection.execute(generate_rec_sql) do |row|
             iter = @tv.model.append(nil)
 
-#             dblink = DBCacheLink.new.load_record(row[2]).load_segment(row[0])
-            dblink = RecordUI.new.load_record(row[2]).load_segment(row[0])
+#             dblink = DBCacheLink.new.set_record_ref(row[2]).set_segment_ref(row[0])
+            dblink = RecordUI.new.set_record_ref(row[2]).set_segment_ref(row[0])
             iter[RTV_REF]   = dblink.record.rrecord
             iter[RTV_TITLE] = dblink.record.stitle
             iter[RTV_PTIME] = row[1].to_ms_length
@@ -161,7 +161,7 @@ Trace.log.debug("record selection changed")
     # Called from master controller to keep tracks synched
     def load_segment(rsegment, update_infos = false)
 #         @reclnk.segment.ref_load(rsegment)
-        @reclnk.load_segment(rsegment)
+        @reclnk.set_segment_ref(rsegment)
         @reclnk.to_widgets(false) if update_infos
     end
 
@@ -234,8 +234,8 @@ p row
         DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             child = @tv.model.append(iter)
 
-            dblink = RecordUI.new.load_segment(row[0])
-            dblink.load_record(dblink.segment.rrecord)
+            dblink = RecordUI.new.set_segment_ref(row[0])
+            dblink.set_record_ref(dblink.segment.rrecord)
 
             child[RTV_REF] = dblink.segment.rsegment
             # If viewing compilation and disc not segmented, display artist's name rather than segment title
@@ -300,7 +300,7 @@ p row
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
-            expected, found = AudioLink.new.load_record(@reclnk.record.rrecord).tag_and_move_dir(dir)
+            expected, found = AudioLink.new.set_record_ref(@reclnk.record.rrecord).tag_and_move_dir(dir)
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
             elsif dir.match(Cfg::instance.rip_dir)

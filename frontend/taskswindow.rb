@@ -64,7 +64,7 @@ class TasksWindow < TopWindow
         }
 
         @mc.glade[UIConsts::TKPM_CLOSE].signal_connect(:activate) { @mc.glade[UIConsts::MM_WIN_TASKS].signal_emit(:activate) }
-        @mc.glade[UIConsts::TKPM_CLEAR].signal_connect(:activate) { 
+        @mc.glade[UIConsts::TKPM_CLEAR].signal_connect(:activate) {
             while @tv.model.get_iter("0") && @tv.model.get_iter("0")[COL_STATUS] == STATUS[STAT_DONE]
                 @tv.model.remove(@tv.model.get_iter("0"))
             end
@@ -98,7 +98,7 @@ class TasksWindow < TopWindow
     def check_config
         if Cfg::instance.remote?
             if @chk_thread.nil?
-puts "--- new task thread started... ---"
+Trace.log.debug("task thread started...".green)
                 @chk_thread = Thread.new {
                     loop do
                         check_waiting_tasks
@@ -109,6 +109,7 @@ puts "--- new task thread started... ---"
         elsif !@chk_thread.nil?
             @chk_thread.exit
             @chk_thread = nil
+Trace.log.debug("task thread stopped".brown)
         end
     end
 

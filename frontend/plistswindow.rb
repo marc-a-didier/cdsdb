@@ -96,10 +96,10 @@ public
         @tvpt.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 0) }
 
         @tvpt.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time| on_drag_received(widget, context, x, y, data, info, time) }
-        dragtable = [ ["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700] ] #DragType::BROWSER_SELECTION
+        dragtable = [ ["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700] ] #DragType::BROWSER_SELECTION
         @tvpt.enable_model_drag_dest(dragtable, Gdk::DragContext::ACTION_COPY)
 
-        @tvpt.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        @tvpt.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvpt.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             selection_data.set(Gdk::Selection::TYPE_STRING, "plist:message:get_plist_selection")
         }
@@ -245,7 +245,7 @@ public
     def plist_infos
         @mc.glade[UIConsts::PL_LBL_TRACKS].text = @tracks.to_s+" track".check_plural(@tracks)
         @mc.glade[UIConsts::PL_LBL_PTIME].text = @ttime.to_hr_length
-        @mc.glade[UIConsts::PL_LBL_ETA].text = "D.O.A."
+        @mc.glade[UIConsts::PL_LBL_ETA].text = ""
     end
 
     def update_tracks_label
@@ -584,7 +584,7 @@ public
                 iter[TT_REF] = row[TDB_RPLTRACK]
                 iter[TT_ORDER] = row[TDB_IORDER]
                 iter[TT_TRACK] = row[TDB_TORDER]
-                iter[TT_DATA]  = UILink.new.load_track(row[TDB_RTRACK])
+                iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
                 # The cache slows a lot down the things.
                 # Better to stay the old way when loadinfg a big play list
 #                 iter[TT_TITLE] = iter[TT_DATA].segment.stitle.empty? ? iter[TT_DATA].track.stitle : iter[TT_DATA].segment.stitle+": "+iter[TT_DATA].track.stitle

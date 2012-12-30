@@ -98,7 +98,7 @@ class ChartsWindow < TopWindow
         @tvc.append_column(trk_column)
         @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
 
-        @tvc.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        @tvc.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvc.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
                 selection_data.set(Gdk::Selection::TYPE_STRING, "charts:message:get_charts_selection")
@@ -140,7 +140,7 @@ class ChartsWindow < TopWindow
             stores << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            DBIntf::connection.execute(sql) { |row| stores << UILink.new.load_track(row[0]) }
+            DBIntf::connection.execute(sql) { |row| stores << UILink.new.set_track_ref(row[0]) }
         end
         return stores
     end
@@ -304,11 +304,11 @@ class ChartsWindow < TopWindow
         # the result set of the query greatly speeds the things down...
         @entries.each { |entry|
             if @view_type == VIEW_TRACKS
-                entry.uilink = UILink.new.load_track(entry.ref)
+                entry.uilink = UILink.new.set_track_ref(entry.ref)
                 entry.pix     = entry.uilink.small_track_cover
                 entry.title   = entry.uilink.html_track_title_no_track_num(@mc.show_segment_title?)
             else
-                entry.uilink = UILink.new.load_record(entry.ref)
+                entry.uilink = UILink.new.set_record_ref(entry.ref)
                 entry.pix     = entry.uilink.small_record_cover
                 entry.title   = entry.uilink.html_record_title
             end

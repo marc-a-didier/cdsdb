@@ -74,7 +74,7 @@ Trace.log.debug("in init_handlers")
             is_to ? control.text = dbs[field] : dbs[field] = control.text
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.buffer.text = dbs[field].gsub(/\\n/, "\n") : dbs[field] = control.buffer.text.gsub(/\n/, '\n')
+            is_to ? control.buffer.text = dbs[field].to_memo : dbs[field] = control.buffer.text.to_dbstring
         }
     end
 

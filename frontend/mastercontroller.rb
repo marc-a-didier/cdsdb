@@ -327,7 +327,7 @@ class MasterController
     # selection of the other browsers and notify the mc when a selection has changed.
     #
     def artist
-        return @art_browser.artist.artist
+        return @art_browser.artlnk.artist
     end
 
     def record
@@ -376,7 +376,7 @@ class MasterController
     end
 
     def change_view_mode
-        uilink = @trk_browser.get_current_uilink
+        uilink = @trk_browser.trklnk
         @art_browser.reload
         select_track(uilink) if uilink
     end
@@ -387,11 +387,6 @@ class MasterController
         }
     end
 
-    # This method is called by the tracks browser when the record is a compile
-    # or is segmented in order to keep the artist/segment in sync with the track.
-    def change_segment(rsegment)
-#         @rec_browser.load_segment(rsegment)
-    end
 
     # Called when browsing compilations to display the current artist infos
     def change_segment_artist(rartist)
@@ -412,7 +407,7 @@ class MasterController
     #
     def set_filter(where_clause, must_join_logtracks)
         if (where_clause != @main_filter)
-            uilink = @trk_browser.get_current_uilink
+            uilink = @trk_browser.trklnk
             @must_join_logtracks = must_join_logtracks
             @main_filter = where_clause
             @art_browser.reload
@@ -430,7 +425,7 @@ class MasterController
         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils::exec_batch(batch, Socket::gethostname)
         @art_browser.reload
-        select_record(UILink.new.load_record(record.get_last_id)) # The best guess to find the imported record
+        select_record(UILink.new.set_record_ref(record.get_last_id)) # The best guess to find the imported record
     end
 
 
@@ -481,7 +476,7 @@ class MasterController
         # If there's no change the db is not updated so we can do it in batch
         # Segment is handled in record class
 Trace.log.debug("*** save memos called")
-        [@art_browser.artist, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
+        [@art_browser.artlnk, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
     end
 
     def on_import_audio_file
@@ -531,7 +526,7 @@ Trace.log.debug("*** save memos called")
     end
 
     def select_segment(uilink, force_reload = false)
-        uilink.load_record(uilink.segment.rrecord)
+        uilink.set_record_ref(uilink.segment.rrecord)
         select_record(uilink)
         @rec_browser.select_segment_from_record_selection(uilink.segment.rsegment) # if self.segment.rsegment != rsegment || force_reload
     end

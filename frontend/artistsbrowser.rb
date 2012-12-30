@@ -260,11 +260,11 @@ class ArtistsBrowser < GenericBrowser
     ROW_REF     = 0
     ROW_NAME    = 1
 
-    attr_reader :artist
+    attr_reader :artlnk
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::ARTISTS_TREEVIEW])
-        @artist = ArtistUI.new #(@mc.glade)
+        @artlnk = ArtistUI.new #(@mc.glade)
         @seg_art = ArtistUI.new #(@mc.glade)
     end
 
@@ -338,7 +338,7 @@ class ArtistsBrowser < GenericBrowser
 
     def reload
         load_entries
-        @mc.no_selection if position_to(@artist.artist.rartist).nil?
+        @mc.no_selection if position_to(@artlnk.artist.rartist).nil?
         return self
     end
 
@@ -349,7 +349,7 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def edit_artist
-        DBEditor.new(@mc, @artist).run if @artist.valid?
+        DBEditor.new(@mc, @artlnk).run if @artlnk.valid?
     end
 
     # Recursively search for rartist from iter. If iter is nil, search from tree root.
@@ -424,16 +424,15 @@ Trace.log.debug("*** load new sub tree ***")
         return if @tvs.nil?
 Trace.log.debug("artists selection changed".cyan)
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
-            @artist.reset
+            @artlnk.reset
         else
-            @artist.load_artist(@tvs[ATV_REF])
+            @artlnk.set_artist_ref(@tvs[ATV_REF])
         end
-        @artist.to_widgets
-        @artist.valid? ? @mc.artist_changed : @mc.invalidate_tabs
+        @artlnk.to_widgets
+        @artlnk.valid? ? @mc.artist_changed : @mc.invalidate_tabs
     end
 
     def sub_filter
-        # TODO -> return @tvs.nil? ? "" : @tvs[2].sub_filter(@tvs)
         return "" if @tvs.nil?
         if @tvs[2].where_fields.empty? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             return ""
@@ -443,8 +442,8 @@ Trace.log.debug("artists selection changed".cyan)
     end
 
     def on_art_popup_add
-        @artist.artist.add_new
-        load_entries.position_to(@artist.artist.rartist)
+        @artlnk.artist.add_new
+        load_entries.position_to(@artlnk.artist.rartist)
     end
 
     def on_art_popup_del
@@ -456,15 +455,16 @@ Trace.log.debug("artists selection changed".cyan)
     end
 
     def on_artist_edited(widget, path, new_text)
+        # TODO: should retag and move all audio files!
         if @tvs[ATV_NAME] != new_text
             @tvs[ATV_NAME] = new_text
-            @artist.artist.sname = new_text
-            @artist.artist.sql_update.to_widgets
+            @artlnk.artist.sname = new_text
+            @artlnk.artist.sql_update
         end
     end
 
     def update_segment_artist(rartist)
-        @seg_art.load_artist(rartist).to_widgets
+        @seg_art.set_artist_ref(rartist).to_widgets
     end
 
     def is_on_compile?

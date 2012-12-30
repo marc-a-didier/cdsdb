@@ -85,6 +85,7 @@ Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
     end
 
     def clear
+#         instance_variables.each { |cache| cache.clear } # Marche pas!!!???
         [@artists, @records, @segments, @tracks,
          @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
 Trace.log.debug("ALL CACHES cleared")
@@ -118,6 +119,12 @@ class DBCacheLink
         return DBCache.instance
     end
 
+    #
+    # Methods that load the row from the primary key
+    # First search in cache and load from db if not found
+    #
+    # Tries to feed the artist primary key from record or segment if possible
+    #
     def track
         return cache.track(@rtrack)
     end
@@ -152,32 +159,38 @@ class DBCacheLink
     end
 
 
-    def load_track(rtrack)
+    #
+    # These methods just set the primary key for futur use but DO NOT load the row
+    #
+    def set_track_ref(rtrack)
         @rtrack = rtrack
         return self
     end
 
-    def load_segment(rsegment)
+    def set_segment_ref(rsegment)
         @rsegment = rsegment
         return self
     end
 
-    def load_record(rrecord)
+    def set_record_ref(rrecord)
         @rrecord = rrecord
         return self
     end
 
-    def load_artist(rartist)
+    def set_artist_ref(rartist)
         @rartist = rartist
         return self
     end
 
-    def load_genre(rgenre)
+    def set_genre_ref(rgenre)
         @rgenre = rgenre
         return self
     end
 
 
+    #
+    # Methods to keep the cache in sync with the db in case of modifications
+    #
     def reload_track_cache
         cache.track(@rtrack).sql_load
         return self

@@ -197,8 +197,8 @@ class AudioLink < DBCacheLink
         # Loops through each track
         i = 0
         DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
-            load_track(row[0])
-            load_segment(track.rsegment)
+            set_track_ref(row[0])
+            set_segment_ref(track.rsegment)
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0])
             i += 1
         end

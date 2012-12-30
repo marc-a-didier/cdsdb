@@ -62,7 +62,7 @@ class TracksBrowser < GenericBrowser
         @tv.columns[TTV_ART_OR_SEG].visible = false
 
         @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
-                                     [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
+                                     [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
                                      Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             tracks = "tracks:message:get_tracks_selection"
@@ -205,7 +205,7 @@ class TracksBrowser < GenericBrowser
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-        iter[TTV_DATA] = TrackUI.new.load_track(iter[TTV_REF])
+        iter[TTV_DATA] = TrackUI.new.set_track_ref(iter[TTV_REF])
     end
 
     def load_entries
@@ -252,6 +252,8 @@ class TracksBrowser < GenericBrowser
         return stores
     end
 
+
+    # Set the tags or rating for a selected track(s) or all tracks (when set from records)
     def set_track_field(field, value, to_all)
         meth = to_all ? @tv.model.method(:each) : @tv.selection.method(:selected_each)
 
@@ -263,15 +265,11 @@ p sql
 
         # Refresh the cache
         meth.call { |model, path, iter| iter[TTV_DATA].track.sql_load }
-        
-        @trklnk.to_widgets if @trklnk.valid? # @track is invalid if multiple selection was made
+
+        @trklnk.to_widgets if @trklnk.valid? # @trklnk is invalid if multiple selection was made
     end
 
-    def get_current_uilink
-#         return @tv.selection.count_selected_rows > 0 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
-        return @trklnk #.track.valid? ? @trklnk : nil
-    end
-
+    # Returns the uilink for the track at position track_index in the view
     def get_track_uilink(track_index)
         itr = @tv.model.get_iter(track_index.to_s)
         return itr ? itr[TTV_DATA] : nil
@@ -325,9 +323,9 @@ p sql
 
 
     # Redraws infos line
-    # Emitted by master controller when the current displayed track has been played
+    # Emitted by master controller when a track has been played
     def update_infos(rtrack)
-        @trklnk.to_widgets if selected_track == @trklnk
+        @trklnk.to_widgets if @trklnk && selected_track == @trklnk
     end
 
     #
@@ -341,27 +339,19 @@ p sql
 # Trace.log.debug("track selection changed.".green)
         trackui = selected_track
         if trackui
-#             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
-            return if @trklnk && @trklnk == trackui #iter[TTV_REF] == @trklnk.track.rtrack
+            return if @trklnk && @trklnk == trackui
 # Trace.log.debug("track selection changed.".green)
 
-#             @track.clone_dbs(iter[TTV_DATA].track).to_widgets_with_cover(iter[TTV_DATA])
-#             @track.set_uilink(iter[TTV_DATA]).to_widgets_with_cover
-            @trklnk = trackui #iter[TTV_DATA]
+            @trklnk = trackui
             @trklnk.to_widgets_with_cover
 
             # Reload artist if artist changed from segment
-#             @mc.change_segment_artist(iter[TTV_DATA].segment.rartist) if iter[TTV_DATA].segment.rartist != @mc.segment.rartist
             @mc.change_segment_artist(@trklnk.segment.rartist) if @trklnk.segment.rartist != @mc.segment.rartist
-
-            # Reload segment if segment changed
-#             @mc.change_segment(@trklnk.track.rsegment) if @trklnk.track.rsegment != @mc.segment.rsegment
         else
+            # There's nothing to do... may be set artist infos to empty.
 Trace.log.debug("--- multi select ---".magenta)
-            #[@trklnk, @mc.record, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
-            #[@track, @mc.record, @mc.segment, @mc.artist].each { |uiclass| uiclass.reset.to_widgets }
         end
     end
 
@@ -407,19 +397,6 @@ Trace.log.debug("--- multi select ---".magenta)
 
         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
         trackui.tag_and_move_file(file) unless file.empty?
-
-#         return if @tv.selection.count_selected_rows != 1
-#         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-#         return if iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
-#
-#         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, iter[TTV_DATA].full_dir)
-#         iter[TTV_DATA].tag_and_move_file(file) unless file.empty?
-
-#         fname = iter[TTV_DATA].audio_file
-#         fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
-#         dir = fname.empty? ? "" : File::dirname(fname)
-#         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, dir)
-#         Utils::tag_and_move_file(file, TrackInfos.new.get_track_infos(@track.rtrack)) unless file.empty?
     end
 
     def on_update_playtime
@@ -433,7 +410,7 @@ Trace.log.debug("--- multi select ---".magenta)
         DBUtils::update_segment_playtime(@track.rsegment)
         DBUtils::update_record_playtime(@track.rrecord)
         @mc.segment.ref_load(@track.rsegment).to_widgets
-        @mc.record.ref_load(@atrack.rrecord).to_widgets
+        @mc.record.ref_load(@track.rrecord).to_widgets
     end
 
     def on_trk_name_edited(widget, path, new_text)
@@ -486,12 +463,13 @@ Trace.log.debug("--- multi select ---".magenta)
     def edit_track
         # Voire si c'est vraiment utile de traiter des cas plus qu'exceptionnels...:
         # s'en fout si on a change qqch dans les db refs et qu'on se repositionne pas automatiquement
-        if DBEditor.new(@mc, @track).run == Gtk::Dialog::RESPONSE_OK
+        # TODO: faire le rename/retag local/remote si le titre/genre a change
+        if DBEditor.new(@mc, @trklnk.track).run == Gtk::Dialog::RESPONSE_OK
             # TODO: review this code. It's useless or poorly coded
             load_entries
-            @track.sql_load
+            @trklnk.track.sql_load
             # TODO: a revoir urgement!
-            @mc.select_track(get_current_uilink)
+            @mc.select_track(@trklnk)
         end
     end
 

@@ -59,7 +59,7 @@ class RecentItemsDialog
         @tv.append_column(title_column)
         @tv.append_column(Gtk::TreeViewColumn.new("Date", srenderer, :text => COL_DATE))
 
-        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             selection_data.set(Gdk::Selection::TYPE_STRING, "recent:message:get_recent_selection:#{@view_type}")
         }
@@ -84,7 +84,7 @@ class RecentItemsDialog
             stores << @tv.selection.selected[COL_DATA]
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
-            DBIntf::connection.execute(sql) { |row| stores << UILink.new.load_track(row[0]) }
+            DBIntf::connection.execute(sql) { |row| stores << UILink.new.set_track_ref(row[0]) }
         end
         return stores
     end
@@ -131,12 +131,12 @@ class RecentItemsDialog
             iter[COL_DATA] = UILink.new
 
             if @view_type == VIEW_PLAYED
-                iter[COL_DATA].load_track(row[0])
+                iter[COL_DATA].set_track_ref(row[0])
                 iter[COL_PIX]   = iter[COL_DATA].small_track_cover
                 iter[COL_TITLE] = iter[COL_DATA].html_track_title_no_track_num(@mc.show_segment_title?)
                 iter[COL_DATE]  = row[1].to_std_date+" @ "+row[2]
             else
-                iter[COL_DATA].load_record(row[0])
+                iter[COL_DATA].set_record_ref(row[0])
                 iter[COL_PIX]   = iter[COL_DATA].small_record_cover
                 iter[COL_TITLE] = row[1].to_html_bold+"\nby "+row[2].to_html_italic
                 iter[COL_DATE]  = row[3].to_std_date

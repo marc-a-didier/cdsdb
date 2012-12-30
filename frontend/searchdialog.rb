@@ -28,8 +28,8 @@ class SearchDialog
         @tv.selection.mode = Gtk::SELECTION_MULTIPLE
 
         # May drag tracks to play list or queue
-        dragtable = [ ["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700] ]
-        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["brower-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        dragtable = [ ["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700] ]
+        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             # Drag/drop is only enabled when viewing track search result set (name or lyrics)
             if @glade[UIConsts::SRCH_DLG_RB_TRACK].active? || @glade[UIConsts::SRCH_DLG_RB_LYRICS].active?
@@ -95,9 +95,9 @@ class SearchDialog
             else
                 iter[1] = row[0].to_html_bold+" from "+row[1].to_html_italic+" by "+row[2].to_html_italic
             end
-            iter[2] = UILink.new.load_track(row[3]) if search_track?
-            iter[2] = UILink.new.load_segment(row[3]) if search_segment?
-            iter[2] = UILink.new.load_record(row[3]) if search_record?
+            iter[2] = UILink.new.set_track_ref(row[3]) if search_track?
+            iter[2] = UILink.new.set_segment_ref(row[3]) if search_segment?
+            iter[2] = UILink.new.set_record_ref(row[3]) if search_record?
         end
     end
 

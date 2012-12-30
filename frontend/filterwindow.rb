@@ -168,7 +168,7 @@ puts sql
         dblink = AudioLink.new
         DBIntf.connection.execute(sql) do |row|
             # Skip tracks which aren't ripped
-            next if dblink.reset.load_track(row[0]).setup_audio_file == AudioLink::NOT_FOUND
+            next if dblink.reset.set_track_ref(row[0]).setup_audio_file == AudioLink::NOT_FOUND
 
             max_played = dblink.track.iplayed if dblink.track.iplayed > max_played
             tracks << [0.0, row[0], dblink.track.iplayed.to_f, dblink.track.irating.to_f/6.0*100.0, dblink.track.stitle]
