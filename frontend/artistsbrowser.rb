@@ -57,7 +57,7 @@ end
 class GenresRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
-            sql = "SELECT * FROM #{iter[2].table}"
+            sql = "SELECT * FROM #{iter[2].table} WHERE rgenre > 0"
         elsif level == 1
             if mc.view_compile?
                 sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
@@ -140,7 +140,7 @@ class TagsRowProp < GenRowProp
             UIConsts::TAGS.each_with_index { |tag, i|
                 child = model.append(iter)
                 child[0] = i
-                child[1] = "<i>#{tag}</i>"
+                child[1] = tag.to_html_italic
                 child[2] = iter[2]
                 child[3] = tag
                 append_fake_child(model, child)
@@ -198,7 +198,7 @@ class RatingsRowProp < GenRowProp
             UIConsts::RATINGS.each_with_index { |rating, i|
                 child = model.append(iter)
                 child[0] = i
-                child[1] = "<i>#{rating}</i>"
+                child[1] = rating.to_html_italic
                 child[2] = iter[2]
                 child[3] = i.to_s
                 append_fake_child(model, child)
@@ -227,7 +227,8 @@ class RecordsRowProp < GenRowProp
                 child = model.append(iter)
                 child[0] = row[1]
 #                 child[1] = '<span color="green">'+CGI::escapeHTML(row[0])+"</span>\n<i>"+CGI::escapeHTML(row[2])+"</i>"
-                child[1] = "<b>"+CGI::escapeHTML(row[0])+"</b>\nby <i>"+CGI::escapeHTML(row[2])+"</i>"
+#                 child[1] = "<b>"+CGI::escapeHTML(row[0])+"</b>\nby <i>"+CGI::escapeHTML(row[2])+"</i>"
+                child[1] = row[0].to_html_bold+"\nby "+row[2].to_html_italic
                 child[2] = iter[2]
                 child[3] = row[0]+"@@@"+row[3].to_s # Magouille magouille...
             }
@@ -264,8 +265,8 @@ class ArtistsBrowser < GenericBrowser
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::ARTISTS_TREEVIEW])
-        @artlnk = ArtistUI.new #(@mc.glade)
-        @seg_art = ArtistUI.new #(@mc.glade)
+        @artlnk = ArtistUI.new
+        @seg_art = ArtistUI.new
     end
 
     def setup
@@ -324,7 +325,7 @@ class ArtistsBrowser < GenericBrowser
         MB_TOP_LEVELS.each { |entry|
             iter = @tvm.append(nil)
             iter[0] = entry.ref
-            iter[1] = "<b>#{entry.title}</b>"
+            iter[1] = entry.title.to_html_bold
             iter[2] = entry
             iter[3] = entry.title
             entry.append_fake_child(@tvm, iter)
@@ -338,7 +339,7 @@ class ArtistsBrowser < GenericBrowser
 
     def reload
         load_entries
-        @mc.no_selection if position_to(@artlnk.artist.rartist).nil?
+        @mc.no_selection if !@artlnk.valid? || position_to(@artlnk.artist.rartist).nil?
         return self
     end
 
@@ -379,7 +380,7 @@ class ArtistsBrowser < GenericBrowser
         new_child[2] = iter[2]
         new_child[3] = row[1]
         if @tvm.iter_depth(new_child) < iter[2].max_level
-            new_child[1] = "<i>#{new_child[1]}</i>"
+            new_child[1] = new_child[1].to_html_italic
             iter[2].append_fake_child(@tvm, new_child)
         end
     end
