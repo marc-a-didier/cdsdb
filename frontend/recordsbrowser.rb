@@ -7,13 +7,12 @@ class RecordsBrowser < GenericBrowser
     RTV_PTIME = 2
     RTV_DBLNK = 3
 
-    attr_reader :reclnk, :seglnk
+    attr_reader :reclnk
 
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::RECORDS_TREEVIEW])
-        @reclnk = nil #RecordUI.new #(@mc.glade)
-#         @seglnk = nil #SegmentUI.new #(@mc.glade)
+        @reclnk = RecordUI.new # Lost instance but setting to nil is not possible
     end
 
     def setup
@@ -104,7 +103,6 @@ class RecordsBrowser < GenericBrowser
         DBIntf::connection.execute(generate_rec_sql) do |row|
             iter = @tv.model.append(nil)
 
-#             dblink = DBCacheLink.new.set_record_ref(row[2]).set_segment_ref(row[0])
             dblink = RecordUI.new.set_record_ref(row[2]).set_segment_ref(row[0])
             iter[RTV_REF]   = dblink.record.rrecord
             iter[RTV_TITLE] = dblink.record.stitle
@@ -120,16 +118,7 @@ class RecordsBrowser < GenericBrowser
     end
 
     def update_ui_handlers(iter)
-        if iter.nil?
-            @reclnk.reset
-#             @reclnk.segment.reset
-        else
-#             @reclnk.clone_dbs(iter[RTV_DBLNK].record)
-#             @segment.clone_dbs(iter[RTV_DBLNK].segment)
-#             @reclnk.set_dblink(iter[RTV_DBLNK])
-            @reclnk = iter[RTV_DBLNK]
-#             @seglnk = iter[RTV_DBLNK]
-        end
+        iter.nil? ? @reclnk.reset : @reclnk = iter[RTV_DBLNK]
     end
 
     def load_entries_select_first
@@ -160,7 +149,6 @@ Trace.log.debug("record selection changed")
 
     # Called from master controller to keep tracks synched
     def load_segment(rsegment, update_infos = false)
-#         @reclnk.segment.ref_load(rsegment)
         @reclnk.set_segment_ref(rsegment)
         @reclnk.to_widgets(false) if update_infos
     end
@@ -217,8 +205,7 @@ p row
 
     def invalidate
         @tv.model.clear
-        @reclnk.reset.to_widgets(true) if @reclnk
-#         @seglnk.segment.reset.to_widgets if @seglnk
+        @reclnk.reset.to_widgets(true) if @reclnk.valid?
     end
 
     def is_on_record

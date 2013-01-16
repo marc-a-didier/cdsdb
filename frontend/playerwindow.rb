@@ -100,10 +100,10 @@ class PlayerWindow < TopWindow
     def play_track
         # Debug info
         if @player_data
-            @player_data.uilink.tags.nil? ? print("[#{@player_data.uilink.track.rtrack}") : print("[0")
-            puts(", #{@player_data.uilink.audio_file}]")
+            info = @player_data.uilink.tags.nil? ? "[#{@player_data.uilink.track.rtrack}" : "[dropped"
+            Trace.log.debug((info+", #{@player_data.uilink.audio_file}]").green)
         else
-            puts("[nil]")
+            Trace.log.debug("[nil]".red)
         end
 
         @tip_pix = nil

@@ -30,8 +30,7 @@ class TracksBrowser < GenericBrowser
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::TRACKS_TREEVIEW])
-#         @track = TrackUI.new #(@mc.glade)
-        @trklnk = nil #TrackUI.new
+        @trklnk = TrackUI.new # Lost instance but setting to nil is not possible
 
         @stocks = [Gtk::Stock::NO, Gtk::Stock::YES, Gtk::Stock::DIALOG_WARNING,
                    Gtk::Stock::NETWORK, Gtk::Stock::DIALOG_QUESTION]
@@ -325,7 +324,7 @@ p sql
     # Redraws infos line
     # Emitted by master controller when a track has been played
     def update_infos(rtrack)
-        @trklnk.to_widgets if @trklnk && selected_track == @trklnk
+        @trklnk.to_widgets if @trklnk.valid? && selected_track == @trklnk
     end
 
     #
@@ -341,7 +340,7 @@ p sql
         if trackui
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
-            return if @trklnk && @trklnk == trackui
+            return if @trklnk.valid? && @trklnk == trackui
 # Trace.log.debug("track selection changed.".green)
 
             @trklnk = trackui
@@ -358,7 +357,7 @@ Trace.log.debug("--- multi select ---".magenta)
     def invalidate
         @tv.model.clear
         @mc.glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
-        @trklnk.reset.to_widgets if @trklnk
+        @trklnk.reset.to_widgets if @trklnk.valid?
     end
 
     def set_cover(url)

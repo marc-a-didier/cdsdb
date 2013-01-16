@@ -148,6 +148,3 @@ module MainTabsUI
     end
 
 end
-
-module UIInfosMapper
-end
