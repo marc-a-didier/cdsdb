@@ -517,12 +517,22 @@ Trace.log.debug("*** save memos called")
 
 
     def select_artist(rartist, force_reload = false)
-        @art_browser.select_artist(rartist) if self.artist.rartist != rartist || force_reload
+        if !@art_browser.artlnk.valid? || self.artist.rartist != rartist || force_reload
+            @art_browser.select_artist(rartist)
+        end
     end
 
     def select_record(uilink, force_reload = false)
-        select_artist(uilink.record.rartist)
-        @rec_browser.select_record(uilink.record.rrecord) if self.record.rrecord != uilink.record.rrecord || force_reload
+        # Check if show the compilations artist if grouped
+        if uilink.record.rartist == 0 && !view_compile? && uilink.valid_segment_ref?
+            rartist = uilink.segment.rartist
+        else
+            rartist = uilink.record.rartist
+        end
+        select_artist(rartist)
+        if !@rec_browser.reclnk.valid? || self.record.rrecord != uilink.record.rrecord || force_reload
+            @rec_browser.select_record(uilink.record.rrecord)
+        end
     end
 
     def select_segment(uilink, force_reload = false)
@@ -532,10 +542,10 @@ Trace.log.debug("*** save memos called")
     end
 
     def select_track(uilink, force_reload = false)
-        rartist = uilink.record.rartist == 0 && !view_compile? ? uilink.segment.rartist : uilink.record.rartist
-        select_artist(rartist)
-        @rec_browser.select_record(uilink.track.rrecord) if self.record.rrecord != uilink.track.rrecord || force_reload
-        @trk_browser.position_to(uilink.track.rtrack) if self.track.rtrack != uilink.track.rtrack || force_reload
+        select_record(uilink)
+        if !@trk_browser.trklnk.valid? || self.track.rtrack != uilink.track.rtrack || force_reload
+            @trk_browser.position_to(uilink.track.rtrack)
+        end
     end
 
 
