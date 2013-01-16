@@ -160,6 +160,26 @@ class DBCacheLink
 
 
     #
+    # Methods to check if a reference has been set for the cache to get it
+    #
+    def valid_track_ref?
+        return !@rtrack.nil?
+    end
+
+    def valid_segment_ref?
+        return !@rsegment.nil?
+    end
+
+    def valid_record_ref?
+        return !@rrecord.nil?
+    end
+
+    def valid_artist_ref?
+        return !@rartist.nil?
+    end
+
+
+    #
     # These methods just set the primary key for futur use but DO NOT load the row
     #
     def set_track_ref(rtrack)
