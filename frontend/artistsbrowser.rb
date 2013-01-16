@@ -2,10 +2,40 @@
 #
 # TODO: remplacer All par filtered et appliquer le filtre seulement sur cette branche???
 
+#
+# Generic Row Properties class.
+#
+# Parent class of all top levels rows displayed in the artist browser.
+#
+# To do its job, a row property subclass must override the select_for_level method
+# to return the SQL statement needed to get its data displayed.
+#
+#
+# The tree model is defined as:
+#
+#   Integer: Always the uid (or db primary key).
+#
+#   String:  The string displayed, may use html tags to make a fancier display .
+#
+#   Class:   A reference to the GenRowProp subclass of the top parent. When an iter is
+#            given in parameter, it's safe to use iter[2] as a GenRowProp to get whatever
+#            may be needed from the class.
+#
+#   String:  The string used to sort the tree view, usually the string from the SQL statement
+#            plus anything that may be needed to obtain a correct order (see Records, Ripped).
+#
+#
 class GenRowProp
 
     attr_accessor :ref, :table, :max_level, :filtered, :where_fields, :title
 
+    # In: ->ref         : uid for the row
+    #     ->table       : the main db table name to work on
+    #     ->max_level   : the numbers of levels of the row (1 means data directly under the row,
+    #                     2 means one intermediate level between row and real data, etc...)
+    #     ->filtered    : unused
+    #     ->where_fields: the discriminating field on which the WHERE clause apply
+    #     ->title       : the title displayed for the row
     def initialize(ref, table, max_level, filtered, where_fields, title)
         @ref = ref
         @table = table
@@ -15,30 +45,53 @@ class GenRowProp
         @title = title
     end
 
+    #
+    # Must return the appropriate SQL statement for the level given by... level
+    #
     def select_for_level(level, iter, mc, model)
-        if level == 0
-            return "SELECT * FROM #{iter[2].table}"
-        else
-            raise
-        end
+        raise
     end
 
+    #
+    # Must return a condition for the WHERE clause for the given iter.
+    #
+    # By default, returns a filter on the discriminating field on its parent ID.
+    #
+    # Only needed for the real data level, not called for intermediate levels.
+    #
+    def sub_filter(iter)
+        return " #{@where_fields}=#{iter.parent[0]} "
+    end
+
+    #
+    # Called when the sub tree is filled, after the select_for_level call.
+    #
+    # By default removes the first child which is the fake child.
+    #
+    # May be overriden by subclasses.
+    #
+    def post_select(model, iter, mc)
+        model.remove(iter.first_child)
+    end
+
+    #
+    # Helpers
+    #
+
+    #
     # Add a fake child setting its ref to -1 so we're sure it's always the
     # first child since db refs are always positive.
+    #
     def append_fake_child(model, iter)
         fake = model.append(iter)
         fake[0] = -1
     end
 
-    # By default, post_select removes the first child which is the fake child.
-    def post_select(model, iter, mc)
-        model.remove(iter.first_child)
-    end
-
-    def sub_filter(iter)
-        return " #{@where_fields}=#{iter.parent[0]} "
-    end
-
+    #
+    # Returns a SQL statement which makes the necessary joins.
+    #
+    # The statement needs to be completed by the subclass.
+    #
     def get_select_on_tracks(mc)
         if mc.view_compile?
             return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
@@ -54,64 +107,11 @@ class GenRowProp
     end
 end
 
-class GenresRowProp < GenRowProp
-    def select_for_level(level, iter, mc, model)
-        if level == 0
-            sql = "SELECT * FROM #{iter[2].table} WHERE rgenre > 0"
-        elsif level == 1
-            if mc.view_compile?
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN records ON records.rartist = artists.rartist
-                         WHERE records.rgenre=#{iter[0]}}
-            else
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN segments ON segments.rartist = artists.rartist
-                         INNER JOIN records ON records.rrecord = segments.rrecord
-                         WHERE records.rgenre=#{iter[0]}}
-            end
-        end
-        return sql
-    end
-end
-
-class LabelsRowProp < GenRowProp
-    def select_for_level(level, iter, mc, model)
-        if level == 0
-            sql = "SELECT * FROM #{iter[2].table}"
-        elsif level == 1
-            if mc.view_compile?
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN records ON records.rartist = artists.rartist
-                         WHERE records.rlabel=#{iter[0]}}
-            else
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN segments ON segments.rartist = artists.rartist
-                         INNER JOIN records ON records.rrecord = segments.rrecord
-                         WHERE records.rlabel=#{iter[0]}}
-            end
-        end
-        return sql
-    end
-end
-
-class OriginsRowProp < GenRowProp
-    def select_for_level(level, iter, mc, model)
-        if level == 0
-            sql = "SELECT * FROM #{iter[2].table}"
-        elsif level == 1
-#             if mc.view_compile?
-#                 sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-#                        "INNER JOIN records ON artists.rartist=records.rartist " \
-#                        "WHERE artists.rorigin=#{iter[0]}"
-#             else
-                sql = %Q{SELECT artists.rartist, artists.sname FROM artists
-                         WHERE artists.rorigin=#{iter[0]}}
-#             end
-        end
-        return sql
-    end
-end
-
+#
+# The main artists view that shows all artists.
+#
+# The only view that may be filtered using the filter window.
+#
 class AllArtistsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         sql = get_select_on_tracks(mc)
@@ -134,6 +134,76 @@ class AllArtistsRowProp < GenRowProp
     end
 end
 
+#
+# View by genres, shows the genres at the first level and each artist for the genre.
+#
+class GenresRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        if level == 0
+            sql = "SELECT * FROM #{iter[2].table} WHERE rgenre > 0"
+        elsif level == 1
+            if mc.view_compile?
+                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                         INNER JOIN records ON records.rartist = artists.rartist
+                         WHERE records.rgenre=#{iter[0]}}
+            else
+                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                         INNER JOIN segments ON segments.rartist = artists.rartist
+                         INNER JOIN records ON records.rrecord = segments.rrecord
+                         WHERE records.rgenre=#{iter[0]}}
+            end
+        end
+        return sql
+    end
+end
+
+#
+# View by labels, shows the labels at the first level and each artist for the label.
+#
+class LabelsRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        if level == 0
+            sql = "SELECT * FROM #{iter[2].table}"
+        elsif level == 1
+            if mc.view_compile?
+                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                         INNER JOIN records ON records.rartist = artists.rartist
+                         WHERE records.rlabel=#{iter[0]}}
+            else
+                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                         INNER JOIN segments ON segments.rartist = artists.rartist
+                         INNER JOIN records ON records.rrecord = segments.rrecord
+                         WHERE records.rlabel=#{iter[0]}}
+            end
+        end
+        return sql
+    end
+end
+
+#
+# View by origins, shows the origins at the first level and each artist for the origin.
+#
+class OriginsRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        if level == 0
+            sql = "SELECT * FROM #{iter[2].table}"
+        elsif level == 1
+#             if mc.view_compile?
+#                 sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+#                        "INNER JOIN records ON artists.rartist=records.rartist " \
+#                        "WHERE artists.rorigin=#{iter[0]}"
+#             else
+                sql = %Q{SELECT artists.rartist, artists.sname FROM artists
+                         WHERE artists.rorigin=#{iter[0]}}
+#             end
+        end
+        return sql
+    end
+end
+
+#
+# View by tags, shows the tags at the first level and each artist for the tag.
+#
 class TagsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
@@ -156,6 +226,9 @@ class TagsRowProp < GenRowProp
     end
 end
 
+#
+# View the last 100 ripped records, sorted by date in a single level.
+#
 class RippedRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
@@ -168,7 +241,7 @@ class RippedRowProp < GenRowProp
                 child = model.append(iter)
                 child[0] = row[1]
                 child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "
-                child[1] += row[1] == 0 ? CGI::escapeHTML(row[4]) : CGI::escapeHTML(row[2])
+                child[1] += CGI::escapeHTML(row[row[1] == 0 ? 4 : 2])
                 child[2] = iter[2]
                 child[3] = ("%03d" % count)+row[3].to_s
                 count += 1
@@ -182,6 +255,9 @@ class RippedRowProp < GenRowProp
     end
 end
 
+#
+# View artists that have at least one never played track in a single level.
+#
 class NeverRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         return get_select_on_tracks(mc)+"WHERE tracks.iplayed=0;"
@@ -192,6 +268,9 @@ class NeverRowProp < GenRowProp
     end
 end
 
+#
+# View by ratings, shows the ratings at the first level and each artist for the rating.
+#
 class RatingsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
@@ -210,12 +289,16 @@ class RatingsRowProp < GenRowProp
     end
 end
 
+
 #
-# Attempt to add a view by records...
+# View by records, a single level that shows all records.
 #
+# It leads to a strange view since each entry in the artist view is replicated in the
+# records view. It's the only view that shows only one record for an artist. Also
+# it doesn't care if the we view all artists or grouped in compilations.
 #
-# TODO: remplacer les magouilles par une classe/methode qui retourne le champ sur lequel on doit
-#       trier et/ou filter!!!
+# TODO: voir pour remplacer les magouilles par une classe/methode qui retourne le champ
+#       sur lequel on doit trier et/ou filtrer!!!
 #
 class RecordsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
@@ -243,6 +326,7 @@ end
 
 class ArtistsBrowser < GenericBrowser
 
+    # Initialize all top levels rows
     MB_TOP_LEVELS = [AllArtistsRowProp.new(1, "artists", 1, false, "", "All"),
                      GenresRowProp.new(2, "genres", 2, true, "records.rgenre", "Genres"),
                      OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
@@ -265,8 +349,8 @@ class ArtistsBrowser < GenericBrowser
 
     def initialize(mc)
         super(mc, mc.glade[UIConsts::ARTISTS_TREEVIEW])
-        @artlnk = ArtistUI.new
-        @seg_art = ArtistUI.new
+        @artlnk = ArtistUI.new # Cache link for the current artist
+        @seg_art = ArtistUI.new # Cache link used to update data when browsing a compilation
     end
 
     def setup
@@ -433,9 +517,10 @@ Trace.log.debug("artists selection changed".cyan)
         @artlnk.valid? ? @mc.artist_changed : @mc.invalidate_tabs
     end
 
+    # This method is called via the mastercontroller to get the current filter for
+    # the records browser.
     def sub_filter
-        return "" if @tvs.nil?
-        if @tvs[2].where_fields.empty? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
+        if @tvs.nil? || @tvs[2].where_fields.empty? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             return ""
         else
             return @tvs[2].sub_filter(@tvs)
