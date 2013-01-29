@@ -413,15 +413,25 @@ Trace.log.debug("--- multi select ---".magenta)
     end
 
     def on_trk_name_edited(widget, path, new_text)
-        iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-        if @track.stitle != new_text
-            fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
-            @track.stitle = iter[TTV_TITLE] = new_text
-            MusicClient.new.rename_audio(iter[TTV_REF], new_text) if Cfg::instance.remote?
-            @track.sql_update.to_widgets
-            Utils::tag_and_move_file(fname, TrackInfos.new.get_track_infos(iter[TTV_REF])) unless fname.empty?
-            update_entry
+        trackui = selected_track
+        if trackui.track.stitle != new_text
+            file = trackui.audio_file
+            # Must rename on server BEFORE the sql update is done!!!
+            MusicClient.new.rename_audio(trackui.track.rtrack, new_text) if Cfg::instance.remote?
+            trackui.track.stitle = new_text
+            trackui.track.sql_update
+            trackui.tag_and_move_file(file) unless file.empty? # May be only on server
         end
+
+#         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+#         if @track.stitle != new_text
+#             fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
+#             @track.stitle = iter[TTV_TITLE] = new_text
+#             MusicClient.new.rename_audio(iter[TTV_REF], new_text) if Cfg::instance.remote?
+#             @track.sql_update.to_widgets
+#             Utils::tag_and_move_file(fname, TrackInfos.new.get_track_infos(iter[TTV_REF])) unless fname.empty?
+#             update_entry
+#         end
     end
 
     def on_trk_segment_assign(widget)
