@@ -425,7 +425,7 @@ class MasterController
         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils::exec_batch(batch, Socket::gethostname)
         @art_browser.reload
-        select_record(UILink.new.set_record_ref(record.get_last_id)) # The best guess to find the imported record
+        select_record(UILink.new.set_record_ref(RecordDBClass.new.get_last_id)) # The best guess to find the imported record
     end
 
 
