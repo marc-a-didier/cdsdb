@@ -143,7 +143,7 @@ class CDEditorWindow
     end
 
     def edit_record()
-        @ripper = RipperClient.new
+        @ripper = RipperClient.new(Cfg.instance.cd_device)
         disc = @ripper.settings['cd'] #Disc.new(Cfg::instance.cd_device) # ("/dev/sr0")
         if disc.md.nil?
             UIUtils::show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)

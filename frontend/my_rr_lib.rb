@@ -2,9 +2,9 @@
 #    Rubyripper - A secure ripper for Linux/BSD/OSX
 #    Copyright (C) 2007  Bouke Woudstra (rubyripperdev@gmail.com)
 #
-#    This file is part of Rubyripper. Rubyripper is free software: you can 
+#    This file is part of Rubyripper. Rubyripper is free software: you can
 #    redistribute it and/or modify it under the terms of the GNU General
-#    Public License as published by the Free Software Foundation, either 
+#    Public License as published by the Free Software Foundation, either
 #    version 3 of the License, or (at your option) any later version.
 #
 #    This program is distributed in the hope that it will be useful,
@@ -83,7 +83,7 @@ attr_reader :settings, :configFound
 	def initialize(configFile = false)
 		@settings = Hash.new()
 		@configFound = false
-		@defaultSettings = {"flac" => false, #boolean 
+		@defaultSettings = {"flac" => false, #boolean
 			"flacsettings" => "--best -V", #string, passed to flac
 			"vorbis" => true, #boolean
 			"vorbissettings" => "-q 4", #string, passed to vorbis
@@ -215,11 +215,11 @@ attr_reader :settings, :configFound
 				# remove the trailing newline character
 				value.rstrip!
 				# replace the strings false/true with a bool
-				if value == "false" ; value = false 
+				if value == "false" ; value = false
 				elsif value == "true" ; value = true
 				# replace two quotes with an empty string
 				elsif value == "''" ; value = ''
-				# replace an integer string with an integer 
+				# replace an integer string with an integer
 				elsif value.to_i > 0 || value == '0' ; value = value.to_i
 				end
 				# only load a setting that is included in the default
@@ -277,7 +277,7 @@ attr_reader :settings, :configFound
 			return 'gedit' #Gnome editor
 		elsif ENV.key?('EDITOR')
 			return ENV['EDITOR']
-		else	
+		else
 			return 'echo'
 		end
 	end
@@ -309,7 +309,7 @@ attr_writer :encodingErrors
 	def initialize(settings) #gui is an instance of the graphical user interface used
 		@settings = settings
 		createLog()
-		
+
 		@problem_tracks = Hash.new # key = tracknumber, value = new dictionary with key = seconds_chunk, value = [amount_of_chunks, trials_needed]
 		@not_corrected_tracks = Array.new # Array of tracks that weren't corrected within the maximum amount of trials set by the user
 		@ripping_progress = 0.0
@@ -329,31 +329,31 @@ attr_writer :encodingErrors
 			end
 		end
 	end
-	
+
 	# update the ripping percentage of the gui
 	def ripPerc(new_value, calling_function = false) #new_value = float, 1 = 100%
 		new_value <= 1.0 ? @ripping_progress = new_value : @ripping_progress = 1.0
 		@settings['instance'].update("ripping_progress", @ripping_progress)
 	end
-	
+
 	# update the encoding percentage of the gui
 	def encPerc(new_value, calling_function = false) #new_value = float, 1 = 100%
 		new_value <= 1.0 ? @encoding_progress = new_value : @encoding_progress = 1.0
 		@settings['instance'].update("encoding_progress", @encoding_progress)
 	end
-	
+
 	# Add a message to the logging file + update the gui
 	def add(message, calling_function = false)
 		@logfiles.each{|logfile| logfile.print(message); logfile.flush()} # Append the messages to the logfiles
 		@settings['instance'].update("log_change", message)
 	end
-	
+
 	# Add a message to the logging file
 	def addLog(message, summary = false)
 		@logfiles.each{|logfile| logfile.print(message); logfile.flush()} # Append the messages to the logfiles
 		if summary ; @short_summary += message end
 	end
-	
+
 	def mismatch(track, trial, indexes_with_errors, size, length)
 		if !@problem_tracks.key?(track) #First time we encounter this track (Secure_rip->analyzeFiles() )
 			@problem_tracks[track] = Hash.new # create the Hash for the track
@@ -373,11 +373,11 @@ attr_writer :encodingErrors
 		end
 		if trial == 0; @not_corrected_tracks << track end #Reached maxtries and still got errors
 	end
-	
+
 	def summary(matches_all, matches_errors, maxtries) #Give an overview of errors
 		if @encodingErrors ; addLog(_("\nWARNING: ENCODING ERRORS WERE DETECTED\n"), true) end
 		addLog(_("\nRIPPING SUMMARY\n\n"), true)
-		
+
 		addLog(_("All chunks were tried to match at least %s times.\n") % [matches_all], true)
 		if matches_all != matches_errors; addLog(_("Chunks that differed after %s trials,\nwere tried to match %s times.\n") % [matches_all, matches_errors], true) end
 
@@ -399,7 +399,7 @@ attr_writer :encodingErrors
 		end
 		@logfiles.each{|logfile| logfile.close} #close all the files
  	end
- 		
+
  	def position_analyse(matches_errors, maxtries) # Give an overview of suspicion position in the logfile
 		addLog(_("\nSUSPICIOUS POSITION ANALYSIS\n\n"))
 		addLog(_("Since there are 75 chunks per second, after making the notion of the\n"))
@@ -417,7 +417,7 @@ attr_writer :encodingErrors
 			end
 		end
 	end
-	
+
 	# delete the logfiles if no errors occured
 	def delLog
 		if @problem_tracks.empty? && !@encodingErrors
@@ -437,7 +437,7 @@ attr_reader :mSecLength, :mSecPT # !!mad
 		@settings = settings # !!mad
         #@settings = Settings.new.settings # !!mad
         #@settings['cdrom'] = device # !!mad
-		@cdrom = @settings['cdrom'] 
+		@cdrom = @settings['cdrom']
 		@freedb = @settings['freedb']
 		@verbose = @settings['verbose']
 		@gui = @settings['instance']
@@ -454,7 +454,7 @@ attr_reader :mSecLength, :mSecPT # !!mad
 
 	def setVariables
 		@multipleDriveSupport = true #not always the case on MacOS's cdparanoia
-		
+
 		@audiotracks = 0
 		@lengthSector = Hash.new
 		@startSector = Hash.new
@@ -467,9 +467,9 @@ attr_reader :mSecLength, :mSecPT # !!mad
 		@datatrack = false
 		@freedbString = ''
 		@discId = ''
-		
+
 		@totalSectors = 0
-		
+
 		@error = '' #set to the error messsage
 
 		@toc = nil # instance of the AdvancedToc class
@@ -483,7 +483,7 @@ attr_reader :mSecLength, :mSecPT # !!mad
 	def prepareToc
         @settings['create_cue'] = false # for further assumptions later on
         return # !!mad
-        
+
 		if @settings['create_cue'] && installed('cdrdao')
 			@cdrdaoThread = Thread.new{advancedToc()}
 		end
@@ -503,20 +503,20 @@ attr_reader :mSecLength, :mSecPT # !!mad
 	# update the Disc class with actual settings and make a cuesheet
 	def updateSettings(settings)
 		@settings = settings
-		
+
 		# user may have enabled cuesheet after the disc was scanned
 		# @toc is still nil because the class isn't finished yet
 		prepareToc() if @tocStarted == false
-		
+
 		# if the scanning thread is still active, wait for it to finish
 		@cdrdaoThread.join() if @cdrdaoThread != nil
-		
+
 		# update the length of the sectors + the start of the tracks if we're prepending the gaps
 		# also for the image since this is more easy with the cuesheet handling
 		if @settings['pregaps'] == "prepend" || @settings['image']
 			prependGaps()
 		end
-		
+
 		# only make a cuesheet when the toc class is there
 		@cue = Cuesheet.new(@settings, @toc) if @toc != nil
 	end
@@ -530,14 +530,14 @@ attr_reader :mSecLength, :mSecPT # !!mad
 			@startSector[track] -= pregap
 			@lengthSector[track] += pregap
 		end
-			             
+
 		if @settings['debug']
 			puts "Debug info: gaps are now prepended"
 			puts "Startsector\tLengthsector"
 			(1..@audiotracks).each do |track|
 				puts "#{@startSector[track]}\t#{@lengthSector[track]}"
 			end
-		end             
+		end
 	end
 
 	def audioDisc
@@ -546,13 +546,13 @@ attr_reader :mSecLength, :mSecPT # !!mad
 		end
 
 		@query = `cdparanoia -d #{@cdrom} -vQ 2>&1`
-		
+
 		unless genericDevice() #check permission of generic device if it exists
 			return false
 		end
 
 		if $?.success? ; return true end #cdparanoia returned no problems
-		
+
 		if @query.include?("Unable to open disc")
 			@query = false
 			@error = _("No disc found in drive %s.\n\n"\
@@ -573,7 +573,7 @@ attr_reader :mSecLength, :mSecPT # !!mad
 			end
 		end
 	end
-	
+
 	def checkDevice
 		while File.symlink?(@cdrom) #find the name of the device, not the symlink
 			link = File.readlink(@cdrom)
@@ -583,14 +583,14 @@ attr_reader :mSecLength, :mSecPT # !!mad
 				@cdrom = link
 			end
 		end
-		
+
 		unless File.blockdev?(@cdrom) #is it a real device?
 			@error = _("Cdrom drive %s does not exist on your system!\n"\
 			"Please configure your cdrom drive first.") % [@cdrom]
 			@query = false
 			return false
 		end
-			
+
 		unless (File.readable?(@cdrom) && File.writable?(@cdrom))
 			@error = _("You don't have read and write permission\n"\
 			"for device %s on your system! These permissions are\n"\
@@ -599,10 +599,10 @@ attr_reader :mSecLength, :mSecPT # !!mad
 			%[@cdrom, "ls -l shows #{`ls -l #{@cdrom}`}"]
 			return false
 		end
-		
+
 		return true
 	end
-	
+
 	def genericDevice #looking for the character device (sata/scsi-only)
 		device = nil
 		if @query.include?('generic device: ')
@@ -615,25 +615,25 @@ attr_reader :mSecLength, :mSecPT # !!mad
 		else
 			return true
 		end
-		
+
 		unless ((File.chardev?(device) || File.blockdev?(device)) && File.readable?(device) && File.writable?(device))
 			permission = nil
 			if File.chardev?(device) && installed('ls')
 				permission = `ls -l #{device}`
 			end
-			
+
 			@error = _("You don't have read and write permission\n"\
 			"for device %s on your system! These permissions are\n"\
 			"necessary for cdparanoia to scan your drive.\n\n%s\n"\
 			"You might want to add yourself to the necessary group in /etc/group")\
 			%[device, "#{if permission ; "ls -l shows #{permission}" end}"]
-			
+
 			return false
 		end
-		
+
 		return true
 	end
-	
+
 	def getDiscInfo
 		@query.split("\n").each do |line|
 puts line # !!mad
@@ -654,7 +654,7 @@ print "len=",len,"\n" # !!mad
                 @mSecPT = len[1,2].to_i*60*1000+len[4,5].to_i*1000+len[7,8].to_i*10 # !!mad
 			end
 		end
-		
+
 		if @freedb ; getFreedbString end
 		@query = false
 	end
@@ -734,7 +734,7 @@ print "len=",len,"\n" # !!mad
 	# In the query it is showing as a start for 1s track the offset of the data track
 	# When ripping this offset isn't used however !! To allow a correct rip of this disc
 	# all startSectors have to be corrected. See also issue 196.
-	
+
 	# If there is no data track at the start, but we do have an offset this means some
 	# hidden audio part. This part is marked as track 0. You can only assess this on
 	# a cd-player by rewinding from 1st track on.
@@ -803,7 +803,7 @@ end
 
 
 # AdvancedToc is a class which helps detecting all special audio-cd
-# features as hidden tracks, pregaps, etcetera. It does so by 
+# features as hidden tracks, pregaps, etcetera. It does so by
 # analyzing the output of cdrdao's TOC output. The class is only
 # opened when the user has the cuesheet enabled. This is so because
 # there is not much of an advantage of detecting pregaps when
@@ -816,11 +816,11 @@ attr_reader :log
 
 	def initialize(settings)
 		@settings = settings
-		
+
 		setVariables()
 		readTOC()
 	end
-	
+
 	# initialize all variables
 	def setVariables
 		@discType = "unknown"
@@ -828,7 +828,7 @@ attr_reader :log
 		@preEmphasis = Hash.new
 		@pregap = Hash.new
 		@silence = 0 #amount of sectors before the 1st track
-		
+
 		@artist = String.new
 		@album = String.new
 		@tracknames = Hash.new
@@ -842,12 +842,12 @@ attr_reader :log
 
 	# get an output location for the temporary Toc file
 	def tocFile()
-		return File.join(Dir.tmpdir, "temp_#{File.basename(@settings['cdrom'])}.toc") 
+		return File.join(Dir.tmpdir, "temp_#{File.basename(@settings['cdrom'])}.toc")
 	end
 
 	# fire the command to read the disc
 	def readTOC()
-		File.delete(tocFile()) if File.exist?(tocFile())  
+		File.delete(tocFile()) if File.exist?(tocFile())
 		puts "Scanning disc with cdrdao" if @settings['debug']
 		`cdrdao read-toc --device #{@settings['cdrom']} \"#{tocFile()}\" #{"2>&1" if !@settings['verbose']}`
 		if $?.success?
@@ -879,7 +879,7 @@ attr_reader :log
 	def readDiscInfo
 		@discType = @toc[0]
 		puts "Disc type = #{@discType}" if @settings['debug']
-		
+
 		# continue reading the disc until the track info starts
 		@index = 1
 		while !@toc[@index].include?('//')
@@ -917,7 +917,7 @@ attr_reader :log
 				sectorMinutes = 60 * 75 * @toc[@index][9..10].to_i
 				sectorSeconds = 75 * @toc[@index][11..12].to_i
 				@silence = sectorMinutes + sectorSeconds + @toc[@index][14..15].to_i
-				@log << _("Silence detected for track %s : %s sectors\n") % [tracknumber, @silence] 
+				@log << _("Silence detected for track %s : %s sectors\n") % [tracknumber, @silence]
 			elsif @toc[@index].include?('TITLE')
 				@toc[@index] =~ /".*"/ #ruby's  magical regular expressions
 				@tracknames[tracknumber] = $&[1..-2] #don't need the quotes
@@ -930,12 +930,12 @@ attr_reader :log
 	# return the pregap if found, otherwise return 0
 	def getPregap(track)
 		if @pregap.key?(track)
-			return @pregap[track] 
+			return @pregap[track]
 		else
 			return 0
 		end
 	end
-	
+
 	# return if a track has pre-emphasis
 	def hasPreEmph(track)
 		if @preEmphasis.key?(track)
@@ -1002,7 +1002,7 @@ class Cuesheet
 					@cuesheet << "FLAGS PRE"
 					puts "Added PRE(emphasis) flag for track #{track}." if @settings['debug']
 				end
-				
+
 				# do not put Track 00 AUDIO, but instead only mention the filename
 				if track == 0
 					writeFileLine(track)
@@ -1020,7 +1020,7 @@ class Cuesheet
 					writeFileLine(track)
 					trackinfo(track)
 				else
-					trackinfo(track)	
+					trackinfo(track)
 				end
 			end
 		end
@@ -1030,11 +1030,11 @@ class Cuesheet
 	def writeFileLine(track)
 		@cuesheet << "FILE \"#{File.basename(@settings['Out'].getFile(track, @codec))}\" #{@filetype[@codec]}"
 	end
-	
+
 	# write the info for a single track
 	def trackinfo(track)
 		@cuesheet << "  TRACK #{sprintf("%02d", track)} AUDIO"
-		
+
 		if track == 1 && @settings['ripHiddenAudio'] == false && @settings['cd'].getStartSector(1) > 0
 			@cuesheet << "  PREGAP #{time(@settings['cd'].getStartSector(1))}"
 		end
@@ -1045,17 +1045,17 @@ class Cuesheet
 		else
 			@cuesheet << "    PERFORMER \"#{@settings['Out'].getVarArtist(track)}\""
 		end
-		
+
 		trackindex(track)
 	end
-	
+
 	def trackindex(track)
 		if @settings['image']
 			# There is a different handling for track 1 and the rest
 			if track == 1 && @settings['cd'].getStartSector(1) > 0
 				@cuesheet << "    INDEX 00 #{time(0)}"
 				@cuesheet << "    INDEX 01 #{time(@settings['cd'].getStartSector(track))}"
-			elsif @toc.getPregap(track) > 0 
+			elsif @toc.getPregap(track) > 0
 				@cuesheet << "    INDEX 00 #{time(@settings['cd'].getStartSector(track))}"
 				@cuesheet << "    INDEX 01 #{time(@settings['cd'].getStartSector(track) + @toc.getPregap(track))}"
 			else # no pregap
@@ -1073,7 +1073,7 @@ class Cuesheet
 				@cuesheet << "    INDEX 01 #{time(@toc.getPregap(track))}"
 			elsif track == 1 && @settings['cd'].getStartSector(0)
 				@cuesheet << "    INDEX 01 #{time(0)}"
-			elsif @settings['pregaps'] == "prepend" && @toc.getPregap(track) > 0 
+			elsif @settings['pregaps'] == "prepend" && @toc.getPregap(track) > 0
 				@cuesheet << "    INDEX 00 #{time(0)}"
 				@cuesheet << "    INDEX 01 #{time(@toc.getPregap(track))}"
 			elsif track == 0 # hidden track needs index 00
@@ -1097,7 +1097,7 @@ class Metadata
 attr_reader :status
 attr_accessor :artist, :album, :genre, :year, :tracklist, :varArtists, :discNumber
 attr_accessor :segments, :comment # !!mad
-	
+
 	def initialize(disc, settings)
 		@disc = disc
 		@gui = settings['instance']
@@ -1177,13 +1177,13 @@ attr_accessor :segments, :comment # !!mad
 		end
 		return false
 	end
-	
+
 	def handshake
 		require 'net/http' #automatically loads the 'uri' library
 		require 'cgi' #for communicating with the server
-		
+
 		@url = URI.parse(@freedbSettings['site'])
-		
+
 		if ENV['http_proxy']
 			@proxy = URI.parse(ENV['http_proxy'])
 			@server = Net::HTTP.new(@url.host, @url.port, @proxy.host,
@@ -1192,8 +1192,8 @@ attr_accessor :segments, :comment # !!mad
 		else
 			@server = Net::HTTP.new(@url.host, @url.port)
 		end
-		
-		@query = @url.path + "?cmd=cddb+query+" + CGI.escape("#{@disc.freedbString.chomp}") + "&hello=" + 
+
+		@query = @url.path + "?cmd=cddb+query+" + CGI.escape("#{@disc.freedbString.chomp}") + "&hello=" +
 			CGI.escape("#{@freedbSettings['username']} #{@freedbSettings['hostname']} rubyripper #{$rr_version}") + "&proto=6"
     puts "cddb query 1 = #{@query}" if @settings['debug']
 		if @verbose ; puts "Created query string: #{@query}" end
@@ -1205,7 +1205,7 @@ attr_accessor :segments, :comment # !!mad
 			puts "Exception thrown: #{$!}"
 			@status = ["networkDown", _("Couldn't connect to freedb server. Network down?\n\nDefault values will be shown...")]
 		end
-	end	
+	end
 
 	def requestDisc # ask for matches on cd, if there are multiple, interaction with user is possible
 		if @answer[0..2] == '200'  #There was only one hit found
@@ -1224,7 +1224,7 @@ attr_accessor :segments, :comment # !!mad
 			@status = ["unknownReturnCode", _("cddb_query return code = %s. Return code not supported.") % [@answer[0..2]]]
 		end
 	end
-	
+
 	def multipleHits
 		discNames = @answer.split("\n")[1..@answer.length]; # remove the first line, which we know is the header
 		discNames.each { |disc| @choices << disc.strip() unless (disc.strip() == "." || disc.strip().length == 0) }
@@ -1246,11 +1246,11 @@ attr_accessor :segments, :comment # !!mad
 	end
 
 	def rawResponse #Retrieve all usefull metadata into @rawResponse
-		@query = @url.path + "?cmd=cddb+read+" + CGI.escape("#{@category} #{@discid}") + "&hello=" + 
+		@query = @url.path + "?cmd=cddb+read+" + CGI.escape("#{@category} #{@discid}") + "&hello=" +
 			CGI.escape("#{@freedbSettings['username']} #{@freedbSettings['hostname']} rubyripper #{$rr_version}") + "&proto=6"
     puts "cddb query 2 = #{@query}" if @settings['debug']
 		if @verbose ; puts "Created fetch string: #{@query}" end
-		
+
 		answer = @server.get(@query).body
 		answers = answer.split("\n")
 		answers.each do |line|
@@ -1259,7 +1259,7 @@ attr_accessor :segments, :comment # !!mad
 		end
 		saveResponse()
 	end
-	
+
 	def saveResponse
 		if File.exist?(@settings['freedbCache'])
 			@metadataFile = YAML.load(File.open(@settings['freedbCache']))
@@ -1268,18 +1268,18 @@ attr_accessor :segments, :comment # !!mad
 		end
 
 		@metadataFile[@disc.freedbString] = @rawResponse
-		
+
 		file = File.new(@settings['freedbCache'], 'w')
 		file.write(@metadataFile.to_yaml)
 		file.close()
 	end
-	
+
 	def saveChanges
 		@rawResponse = Array.new
 		@rawResponse << "DTITLE=#{@artist} \/ #{@album}"
 		@rawResponse << "DYEAR=#{@year}"
 		@rawResponse << "DGENRE=#{@genre}"
-		
+
 		@disc.audiotracks.times do |index|
 			if @varArtists.empty?
 				@rawResponse << "TTITLE#{index}=#{@tracklist[index]}"
@@ -1290,7 +1290,7 @@ attr_accessor :segments, :comment # !!mad
 		saveResponse()
 		return true
 	end
-	
+
 	def handleResponse #Make some usefull variables from the raw_response.
 		@rawResponse.each do |line|
 			line.strip! #remove any newline characters
@@ -1312,7 +1312,7 @@ attr_accessor :segments, :comment # !!mad
 				if trackname != nil && @tracklist.empty? #1st track
 					@tracklist << trackname
 				elsif trackname != nil && @tracklist.length == tracknumber #counting of tracknumber starts with 0
-					@tracklist << trackname 
+					@tracklist << trackname
 				elsif trackname != nil #already had a line for this track, so add this trackname to the previous one
 					@tracklist[-1] += trackname
 				end
@@ -1346,7 +1346,7 @@ attr_accessor :segments, :comment # !!mad
 			@tracklist.each_index{|index| @varArtists[index], @tracklist[index] = @tracklist[index].split(/\s*[\/-]\s*|(\sby\s)\s*/)} #remove any spaces (\s) around sep
 		end
 	end
-	
+
 	def undoVarArtist
 		# first backup in case we want to revert back
 		@varArtistsBackup = @varArtists.dup()
@@ -1368,7 +1368,7 @@ attr_accessor :segments, :comment # !!mad
 	end
 end
 
-# Output is a helpclass that defines all the names of the directories, 
+# Output is a helpclass that defines all the names of the directories,
 # filenames and tags. It filters out special characters that are not
 # well supported in the different platforms. It also offers some help
 # functions to create the output dirs and to get a preview of the output.
@@ -1378,7 +1378,7 @@ end
 
 class Output
 attr_reader :status, :artist, :album, :year, :genre
-	
+
 	def initialize(settings)
 		@settings = settings
 		@md = @settings['cd'].md
@@ -1399,7 +1399,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		@tracklist = Hash.new
 		@varArtists = Hash.new
 		@otherExtension = String.new
-		
+
 		splitDirFile()
 		checkNames()
 		setDirectory()
@@ -1415,7 +1415,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		else
 			fileScheme = @settings['naming_various']
 		end
-		
+
 		# the basedir is added later on, since we don't want to change it
 		@dirName, @fileName = File.split(fileScheme)
 	end
@@ -1429,7 +1429,7 @@ attr_reader :status, :artist, :album, :year, :genre
 # 5) Check if %t exists in single file rip scheme
 
 	def checkNames
-		if @dirName.include?("/%b") && @md.album[0,1] == '.' 
+		if @dirName.include?("/%b") && @md.album[0,1] == '.'
  			@dirName.sub!(/\.*/, '')
  		end
 
@@ -1445,7 +1445,7 @@ attr_reader :status, :artist, :album, :year, :genre
 				puts "Warning: '%n' in the filescheme for image rips makes no sense!"
 				puts "This is automatically removed"
 			end
-			
+
 			if @fileName.include?('%va')
 				@fileName.gsub!('%va', '')
 				puts "Warning: '%va' in the filescheme for image rips makes no sense!"
@@ -1486,7 +1486,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		if @md.discNumber != false
 			dirName = File.join(dirName, "CD #{sprintf("%02d", @md.discNumber)}")
 		end
-		
+
 		dirName = fileFilter(dirName, true)
 		return File.expand_path(File.join(@settings['basedir'], dirName))
 	end
@@ -1503,7 +1503,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		createFiles()
 		@status = true
 	end
-	
+
 	def findExtensionOther
 		if @settings['other']
 			@settings['othersettings'] =~ /"%o".\S+/ # ruby magic, match %o.+ any characters that are not like spaces
@@ -1527,7 +1527,7 @@ attr_reader :status, :artist, :album, :year, :genre
 			dir = directory
 			# search for the first existing directory
 			while not File.directory?(dir) ; dir = File.dirname(dir) end
-			
+
 			if not File.writable?(dir)
 				@status = ["error", _("Can't create output directory!\nYou have no writing acces in dir %s") % [dir]]
  				return false
@@ -1542,7 +1542,7 @@ attr_reader :status, :artist, :album, :year, :genre
 			puts dir if @settings['debug']
 			if File.directory?(dir)
 				@status = ["dir_exists", dir]
-				return false			
+				return false
 			end
 		end
 		return true
@@ -1584,13 +1584,13 @@ attr_reader :status, :artist, :album, :year, :genre
 	# give the filename for given codec and track
 	def giveFileName(codec, track=0)
 		file = @fileName.dup
-		
+
 		# the artist should always refer to the artist that is valid for the track
 		if getVarArtist(track + 1) == '' ; artist = @md.artist ; varArtist = ''
 		else artist = getVarArtist(track + 1) ; varArtist = @md.artist end
-		
+
 		{'%a' => artist, '%b' => @md.album, '%f' => codec, '%g' => @md.genre,
-		'%y' => @md.year, '%n' => sprintf("%02d", track + 1), '%va' => varArtist, 
+		'%y' => @md.year, '%n' => sprintf("%02d", track + 1), '%va' => varArtist,
 		'%t' => getTrackname(track + 1)}.each do |key, value|
 			file.gsub!(key, value)
 		end
@@ -1602,7 +1602,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		elsif codec == 'wav' ; file += '.wav'
 		elsif codec == 'other' ; file += @otherExtension
 		end
-		
+
 		filename = fileFilter(file)
 		puts filename if @settings['debug']
 		return filename
@@ -1644,7 +1644,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		var.gsub!('|', '') #no pipe allowed in FAT
 		var.gsub!('\\', '') #the \\ means a normal \
  		var.gsub!('"', '')
- 		
+
 		allFilter(var)
 
 		if @settings['noSpaces'] ; var.gsub!(" ", "_") end
@@ -1656,7 +1656,7 @@ attr_reader :status, :artist, :album, :year, :genre
 	def tagFilter(var)
 		allFilter(var)
 
-		#Add a slash before the double quote chars, 
+		#Add a slash before the double quote chars,
 		#otherwise the shell will complain
 		var.gsub!('"', '\"')
 		return var.strip
@@ -1665,8 +1665,8 @@ attr_reader :status, :artist, :album, :year, :genre
 	# characters that will be changed for tags and filenames
 	def allFilter(var)
 		var.gsub!('`', "'")
-		
-		# replace any underscores with spaces, some freedb info got 
+
+		# replace any underscores with spaces, some freedb info got
 		# underscores instead of spaces
 		if not @settings['noSpaces'] ; var.gsub!('_', ' ') end
 
@@ -1676,11 +1676,11 @@ attr_reader :status, :artist, :album, :year, :genre
 			var.force_encoding("ASCII-8BIT")
 		end
 
-		# replace utf-8 single quotes with latin single quote 
-		var.gsub!(/\342\200\230|\342\200\231/, "'") 
-		
+		# replace utf-8 single quotes with latin single quote
+		var.gsub!(/\342\200\230|\342\200\231/, "'")
+
 		# replace utf-8 double quotes with latin double quote
-		var.gsub!(/\342\200\234|\342\200\235/, '"') 
+		var.gsub!(/\342\200\234|\342\200\235/, '"')
 
 		if var.respond_to?(:encoding)
 			# restore the old encoding
@@ -1699,7 +1699,7 @@ attr_reader :status, :artist, :album, :year, :genre
 		@dir.keys.each{|key| @dir[key] = @dir[key] += "\##{postfix}"}
 		attemptDirCreation()
  	end
- 	
+
 	# remove the existing dir, starting with the files in it
  	def overwriteDir
  		@dir.values.each{|dir| cleanDir(dir) if File.directory?(dir)}
@@ -1718,9 +1718,9 @@ attr_reader :status, :artist, :album, :year, :genre
 
 	# create Playlist for each codec
 	def createPlaylist(codec)
-		playlist = File.new(File.join(@dir[codec], 
+		playlist = File.new(File.join(@dir[codec],
 			"#{@artistFile} - #{@albumFile} (#{codec}).m3u"), 'w')
-		
+
 		@settings['tracksToRip'].each do |track|
 			playlist.puts @file[codec][track]
 		end
@@ -1741,10 +1741,10 @@ attr_reader :status, :artist, :album, :year, :genre
 	# return the full filename of the track (starting with 1) or image
 	def getFile(track, codec)
 		if track == "image"
-			return File.join(@dir[codec], @image[codec])		
+			return File.join(@dir[codec], @image[codec])
 		else
 			return File.join(@dir[codec], @file[codec][track])
-		end	
+		end
 	end
 
 	# return the toc file of AdvancedToc class
@@ -1797,12 +1797,12 @@ end
 # require 'fileutils'
 
 class SecureRip
-	attr_writer :cancelled 
+	attr_writer :cancelled
 
 	BYTES_WAV_CONTAINER = 44 # wav container overhead
 	BYTES_AUDIO_SECTOR = 2352 # size for a audiocd sector as used in cdparanoia
 	BYTES_SECTOR_GROUP = 1024 * BYTES_AUDIO_SECTOR # compare groups first due performance issue ruby 1.8
-	
+
 	def initialize(settings, encoding)
 		@settings = settings
 		@encoding = encoding
@@ -1817,18 +1817,18 @@ class SecureRip
 
 	def ripTracks
 		@settings['log'].ripPerc(0.0, "ripper") # Give a hint to the gui that ripping has started
-		
+
 		@settings['tracksToRip'].each do |track|
 			break if @cancelled == true
 			puts "Ripping track #{track}" if @settings['debug'] && track != 'image'
 			puts "Ripping image" if @settings['debug'] && track == 'image'
 			ripTrack(track)
 		end
-		
-		eject(@settings['cd'].cdrom) if @settings['eject'] 
+
+		eject(@settings['cd'].cdrom) if @settings['eject']
 	end
 
-	
+
 	# Due to a bug in cdparanoia the -Z setting has to be replaced for last track.
 	# This is only needed when an offset is set. See issue nr. 13.
 	def checkParanoiaSettings(track)
@@ -1853,12 +1853,12 @@ class SecureRip
 			if main(track)
 				deEmphasize(track)
 				@encoding.addTrack(track)
-			else 
+			else
 				return false
 			end #ready to encode
 		end
 	end
-	
+
 	# check if the track needs to be corrected
 	# the de-emphasized file needs another name
 	# when sox is finished move it back to the original name
@@ -1876,9 +1876,9 @@ class SecureRip
 
 	def sizeTest(track)
 		puts "Expected filesize for #{if track == "image" ; track else "track #{track}" end}\
-		is #{@settings['cd'].getFileSize(track)} bytes." if @settings['debug'] 
+		is #{@settings['cd'].getFileSize(track)} bytes." if @settings['debug']
 
-		if installed('df')				
+		if installed('df')
 			freeDiskSpace = `LANG=C df \"#{@settings['Out'].getDir()}\"`.split()[10].to_i
 			puts "Free disk space is #{freeDiskSpace} MB" if @settings['debug']
 			if @settings['cd'].getFileSize(track) > freeDiskSpace*1000
@@ -1888,11 +1888,11 @@ class SecureRip
 		end
 		return true
 	end
-	
+
 	def main(track)
 		@reqMatchesAll.times{if not doNewTrial(track) ; return false end} # The amount of matches all sectors should match
 		analyzeFiles(track) #If there are differences, save them in the @errors hash
-				
+
 		while @errors.size > 0
 			if @trial > @settings['max_tries'] && @settings['max_tries'] != 0 # We would like to respect our users settings, wouldn't we?
 				@settings['log'].add(_("Maximum tries reached. %s chunk(s) didn't match the required %s times\n") % [@errors.length, @reqMatchesErrors])
@@ -1900,7 +1900,7 @@ class SecureRip
 				@settings['log'].mismatch(track, 0, @errors.keys, @settings['cd'].getFileSize(track), @settings['cd'].getLengthSector(track)) # zero means it is never solved.
 				break # break out loop and continue using trial1
 			end
-			
+
 			doNewTrial(track)
 			break if @cancelled == true
 
@@ -1908,9 +1908,9 @@ class SecureRip
 				correctErrorPos(track)
 			else
 				readErrorPos(track)
-			end 
+			end
 		end
-		
+
 		getDigest(track) # Get a MD5-digest for the logfile
 		@progress += @settings['percentages'][track]
 		@settings['log'].ripPerc(@progress)
@@ -1919,7 +1919,7 @@ class SecureRip
 
 	def doNewTrial(track)
 		fileOk = false
-	
+
 		while (!@cancelled && !fileOk)
 			@trial += 1
 			rip(track)
@@ -1931,7 +1931,7 @@ class SecureRip
 		# when cancelled fileOk will still be false
 		return fileOk
 	end
-	
+
 	def fileCreated(track) #check if cdparanoia outputs wav files (passing bad parameters?)
 		if not File.exist?(@settings['Out'].getTempFile(track, @trial))
 			@settings['instance'].update("error", _("Cdparanoia doesn't output wav files.\nCheck your settings please."))
@@ -1939,7 +1939,7 @@ class SecureRip
 		end
 		return true
 	end
-	
+
 	def testFileSize(track) #check if wavfile is of correct size
 		sizeDiff = @settings['cd'].getFileSize(track) - File.size(@settings['Out'].getTempFile(track, @trial))
 
@@ -1949,8 +1949,8 @@ class SecureRip
 		elsif sizeDiff < 0
 			puts "More sectors ripped than expected: #{sizeDiff / 2352} sector(s)" if @settings['debug']
 		elsif @settings['offset'] > 0 && (track == "image" || track == @settings['cd'].audiotracks)
-			@settings['log'].add(_("The ripped file misses %s sectors.\n") % [sizeDiff / 2352.0])			
-			@settings['log'].add(_("This is known behaviour for some drives when using an offset.\n"))		
+			@settings['log'].add(_("The ripped file misses %s sectors.\n") % [sizeDiff / 2352.0])
+			@settings['log'].add(_("This is known behaviour for some drives when using an offset.\n"))
 			@settings['log'].add(_("Notice that each sector is 1/75 second.\n"))
 		elsif @cancelled == false
 			if @settings['debug']
@@ -1960,7 +1960,7 @@ class SecureRip
 
 			#someone might get out of free diskspace meanwhile
 			@cancelled = true if not sizeTest(track)
-			
+
 			File.delete(@settings['Out'].getTempFile(track, @trial)) # Delete file with wrong filesize
 			@trial -= 1 # reset the counter because the filesize is not right
 			@settings['log'].add(_("Filesize is not correct! Trying another time\n"))
@@ -1978,7 +1978,7 @@ class SecureRip
 
 		# Remove the files now we analyzed them. Differences are saved in memory.
 		(@reqMatchesAll - 1).times{|time| File.delete(@settings['Out'].getTempFile(track, time + 2))}
- 
+
 		if @errors.size == 0
 			@settings['log'].add(_("Every chunk matched %s times :)\n") % [@reqMatchesAll])
 		else
@@ -2043,11 +2043,11 @@ class SecureRip
 				sectorOffset += BYTES_SECTOR_GROUP
 			end
 		end
-		
+
 		files.each{|file| file.close}
 	end
-	
-	# When required matches for mismatched sectors are bigger than there are 
+
+	# When required matches for mismatched sectors are bigger than there are
 	# trials to be tested, readErrorPos() just reads the mismatched sectors
 	# without analysing them.
 	# Wav-containter overhead = 44 bytes.
@@ -2065,9 +2065,9 @@ class SecureRip
 		File.delete(@settings['Out'].getTempFile(track, @trial))
 
 		# Give an update for the trials for later analysis
-		@settings['log'].mismatch(track, @trial, @errors.keys, @settings['cd'].getFileSize(track), @settings['cd'].getLengthSector(track)) 
+		@settings['log'].mismatch(track, @trial, @errors.keys, @settings['cd'].getFileSize(track), @settings['cd'].getLengthSector(track))
 	end
-	
+
 	# Let the errors 'wave' out. For each sector that isn't unique across
 	# different trials, try to find at least @reqMatchesErrors matches. If
 	# indeed this amount of matches is found, correct the sector in the
@@ -2076,7 +2076,7 @@ class SecureRip
 	def correctErrorPos(track)
 		file1 = File.new(@settings['Out'].getTempFile(track, 1), 'r+')
 		file2 = File.new(@settings['Out'].getTempFile(track, @trial), 'r')
-		
+
 		# Sort the hash keys to prevent jumping forward and backwards in the file
 		@errors.keys.sort.each do |start_chunk|
 			file2.sysseek(start_chunk + BYTES_WAV_CONTAINER, IO::SEEK_SET)
@@ -2097,7 +2097,7 @@ class SecureRip
 
 		# Remove the file now we read it. Differences are saved in memory.
 		File.delete(@settings['Out'].getTempFile(track, @trial))
-		
+
 		#give an update of the amount of errors and trials
 		if @errors.size == 0
 			@settings['log'].add(_("Error(s) succesfully corrected, %s matches found for each chunk :)\n") % [@reqMatchesErrors])
@@ -2106,11 +2106,11 @@ class SecureRip
 			@settings['log'].add(_("%s chunk(s) didn't match %s times.\n") % [@errors.length, @reqMatchesErrors])
 		end
 	end
-	
+
 	# add a timeout if a disc takes longer than 30 minutes to rip (this might save the hardware and the disc)
 	def cooldownNeeded
 		puts "Minutes ripping is #{(Time.now - @timeStarted) / 60}." if @settings['debug']
-		
+
 		if (((Time.now - @timeStarted) / 60) > 30 && @settings['maxThreads'] != 0)
 			@settings['log'].add(_("The drive is spinning for more than 30 minutes.\n"))
 			@settings['log'].add(_("Taking a timeout of 2 minutes to protect the hardware.\n"))
@@ -2118,12 +2118,12 @@ class SecureRip
 			@timeStarted = Time.now # reset time
 		end
 	end
-	
+
 	def rip(track) # set cdparanoia command + parameters
 		cooldownNeeded()
 
 		timeStarted = Time.now
-		
+
 		if track == "image"
 			@settings['log'].add(_("Starting to rip CD image, trial \#%s") % [@trial])
 		else
@@ -2131,11 +2131,11 @@ class SecureRip
 		end
 
 		command = "cdparanoia"
-		
+
 		if @settings['rippersettings'].size != 0
 			command += " #{@settings['rippersettings']}"
-		end 
-		
+		end
+
 		command += " [.#{@settings['cd'].getStartSector(track)}]-"
 
 		# for the last track tell cdparanoia to rip till end to prevent problems on some drives
@@ -2153,7 +2153,7 @@ class SecureRip
 		`#{command}` if @cancelled == false #Launch the cdparanoia command
 		@settings['log'].add(" (#{(Time.now - timeStarted).to_i} #{_("seconds")})\n")
 	end
-	
+
 	def getDigest(track)
 		digest = Digest::MD5.new()
 		file = File.open(@settings['Out'].getTempFile(track, 1), 'r')
@@ -2169,9 +2169,9 @@ end
 
 class Encode
 	attr_writer :cancelled
-	
+
 	require 'thread'
-	
+
 	def initialize(settings)
 		@settings = settings
 		@cancelled = false
@@ -2183,8 +2183,8 @@ class Encode
 
 		# Set the charset environment variable to UTF-8. Oggenc needs this.
 		# Perhaps others need it as well.
-		ENV['CHARSET'] = "UTF-8" 
-		
+		ENV['CHARSET'] = "UTF-8"
+
 		@codecs = 0 # number of codecs
 		['flac','vorbis','mp3','wav','other'].each do |codec|
 			@codecs += 1 if @settings[codec]
@@ -2194,7 +2194,7 @@ class Encode
 		@tasks = Hash.new
 		@settings['tracksToRip'].each{|track| @tasks[track] = @codecs}
 	end
-	
+
 	# is called when a track is ripped succesfully
 	def addTrack(track)
 		if normalize(track)
@@ -2221,10 +2221,10 @@ class Encode
 				end
 			end
 		end
-		
+
 		#give the signal we're finished
 		if track == @settings['tracksToRip'][-1] && @cancelled == false
-			@threads.each{|thread| thread.join()}	
+			@threads.each{|thread| thread.join()}
 			finished()
 		end
 	end
@@ -2247,7 +2247,7 @@ class Encode
 		end
 		return continue
 	end
-	
+
 	# call the specific codec function for the track
 	def encodeTrack(track, codec)
 		if codec == 'flac' ; doFlac(track)
@@ -2256,7 +2256,7 @@ class Encode
 		elsif codec == 'wav' ; doWav(track)
 		elsif codec == 'other' && @settings['othersettings'] != nil ; doOther(track)
 		end
-		
+
 		@lock.synchronize do
 			File.delete(@out.getTempFile(track, 1)) if (@tasks[track] -= 1) == 0
 			updateProgress(@settings['percentages'][track] / @codecs)
@@ -2269,7 +2269,7 @@ class Encode
 		@settings['log'].encPerc(@progress)
 	end
 
-	
+
 	def finished
 		puts "Inside the finished function" if @settings['debug']
 		@progress = 1.0 ; @settings['log'].encPerc(@progress)
@@ -2282,7 +2282,7 @@ class Encode
 			@settings['instance'].update("finished", true)
 		end
 	end
-	
+
 	def replaygain(filename, codec, track)
 		if @settings['normalize'] == "replaygain"
 			if @settings['gain'] == "album" && @settings['tracksToRip'][-1] == track || @settings['gain']=="track"
@@ -2321,14 +2321,14 @@ class Encode
 		flac(filename, track)
 		replaygain(filename, 'flac', track)
 	end
-		
+
 	def doVorbis(track)
 		filename = @out.getFile(track, 'vorbis')
 		if !@settings['vorbissettings'] ; @settings['vorbissettings'] = '-q 6' end
 		vorbis(filename, track)
 		replaygain(filename, 'vorbis', track)
 	end
-		
+
 	def doMp3(track)
 		@possible_lame_tags = ['A CAPPELLA', 'ACID', 'ACID JAZZ', 'ACID PUNK', 'ACOUSTIC', 'ALTERNATIVE', 'ALT. ROCK', 'AMBIENT', 'ANIME', 'AVANTGARDE', \
 'BALLAD', 'BASS', 'BEAT', 'BEBOB', 'BIG BAND', 'BLACK METAL', 'BLUEGRASS', 'BLUES', 'BOOTY BASS', 'BRITPOP', 'CABARET', 'CELTIC', 'CHAMBER MUSIC', 'CHANSON', \
@@ -2344,21 +2344,21 @@ class Encode
 'TOP 40', 'TRAILER', 'TRANCE', 'TRIBAL', 'TRIP-HOP', 'VOCAL']
 		filename = @out.getFile(track, 'mp3')
 		if !@settings['mp3settings'] ; @settings['mp3settings'] = "--preset fast standard" end
-		
-		# lame versions before 3.98 didn't support other genre tags than the 
+
+		# lame versions before 3.98 didn't support other genre tags than the
 		# ones defined above, so change it to 'other' to prevent crashes
 		lameVersion = `lame --version`[20,4].split('.') # for example [3, 98]
-		if (lameVersion[0] == '3' && lameVersion[1].to_i < 98 && 
+		if (lameVersion[0] == '3' && lameVersion[1].to_i < 98 &&
 		!@possible_lame_tags.include?(@out.genre.upcase))
-		    genre = 'other' 
+		    genre = 'other'
 		else
 		    genre = @out.genre
 		end
-		
+
 		mp3(filename, genre, track)
 		replaygain(filename, 'mp3', track)
 	end
-		
+
 	def doWav(track)
 		filename = @out.getFile(track, 'wav')
 		wav(filename, track)
@@ -2388,7 +2388,7 @@ class Encode
 		command.gsub!('%o', @out.getFile(track, 'other'))
 		checkCommand(command, track, 'other')
 	end
-	
+
 	def flac(filename, track)
 		tags = String.new
 		tags.force_encoding("UTF-8") if tags.respond_to?("force_encoding")
@@ -2397,7 +2397,7 @@ class Encode
 		tags += "--tag GENRE=\"#{@out.genre}\" "
 		tags += "--tag DISCID=\"#{@settings['cd'].discId}\" "
 		tags += "--tag DISCNUMBER=\"#{@settings['cd'].md.discNumber}\" " if @settings['cd'].md.discNumber
-		
+
 		 # Handle tags for single file images differently
 		if @settings['image']
 			tags += "--tag ARTIST=\"#{@out.artist}\" " #artist is always artist
@@ -2413,7 +2413,7 @@ class Encode
 			end
 			tags += "--tag TITLE=\"#{@out.getTrackname(track)}\" "
 			tags += "--tag TRACKNUMBER=#{track} "
-			tags += "--tag TRACKTOTAL=#{@settings['cd'].audiotracks} "			
+			tags += "--tag TRACKTOTAL=#{@settings['cd'].audiotracks} "
 		end
 
 		command = String.new
@@ -2424,7 +2424,7 @@ class Encode
 
 		checkCommand(command, track, 'flac')
 	end
-	
+
 	def vorbis(filename, track)
 		tags = String.new
 		tags.force_encoding("UTF-8") if tags.respond_to?("force_encoding")
@@ -2454,10 +2454,10 @@ class Encode
 		command += "oggenc -o \"#{filename}\" #{@settings['vorbissettings']} \
 #{tags} \"#{@out.getTempFile(track, 1)}\""
 		command += " 2>&1" unless @settings['verbose']
-	
+
 		checkCommand(command, track, 'vorbis')
 	end
-	
+
 	def mp3(filename, genre, track)
 		tags = String.new
 		tags.force_encoding("UTF-8") if tags.respond_to?("force_encoding")
@@ -2484,7 +2484,7 @@ class Encode
 		# set UTF-8 tags (not the filename) to latin because of a lame bug.
 		begin
 			require 'iconv'
-			tags = Iconv.conv("ISO-8859-1", "UTF-8", tags)		
+			tags = Iconv.conv("ISO-8859-1", "UTF-8", tags)
 		rescue
 			puts "couldn't convert to ISO-8859-1 succesfully"
 		end
@@ -2502,10 +2502,10 @@ class Encode
 		command += "lame #{@settings['mp3settings']} #{tags}\"\
 #{inputWavFile}\" \"#{filename}\""
 		command += " 2>&1" unless @settings['verbose']
-	
+
 		checkCommand(command, track, 'mp3')
 	end
-	
+
 	def wav(filename, track)
 		begin
 			FileUtils.cp(@out.getTempFile(track, 1), filename)
@@ -2514,13 +2514,13 @@ class Encode
 			puts "If this is not the case, you might have a shortage of disk space.."
 		end
 	end
-	
+
 	def checkCommand(command, track, codec)
 		puts "command = #{command}" if @settings['debug']
 
 		exec = IO.popen("nice -n 6 #{command}") #execute command
 		exec.readlines() #get all the output
-		
+
 		if Process.waitpid2(exec.pid)[1].exitstatus != 0
 			@settings['log'].add(_("WARNING: Encoding to %s exited with an error with track %s!\n") % [codec, track])
 			@settings['log'].encodingErrors = true
@@ -2530,7 +2530,7 @@ end
 
 class Rubyripper
 attr_reader :outputDir
-	
+
 	def initialize(settings, gui)
 		@settings = settings.dup
 		@directory = false
@@ -2540,7 +2540,7 @@ attr_reader :outputDir
 		@encoding = nil
 		@ripping = nil
 	end
-	
+
 	def settingsOk
 		if not checkConfig() ; return @error end
 		if not testDeps() ; return @error end
@@ -2548,7 +2548,7 @@ attr_reader :outputDir
 		@settings['Out'] = Output.new(@settings)
 		return @settings['Out'].status
 	end
-	
+
 	def startRip
 		@settings['log'] = Gui_support.new(@settings)
 		@outputDir = @settings['Out'].getDir()
@@ -2557,14 +2557,14 @@ attr_reader :outputDir
 		waitForToc()
 
 		@settings['log'].add(_("\nSTATUS\n\n"))
-		
+
 		computePercentage() # Do some pre-work to get the progress updater working later on
 		require 'digest/md5' # Needed for secure class, only have to load them ones here.
 		@encoding = Encode.new(@settings) #Create an instance for encoding
 		@ripping = SecureRip.new(@settings, @encoding) #create an instance for ripping
 	end
 
-	# the user wants to abort the ripping	
+	# the user wants to abort the ripping
 	def cancelRip
 		puts "User aborted current rip"
 		`killall cdrdao 2>&1`
@@ -2581,15 +2581,15 @@ attr_reader :outputDir
 		if @settings['create_cue'] && installed('cdrdao')
 			@settings['log'].add(_("\nADVANCED TOC ANALYSIS (with cdrdao)\n"))
 			@settings['log'].add(_("...please be patient, this may take a while\n\n"))
-		
+
 			@settings['cd'].updateSettings(@settings) # update the rip settings
-			
+
 			@settings['cd'].toc.log.each do |message|
 				@settings['log'].add(message)
 			end
 		end
 	end
-	
+
 	# check the configuration of the user.
 	# 1) does the ripping drive exists
 	# 2) are there tracks selected to rip
@@ -2608,7 +2608,7 @@ attr_reader :outputDir
 			@error = ["error", _("Please select at least one track.")]
 			return false
 		end
-		
+
 		if (!@settings['cd'].tocStarted || @settings['cd'].tocFinished)
 			temp = Disc.new(@settings, @settings['instance'], '', true)
 			if @settings['cd'].freedbString != temp.freedbString || @settings['cd'].playtime != temp.playtime
@@ -2616,7 +2616,7 @@ attr_reader :outputDir
  				return false
 			end
 		end
-		
+
 		unless @settings['flac'] || @settings['vorbis'] || @settings['mp3'] || @settings['wav'] || @settings['other']
 			@error = ["error", _("No codecs are selected!")]
 			return false
@@ -2626,12 +2626,12 @@ attr_reader :outputDir
 		@settings['flacsettings'].gsub!(' --delete-input-file', '')
 
 		if @settings['other'] ; checkOtherSettings() end
-			
+
 		# update the ripping settings for a hidden audio track if track 1 is selected
 		if @settings['cd'].getStartSector(0) && @settings['tracksToRip'][0] == 1
 			@settings['tracksToRip'].unshift(0)
 		end
- 		
+
  		if @settings['req_matches_all'] > @settings['req_matches_errors'] ; @settings['req_matches_errors'] = @settings['req_matches_all'] end
 		return true
 	end
@@ -2639,7 +2639,7 @@ attr_reader :outputDir
 	def checkOtherSettings
 		copyString = ""
 		lastChar = ""
-		
+
 		#first remove all double quotes. then iterate over each char
 		@settings['othersettings'].delete('"').split(//).each do |char|
 			if char == '%' # prepend double quote before %
@@ -2659,7 +2659,7 @@ attr_reader :outputDir
 
 		puts @settings['othersettings'] if @settings['debug']
 	end
-	
+
 	def testDeps
 		{"ripper" => "cdparanoia", "flac" => "flac", "vorbis" => "oggenc", "mp3" => "lame"}.each do |setting, binary|
 			if @settings[setting] && !installed(binary)
@@ -2688,7 +2688,7 @@ attr_reader :outputDir
 		@settings['log'].add(_("Ripper used: cdparanoia %s\n") % [if @settings['rippersettings'] ; @settings['rippersettings'] else _('default settings') end])
 		@settings['log'].add(_("Matches required for all chunks: %s\n") % [@settings['req_matches_all']])
 		@settings['log'].add(_("Matches required for erroneous chunks: %s\n\n") % [@settings['req_matches_errors']])
-		
+
 		@settings['log'].add(_("Codec(s) used:\n"))
 		if @settings['flac']; @settings['log'].add(_("-flac \t-> %s (%s)\n") % [@settings['flacsettings'], `flac --version`.strip]) end
 		if @settings['vorbis']; @settings['log'].add(_("-vorbis\t-> %s (%s)\n") % [@settings['vorbissettings'], `oggenc --version`.strip]) end
@@ -2702,15 +2702,15 @@ attr_reader :outputDir
 		@settings['log'].add(@settings['cd'].md.album)
 		@settings['log'].add(_("\nYear\t= ") + @settings['cd'].md.year)
 		@settings['log'].add(_("\nGenre\t= ") + @settings['cd'].md.genre)
-		@settings['log'].add(_("\nTracks\t= ") + @settings['cd'].audiotracks.to_s + 
+		@settings['log'].add(_("\nTracks\t= ") + @settings['cd'].audiotracks.to_s +
 		" (#{@settings['tracksToRip'].length} " + _("selected") + ")\n\n")
 		@settings['cd'].audiotracks.times do |track|
 			if @settings['tracksToRip'] == 'image' || @settings['tracksToRip'].include?(track + 1)
-				@settings['log'].add("#{sprintf("%02d", track + 1)} - #{@settings['cd'].md.tracklist[track]}\n")	
+				@settings['log'].add("#{sprintf("%02d", track + 1)} - #{@settings['cd'].md.tracklist[track]}\n")
 			end
 		end
 	end
-	
+
 	def computePercentage
 		@settings['percentages'] = Hash.new() #progress for each track
 		totalSectors = 0.0 # It can be that the user doesn't want to rip all tracks, so calculate it
@@ -2722,14 +2722,16 @@ end
 class RipperClient
 
     attr_reader :update, :settings
-    
-    def initialize()
+
+    def initialize(cd_drive = '/dev/cdrom')
         parse_options()
         @ripping_log = ""
         @ripping_progress = 0.0
         @encoding_progress = 0.0
         @settingsClass = Settings.new(@options.file)
         @settings = @settingsClass.settings
+
+        @settings['cdrom'] = cd_drive
 
         get_cd_info()
     end
