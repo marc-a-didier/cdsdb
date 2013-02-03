@@ -287,7 +287,7 @@ public
             end
 
             @tvpt.set_cursor(iter.path, nil, false)
-            if iter[TT_DATA].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
+            if iter[TT_DATA].get_audio_file(self, @mc.tasks, true) == AudioLink::NOT_FOUND
                 @curr_track += 1
             else
                 break
