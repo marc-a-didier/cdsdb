@@ -261,17 +261,19 @@ class UILink < AudioLink
     end
 
 
-    def get_audio_file(emitter, tasks)
+    def get_audio_file(emitter, tasks, check_on_server = false)
         # Try to find a local file if status is unknown
         setup_audio_file if @audio_status == AudioLink::UNKNOWN
 
-        # If status is not found, exit. May be add code to check if on server...
-        return @audio_status if @audio_status == AudioLink::NOT_FOUND
+        # If called from play list, check_on_server is true to get the file in on server
+        if @audio_status == AudioLink::NOT_FOUND && check_on_server
+            @audio_status = AudioLink::ON_SERVER if MusicClient.new.check_single_audio(track.rtrack) != "0"
+        end
 
-        # If status is on server, get the remote file. It can only come from the tracks browser.
-        # If file is coming from charts, play list or any other, the track won't be downloaded.
+        # If status is on server, get the remote file.
         return get_remote_audio_file(emitter, tasks) if @audio_status == AudioLink::ON_SERVER
-        return AudioLink::NOT_FOUND
+
+        return @audio_status
     end
 
     def get_remote_audio_file(emitter, tasks)
