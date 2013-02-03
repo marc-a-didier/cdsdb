@@ -45,7 +45,11 @@ class MusicServer
     end
 
     def listen
-        server = TCPServer.new(Cfg::instance.server, Cfg::instance.port)
+        Signal.trap("TERM") {
+            Log::instance.info("Server shutdown on TERM signal.")
+            exit(0)
+        }
+        server = TCPServer.new('0.0.0.0', Cfg::instance.port)
         begin
             loop do #while (session = server.accept)
                 Thread.start(server.accept) { |session|
@@ -87,6 +91,12 @@ class MusicServer
             end
             f.close
         end
+    end
+
+    def check_single_audio(session)
+        session.puts("OK")
+        rtrack = session.gets.chomp.to_i
+        session.puts(Utils::audio_file_exists(TrackMgr.new.get_track_infos(rtrack)).status.to_s)
     end
 
     def check_multiple_audio(session)
