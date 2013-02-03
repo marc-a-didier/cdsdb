@@ -287,7 +287,7 @@ p row
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
-            expected, found = AudioLink.new.set_record_ref(@reclnk.record.rrecord).tag_and_move_dir(dir)
+            expected, found = uilink.tag_and_move_dir(dir)
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
             elsif dir.match(Cfg::instance.rip_dir)
