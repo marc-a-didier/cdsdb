@@ -141,6 +141,7 @@ module UIConsts
     MM_WIN_RECENT               = "mm_win_recent"
     MM_WIN_RIPPED               = "mm_win_ripped"
     MM_WIN_PLAYED               = "mm_win_played"
+    MM_WIN_DATES                = "mm_win_dates"
 
     # Tools menu
     MM_TOOLS_TAG_GENRE          = "mm_tools_tag_genre"
@@ -574,6 +575,17 @@ module UIConsts
     DLG_STATS = "dlg_stats"
 
     STATS_TV = "stats_tv"
+
+    #
+    # Date chooser dialog
+    #
+    DLG_DATE_CHOOSER     = "dlg_date_chooser"
+
+    DTDLG_BTN_FROMDATE   = "dtdlg_btn_fromdate"
+    DTDLG_ENTRY_FROMDATE = "dtdlg_entry_fromdate"
+    DTDLG_BTN_TODATE     = "dtdlg_btn_todate"
+    DTDLG_ENTRY_TODATE   = "dtdlg_entry_todate"
+
 
     #
     # Disabled controls when not in admin mode.

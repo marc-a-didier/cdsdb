@@ -4,6 +4,7 @@ class RecentItemsDialog
     VIEW_ADDED  = 0
     VIEW_RIPPED = 1
     VIEW_PLAYED = 2
+    VIEW_DATES  = 3
 
     COL_ENTRY = 0
     COL_PIX   = 1
@@ -11,9 +12,10 @@ class RecentItemsDialog
     COL_DATE  = 3
     COL_DATA  = 4
 
-    def initialize(mc, view_type)
+    def initialize(mc, view_type, dates)
         @mc = mc
         @filter = ""
+        @dates = dates
 
         @glade = GTBld::load(UIConsts::DLG_RECENT_ITEMS)
 
@@ -80,7 +82,7 @@ class RecentItemsDialog
 
     def get_selection
         stores = []
-        if @view_type == VIEW_PLAYED
+        if @view_type == VIEW_PLAYED || @view_type == VIEW_DATES
             stores << @tv.selection.selected[COL_DATA]
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
@@ -120,6 +122,16 @@ class RecentItemsDialog
                    INNER JOIN artists ON artists.rartist=records.rartist
                    WHERE tracks.iplayed > 0 #{@filter}
                    ORDER BY logtracks.idateplayed DESC LIMIT #{Cfg::instance.max_items};}
+            when VIEW_DATES
+                # The WHERE clause was added to add a WHERE for the filter if any. Should be changed...
+                %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
+                   INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname
+                   INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                   INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                   INNER JOIN records ON records.rrecord=segments.rrecord
+                   INNER JOIN artists ON artists.rartist=records.rartist
+                   WHERE logtracks.idateplayed >= #{@dates[0]} AND logtracks.idateplayed <= #{@dates[1]}
+                   ORDER BY logtracks.idateplayed DESC;}
         end
 
         @tv.model.clear
@@ -130,7 +142,7 @@ class RecentItemsDialog
             iter[COL_ENTRY] = i
             iter[COL_DATA] = UILink.new
 
-            if @view_type == VIEW_PLAYED
+            if @view_type == VIEW_PLAYED || @view_type == VIEW_DATES
                 iter[COL_DATA].set_track_ref(row[0])
                 iter[COL_PIX]   = iter[COL_DATA].small_track_cover
                 iter[COL_TITLE] = iter[COL_DATA].html_track_title_no_track_num(@mc.show_segment_title?)

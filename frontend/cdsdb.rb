@@ -68,6 +68,7 @@ require './searchdialog'
 require './chartswindow'
 require './recentitemsdialog'
 require './trkplistsdialog'
+require './datechooser'
 
 require './musicclient'
 
@@ -212,6 +213,8 @@ require './my_rr_lib'
 
 # TODO: Ajouter un mecanisme trace qui par sur stdout par defaut ou un fichier plutot que balancer des
 #       puts n'importe ou.
+
+# TODO: What did WE play on that day (24th of november, as example...)
 
 
 # Peu realistes:

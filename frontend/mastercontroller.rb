@@ -22,6 +22,7 @@ class MasterController
     RECENT_ADDED  = 0
     RECENT_RIPPED = 1
     RECENT_PLAYED = 2
+    VIEW_BY_DATES = 3
 
     def initialize(path_or_data, root, domain)
         @glade = GTBld.main
@@ -102,7 +103,7 @@ class MasterController
         @memos    = MemosWindow.new(self)
 
         # Stores the recent items window object
-        @recents = [nil, nil, nil] # Pointer to recent added/ripped/played
+        @recents = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
         @search_dlg   = nil
 
         # Set windows icons
@@ -139,6 +140,7 @@ class MasterController
         @glade[UIConsts::MM_WIN_RECENT].signal_connect(:activate) { handle_recent_items(RECENT_ADDED)  }
         @glade[UIConsts::MM_WIN_RIPPED].signal_connect(:activate) { handle_recent_items(RECENT_RIPPED) }
         @glade[UIConsts::MM_WIN_PLAYED].signal_connect(:activate) { handle_recent_items(RECENT_PLAYED) }
+        @glade[UIConsts::MM_WIN_DATES].signal_connect(:activate)  { handle_recent_items(VIEW_BY_DATES) }
 
         @glade[UIConsts::MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
@@ -266,12 +268,23 @@ class MasterController
     end
 
     def handle_recent_items(item)
-        @recents[item] ? @recents[item].present : @recents[item] = RecentItemsDialog.new(self, item).run
+        if @recents[item]
+            @recents[item].present
+        else
+            if item == VIEW_BY_DATES
+                dlg = DateChooser.new.run
+                dates = dlg.dates
+                dlg.close
+                @recents[item] = RecentItemsDialog.new(self, item, dates).run if dates
+            else
+                @recents[item] = RecentItemsDialog.new(self, item, nil).run
+            end
+        end
     end
 
     def recent_items_closed(sender)
 #         @recents.each { |dialog| dialog = nil if dialog == sender }
-        (RECENT_ADDED..RECENT_PLAYED).each { |i| @recents[i] = nil if @recents[i] == sender }
+        (RECENT_ADDED..VIEW_BY_DATES).each { |i| @recents[i] = nil if @recents[i] == sender }
     end
 
     #
