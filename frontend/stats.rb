@@ -366,22 +366,81 @@ class Stats
     end
 
     def rating_tags_stats
-        tot_rated = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE irating<>0;")
-        new_table("Rated tracks", ["Rating", "# of tracks"])
+        sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE records.rgenre NOT IN (1, 28);}
+        tot_tracks = DBIntf.connection.get_first_value(sql)
+
+        # Number and percentage of rated track
+        sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE tracks.irating<>0 AND records.rgenre NOT IN (1, 28);}
+        tot_rated = DBIntf::connection.get_first_value(sql)
+        new_table("Rated tracks", ["Rating", "# of tracks", "Percentage"])
         UIConsts::RATINGS.each_with_index { |rating, index|
-            rated = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE irating=#{index};")
-            new_row([rating, rated])
+            sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
+                    INNER JOIN records ON records.rrecord=tracks.rrecord
+                    WHERE tracks.irating=#{index} AND records.rgenre NOT IN (1, 28);}
+            rated = DBIntf::connection.get_first_value(sql)
+#             new_row([rating, rated, "%6.2f" % [rated*100.0/@db_tots[DBTOTS_TRACKS]]])
+            new_row([rating, rated, "%6.2f" % [rated*100.0/tot_tracks]])
         }
-        new_row(["Qualified total", tot_rated])
+#         new_row(["Qualified total", tot_rated, "%6.2f" % [tot_rated*100.0/@db_tots[DBTOTS_TRACKS]]])
+        new_row(["Qualified total", tot_rated, "%6.2f" % [tot_rated*100.0/tot_tracks]])
+        new_row(["Tracks total", tot_tracks, ""])
         end_table
 
-        tot_tagged = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE itags<>0;")
-        new_table("Tagged tracks", ["Tags", "# of tracks"])
-        UIConsts::TAGS.each_with_index { |tag, index|
-            tagged = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE (itags & #{1 << index})<>0;")
-            new_row([tag, tagged])
+        sql = %{SELECT COUNT(logtracks.rtrack) FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE records.rgenre NOT IN (1, 28);}
+        tot_played = DBIntf::connection.get_first_value(sql)
+
+        # Number and percentage of played tracks by rating
+        new_table("Played tracks by rating", ["Rating", "Played", "Percentage"])
+        UIConsts::RATINGS.each_with_index { |rating, index|
+#             played = DBIntf::connection.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE irating=#{index};")
+            sql = %{SELECT SUM(tracks.iplayed) FROM tracks
+                    INNER JOIN records ON records.rrecord=tracks.rrecord
+                    WHERE tracks.irating=#{index} AND records.rgenre NOT IN (1, 28);}
+            played = DBIntf::connection.get_first_value(sql)
+            played = 0 if played.nil?
+            new_row([rating, played, "%6.2f" % [played*100.0/tot_played]])
         }
-        new_row(["Tagged total", tot_tagged])
+        new_row(["Tracks total", tot_played, ""])
+        end_table
+
+        # Number and percentage of tagged track
+        sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE tracks.itags<>0 AND records.rgenre NOT IN (1, 28);}
+        tot_tagged = DBIntf::connection.get_first_value(sql)
+        new_table("Tagged tracks", ["Tags", "# of tracks", "Percentage"])
+        UIConsts::TAGS.each_with_index { |tag, index|
+            sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
+                    INNER JOIN records ON records.rrecord=tracks.rrecord
+                    WHERE (tracks.itags & #{1 << index})<>0 AND records.rgenre NOT IN (1, 28);}
+            tagged = DBIntf::connection.get_first_value(sql)
+#             new_row([tag, tagged, "%6.2f" % [tagged*100.0/@db_tots[DBTOTS_TRACKS]]])
+            new_row([tag, tagged, "%6.2f" % [tagged*100.0/tot_tracks]])
+        }
+#         new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/@db_tots[DBTOTS_TRACKS]]])
+        new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/tot_tracks]])
+        new_row(["Tracks total", tot_tracks, ""])
+        end_table
+
+        # Number and percentil of played tracks by tag
+        new_table("Played tracks by tag", ["Tags", "Played", "Percentage"])
+        UIConsts::TAGS.each_with_index { |tag, index|
+            sql = %{SELECT SUM(tracks.iplayed) FROM tracks
+                    INNER JOIN records ON records.rrecord=tracks.rrecord
+                    WHERE (tracks.itags & #{1 << index}) <> 0 AND records.rgenre NOT IN (1, 28);}
+#             played = DBIntf::connection.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE (itags & #{1 << index})<>0;")
+            played = DBIntf::connection.get_first_value(sql)
+            played = 0 if played.nil?
+            new_row([tag, played, "%6.2f" % [played*100.0/tot_played]])
+        }
+        new_row(["Tracks total", tot_played, ""])
         end_table
     end
 
