@@ -266,8 +266,10 @@ class UILink < AudioLink
         setup_audio_file if @audio_status == AudioLink::UNKNOWN
 
         # If called from play list, check_on_server is true to get the file in on server
-        if @audio_status == AudioLink::NOT_FOUND && check_on_server
-            @audio_status = AudioLink::ON_SERVER if MusicClient.new.check_single_audio(track.rtrack) != "0"
+        if @audio_status == AudioLink::NOT_FOUND && Cfg.instance.remote? && check_on_server
+            if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0] != AudioLink::NOT_FOUND
+                @audio_status = AudioLink::ON_SERVER
+            end
         end
 
         # If status is on server, get the remote file.
