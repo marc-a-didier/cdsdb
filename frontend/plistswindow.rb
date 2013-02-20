@@ -270,7 +270,7 @@ public
     def dwl_file_name_notification(rtrack, file_name)
         @audio_file = file_name
         @mc.update_track_icon(rtrack)
-        @tvpt.each { |model, path, iter|
+        @pts.each { |model, path, iter|
             if iter[TT_DATA].track.rtrack == rtrack
                 iter[TT_DATA].set_audio_file(file_name) # Also sets the status to FILE_OK
                 break
@@ -294,14 +294,11 @@ public
             end
         end
 
-
-#         track_infos = TrackInfos.new.get_track_infos(rtrack)
-#         @audio_file = Utils::search_and_get_audio_file(self, @mc.tasks, track_infos)
         while iter[TT_DATA].audio_status == AudioLink::ON_SERVER
             Gtk.main_iteration while Gtk.events_pending?
             sleep(0.1)
         end
-#         iter[TT_DATA].set_audio_file(@audio_file)
+
         @remaining_time = 0
         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
         update_tracks_label
@@ -581,7 +578,7 @@ public
             INNER JOIN artists ON segments.rartist = artists.rartist
             WHERE rplist=#{@current_pl.rplist} ORDER BY pltracks.iorder;}) do |row|
                 iter = @pts.append
-                iter[TT_REF] = row[TDB_RPLTRACK]
+                iter[TT_REF]   = row[TDB_RPLTRACK]
                 iter[TT_ORDER] = row[TDB_IORDER]
                 iter[TT_TRACK] = row[TDB_TORDER]
                 iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
@@ -592,7 +589,7 @@ public
 #                 iter[TT_RECORD] = iter[TT_DATA].record.stitle
 #                 iter[TT_LENGTH] = iter[TT_DATA].track.iplaytime.to_ms_length
 
-                iter[TT_TITLE] = row[TDB_STITLE].empty? ? row[TDB_TTITLE] : row[TDB_STITLE]+": "+row[TDB_TTITLE]
+                iter[TT_TITLE]  = row[TDB_STITLE].empty? ? row[TDB_TTITLE] : row[TDB_STITLE]+": "+row[TDB_TTITLE]
                 iter[TT_ARTIST] = row[TDB_ARTISTS]
                 iter[TT_RECORD] = row[TDB_RTITLE]
                 iter[TT_LENGTH] = row[TDB_ILENGTH].to_ms_length
