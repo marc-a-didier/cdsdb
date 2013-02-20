@@ -18,20 +18,6 @@ class MusicClient
     end
 
 
-    # Not used...
-    def check_single_audio(rtrack)
-        socket = TCPSocket.new(Cfg::instance.server, Cfg::instance.port)
-        socket.puts("check single audio")
-        if socket.gets.chomp == "OK"
-            puts "OK"
-            socket.puts(rtrack.to_s)
-            exists = socket.gets.chomp.to_i
-            p exists
-        end
-        socket.close
-        return exists
-    end
-
     def get_server_db_version
         return "" unless socket = get_connection
 puts("get db version")
