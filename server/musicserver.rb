@@ -85,18 +85,19 @@ class MusicServer
         else
             session.puts(File.size(file).to_s)
             session.puts(file.sub(Cfg::instance.music_dir, ""))
-            f = File.new(file, "rb")
-            while (data = f.read(block_size))
-                session.write(data)
-            end
-            f.close
+            File.open(file, "rb") { |f|
+                while data = f.read(block_size)
+                    session.write(data)
+                end
+            }
         end
     end
 
+    # No more used... again...
     def check_single_audio(session)
         session.puts("OK")
         rtrack = session.gets.chomp.to_i
-        session.puts(Utils::audio_file_exists(TrackMgr.new.get_track_infos(rtrack)).status.to_s)
+        session.puts(Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).status.to_s)
     end
 
     def check_multiple_audio(session)
@@ -164,11 +165,11 @@ class MusicServer
         end
         Log::instance.info("Sending file #{file_name} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
         session.puts(File.size(file_name).to_s)
-        f = File.new(file_name, "rb")
-        while (data = f.read(block_size))
-            session.write(data)
-        end
-        f.close
+        File.open(file_name, "rb") { |f|
+            while data = f.read(block_size)
+                session.write(data)
+            end
+        }
     end
 
     def rename_audio(session)
