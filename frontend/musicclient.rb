@@ -31,19 +31,6 @@ puts("get db version")
         return db_version
     end
 
-    def check_single_audio(rtrack)
-        status = "0"
-        return status unless socket = get_connection
-        socket.puts("check single audio")
-        if socket.gets.chomp == "OK"
-            puts "OK"
-            socket.puts(rtrack.to_s)
-            status = socket.gets.chomp
-        end
-        socket.close
-        return status
-    end
-
     def check_multiple_audio(tracks)
         return [] unless socket = get_connection
         socket.puts("check multiple audio")
