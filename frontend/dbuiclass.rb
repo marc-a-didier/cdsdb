@@ -109,8 +109,7 @@ class TrackUI < UILink
 
     # TODO: find a way to not redraw image each time if not changed
     def to_widgets_with_cover
-        GTBld.main[UIConsts::REC_IMAGE].pixbuf = large_track_cover if cover_key.empty? #|| cover_key != @curr_pix_key
-#         @curr_pix_key = cover_key
+        GTBld.main[UIConsts::REC_IMAGE].pixbuf = large_track_cover #if @pix_key.empty? || @curr_pix_key != @pix_key
         return to_widgets
     end
 
