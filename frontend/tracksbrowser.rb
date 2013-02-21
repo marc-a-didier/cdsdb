@@ -483,8 +483,8 @@ Trace.log.debug("--- multi select ---".magenta)
     end
 
 
-    def dwl_file_name_notification(rtrack, file_name)
-        update_track_icon(rtrack)
+    def dwl_file_name_notification(uilink, file_name)
+        update_track_icon(uilink.track.rtrack)
     end
 
     def on_download_trk
@@ -514,12 +514,15 @@ Trace.log.debug("--- multi select ---".magenta)
             return nil
         end
 
-        # TODO: Faudrait voir pour gerer le cas ou on download du serveur...
-        if iter[TTV_DATA].get_audio_file(self, @mc.tasks) == AudioLink::OK
-            return PlayerData.new(self, @curr_track, iter[TTV_DATA])
-        else
-            return nil
+        # Faudrait peut-etre boucler pour trouver une track...
+        return nil if iter[TTV_DATA].get_audio_file(self, @mc.tasks, true) == AudioLink::NOT_FOUND
+        
+        while iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
+            Gtk.main_iteration while Gtk.events_pending?
+            sleep(0.1)
         end
+
+        return PlayerData.new(self, @curr_track, iter[TTV_DATA])
     end
 
     def notify_played(player_data)

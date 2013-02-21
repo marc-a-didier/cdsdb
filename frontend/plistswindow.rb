@@ -267,15 +267,8 @@ public
         #@curr_track += 1
     end
 
-    def dwl_file_name_notification(rtrack, file_name)
-        @audio_file = file_name
-        @mc.update_track_icon(rtrack)
-        @pts.each { |model, path, iter|
-            if iter[TT_DATA].track.rtrack == rtrack
-                iter[TT_DATA].set_audio_file(file_name) # Also sets the status to FILE_OK
-                break
-            end
-        }
+    def dwl_file_name_notification(uilink, file_name)
+        @mc.update_track_icon(uilink.track.rtrack)
     end
 
     def get_audio_file

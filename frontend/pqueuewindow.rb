@@ -181,14 +181,8 @@ class PQueueWindow < TopWindow
         update_status
     end
 
-    def dwl_file_name_notification(rtrack, file_name)
-        @plq.each { |model, path, iter|
-            if iter[4].uilink.track.rtrack == rtrack
-                iter[4].uilink.set_audio_file(file_name) # Also sets the status to FILE_OK
-                @mc.update_track_icon(rtrack)
-                break
-            end
-        }
+    def dwl_file_name_notification(uilink, file_name)
+        @mc.update_track_icon(uilink.track.rtrack)
     end
 
     def update_status

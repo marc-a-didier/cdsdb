@@ -55,7 +55,7 @@ class TasksWindow < TopWindow
         @tv.append_column(prgs_col)
         @tv.append_column(Gtk::TreeViewColumn.new("Status", Gtk::CellRendererText.new, :text => COL_STATUS))
 
-        @tv.model = Gtk::ListStore.new(String, String, Integer, String, Integer, Class, String)
+        @tv.model = Gtk::ListStore.new(String, String, Integer, String, Class, Class, String)
 
         @tv.signal_connect(:button_press_event) { |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
@@ -85,9 +85,8 @@ class TasksWindow < TopWindow
                 iter[COL_STATUS] = STATUS[STAT_DOWNLOAD]
                 if operation == OP_FILE_DL
                     MusicClient.new.get_file(iter[COL_FILEINFO], self, iter)
-                    #MusicClient.new.get_file(iter[COL_FILEINFO], self, iter)
                 else
-                    MusicClient.new.get_audio_file(self, iter, iter[COL_REF])
+                    MusicClient.new.get_audio_file(self, iter, iter[COL_REF].track.rtrack)
                 end
 
                 #break
@@ -125,8 +124,8 @@ Trace.log.debug("task thread stopped".brown)
         return iter
     end
 
-    def new_track_download(emitter, title, user_ref)
-        new_task(OP_AUDIO_DL, emitter, title, user_ref, "")
+    def new_track_download(emitter, uilink)
+        new_task(OP_AUDIO_DL, emitter, uilink.track.stitle, uilink, "")
     end
 
     def new_file_download(emitter, file_info, user_ref)
@@ -140,6 +139,7 @@ Trace.log.debug("task thread stopped".brown)
     def end_file_op(iter, file_name)
         iter[COL_PROGRESS] = 100
         iter[COL_STATUS]   = STATUS[STAT_DONE]
+        iter[COL_REF].set_audio_file(file_name) if iter[COL_REF].kind_of?(AudioLink)
         iter[COL_CLASS].dwl_file_name_notification(iter[COL_REF], file_name) if iter[COL_CLASS]
     end
 
