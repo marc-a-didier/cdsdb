@@ -515,8 +515,8 @@ Trace.log.debug("--- multi select ---".magenta)
         end
 
         # Faudrait peut-etre boucler pour trouver une track...
-        return nil if iter[TTV_DATA].get_audio_file(self, @mc.tasks, true) == AudioLink::NOT_FOUND
-        
+        return nil if iter[TTV_DATA].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
+
         while iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
             Gtk.main_iteration while Gtk.events_pending?
             sleep(0.1)

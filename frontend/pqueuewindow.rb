@@ -165,7 +165,7 @@ class PQueueWindow < TopWindow
 
     def enqueue(uilinks)
         uilinks.each { |uilink|
-            uilink.get_audio_file(self, @mc.tasks, true)
+            uilink.get_audio_file(self, @mc.tasks)
             unless uilink.audio_status == AudioLink::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
