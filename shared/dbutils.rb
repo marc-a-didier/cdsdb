@@ -80,17 +80,14 @@ class DBUtils
     end
 
     def DBUtils::renumber_play_list(rplist)
-        pltracks = []
+        i = 1
+        sql = ""
         DBIntf::connection.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist}
                                       ORDER BY iorder;}) do |row|
-            pltracks << row[0]
-        end
-        i = 1
-        pltracks.each { |rpltrack|
-            #DBUtils::log_exec("UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};")
-            DBIntf::connection.execute("UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{rpltrack};")
+            sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
             i += 1
-        }
+        end
+        DBIntf::connection.transaction { |db| db.execute_batch(sql) }
         DBUtils::log_exec("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
     end
 
