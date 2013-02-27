@@ -608,13 +608,13 @@ module UIConsts
     # Ratings and tags appear in popup menus
     #
     RATINGS = ["Non qualifié", "A chier", "Bouseux", "Limite", "Décent", "Cool", "Top fuel", "Transcendant", "Sublimissime"]
-    TAGS = ["Girly", "Live", "Fun", "Calmos", "Fiesta", "Destroy!", "Satanique", "Instrumental", "Banned", "1234!"]
+    TAGS = ["Girly", "Live", "Fun", "Calmos", "Accoustic", "Destroy!", "Satanique", "Instrumental", "Banned", "1234!"]
 
     TAGS_GIRLY        = 1
     TAGS_LIVE         = 2
     TAGS_FUN          = 4
     TAGS_CALMOS       = 8
-    TAGS_FIESTA       = 16
+    TAGS_ACCOUSTIC    = 16
     TAGS_DESTROY      = 32
     TAGS_SATANIQUE    = 64
     TAGS_INSTRUMENTAL = 128
