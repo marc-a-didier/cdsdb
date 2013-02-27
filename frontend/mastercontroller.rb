@@ -84,6 +84,10 @@ class MasterController
         @glade[UIConsts::MW_TASKS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@tasks ) }
         @glade[UIConsts::MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@filter) }
         @glade[UIConsts::MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@memos)  }
+        @glade[UIConsts::MW_TBBTN_APPFILTER].signal_connect(:clicked){
+            DBCache.instance.dump_infos
+            ImageCache.instance.dump_infos
+        }
 
         # Action called from the memos window, equivalent to File/Save of the main window
         @glade[UIConsts::MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }

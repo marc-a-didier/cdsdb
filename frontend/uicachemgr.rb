@@ -40,13 +40,13 @@ class ImageCache
         data = @map[key]
         if size == SMALL_SIZE
             if data.small_pix.nil?
-Trace.log.debug "ImageCache check pix load small from cache".brown
+# Trace.log.debug "ImageCache check pix load small from cache".brown
                 data.small_pix = Gdk::Pixbuf.new(Cfg::instance.covers_dir+data.file_name, size, size)
             end
             return data.small_pix
         else
             if data.large_pix.nil?
-Trace.log.debug "ImageCache check pix load large from cache".brown
+# Trace.log.debug "ImageCache check pix load large from cache".brown
                 data.large_pix = Gdk::Pixbuf.new(Cfg::instance.covers_dir+data.file_name, size, size)
             end
             return data.large_pix
@@ -56,7 +56,7 @@ Trace.log.debug "ImageCache check pix load large from cache".brown
     def load_cover(key, size, file_name)
 #         unless @map[key]
         fname = Cfg::instance.covers_dir+file_name
-Trace.log.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
+# Trace.log.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
         if size == SMALL_SIZE
             @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
             return @map[key].small_pix
@@ -70,7 +70,7 @@ Trace.log.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
     end
 
     def set_default_pix(key, size)
-Trace.log.debug "ImageCache for key #{key} rerouted to default".green
+# Trace.log.debug "ImageCache for key #{key} rerouted to default".green
         if key[0] == "f"
             @map[key] = ImageData.new(DEF_FLAG_FILE, @map[DEFAULT_FLAG].small_pix, nil)
         else
@@ -112,7 +112,7 @@ Trace.log.debug "ImageCache for key #{key} rerouted to default".green
     def get_flag(rorigin)
         key = "f"+rorigin.to_s
         if @map[key].nil?
-Trace.log.debug "--- load flag for origin #{rorigin}".red
+# Trace.log.debug "--- load flag for origin #{rorigin}".red
             file = Cfg::instance.flags_dir+rorigin.to_s+".svg"
             File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
         end
@@ -134,9 +134,13 @@ Trace.log.debug "--- load flag for origin #{rorigin}".red
                 next if File::directory?(file)
                 key =  "t"+File::basename(file).gsub(File::extname(file), "")
                 @map[key] = ImageData.new(file.gsub(Cfg::instance.covers_dir, ""), nil, nil)
-Trace.log.debug("Key #{key} added, file=#{@map[key].file_name}")
+# Trace.log.debug("Key #{key} added, file=#{@map[key].file_name}")
            }
         }
+    end
+
+    def dump_infos
+        Trace.log.debug("Image cache size=#{@map.size}")
     end
 end
 
@@ -158,7 +162,7 @@ module CoverMgr
 
     def get_cover_file_name
         files = Dir[Cfg::instance.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
-Trace.log.debug "CoverMgr search key #{@pix_key} - disk access".red
+# Trace.log.debug "CoverMgr search key #{@pix_key} - disk access".red
         return files.size > 0 ? File::basename(files[0]) : ImageCache::DEF_RECORD_FILE
     end
 

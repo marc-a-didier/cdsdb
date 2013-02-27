@@ -27,7 +27,7 @@ class DBCache
 #         @artists[rartist] = ArtistDBClass.new.ref_load(rartist) if @artists[rartist].nil?
         if @artists[rartist].nil?
             @artists[rartist] = ArtistDBClass.new.ref_load(rartist)
-Trace.log.debug("Artist cache loaded key #{rartist}, size=#{@artists.size}")
+# Trace.log.debug("Artist cache loaded key #{rartist}, size=#{@artists.size}")
         end
         return @artists[rartist]
     end
@@ -36,7 +36,7 @@ Trace.log.debug("Artist cache loaded key #{rartist}, size=#{@artists.size}")
 #         @records[rrecord] = RecordDBClass.new.ref_load(rrecord) if @records[rrecord].nil?
         if @records[rrecord].nil?
             @records[rrecord] = RecordDBClass.new.ref_load(rrecord)
-Trace.log.debug("Record cache loaded key #{rrecord}, size=#{@records.size}")
+# Trace.log.debug("Record cache loaded key #{rrecord}, size=#{@records.size}")
         end
         return @records[rrecord]
     end
@@ -45,7 +45,7 @@ Trace.log.debug("Record cache loaded key #{rrecord}, size=#{@records.size}")
 #         @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment) if @segments[rsegment].nil?
         if @segments[rsegment].nil?
             @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment)
-Trace.log.debug("Segment cache loaded key #{rsegment}, size=#{@segments.size}")
+# Trace.log.debug("Segment cache loaded key #{rsegment}, size=#{@segments.size}")
         end
         return @segments[rsegment]
     end
@@ -54,7 +54,7 @@ Trace.log.debug("Segment cache loaded key #{rsegment}, size=#{@segments.size}")
 #         @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
         if @tracks[rtrack].nil?
             @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
-Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
+# Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
         end
         return @tracks[rtrack]
     end
@@ -89,6 +89,18 @@ Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
         [@artists, @records, @segments, @tracks,
          @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
 Trace.log.debug("ALL CACHES cleared")
+    end
+
+    def dump_infos
+        Trace.log.debug("Artist cache size=#{@artists.size}")
+        Trace.log.debug("Record cache size=#{@records.size}")
+        Trace.log.debug("Segment cache size=#{@segments.size}")
+        Trace.log.debug("Track cache size=#{@tracks.size}")
+        Trace.log.debug("Genre cache size=#{@genres.size}")
+        Trace.log.debug("Label cache size=#{@labels.size}")
+        Trace.log.debug("Media cache size=#{@medias.size}")
+        Trace.log.debug("Collection cache size=#{@collections.size}")
+        Trace.log.debug("Origin cache size=#{@origins.size}")
     end
 end
 

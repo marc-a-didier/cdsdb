@@ -85,8 +85,7 @@ class RecordUI < DBCacheLink
         return "" unless valid?
         str  = "Segment "+segment.iorder.to_s
         str += " "+segment.stitle unless segment.stitle.empty?
-        str += " by "+segment_artist.sname
-        str += " "+segment.iplaytime.to_ms_length
+        str += " by "+segment_artist.sname+" "+segment.iplaytime.to_ms_length
     end
 end
 
