@@ -233,13 +233,18 @@ public
     #
 
     def update_tracks_time_infos
-        DBIntf::connection.execute(%Q{SELECT COUNT(pltracks.rtrack), SUM(tracks.iplaytime) FROM pltracks
-                                      LEFT OUTER JOIN tracks ON pltracks.rtrack = tracks.rtrack
-                                      WHERE rplist=#{@current_pl.rplist}}) do |row|
-            @tracks = row[0].to_i
-            @ttime = row[1].to_i
-        end
-        plist_infos
+        @tracks = @ttime = 0
+        @pts.each { |model, path, iter|
+            @tracks += 1
+            @ttime += iter[TT_DATA].track.iplaytime
+        }
+#         DBIntf::connection.execute(%Q{SELECT COUNT(pltracks.rtrack), SUM(tracks.iplaytime) FROM pltracks
+#                                       LEFT OUTER JOIN tracks ON pltracks.rtrack = tracks.rtrack
+#                                       WHERE rplist=#{@current_pl.rplist}}) do |row|
+#             @tracks = row[0].to_i
+#             @ttime = row[1].to_i
+#         end
+        @current_pl.rplist == @playing_pl ? update_tracks_label : plist_infos
     end
 
     def plist_infos
@@ -385,6 +390,7 @@ public
                 @pts.each { |model, path, iter|
                     next if iter[0] != rpltrack
                     exec_sql("DELETE FROM pltracks WHERE rpltrack=#{rpltrack};")
+                    @remaining_time -= iter[TT_DATA].track.iplaytime if @remaining_time > 0
                     @pts.remove(iter)
                     break
                 }
@@ -561,31 +567,19 @@ public
         @pts.clear
         return if @tvpl.cursor[0].nil?
 
-        DBIntf::connection.execute(%Q{
-            SELECT pltracks.rpltrack, pltracks.rplist, pltracks.rtrack, pltracks.iorder, tracks.iorder,
-                   tracks.stitle, segments.stitle, records.stitle, artists.sname, tracks.iplaytime
-            FROM pltracks
-            INNER JOIN tracks ON pltracks.rtrack = tracks.rtrack
-            INNER JOIN segments ON tracks.rsegment = segments.rsegment
-            INNER JOIN records ON segments.rrecord = records.rrecord
-            INNER JOIN artists ON segments.rartist = artists.rartist
-            WHERE rplist=#{@current_pl.rplist} ORDER BY pltracks.iorder;}) do |row|
+        # The cache mechanism slows the things a bit down when a play list
+        # is loaded for the first time
+        DBIntf::connection.execute(
+            "SELECT * FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
                 iter = @pts.append
                 iter[TT_REF]   = row[TDB_RPLTRACK]
                 iter[TT_ORDER] = row[TDB_IORDER]
-                iter[TT_TRACK] = row[TDB_TORDER]
                 iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
-                # The cache slows a lot down the things.
-                # Better to stay the old way when loadinfg a big play list
-#                 iter[TT_TITLE] = iter[TT_DATA].segment.stitle.empty? ? iter[TT_DATA].track.stitle : iter[TT_DATA].segment.stitle+": "+iter[TT_DATA].track.stitle
-#                 iter[TT_ARTIST] = iter[TT_DATA].artist.sname
-#                 iter[TT_RECORD] = iter[TT_DATA].record.stitle
-#                 iter[TT_LENGTH] = iter[TT_DATA].track.iplaytime.to_ms_length
-
-                iter[TT_TITLE]  = row[TDB_STITLE].empty? ? row[TDB_TTITLE] : row[TDB_STITLE]+": "+row[TDB_TTITLE]
-                iter[TT_ARTIST] = row[TDB_ARTISTS]
-                iter[TT_RECORD] = row[TDB_RTITLE]
-                iter[TT_LENGTH] = row[TDB_ILENGTH].to_ms_length
+                iter[TT_TRACK] = iter[TT_DATA].track.iorder
+                iter[TT_TITLE]  = iter[TT_DATA].segment.stitle.empty? ? iter[TT_DATA].track.stitle : iter[TT_DATA].segment.stitle+": "+iter[TT_DATA].track.stitle
+                iter[TT_ARTIST] = iter[TT_DATA].segment_artist.sname
+                iter[TT_RECORD] = iter[TT_DATA].record.stitle
+                iter[TT_LENGTH] = iter[TT_DATA].track.iplaytime.to_ms_length
         end
         update_tracks_time_infos
         @tvpt.columns_autosize
