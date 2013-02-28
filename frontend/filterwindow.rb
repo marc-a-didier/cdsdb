@@ -185,6 +185,7 @@ puts sql
 
         # The array is ready. If random selection, shuffle it else compute and sort by weight
         if @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
+            Utils::init_random_generator
             tracks.shuffle!
         else
             tracks.each { |track|

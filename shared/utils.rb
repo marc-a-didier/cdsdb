@@ -206,6 +206,17 @@ class Utils
     end
 
 
+    #
+    # Another attempt to get more randomness...
+    #
+    def Utils::init_random_generator
+        sysrand = `head -c 8 /dev/random`
+        i = rseed = 0
+        sysrand.each_byte { |c| rseed += c << i*8; i += 1 }
+p rseed
+        srand(rseed)
+    end
+
 
     #
     # Tags a music file with data provided by the track_info class
