@@ -383,17 +383,32 @@ public
 
     def do_del(widget)
         # Check if the add item is sensitive to determinate if the popup is in the play lists or tracks
-        pltracks = []
+#         pltracks = []
         unless @mc.glade[UIConsts::PM_PL_ADD].sensitive?
-            @tvpt.selection.selected_each { |model, path, iter| pltracks << iter[0] }
-            pltracks.each { |rpltrack|
-                @pts.each { |model, path, iter|
-                    next if iter[0] != rpltrack
-                    exec_sql("DELETE FROM pltracks WHERE rpltrack=#{rpltrack};")
-                    @remaining_time -= iter[TT_DATA].track.iplaytime if @remaining_time > 0
-                    @pts.remove(iter)
-                    break
-                }
+#             @tvpt.selection.selected_each { |model, path, iter| pltracks << iter[0] }
+#             pltracks.each { |rpltrack|
+#                 @pts.each { |model, path, iter|
+#                     next if iter[0] != rpltrack
+#                     exec_sql("DELETE FROM pltracks WHERE rpltrack=#{rpltrack};")
+#                     @remaining_time -= iter[TT_DATA].track.iplaytime if @curr_track != -1 && path.to_s.to_i > @curr_track
+#                     @pts.remove(iter)
+#                     break
+#                 }
+#             }
+            iters = []
+            sql = "DELETE FROM pltracks WHERE rpltrack IN ("
+            @tvpt.selection.selected_each { |model, path, iter| sql += iter[0].to_s+","; iters << iter }
+            sql[-1] = ")"
+            exec_sql(sql)
+            iters.each { |iter|
+                if @curr_track != 1
+                    if iter.path.to_s.to_i > @curr_track
+                        @remaining_time -= iter[TT_DATA].track.iplaytime
+                    else
+                        @curr_track -= 1
+                    end
+                end
+                @pts.remove(iter)
             }
             do_renumber
             renumber_tracks_list_store
