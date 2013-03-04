@@ -27,6 +27,11 @@
 #
 class GenRowProp
 
+    FAKE_ID = -10
+
+    SELECT_ARTISTS = -1
+    SELECT_RECORDS = -2
+
     attr_accessor :ref, :table, :max_level, :filtered, :where_fields, :title
 
     # In: ->ref         : uid for the row
@@ -52,6 +57,22 @@ class GenRowProp
         raise
     end
 
+
+    def default_main_select(where_clause = "")
+        return "SELECT * FROM #{@table} "+where_clause
+    end
+
+    #
+    # By default, filter on where_fields and the parent PK or grand-parent PK if view
+    # is subdivided with artists/records
+    #
+    def default_filter(iter)
+        iter.parent[0] < 0 ? " #{@where_fields}=#{iter.parent.parent[0]} " :
+                             " #{@where_fields}=#{iter.parent[0]} "
+
+    end
+
+
     #
     # Must return a condition for the WHERE clause for the given iter.
     #
@@ -60,7 +81,11 @@ class GenRowProp
     # Only needed for the real data level, not called for intermediate levels.
     #
     def sub_filter(iter)
-        return " #{@where_fields}=#{iter.parent[0]} "
+        filter = default_filter(iter)
+        if iter.parent[0] == SELECT_RECORDS
+            filter += "AND records.rrecord=#{iter[3].split("@@@")[1]}" # Extract rrecord from the sort column
+        end
+        return filter
     end
 
     #
@@ -78,13 +103,33 @@ class GenRowProp
     # Helpers
     #
 
+    def add_compilations(model, iter, mc)
+        if mc.view_compile? && iter[0] == SELECT_ARTISTS
+            child = model.append(iter)
+            child[0], child[1], child[2], child[3] = 0, "Compilations", iter[2], "Compilations"
+        end
+    end
+
     #
-    # Add a fake child setting its ref to -1 so we're sure it's always the
+    # Add a fake child setting its ref to -10 so we're sure it's always the
     # first child since db refs are always positive.
     #
     def append_fake_child(model, iter)
         fake = model.append(iter)
-        fake[0] = -1
+        fake[0] = FAKE_ID
+    end
+
+    #
+    # Adds Artists/Records children for views that want it
+    #
+    def append_artists_records(model, iter)
+        ["Artists", "Records"].each_with_index { |title, index|
+            child = model.append(iter)
+            child[0], child[1], child[2], child[3] = -1-index, title, iter[2], title
+            append_fake_child(model, child)
+        }
+        # The caller expects a SQL statement. Empty means nothing to do.
+        return ""
     end
 
     #
@@ -92,17 +137,46 @@ class GenRowProp
     #
     # The statement needs to be completed by the subclass.
     #
-    def get_select_on_tracks(mc)
-        if mc.view_compile?
-            return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN records ON artists.rartist=records.rartist " \
-                    "INNER JOIN segments ON segments.rrecord=records.rrecord " \
-                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
+    def get_select_on_tracks(mc, selection_type = SELECT_ARTISTS)
+        if selection_type == SELECT_ARTISTS
+            if mc.view_compile?
+                return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+                        "INNER JOIN records ON artists.rartist=records.rartist " \
+                        "INNER JOIN segments ON segments.rrecord=records.rrecord " \
+                        "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
+            else
+                return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
+                        "INNER JOIN segments ON segments.rartist=artists.rartist " \
+                        "INNER JOIN records ON records.rrecord=segments.rrecord " \
+                        "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
+            end
         else
-            return "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-                    "INNER JOIN segments ON segments.rartist=artists.rartist " \
-                    "INNER JOIN records ON records.rrecord=segments.rrecord " \
-                    "INNER JOIN tracks ON tracks.rsegment=segments.rsegment "
+            return %Q{SELECT DISTINCT(records.stitle), artists.rartist, artists.sname, records.rrecord FROM records
+                      INNER JOIN artists ON records.rartist = artists.rartist
+                      INNER JOIN tracks ON tracks.rrecord = records.rrecord }
+        end
+    end
+
+
+    #
+    # Returns an SQL statement for records based filter
+    #
+    def get_select_on_records(mc, iter)
+        if iter[0] == SELECT_ARTISTS
+            if mc.view_compile?
+                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                        INNER JOIN records ON records.rartist = artists.rartist
+                        WHERE #{@where_fields}=#{iter.parent[0]}}
+            else
+                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                        INNER JOIN segments ON segments.rartist = artists.rartist
+                        INNER JOIN records ON records.rrecord = segments.rrecord
+                        WHERE #{@where_fields}=#{iter.parent[0]}}
+            end
+        else
+            sql = %Q{SELECT DISTINCT(records.stitle), artists.rartist, artists.sname, records.rrecord FROM records
+                     INNER JOIN artists ON records.rartist = artists.rartist
+                     WHERE #{@where_fields}=#{iter.parent[0]}}
         end
     end
 end
@@ -139,21 +213,11 @@ end
 #
 class GenresRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
-        if level == 0
-            sql = "SELECT * FROM #{iter[2].table} WHERE rgenre > 0"
-        elsif level == 1
-            if mc.view_compile?
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN records ON records.rartist = artists.rartist
-                         WHERE records.rgenre=#{iter[0]}}
-            else
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN segments ON segments.rartist = artists.rartist
-                         INNER JOIN records ON records.rrecord = segments.rrecord
-                         WHERE records.rgenre=#{iter[0]}}
-            end
+        return case level
+            when 0 then default_main_select("WHERE rgenre > 0")
+            when 1 then append_artists_records(model, iter)
+            when 2 then get_select_on_records(mc, iter)
         end
-        return sql
     end
 end
 
@@ -162,21 +226,11 @@ end
 #
 class LabelsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
-        if level == 0
-            sql = "SELECT * FROM #{iter[2].table}"
-        elsif level == 1
-            if mc.view_compile?
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN records ON records.rartist = artists.rartist
-                         WHERE records.rlabel=#{iter[0]}}
-            else
-                sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                         INNER JOIN segments ON segments.rartist = artists.rartist
-                         INNER JOIN records ON records.rrecord = segments.rrecord
-                         WHERE records.rlabel=#{iter[0]}}
-            end
+        return case level
+            when 0 then default_main_select
+            when 1 then append_artists_records(model, iter)
+            when 2 then get_select_on_records(mc, iter)
         end
-        return sql
     end
 end
 
@@ -185,19 +239,33 @@ end
 #
 class OriginsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
+        sql = ""
         if level == 0
-            sql = "SELECT * FROM #{iter[2].table}"
+            sql = default_main_select
         elsif level == 1
-#             if mc.view_compile?
-#                 sql = "SELECT DISTINCT(artists.rartist), artists.sname FROM artists " \
-#                        "INNER JOIN records ON artists.rartist=records.rartist " \
-#                        "WHERE artists.rorigin=#{iter[0]}"
-#             else
-                sql = %Q{SELECT artists.rartist, artists.sname FROM artists
-                         WHERE artists.rorigin=#{iter[0]}}
-#             end
+            append_artists_records(model, iter)
+        elsif level == 2
+            if iter[0] == SELECT_ARTISTS
+                if mc.view_compile?
+                    sql = %{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
+                            INNER JOIN records ON artists.rartist=records.rartist
+                            WHERE artists.rorigin=#{iter.parent[0]}}
+                else
+                    sql = %{SELECT artists.rartist, artists.sname FROM artists
+                            WHERE artists.rorigin=#{iter.parent[0]}}
+                end
+            else
+                sql = %{SELECT DISTINCT(records.stitle), artists.rartist, artists.sname, records.rrecord FROM records
+                        INNER JOIN artists ON records.rartist = artists.rartist
+                        WHERE artists.rorigin=#{iter.parent[0]}}
+            end
         end
         return sql
+    end
+
+    def post_select(model, iter, mc)
+        add_compilations(model, iter, mc)
+        super(model, iter, mc)
     end
 end
 
@@ -206,23 +274,24 @@ end
 #
 class TagsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
-        if level == 0
-            UIConsts::TAGS.each_with_index { |tag, i|
-                child = model.append(iter)
-                child[0] = i
-                child[1] = tag.to_html_italic
-                child[2] = iter[2]
-                child[3] = tag
-                append_fake_child(model, child)
-            }
-            return ""
-        elsif level == 1
-            return get_select_on_tracks(mc)+"WHERE (tracks.itags & #{1 << iter[0]}) <> 0"
+        return case level
+            when 0
+                UIConsts::TAGS.each_with_index { |tag, i|
+                    child = model.append(iter)
+                    child[0] = i
+                    child[1] = tag.to_html_italic
+                    child[2] = iter[2]
+                    child[3] = tag
+                    append_fake_child(model, child)
+                }
+                ""
+            when 1 then append_artists_records(model, iter)
+            when 2 then get_select_on_tracks(mc, iter[0])+"WHERE (tracks.itags & #{1 << iter.parent[0]}) <> 0"
         end
     end
 
-    def sub_filter(iter)
-        return " (#@where_fields & #{1 << iter.parent[0]}) <> 0 "
+    def default_filter(iter)
+        return " (#@where_fields & #{1 << iter.parent.parent[0]}) <> 0 "
     end
 end
 
@@ -240,8 +309,9 @@ class RippedRowProp < GenRowProp
             DBIntf::connection.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
-                child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "
-                child[1] += CGI::escapeHTML(row[row[1] == 0 ? 4 : 2])
+                child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+
+                           row[4].to_html_bold+"\nby "+row[2].to_html_italic
+#                 child[1] += CGI::escapeHTML(row[row[1] == 0 ? 4 : 2])
                 child[2] = iter[2]
                 child[3] = ("%03d" % count)+row[3].to_s
                 count += 1
@@ -260,11 +330,14 @@ end
 #
 class NeverRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
-        return get_select_on_tracks(mc)+"WHERE tracks.iplayed=0;"
+        return case level
+            when 0 then append_artists_records(model, iter)
+            when 1 then get_select_on_tracks(mc, iter[0])+"WHERE tracks.iplayed=0;"
+        end
     end
 
-    def sub_filter(iter)
-        return " #@where_fields=0"
+    def default_filter(iter)
+        return " #@where_fields=0 "
     end
 end
 
@@ -273,18 +346,19 @@ end
 #
 class RatingsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
-        if level == 0
-            UIConsts::RATINGS.each_with_index { |rating, i|
-                child = model.append(iter)
-                child[0] = i
-                child[1] = rating.to_html_italic
-                child[2] = iter[2]
-                child[3] = i.to_s
-                append_fake_child(model, child)
-            }
-            return ""
-        elsif level == 1
-            return get_select_on_tracks(mc)+"WHERE tracks.irating=#{iter[0]}"
+        return case level
+            when 0
+                UIConsts::RATINGS.each_with_index { |rating, i|
+                    child = model.append(iter)
+                    child[0] = i
+                    child[1] = rating.to_html_italic
+                    child[2] = iter[2]
+                    child[3] = i.to_s
+                    append_fake_child(model, child)
+                }
+                ""
+            when 1 then append_artists_records(model, iter)
+            when 2 then get_select_on_tracks(mc, iter[0])+"WHERE tracks.irating=#{iter.parent[0]}"
         end
     end
 end
@@ -304,8 +378,8 @@ class RecordsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         if level == 0
             sql = %Q{SELECT records.stitle, artists.rartist, artists.sname, records.rrecord FROM records
-                     INNER JOIN artists ON records.rartist = artists.rartist
-                     ORDER BY LOWER(records.stitle);}
+                     INNER JOIN artists ON records.rartist = artists.rartist;}
+#                      ORDER BY LOWER(records.stitle);}
             DBIntf::connection.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
@@ -327,15 +401,15 @@ end
 class ArtistsBrowser < GenericBrowser
 
     # Initialize all top levels rows
-    MB_TOP_LEVELS = [AllArtistsRowProp.new(1, "artists", 1, false, "", "All"),
-                     GenresRowProp.new(2, "genres", 2, true, "records.rgenre", "Genres"),
-                     OriginsRowProp.new(3, "origins", 2, true, "artists.rorigin", "Countries"),
-                     TagsRowProp.new(4, "tags", 2, true, "tracks.itags", "Tags"),
-                     LabelsRowProp.new(5, "labels", 2, true, "records.rlabel", "Labels"),
+    MB_TOP_LEVELS = [AllArtistsRowProp.new(1, "artists", 1, false, "", "All Artists"),
+                     GenresRowProp.new(2, "genres", 3, true, "records.rgenre", "Genres"),
+                     OriginsRowProp.new(3, "origins", 3, true, "artists.rorigin", "Countries"),
+                     TagsRowProp.new(4, "tags", 3, true, "tracks.itags", "Tags"),
+                     LabelsRowProp.new(5, "labels", 3, true, "records.rlabel", "Labels"),
                      RippedRowProp.new(6, "artists", 1, true, "records.rrecord", "Last ripped"),
-                     NeverRowProp.new(7, "tracks", 1, true, "tracks.iplayed", "Never played"),
-                     RatingsRowProp.new(8, "ratings", 2, true, "tracks.irating", "Rating"),
-                     RecordsRowProp.new(9, "records", 1, true, "records.rrecord", "Records")]
+                     NeverRowProp.new(7, "tracks", 2, true, "tracks.iplayed", "Never played"),
+                     RatingsRowProp.new(8, "ratings", 3, true, "tracks.irating", "Rating"),
+                     RecordsRowProp.new(9, "records", 1, true, "records.rrecord", "All Records")]
 
     ATV_REF   = 0
     ATV_NAME  = 1
@@ -355,11 +429,11 @@ class ArtistsBrowser < GenericBrowser
 
     def setup
         name_renderer = Gtk::CellRendererText.new
-        if Cfg::instance.admin?
-            name_renderer.editable = true
-            name_renderer.signal_connect(:edited) { |widget, path, new_text| on_artist_edited(widget, path, new_text) }
-        end
-        name_column = Gtk::TreeViewColumn.new("Artists", name_renderer)
+#         if Cfg::instance.admin?
+#             name_renderer.editable = true
+#             name_renderer.signal_connect(:edited) { |widget, path, new_text| on_artist_edited(widget, path, new_text) }
+#         end
+        name_column = Gtk::TreeViewColumn.new("Views", name_renderer)
         name_column.set_cell_data_func(name_renderer) { |col, renderer, model, iter| renderer.markup = iter[ATV_NAME] }
 
         @tv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new, :text => ATV_REF))
@@ -443,7 +517,7 @@ class ArtistsBrowser < GenericBrowser
     def select_artist(rartist, iter = nil)
         iter = @tvm.iter_first unless iter
         if iter.has_child?
-            if iter.first_child[0] != -1
+            if iter.first_child[0] != GenRowProp::FAKE_ID
                 self.select_artist(rartist, iter.first_child)
             else
                 self.select_artist(rartist, iter) if iter.next!
@@ -459,22 +533,29 @@ class ArtistsBrowser < GenericBrowser
 
     def map_sub_row_to_entry(row, iter)
         new_child = @tvm.append(iter)
-        new_child[0] = row[0]
-        new_child[1] = CGI::escapeHTML(row[1])
-        new_child[2] = iter[2]
-        new_child[3] = row[1]
+        if iter[0] == GenRowProp::SELECT_RECORDS
+            new_child[0] = row[1]
+            new_child[1] = row[0].to_html_bold+"\nby "+row[2].to_html_italic
+            new_child[2] = iter[2]
+            new_child[3] = row[0]+"@@@"+row[3].to_s # Magouille magouille...
+        else
+            new_child[0] = row[0]
+            new_child[1] = CGI::escapeHTML(row[1])
+            new_child[2] = iter[2]
+            new_child[3] = row[1]
+        end
         if @tvm.iter_depth(new_child) < iter[2].max_level
             new_child[1] = new_child[1].to_html_italic
             iter[2].append_fake_child(@tvm, new_child)
         end
     end
 
-    # Load children of iter. If it has childen and first child ref is not -1 the children
+    # Load children of iter. If it has childen and first child ref is not -10 the children
     # are already loaded, so do nothing except if force_reload is set to true.
-    # If first child ref is -1, it's a fake entry so load the true children
+    # If first child ref is -10, it's a fake entry so load the true children
     def load_sub_tree(iter, force_reload = false)
 
-        return if iter.first_child && iter.first_child[0] != -1 && !force_reload
+        return if iter.first_child && iter.first_child[0] != GenRowProp::FAKE_ID && !force_reload
 
 Trace.log.debug("*** load new sub tree ***")
         # Making the first column the sort column greatly speeds up things AND makes sure that the
@@ -565,7 +646,7 @@ Trace.log.debug("artists selection changed".cyan)
     def never_played_iter
         iter = @tvm.iter_first
         iter.next! while iter[2].ref != 7
-        return !iter || iter.first_child[0] == -1 ? nil : iter
+        return !iter || iter.first_child[0] == GenRowProp::FAKE_ID ? nil : iter
     end
 
     def remove_artist(rartist)
