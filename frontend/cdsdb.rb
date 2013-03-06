@@ -88,97 +88,106 @@ require './mastercontroller'
 require './my_rr_lib'
 
 
-# TODO: implementer un player via gstreamer (quand la doc sera a jour!)
-# TODO: generation de playlist
-# TODO: Classer la muse direct via le genre dans ~/Music apres le rip
-# TODO: ajouter le no de sequence dans l'index pour les tracks
-# TODO: sauver les infos de toutes les fenetres dans des prefs via xml plutot que yaml
+# DONE: implementer un player via gstreamer (quand la doc sera a jour!)
+# DONE: generation de playlist
+# DONE: Classer la muse direct via le genre dans ~/Music apres le rip
+# DONE: ajouter le no de sequence dans l'index pour les tracks
+# DONE: sauver les infos de toutes les fenetres dans des prefs via xml plutot que yaml
 
-# TODO: mettre une play queue dans le player
-# TODO: ramener les couvertures de disques via la lib ruby/aws (amazon web services)
-# TODO: shuffle des play lists
-# TODO: voir pour les styles (changement de font, etc...)
-# TODO: editeur du disque retourne par la recherche sur le net (ajout des segments)
+# DONE: mettre une play queue dans le player
+# DONE: ramener les couvertures de disques via la lib ruby/aws (amazon web services)
+# DONE: shuffle des play lists
+# DONE: voir pour les styles (changement de font, etc...)
+# DONE: editeur du disque retourne par la recherche sur le net (ajout des segments)
 
-# TODO: ajouter une icone dans la barre (comme rhythmbox & amarok)
-# TODO: ajouter un compteur played et faire des play lists automatiques en fonction via les genres
-# TODO: selection aleatoire de morceaux
-# TODO: utilitaires de recherche des fichiers dont on trouve pas un match dans la base
+# DONE: ajouter une icone dans la barre (comme rhythmbox & amarok)
+# DONE: ajouter un compteur played et faire des play lists automatiques en fonction via les genres
+# DONE: selection aleatoire de morceaux
+# DONE: utilitaires de recherche des fichiers dont on trouve pas un match dans la base
 
-# TODO: client/serveur : jouer les morceaux situes sur une autre machine
+# DONE: client/serveur : jouer les morceaux situes sur une autre machine
 
-# TODO: generer les stats en html
-# TODO: export de play lists vers un media (ipod, archos, ...)
-# TODO: notification quand commence un nouveau morceau
-# TODO: outil de recherche des morceaux, segs ou disques
+# DONE: generer les stats en html
+# DONE: export de play lists vers un media (ipod, archos, ...)
+# DONE: notification quand commence un nouveau morceau
+# DONE: outil de recherche des morceaux, segs ou disques
 
-# TODO: multiple selection on tracks tv
-# TODO: filter artists view by genre, tags, ...
-# TODO: mode admin/user (disable add, delete, update...)
-# TODO: mettre un flag jaune dans les tracks si le morceau est trouve mais pas au bon endroit
-# TODO: utiliser le drag/drop depuis les tracks pour alimenter les play lists plutot qu'un submenu
+# DONE: multiple selection on tracks tv
+# DONE: filter artists view by genre, tags, ...
+# DONE: mode admin/user (disable add, delete, update...)
+# DONE: mettre un flag jaune dans les tracks si le morceau est trouve mais pas au bon endroit
+# DONE: utiliser le drag/drop depuis les tracks pour alimenter les play lists plutot qu'un submenu
 
-# TODO: Regler le probleme de la double indexation quand on edite un titre de morceau
+# DONE: Regler le probleme de la double indexation quand on edite un titre de morceau
 #       dans le treeview (supprimer l'index du segment avant edition)
 
-# TODO: Assignement des segments avec des noms vides?
-# TODO: Verif de l'existence d'un titre maintenant que les segments n'ont plus de titre.
+# DONE: Assignement des segments avec des noms vides?
+# DONE: Verif de l'existence d'un titre maintenant que les segments n'ont plus de titre.
 
-# TODO: Modif automatique du fichier audio quand on modifie un titre
+# DONE: Modif automatique du fichier audio quand on modifie un titre
 
-# TODO: Perfectionner le système de génération des play lists: baser p.ex. sur le top des genres
+# DONE: Perfectionner le système de génération des play lists: baser p.ex. sur le top des genres
 #	et assigner un poids au genre.
 #	Etudier un système de bannissement.
 #	Assigner un poids linéaire ou logarithmique.
 #	Poids pour les tags également?
 #	Ajouter un interval de dates
 
-# TODO: cliquer sur le temps du player modifie l'affichage (remaining time).
+# DONE: cliquer sur le temps du player modifie l'affichage (remaining time).
 
-# TODO: agrandir l'image du disque quand on clique dessus.
-# TODO: Assigner l'image d'un disque en faisant un drag/drop sur l'image.
+# DONE: agrandir l'image du disque quand on clique dessus.
+# DONE: Assigner l'image d'un disque en faisant un drag/drop sur l'image.
 
-# TODO: Assigner un ordre de preference des morceaux dans un disque
-# TODO: Ajouter un flag local aux playlists pour savoir si les modifs doivent etre
+# DONE: Assigner un ordre de preference des morceaux dans un disque
+# DONE: Ajouter un flag local aux playlists pour savoir si les modifs doivent etre
 #       repercutees sur le serveur (surtout pour les generated playlists).
-# TODO: stats: artistes par pays
-# TODO: generer play list depuis les charts
-# TODO: negotiate database version when updating the db from client.
-# TODO: add a menu entry to update db track length from music file length when cd index is rotten!
-# TODO: Implement a server method to renumber play lists when changed
-# TODO: Add an item to the track popup to download track if on server
-# TODO: remplacer la check box active? du filtre par expanded? de l'expander.
-# TODO: mettre une option dans view pour cacher la premiere colonne (ref) des tv?
-# TODO: mettre le device du cd (/dev/cdrom, /dev/sr0, ...) dans les prefs
-# TODO: tester de passer par gtk::builder plutot que libglade2
-# TODO: tree view dans la liste des artistes avec vue par genre et autre???
-# TODO: voir pour le filtre: virer l'ancienne version et voir comment remplacer pour la gen. playlists
-# TODO: regrouper tous les tabs dans un seul? Remplacer les boutons par un popup sur un bouton.
+# DONE: stats: artistes par pays
+# DONE: generer play list depuis les charts
+# DONE: negotiate database version when updating the db from client.
+# DONE: add a menu entry to update db track length from music file length when cd index is rotten!
+# DONE: Implement a server method to renumber play lists when changed
+# DONE: Add an item to the track popup to download track if on server
+# DONE: remplacer la check box active? du filtre par expanded? de l'expander.
+# DONE: mettre une option dans view pour cacher la premiere colonne (ref) des tv?
+# DONE: mettre le device du cd (/dev/cdrom, /dev/sr0, ...) dans les prefs
+# DONE: tester de passer par gtk::builder plutot que libglade2
+# DONE: tree view dans la liste des artistes avec vue par genre et autre???
+# DONE: voir pour le filtre: virer l'ancienne version et voir comment remplacer pour la gen. playlists
+# DONE: regrouper tous les tabs dans un seul? Remplacer les boutons par un popup sur un bouton.
 #       Laisser des tabs pour les comments? ou les virer et faire une fenetre qui les affiche
 #       et reste instantiee avec un toggle quelconque?
-# TODO: voir si pour le filtre ajouter un message quand une fenetre est activee pour dire quelconque
+# DONE: voir si pour le filtre ajouter un message quand une fenetre est activee pour dire quelconque
 #       c'est elle qui recoit le message quand le filtre est applique plutot que de mettre un menu
 #       dans les fenetres susceptibles d'etre filtrees.
-# TODO: URGENT!!! voir pour le save du memo et si le to_widgets a encore un sens pour la main window
-# TODO: add a download from server item in the record/segment popup menu
-# TODO: remove the oldest played tracks from menus and make the recently played tracks filterable
-# TODO: Voir le probleme du remplissage des titres depuis le net avec la nouvelle version de rr lib
-# TODO: URGENT: voir le bug de l'expand des records quand on est pas dans All ??? hallucination???
+# DONE: URGENT!!! voir pour le save du memo et si le to_widgets a encore un sens pour la main window
+# DONE: add a download from server item in the record/segment popup menu
+# DONE: remove the oldest played tracks from menus and make the recently played tracks filterable
+# DONE: Voir le probleme du remplissage des titres depuis le net avec la nouvelle version de rr lib
+# DONE: URGENT: voir le bug de l'expand des records quand on est pas dans All ??? hallucination???
 #       Hallucination, de toute evidence...
 
-# TODO: trier la vue artistes par date d'ajout plutot que d'avoir un recently ripped/added records...
-# TODO: database cleanup. remove iiscompile, iisinset, isetof --- keep isetorder to may be append the
+# DONE: trier la vue artistes par date d'ajout plutot que d'avoir un recently ripped/added records...
+# DONE: database cleanup. remove iiscompile, iisinset, isetof --- keep isetorder to may be append the
 #       order to the disc name ([CD 1] for ex.).
-# TODO: enlever le hostname de logtracks et remplacer par une ref sur une table de hostname
+# DONE: enlever le hostname de logtracks et remplacer par une ref sur une table de hostname
 #       automatiquement remplie??? Ca sauverait des bytes...
 #       Et virer le champ rlogtrack qui sert a rien...???
-# TODO: ajouter rating & never played dans la view des artistes???
+# DONE: ajouter rating & never played dans la view des artistes???
 
-# TODO: add a reload menu entry in artists popup
-# TODO: Corriger le bug des charts!!!
-# TODO: faire une fenetre avec des checks box pour selectionner les stats qu'on veut
+# DONE: add a reload menu entry in artists popup
+# DONE: Corriger le bug des charts!!!
+# DONE: faire une fenetre avec des checks box pour selectionner les stats qu'on veut
 #       et ajouter des stats sur les tracks tagees et qualifiees.
 
+# DONE: Ajouter un mecanisme trace qui par sur stdout par defaut ou un fichier plutot que balancer des
+#       puts n'importe ou.
+
+# DONE: What did WE play on that day (24th of november, as example...)
+
+# DONE: Faire pour la base comme pour les images: une map qui enregistre une dbclass pour
+#       chaque entree qu'on veut cacher + sa pix_key!!!
+
+# DONE: Dans la vue des artistes, ajouter un sous-viveau avec vue par artiste ou record
 
 
 
@@ -207,14 +216,6 @@ require './my_rr_lib'
 
 # TODO: Trouver un moyen de disabler les signaux emis quand on fait une recherche incrementale!!!
 # TODO: remplacer les strings drag-data-get par un TrackMgr!!!
-
-# TODO: Faire pour la base comme pour les images: une map qui enregistre une dbclass pour
-#       chaque entree qu'on veut cacher + sa pix_key!!!
-
-# TODO: Ajouter un mecanisme trace qui par sur stdout par defaut ou un fichier plutot que balancer des
-#       puts n'importe ou.
-
-# TODO: What did WE play on that day (24th of november, as example...)
 
 
 # Peu realistes:
