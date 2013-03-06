@@ -350,7 +350,7 @@ p sql
             @mc.change_segment_artist(@trklnk.segment.rartist) if @trklnk.segment.rartist != @mc.segment.rartist
         else
             # There's nothing to do... may be set artist infos to empty.
-Trace.log.debug("--- multi select ---".magenta)
+# Trace.log.debug("--- multi select ---".magenta)
         end
     end
 

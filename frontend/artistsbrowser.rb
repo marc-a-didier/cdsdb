@@ -125,7 +125,7 @@ class GenRowProp
     def append_artists_records(model, iter)
         ["Artists", "Records"].each_with_index { |title, index|
             child = model.append(iter)
-            child[0], child[1], child[2], child[3] = -1-index, title, iter[2], title
+            child[0], child[1], child[2], child[3] = -1-index, "<b>#{title}</b>", iter[2], title
             append_fake_child(model, child)
         }
         # The caller expects a SQL statement. Empty means nothing to do.
@@ -557,7 +557,7 @@ class ArtistsBrowser < GenericBrowser
 
         return if iter.first_child && iter.first_child[0] != GenRowProp::FAKE_ID && !force_reload
 
-Trace.log.debug("*** load new sub tree ***")
+# Trace.log.debug("*** load new sub tree ***")
         # Making the first column the sort column greatly speeds up things AND makes sure that the
         # fake item is first in the store.
         @tvm.set_sort_column_id(0)
@@ -576,7 +576,8 @@ Trace.log.debug("*** load new sub tree ***")
         # Perform any post selection required action. By default, removes the first fake child
         iter[2].post_select(@tvm, iter, @mc)
 
-        iter[1] = iter[1]+" - (#{iter.n_children})"
+        # Called before the set sort column, so it's sorted by ref, not by name!
+        iter[1] = iter[1]+" - (#{iter.n_children})" if iter.first_child[0] != GenRowProp::SELECT_RECORDS
 
         @tvm.set_sort_column_id(3, Gtk::SORT_ASCENDING)
     end
@@ -588,7 +589,7 @@ Trace.log.debug("*** load new sub tree ***")
     def on_selection_changed(widget)
         @tvs = @tv.selection.selected
         return if @tvs.nil?
-Trace.log.debug("artists selection changed".cyan)
+# Trace.log.debug("artists selection changed".cyan)
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artlnk.reset
         else
