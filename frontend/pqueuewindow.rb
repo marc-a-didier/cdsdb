@@ -182,7 +182,7 @@ class PQueueWindow < TopWindow
     end
 
     def dwl_file_name_notification(uilink, file_name)
-        @mc.update_track_icon(uilink.track.rtrack)
+        @mc.update_track_icon(uilink)
     end
 
     def update_status

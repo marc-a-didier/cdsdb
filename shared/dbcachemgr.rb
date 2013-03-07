@@ -21,6 +21,11 @@ class DBCache
         @medias      = {}
         @collections = {}
         @origins     = {}
+
+        # Keep tracks of audio file status for a track, avoiding to
+        # repeatetly ask to the server if the track exists in client mode.
+        # Closely related to the track cache.
+        @audio_status = {}
     end
 
     def artist(rartist)
@@ -54,6 +59,7 @@ class DBCache
 #         @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
         if @tracks[rtrack].nil?
             @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
+            @audio_status[rtrack] = 4 # AudioLink::UNKNOWN default value
 # Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
         end
         return @tracks[rtrack]
@@ -84,6 +90,14 @@ class DBCache
         return @origins[rorigin]
     end
 
+    def set_audio_status(rtrack, status)
+        @audio_status[rtrack] = status
+    end
+
+    def audio_status(rtrack)
+        return @audio_status[rtrack]
+    end
+
     def clear
 #         instance_variables.each { |cache| cache.clear } # Marche pas!!!???
         [@artists, @records, @segments, @tracks,
@@ -101,6 +115,7 @@ Trace.log.debug("ALL CACHES cleared")
         Trace.log.debug("Media cache size=#{@medias.size}")
         Trace.log.debug("Collection cache size=#{@collections.size}")
         Trace.log.debug("Origin cache size=#{@origins.size}")
+        Trace.log.debug("Audio status cache size=#{@audio_status.size}")
     end
 end
 
@@ -168,6 +183,15 @@ class DBCacheLink
     def genre
         @rgenre = cache.genre(record.rgenre).rgenre if @rgenre.nil?
         return cache.genre(@rgenre)
+    end
+
+    def set_audio_status(status)
+        cache.set_audio_status(@rtrack, status)
+        return self
+    end
+
+    def audio_status
+        return cache.audio_status(@rtrack)
     end
 
 

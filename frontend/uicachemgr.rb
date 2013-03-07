@@ -267,29 +267,37 @@ class UILink < AudioLink
 
     def get_audio_file(emitter, tasks)
         # Try to find a local file if status is unknown
-        setup_audio_file if @audio_status == AudioLink::UNKNOWN
+#         setup_audio_file if @audio_status == AudioLink::UNKNOWN
+        setup_audio_file if audio_status == AudioLink::UNKNOWN
 
         # If called from play list, check_on_server is true to get the file in on server
-        if @audio_status == AudioLink::NOT_FOUND && Cfg.instance.remote?
+#         if @audio_status == AudioLink::NOT_FOUND && Cfg.instance.remote?
+        if audio_status == AudioLink::NOT_FOUND && Cfg.instance.remote?
             if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0] != AudioLink::NOT_FOUND
-                @audio_status = AudioLink::ON_SERVER
+#                 @audio_status = AudioLink::ON_SERVER
+                set_audio_status(AudioLink::ON_SERVER)
             end
         end
 
         # If status is on server, get the remote file.
-        return get_remote_audio_file(emitter, tasks) if @audio_status == AudioLink::ON_SERVER
+#         return get_remote_audio_file(emitter, tasks) if @audio_status == AudioLink::ON_SERVER
+        return get_remote_audio_file(emitter, tasks) if audio_status == AudioLink::ON_SERVER
 
-        return @audio_status
+#         return @audio_status
+        return audio_status
     end
 
     def get_remote_audio_file(emitter, tasks)
         if Cfg::instance.remote? && Cfg::instance.local_store?
             tasks.new_track_download(emitter, self)
-            @audio_status = AudioLink::ON_SERVER
+#             @audio_status = AudioLink::ON_SERVER
+            set_audio_status(AudioLink::ON_SERVER)
         else
-            @audio_status = AudioLink::NOT_FOUND
+#             @audio_status = AudioLink::NOT_FOUND
+            set_audio_status(AudioLink::NOT_FOUND)
         end
-        return @audio_status
+#         return @audio_status
+        return audio_status
     end
 
 

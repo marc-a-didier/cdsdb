@@ -14,7 +14,7 @@ class AudioLink < DBCacheLink
     ON_SERVER = 3 # No local file but available from server
     UNKNOWN   = 4 # Should be default value, no check has been made
 
-    attr_accessor :audio_file, :audio_status
+    attr_accessor :audio_file #, :audio_status
     attr_reader   :tags
 
     def initialize
@@ -25,15 +25,19 @@ class AudioLink < DBCacheLink
 
     def reset
         @audio_file = ""
-        @audio_status = UNKNOWN
+#         @audio_status = UNKNOWN
         @tags = nil
 
         return super
     end
 
+    def audio_status
+        return tags.nil? ? super : OK
+    end
+
     def load_from_tags(file_name)
         @audio_file = file_name
-        @audio_status = OK
+#         @audio_status = OK
 
         tags = TagLib::File.new(file_name)
         @tags = TagsData.new(tags.artist, tags.album, tags.title, tags.track,
@@ -47,7 +51,8 @@ class AudioLink < DBCacheLink
     # as we may guess the file really exists.
     def set_audio_file(file_name)
         @audio_file = file_name
-        @audio_status = OK
+#         @audio_status = OK
+        set_audio_status(OK)
     end
 
     # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
@@ -76,11 +81,14 @@ class AudioLink < DBCacheLink
     end
 
     def setup_audio_file
-        return @audio_status unless @audio_file.empty?
+#         return @audio_status unless @audio_file.empty?
+        return audio_status unless @audio_file.empty?
 
         build_audio_file_name
-        @audio_status = search_audio_file
-        return @audio_status
+#         @audio_status = search_audio_file
+        set_audio_status(search_audio_file)
+#         return @audio_status
+        return audio_status
     end
 
     # Returns the file name without the music dir and genre
@@ -94,7 +102,8 @@ class AudioLink < DBCacheLink
     end
 
     def playable?
-        return @audio_status == OK || @audio_status == MISPLACED
+#         return @audio_status == OK || @audio_status == MISPLACED
+        return audio_status == OK || audio_status == MISPLACED
     end
 
     # Search the Music directory for a file matching the theoretical file name.

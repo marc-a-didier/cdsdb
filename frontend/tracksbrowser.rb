@@ -283,7 +283,9 @@ p sql
 
         # Get local files first and stores the state of each track
         @tv.model.each { |model, path, iter|
-            check_on_server = true if iter[TTV_DATA].setup_audio_file == AudioLink::NOT_FOUND
+            if iter[TTV_DATA].audio_status.nil? || iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
+                check_on_server = true if iter[TTV_DATA].setup_audio_file == AudioLink::NOT_FOUND
+            end
         }
 
         # If client mode and some or all files not found, ask if present on the server
@@ -294,7 +296,8 @@ p sql
             # Replace each file not found state with server state
             MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
                 iter = @tv.model.get_iter(i.to_s)
-                iter[TTV_DATA].audio_status = AudioLink::ON_SERVER if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
+#                 iter[TTV_DATA].audio_status = AudioLink::ON_SERVER if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
+                iter[TTV_DATA].set_audio_status(AudioLink::ON_SERVER) if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
             }
         end
 
@@ -307,11 +310,13 @@ p sql
     #
     # Update the track icon when the download is finished
     #
-    def update_track_icon(rtrack)
-        if iter = find_ref(rtrack)
-            iter[TTV_DATA].audio_status = AudioLink::OK
+    def update_track_icon(uilink)
+        if iter = find_ref(uilink.track.rtrack)
+#             iter[TTV_DATA].audio_status = AudioLink::OK
             iter[TTV_PIX] = @tv.render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
         end
+        uilink.set_audio_status(AudioLink::OK)
+#         iter[TTV_DATA].audio_status = AudioLink::OK
     end
 
     # Returns the TrackUI for the currently selected track in the browser.
@@ -484,7 +489,7 @@ p sql
 
 
     def dwl_file_name_notification(uilink, file_name)
-        update_track_icon(uilink.track.rtrack)
+        update_track_icon(uilink)
     end
 
     def on_download_trk

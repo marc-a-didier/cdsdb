@@ -273,7 +273,7 @@ public
     end
 
     def dwl_file_name_notification(uilink, file_name)
-        @mc.update_track_icon(uilink.track.rtrack)
+        @mc.update_track_icon(uilink)
     end
 
     def get_audio_file

@@ -415,8 +415,8 @@ class MasterController
         @rec_browser.clear
     end
 
-    def update_track_icon(rtrack)
-        @trk_browser.update_track_icon(rtrack)
+    def update_track_icon(uilink)
+        @trk_browser.update_track_icon(uilink)
     end
 
     #
