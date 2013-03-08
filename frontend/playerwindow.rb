@@ -98,8 +98,15 @@ class PlayerWindow < TopWindow
     end
 
     def play_track
-        # Debug info
         if @player_data
+            # The status cache prevent the file name to be reloaded when selection is changed
+            # in the track browser. So, from now, we may receive an empty file name but the
+            # status is valid. If audio link is OK, we just have to find the file name for the track.
+            if @player_data.uilink.audio_file.empty? && @player_data.uilink.playable?
+                @player_data.uilink.setup_audio_file
+            end
+
+            # Debug info
             info = @player_data.uilink.tags.nil? ? "[#{@player_data.uilink.track.rtrack}" : "[dropped"
             Trace.log.debug((info+", #{@player_data.uilink.audio_file}]").green)
         else
