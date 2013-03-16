@@ -256,7 +256,14 @@ class TracksBrowser < GenericBrowser
     def set_track_field(field, value, to_all)
         meth = to_all ? @tv.model.method(:each) : @tv.selection.method(:selected_each)
 
-        sql = "UPDATE tracks SET #{field}=#{value} WHERE rtrack IN ("
+        sql = "UPDATE tracks SET #{field}="
+        if field == "itags"
+            operator = value < 0 ? "& ~" : "|"
+            sql += "#{field} #{operator} #{value.abs}"
+        else
+            sql += value.to_s
+        end
+        sql += " WHERE rtrack IN ("
         meth.call { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
         sql[-1] = ")"
 p sql

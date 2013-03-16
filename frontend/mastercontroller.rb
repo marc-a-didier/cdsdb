@@ -313,12 +313,9 @@ class MasterController
     # Send the value of tags selection to the popup owner so it can do what it wants of it
     #
     def on_set_tags(widget)
-        tags = 0
-        i = 1
-        widget.parent.each { |child| tags |= i if child.active?; i <<= 1 }
-        track.itags = tags
-        @trk_browser.set_track_field("itags", tags, @pm_owner.instance_of?(RecordsBrowser))
-#         @pm_owner.send(:set_tags, tags)
+        bit = 1 << UIConsts::TAGS.index(widget.child.label)
+        bit = -bit unless widget.active? # Send negative value to tell it must be unset
+        @trk_browser.set_track_field("itags", bit, @pm_owner.instance_of?(RecordsBrowser))
     end
 
     #
