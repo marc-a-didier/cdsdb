@@ -261,4 +261,9 @@ class DBCacheLink
         cache.segment(@rsegment).sql_load
         return self
     end
+
+    def reload_artist_cache
+        cache.artist(@rartist).sql_load
+        return self
+    end
 end
