@@ -85,9 +85,9 @@ Trace.log.debug("in init_baseui: prefix=#{prefix}")
         init_handlers if @@handlers.size == 0
 
         @dbs.members.each { |member|
-            TYPES_MAP.each { |key, value|
-                if @glade[prefix+key+member.to_s]
-                    @controls[member.to_s] = [@glade[prefix+key+member.to_s], @@handlers[value]]
+            TYPES_MAP.each { |ui_type, handler_type|
+                if @glade[prefix+ui_type+member.to_s]
+                    @controls[member.to_s] = [@glade[prefix+ui_type+member.to_s], @@handlers[handler_type]]
                     break;
                 end
             }
