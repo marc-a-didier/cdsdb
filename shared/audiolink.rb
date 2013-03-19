@@ -160,7 +160,7 @@ class AudioLink < DBCacheLink
         tags.close
     end
 
-    def tag_and_move_file(file_name)
+    def tag_and_move_file(file_name, &call_back)
         # Re-tags the original file
         tag_file(file_name)
 
@@ -174,9 +174,12 @@ class AudioLink < DBCacheLink
         FileUtils.mv(file_name, @audio_file)
         Log.instance.info("Source #{file_name} tagged and moved to "+@audio_file)
         Utils::remove_dirs(File.dirname(file_name))
+
+        set_audio_status(OK) # Force the track status as we may guess the file is OK...
+        call_back.call(self) if block_given?
     end
 
-    def tag_and_move_dir(dir)
+    def tag_and_move_dir(dir, &call_back)
         # Get track count
         trk_count = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
 
@@ -209,7 +212,7 @@ class AudioLink < DBCacheLink
             set_track_ref(row[0])
             set_segment_ref(track.rsegment)
             set_artist_ref(segment.rartist)
-            tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0])
+            tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], &call_back)
             i += 1
         end
         return [trk_count, files.size]

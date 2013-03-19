@@ -407,7 +407,7 @@ p sql
         return if !trackui || trackui.audio_status == AudioLink::UNKNOWN
 
         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
-        trackui.tag_and_move_file(file) unless file.empty?
+        trackui.tag_and_move_file(file) { |param| self.update_track_icon(param) } unless file.empty?
     end
 
     def on_update_playtime
