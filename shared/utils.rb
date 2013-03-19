@@ -217,6 +217,22 @@ p rseed
         srand(rseed)
     end
 
+    def self.get_randoms(max_value, how_many)
+        values = []
+        i = val = 0
+        sysvals = `head -c #{how_many*4} /dev/random`
+        sysvals.each_byte { |b|
+            val += b << (i*8)
+            if i == 3
+                values << (val % max_value)
+                i = val = 0
+            else
+                i += 1
+            end
+        }
+        return values
+    end
+
 
     #
     # Tags a music file with data provided by the track_info class
