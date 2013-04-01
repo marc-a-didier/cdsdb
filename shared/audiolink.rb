@@ -175,7 +175,7 @@ class AudioLink < DBCacheLink
         Log.instance.info("Source #{file_name} tagged and moved to "+@audio_file)
         Utils::remove_dirs(File.dirname(file_name))
 
-        set_audio_status(OK) # Force the track status as we may guess the file is OK...
+#         set_audio_status(OK) # Force the track status as we may guess the file is OK...
         call_back.call(self) if block_given?
     end
 

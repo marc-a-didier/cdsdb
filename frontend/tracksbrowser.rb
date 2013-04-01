@@ -315,15 +315,13 @@ p sql
     end
 
     #
-    # Update the track icon when the download is finished
+    # Set the status of audio link to OK and update the icon if visible
     #
-    def update_track_icon(uilink)
+    def audio_link_ok(uilink)
+        uilink.set_audio_status(AudioLink::OK)
         if iter = find_ref(uilink.track.rtrack)
-#             iter[TTV_DATA].audio_status = AudioLink::OK
             iter[TTV_PIX] = @tv.render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
         end
-        uilink.set_audio_status(AudioLink::OK)
-#         iter[TTV_DATA].audio_status = AudioLink::OK
     end
 
     # Returns the TrackUI for the currently selected track in the browser.
@@ -407,7 +405,7 @@ p sql
         return if !trackui || trackui.audio_status == AudioLink::UNKNOWN
 
         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
-        trackui.tag_and_move_file(file) { |param| self.update_track_icon(param) } unless file.empty?
+        trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) } unless file.empty?
     end
 
     def on_update_playtime
@@ -467,17 +465,16 @@ p sql
     end
 
     def on_trk_enqueue(is_from)
-        # Make it thread safe: if in client mode, stores what may change if user changes selection
-        # before all requests are made to the server.
-        # Juste supposin'... that the loop will finish before any user interaction...
-        stores = []
+        # Sends the current selection of track(s) to the play queue.
+        # If is_from is true, sends all tracks starting from the current selection
+        links = []
         if is_from
             iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-            begin stores << iter[TTV_DATA] end while iter.next!
+            begin links << iter[TTV_DATA] end while iter.next!
         else
-            @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
+            @tv.selection.selected_each { |model, path, iter| links << iter[TTV_DATA] }
         end
-        @mc.pqueue.enqueue(stores)
+        @mc.pqueue.enqueue(links)
     end
 
 
@@ -496,7 +493,7 @@ p sql
 
 
     def dwl_file_name_notification(uilink, file_name)
-        update_track_icon(uilink)
+        audio_link_ok(uilink)
     end
 
     def on_download_trk

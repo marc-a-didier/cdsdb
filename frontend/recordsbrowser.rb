@@ -287,14 +287,14 @@ p row
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
-            expected, found = uilink.tag_and_move_dir(dir) { |param| @mc.update_track_icon(param) }
+            expected, found = uilink.tag_and_move_dir(dir) { |param| @mc.audio_link_ok(param) }
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
             elsif dir.match(Cfg::instance.rip_dir)
                 # Set the ripped date only if processing files from the rip directory.
 #                 DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@reclnk.record.rrecord};")
                 @reclnk.record.idateripped = Time::now.to_i
-                @reclnk.record.sql_update.reload_record_cache
+                @reclnk.record.sql_update
             end
         end
     end
