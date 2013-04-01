@@ -179,14 +179,24 @@ puts sql
         # Filter was too restrictive, no match, exit silently
         return if tracks.size == 0
 
+        #
+        max_tracks = @mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round
+        
         # Store play count and rating weight for effiency purpose
         pcweight = @mc.glade[UIConsts::FLT_SPIN_PCWEIGHT].value
         rtweight = @mc.glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value
 
         # The array is ready. If random selection, shuffle it else compute and sort by weight
         if @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
-            Utils::init_random_generator
-            tracks.shuffle!
+#             Utils::init_random_generator
+puts "start get rnd"
+            rvalues = Utils::get_randoms(tracks.size, max_tracks)
+p rvalues
+            tmp = []
+            rvalues.each { |rnd| tmp << tracks[rnd] }
+            tracks = tmp
+# #             tmp.each_with_index { |track, index| tracks[index] = tmp[index] }
+#             tracks.shuffle!
         else
             tracks.each { |track|
                 track[TRACK_PLAYED]  = track[TRACK_PLAYED]/max_played*100.0 if max_played > 0
@@ -198,7 +208,8 @@ puts sql
             tracks.sort! { |t1, t2| t2[TRACK_WEIGHT] <=> t1[TRACK_WEIGHT] } # reverse sort, most weighted first
         end
 
-        tracks.slice!(@mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round, tracks.size)
+#         tracks.slice!(@mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round, tracks.size)
+        tracks.slice!(max_tracks, tracks.size)
 
         f.puts; f.puts
 
