@@ -63,6 +63,9 @@ public
         edrenderer.signal_connect(:edited) { |widget, path, new_text| on_tv_edited(widget, path, new_text) }
 
         srenderer = Gtk::CellRendererText.new()
+        trk_renderer = Gtk::CellRendererText.new
+#         trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
+#         trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[col] }
 
         @tvpl = @mc.glade[UIConsts::TV_PLISTS]
         @pls = Gtk::ListStore.new(Integer, String)
@@ -81,10 +84,12 @@ public
 
         @tvpt = @mc.glade[UIConsts::TV_PLTRACKS]
         @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class)
-        #col_names = ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"]
-        #col_names.size.times { |i|
+
         ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index { |name, i|
-            @tvpt.append_column(Gtk::TreeViewColumn.new(name, srenderer, :text => i))
+            @tvpt.append_column(Gtk::TreeViewColumn.new(name, trk_renderer, :text => i))
+            if i == 3 || i == 4
+                @tvpt.columns[i].set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[i].to_s }
+            end
             @tvpt.columns[i].resizable = true
             if i > 0
                 @tvpt.columns[i].clickable = true
@@ -273,7 +278,7 @@ public
     end
 
     def dwl_file_name_notification(uilink, file_name)
-        @mc.update_track_icon(uilink)
+        @mc.audio_link_ok(uilink)
     end
 
     def get_audio_file
@@ -591,8 +596,12 @@ public
                 iter[TT_ORDER] = row[TDB_IORDER]
                 iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
                 iter[TT_TRACK] = iter[TT_DATA].track.iorder
-                iter[TT_TITLE]  = iter[TT_DATA].segment.stitle.empty? ? iter[TT_DATA].track.stitle : iter[TT_DATA].segment.stitle+": "+iter[TT_DATA].track.stitle
-                iter[TT_ARTIST] = iter[TT_DATA].segment_artist.sname
+                if iter[TT_DATA].segment.stitle.empty?
+                    iter[TT_TITLE] = iter[TT_DATA].track.stitle.to_html_bold
+                else
+                    iter[TT_TITLE] = iter[TT_DATA].segment.stitle.to_html_bold+": "+iter[TT_DATA].track.stitle.to_html_bold
+                end
+                iter[TT_ARTIST] = iter[TT_DATA].segment_artist.sname.to_html_italic
                 iter[TT_RECORD] = iter[TT_DATA].record.stitle
                 iter[TT_LENGTH] = iter[TT_DATA].track.iplaytime.to_ms_length
         end
