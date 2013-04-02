@@ -280,7 +280,7 @@ p row
     end
 
     def on_tag_dir
-        uilink = @mc.get_track_uilink(0)
+        uilink = @mc.get_track_uilink(0).clone
         return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
 
         default_dir = uilink.playable? ? uilink.full_dir : Cfg::instance.rip_dir
