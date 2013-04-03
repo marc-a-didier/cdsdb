@@ -180,14 +180,14 @@ puts sql
         return if tracks.size == 0
 
         #
-        max_tracks = @mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round
-        
+        max_tracks = @mc.glade[FLT_SPIN_PLENTRIES].value.round
+
         # Store play count and rating weight for effiency purpose
-        pcweight = @mc.glade[UIConsts::FLT_SPIN_PCWEIGHT].value
-        rtweight = @mc.glade[UIConsts::FLT_SPIN_RATINGWEIGHT].value
+        pcweight = @mc.glade[FLT_SPIN_PCWEIGHT].value
+        rtweight = @mc.glade[FLT_SPIN_RATINGWEIGHT].value
 
         # The array is ready. If random selection, shuffle it else compute and sort by weight
-        if @mc.glade[UIConsts::FLT_CMB_SELECTBY].active == 0 # Random selection
+        if @mc.glade[FLT_CMB_SELECTBY].active == 0 # Random selection
 #             Utils::init_random_generator
 puts "start get rnd"
             rvalues = Utils::get_randoms(tracks.size, max_tracks)
@@ -200,12 +200,31 @@ p rvalues
         else
             tracks.each { |track|
                 track[TRACK_PLAYED]  = track[TRACK_PLAYED]/max_played*100.0 if max_played > 0
-                track[TRACK_WEIGHT] += track[TRACK_PLAYED]*pcweight if pcweight > 0.0
-                track[TRACK_WEIGHT] += track[TRACK_RATING]*rtweight if rtweight > 0.0
+                track[TRACK_WEIGHT] += track[TRACK_PLAYED]*pcweight # if pcweight > 0.0
+                track[TRACK_WEIGHT] += track[TRACK_RATING]*rtweight # if rtweight > 0.0
                 f << track[TRACK_RTRACK] << " - pcp: " << track[TRACK_PLAYED] << " - rtp: " << track[TRACK_RATING] \
                   << " - Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
             }
+
             tracks.sort! { |t1, t2| t2[TRACK_WEIGHT] <=> t1[TRACK_WEIGHT] } # reverse sort, most weighted first
+
+            if @mc.glade[FLT_CMB_SELECTBY].active == 2 # Randomize hits with same weight
+                # Search for the number of entries with same weight
+                count = 0
+                curr_weight = tracks[0][TRACK_WEIGHT]
+                tracks.each { |track|
+                    break if curr_weight != track[TRACK_WEIGHT]
+                    count += 1
+                }
+
+                f << "\n" << count << " tracks with weight " << curr_weight << "\n\n"
+
+                # If more tracks than wanted, slice it to the same rating level and shuffle
+                if count > max_tracks
+                    tracks.slice!(count, tracks.size)
+                    tracks.shuffle!
+                end
+            end
         end
 
 #         tracks.slice!(@mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round, tracks.size)
