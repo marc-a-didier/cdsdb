@@ -217,6 +217,11 @@ require './my_rr_lib'
 # TODO: Trouver un moyen de disabler les signaux emis quand on fait une recherche incrementale!!!
 # TODO: remplacer les strings drag-data-get par un TrackMgr!!!
 
+# TODO: deplacer les covers dans le dir des morceaux. suffixer avec f pour front, b pour back, etc...
+#       mettre le numero du morceau pour les covers individuelles.
+# TODO: autoriser des poids negatifs pour le filtre histoire de favoriser les morceaux les moins joues.
+
+
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)
