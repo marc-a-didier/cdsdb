@@ -210,20 +210,31 @@ p rvalues
 
             if @mc.glade[FLT_CMB_SELECTBY].active == 2 # Randomize hits with same weight
                 # Search for the number of entries with same weight
+                stracks = []
+                ttracks = []
                 count = 0
                 curr_weight = tracks[0][TRACK_WEIGHT]
                 tracks.each { |track|
-                    break if curr_weight != track[TRACK_WEIGHT]
+                    if curr_weight != track[TRACK_WEIGHT]
+                        ttracks.shuffle!
+                        stracks += ttracks
+                        ttracks = []
+                        break if count >= max_tracks
+                        curr_weight = track[TRACK_WEIGHT]
+                    end
                     count += 1
+                    ttracks << track
                 }
 
-                f << "\n" << count << " tracks with weight " << curr_weight << "\n\n"
+                f << "\n" << stracks.size << " tracks selected until weight " << curr_weight << "\n"
+                stracks.each { |track| f << track[TRACK_WEIGHT] << "\n" }
+                tracks = stracks
 
                 # If more tracks than wanted, slice it to the same rating level and shuffle
-                if count > max_tracks
-                    tracks.slice!(count, tracks.size)
-                    tracks.shuffle!
-                end
+#                 count = max_tracks if count < max_tracks
+#                 tracks.slice!(count, tracks.size)
+#                 tracks.each { |track| f << track[TRACK_WEIGHT] << "\n" }
+#                 tracks.shuffle!
             end
         end
 
