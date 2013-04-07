@@ -510,17 +510,18 @@ Trace.log.debug("*** save memos called")
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
 
+        Thread.new {
+            # Update local database AND remote database if in client mode
+            host = Socket::gethostname if host == ""
+            DBUtils::update_track_stats(uilink.track.rtrack, host)
 
-        # Update local database AND remote database if in client mode
-        host = Socket::gethostname if host == ""
-        DBUtils::update_track_stats(uilink.track.rtrack, host)
+            MusicClient.new.update_stats(uilink.track.rtrack) if Cfg::instance.remote?
 
-        Thread.new { MusicClient.new.update_stats(uilink.track.rtrack) } if Cfg::instance.remote?
+            @charts.live_update(uilink) if Cfg::instance.live_charts_update? && @charts.window.visible?
 
-        Thread.new { @charts.live_update(uilink) } if Cfg::instance.live_charts_update? && @charts.window.visible?
-
-        # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
-        @trk_browser.update_infos(uilink.reload_track_cache.track.rtrack)
+            # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
+            @trk_browser.update_infos(uilink.reload_track_cache.track.rtrack)
+        } #.resume
 
 #         if @glade[UIConsts::MM_VIEW_UPDATENP].active?
 #             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
