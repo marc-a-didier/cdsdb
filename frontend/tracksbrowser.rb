@@ -247,7 +247,7 @@ class TracksBrowser < GenericBrowser
     # Returns a list of the the currently visible tracks
     def get_tracks_list
         links = []
-        @tv.model.each { |model, path, iter| stores << iter[TTV_DATA].clone }
+        @tv.model.each { |model, path, iter| links << iter[TTV_DATA].clone }
         return links
     end
 
