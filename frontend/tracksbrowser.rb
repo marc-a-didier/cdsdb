@@ -239,16 +239,16 @@ class TracksBrowser < GenericBrowser
     end
 
     def get_selection
-        stores = []
-        @tv.selection.selected_each { |model, path, iter| stores << iter[TTV_DATA] }
-        return stores
+        links = []
+        @tv.selection.selected_each { |model, path, iter| links << iter[TTV_DATA].clone }
+        return links
     end
 
     # Returns a list of the the currently visible tracks
     def get_tracks_list
-        stores = []
-        @tv.model.each { |model, path, iter| stores << iter[TTV_DATA] }
-        return stores
+        links = []
+        @tv.model.each { |model, path, iter| stores << iter[TTV_DATA].clone }
+        return links
     end
 
 

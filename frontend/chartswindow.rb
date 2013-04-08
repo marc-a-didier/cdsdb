@@ -134,15 +134,15 @@ class ChartsWindow < TopWindow
     def get_selection
         return [] if @tvc.selection.selected.nil?
 
-        stores = []
+        links = []
         ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-            stores << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink
+            links << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            DBIntf::connection.execute(sql) { |row| stores << UILink.new.set_track_ref(row[0]) }
+            DBIntf::connection.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
         end
-        return stores
+        return links
     end
 
     def enqueue

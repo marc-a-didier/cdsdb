@@ -211,9 +211,9 @@ public
     end
 
     def get_selection
-        stores = []
-        @tvpt.selection.selected_each { |model, path, iter| stores << iter[TT_DATA] }
-        return stores
+        links = []
+        @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA].clone }
+        return links
     end
 
     def reorder_pltracks(col_id)

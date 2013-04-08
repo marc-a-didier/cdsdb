@@ -81,14 +81,14 @@ class RecentItemsDialog
     end
 
     def get_selection
-        stores = []
+        links = []
         if @view_type == VIEW_PLAYED || @view_type == VIEW_DATES
-            stores << @tv.selection.selected[COL_DATA]
+            links << @tv.selection.selected[COL_DATA].clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
-            DBIntf::connection.execute(sql) { |row| stores << UILink.new.set_track_ref(row[0]) }
+            DBIntf::connection.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
         end
-        return stores
+        return links
     end
 
     def set_filter(where_clause, must_join_logtracks = false)
