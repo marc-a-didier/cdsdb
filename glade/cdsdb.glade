@@ -3,11 +3,6 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
-  <object class="GtkToggleAction" id="mw_memos_action"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkAdjustment" id="adjustment10">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -47,6 +42,11 @@
   <object class="GtkToggleAction" id="mw_charts_action"/>
   <object class="GtkToggleAction" id="mw_filter_action"/>
   <object class="GtkAction" id="mw_memo_save_action"/>
+  <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkMenu" id="apm_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1483,32 +1483,7 @@ ou n'importe lequel des tags
         <col id="0" translatable="yes">First hits</col>
       </row>
       <row>
-        <col id="0" translatable="yes">First hits randomized</col>
-      </row>
-    </data>
-  </object>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-network</property>
-    <property name="icon-size">1</property>
-  </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-network</property>
-  </object>
-  <object class="GtkListStore" id="liststore1">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">Top hits</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Random</col>
+        <col id="0" translatable="yes">First hits shuffled</col>
       </row>
     </data>
   </object>
@@ -1539,6 +1514,31 @@ ou n'importe lequel des tags
       <!-- column-name item -->
       <column type="gchararray"/>
     </columns>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-network</property>
+    <property name="icon-size">1</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-network</property>
+  </object>
+  <object class="GtkListStore" id="liststore1">
+    <columns>
+      <!-- column-name item -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">Top hits</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Random</col>
+      </row>
+    </data>
   </object>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
