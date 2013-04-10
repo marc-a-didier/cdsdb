@@ -209,7 +209,11 @@ p rvalues
             tracks.sort! { |t1, t2| t2[TRACK_WEIGHT] <=> t1[TRACK_WEIGHT] } # reverse sort, most weighted first
 
             if @mc.glade[FLT_CMB_SELECTBY].active == 2 # Randomize hits with same weight
-                # Search for the number of entries with same weight
+                # Search for the number of entries with same weight. While we don't have
+                # enough tracks, shuffle the first result and append it to the selected tracks
+                # array then get all tracks of the next weight and repeat the operation
+                # until we have enough tracks. It ensures that the most weighted tracks
+                # are first in the list but shuffled.
                 stracks = []
                 ttracks = []
                 count = 0
@@ -218,7 +222,7 @@ p rvalues
                     if curr_weight != track[TRACK_WEIGHT]
                         ttracks.shuffle!
                         stracks += ttracks
-                        ttracks = []
+                        ttracks.clear
                         break if count >= max_tracks
                         curr_weight = track[TRACK_WEIGHT]
                     end
@@ -229,16 +233,9 @@ p rvalues
                 f << "\n" << stracks.size << " tracks selected until weight " << curr_weight << "\n"
                 stracks.each { |track| f << track[TRACK_WEIGHT] << "\n" }
                 tracks = stracks
-
-                # If more tracks than wanted, slice it to the same rating level and shuffle
-#                 count = max_tracks if count < max_tracks
-#                 tracks.slice!(count, tracks.size)
-#                 tracks.each { |track| f << track[TRACK_WEIGHT] << "\n" }
-#                 tracks.shuffle!
             end
         end
 
-#         tracks.slice!(@mc.glade[UIConsts::FLT_SPIN_PLENTRIES].value.round, tracks.size)
         tracks.slice!(max_tracks, tracks.size)
 
         f.puts; f.puts
