@@ -303,7 +303,6 @@ p sql
             # Replace each file not found state with server state
             MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
                 iter = @tv.model.get_iter(i.to_s)
-#                 iter[TTV_DATA].audio_status = AudioLink::ON_SERVER if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
                 iter[TTV_DATA].set_audio_status(AudioLink::ON_SERVER) if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
             }
         end
@@ -316,11 +315,15 @@ p sql
 
     #
     # Set the status of audio link to OK and update the icon if visible
+    # Warning: uilink is now cloned from the original so setting the audio file name
+    #          in the clone DOESN'T affect the original link since the file name
+    #          is not in the cache but in the link itself.
     #
     def audio_link_ok(uilink)
         uilink.set_audio_status(AudioLink::OK)
         if iter = find_ref(uilink.track.rtrack)
             iter[TTV_PIX] = @tv.render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
+            iter[TTV_DATA].audio_file = uilink.audio_file
         end
     end
 
@@ -372,10 +375,6 @@ p sql
 
     def set_cover(url)
         @trklnk.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @trklnk.track.valid?
-#         return if @tv.selection.count_selected_rows == 0
-#         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-#         iter[TTV_DATA].set_cover(url, @mc.artist.compile?)
-#         @track.to_widgets_with_cover(iter[TTV_DATA])
     end
 
     def on_trk_add
@@ -432,16 +431,6 @@ p sql
             trackui.track.sql_update
             trackui.tag_and_move_file(file) unless file.empty? # May be only on server
         end
-
-#         iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
-#         if @track.stitle != new_text
-#             fname = Utils::audio_file_exists(TrackInfos.new.get_track_infos(iter[TTV_REF])).file_name
-#             @track.stitle = iter[TTV_TITLE] = new_text
-#             MusicClient.new.rename_audio(iter[TTV_REF], new_text) if Cfg::instance.remote?
-#             @track.sql_update.to_widgets
-#             Utils::tag_and_move_file(fname, TrackInfos.new.get_track_infos(iter[TTV_REF])) unless fname.empty?
-#             update_entry
-#         end
     end
 
     def on_trk_segment_assign(widget)
