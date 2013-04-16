@@ -79,20 +79,19 @@ class String
 
     def to_date_from_utc
         begin
-            dt = (Time.at(DateTime.parse(self).to_time)-Time.now.utc_offset).to_i
+            dt = Time.at(DateTime.parse(self).to_time)
+            return (dt-dt.utc_offset).to_i
         rescue ArgumentError
-            dt = 0
+            return 0
         end
-        return dt
     end
 
     def to_date
         begin
-            dt = Time.at(Date.parse(self).to_time).to_i
+            return Time.at(Date.parse(self).to_time).to_i
         rescue ArgumentError
-            dt = 0
+            return 0
         end
-        return dt
     end
 
 
