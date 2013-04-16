@@ -508,7 +508,7 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def edit_artist
-        DBEditor.new(@mc, @artlnk).run if @artlnk.valid?
+        @artlnk.to_widgets if @artlnk.valid? && DBEditor.new(@mc, @artlnk).run == Gtk::Dialog::RESPONSE_OK
     end
 
     # Recursively search for rartist from iter. If iter is nil, search from tree root.

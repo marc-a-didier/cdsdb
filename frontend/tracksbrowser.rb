@@ -473,10 +473,11 @@ p sql
         # TODO: faire le rename/retag local/remote si le titre/genre a change
         if DBEditor.new(@mc, @trklnk.track).run == Gtk::Dialog::RESPONSE_OK
             # TODO: review this code. It's useless or poorly coded
-            load_entries
-            @trklnk.track.sql_load
+#             load_entries
+#             @trklnk.track.sql_load
             # TODO: a revoir urgement!
-            @mc.select_track(@trklnk)
+#             @mc.select_track(@trklnk)
+            @trklnk.to_widgets_with_cover
         end
     end
 

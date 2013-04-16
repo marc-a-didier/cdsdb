@@ -238,10 +238,9 @@ p row
     end
 
     def on_rec_edit
-        resp = @tv.selection.selected.parent ? DBEditor.new(@mc, @reclnk.segment).run : DBEditor.new(@mc, @reclnk.record).run
-        if resp == Gtk::Dialog::RESPONSE_OK
+        if DBEditor.new(@mc, @tv.selection.selected.parent ? @reclnk.segment : @reclnk.record).run == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
-            @tv.selection.selected[RTV_DBLNK].reload_segment_cache.reload_record_cache
+#             @tv.selection.selected[RTV_DBLNK].reload_segment_cache.reload_record_cache
             # update_ui_handlers(@tv.selection.selected)
             @reclnk.to_widgets(!@tv.selection.selected.parent)
         end

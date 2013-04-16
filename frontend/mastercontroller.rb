@@ -352,10 +352,6 @@ class MasterController
         return @rec_browser.reclnk.segment
     end
 
-    def is_on_record
-        return @rec_browser.is_on_record
-    end
-
     def track
         return @trk_browser.trklnk.track
     end
@@ -366,6 +362,10 @@ class MasterController
 
     def record_changed
         @trk_browser.load_entries_select_first
+    end
+
+    def is_on_record
+        return @rec_browser.is_on_record
     end
 
     def is_on_never_played?
@@ -379,6 +379,13 @@ class MasterController
     def invalidate_tabs
         @rec_browser.invalidate
         @trk_browser.invalidate
+    end
+
+    def new_link_from_selection
+        return DBCacheLink.new.set_artist_ref(record.compile? ? segment.rartist : artist.rartist) \
+                              .set_record_ref(record.rrecord) \
+                              .set_segment_ref(segment.rsegment) \
+                              .set_track_ref(track.rtrack)
     end
 
     def sub_filter

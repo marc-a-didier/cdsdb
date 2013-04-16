@@ -124,7 +124,8 @@ Trace.log.debug("in init_baseui: prefix=#{prefix}")
         value = DBSelectorDialog.new.run(dbfield[1..-1])
         unless value == -1
             @dbs[dbfield] = value
-            self.sql_update.field_to_widget(dbfield)
+#             self.sql_update.field_to_widget(dbfield)
+            self.field_to_widget(dbfield)
         end
     end
 

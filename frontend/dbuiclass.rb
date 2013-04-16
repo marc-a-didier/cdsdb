@@ -71,14 +71,6 @@ class RecordUI < DBCacheLink
         str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
         str += ", "+cache.collection(rec.rcollection).sname if rec.rcollection != 0
         str += ", "+rec.iplaytime.to_ms_length
-#         str  = cache.media(record.rmedia).sname
-#         str += record.iyear == 0 ? ", Unknown" : ", "+record.iyear.to_s
-#         str += ", "+cache.label(record.rlabel).sname
-#         str += ", "+record.scatalog unless record.scatalog.empty?
-#         str += ", "+genre.sname
-#         str += ", "+record.isetorder.to_s+" of "+record.isetof.to_s if record.isetorder > 0
-#         str += ", "+cache.collection(record.rcollection).sname if record.rcollection != 0
-#         str += ", "+record.iplaytime.to_ms_length
     end
 
     def build_seg_infos_string
@@ -131,16 +123,6 @@ class TrackUI < UILink
             UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
         end
         return str
-#         str  = UIConsts::RATINGS[track.irating]+", "
-#         str += track.iplayed > 0 ? "played "+track.iplayed.to_s+" time".check_plural(track.iplayed)+" " : "never played, "
-#         str += "(Last: "+track.ilastplayed.to_std_date+"), " if track.ilastplayed != 0
-#         if track.itags == 0
-#             str += "no tags"
-#         else
-#             str += "tagged as "
-#             UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (track.itags & (1 << i)) != 0 }
-#         end
-#         return str
     end
 end
 
@@ -149,36 +131,34 @@ end
 # Classes that handle the full stand-alone editor to the underlying db structure
 #
 #
-class ArtistEditor < ArtistDBClass
+class ArtistEditor
 
     include UIConsts
     include BaseUI
 
-    def initialize(glade, rartist)
+    def initialize(glade, dbs)
         super()
 
         @glade = glade
+        @dbs = dbs
         init_baseui("arted_")
-
-        ref_load(rartist)
 
         @glade[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
     end
 end
 
 
-class RecordEditor < RecordDBClass
+class RecordEditor
 
     include UIConsts
     include BaseUI
 
-    def initialize(glade, rrecord)
+    def initialize(glade, dbs)
         super()
 
         @glade = glade
+        @dbs = dbs
         init_baseui("reced_")
-
-        ref_load(rrecord)
 
         @glade[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
         @glade[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
@@ -201,18 +181,17 @@ class RecordEditor < RecordDBClass
 end
 
 
-class SegmentEditor < SegmentDBClass
+class SegmentEditor
 
     include UIConsts
     include BaseUI
 
-    def initialize(glade, rsegment)
+    def initialize(glade, dbs)
         super()
 
         @glade = glade
+        @dbs = dbs
         init_baseui("seged_")
-
-        ref_load(rsegment)
 
         @glade[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
         @glade[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
@@ -231,18 +210,17 @@ class SegmentEditor < SegmentDBClass
 end
 
 
-class TrackEditor < TrackDBClass
+class TrackEditor
 
     include UIConsts
     include BaseUI
 
-    def initialize(glade, rtrack)
+    def initialize(glade, dbs)
         super()
 
         @glade = glade
+        @dbs = dbs
         init_baseui("trked_")
-
-        ref_load(rtrack)
 
         #
         # Setup the rating combo
@@ -263,11 +241,13 @@ class DBEditor
     def initialize(mc, initiating_class)
         @glade = GTBld::load(DLG_DB_EDITOR)
 
+        @dblink = mc.new_link_from_selection
+
         @editors = []
-        @editors << ArtistEditor.new(@glade, mc.record.compile? ? mc.segment.rartist : mc.artist.rartist)
-        @editors << RecordEditor.new(@glade, mc.record.rrecord)
-        @editors << SegmentEditor.new(@glade, mc.segment.rsegment)
-        @editors << TrackEditor.new(@glade, mc.track.rtrack)
+        @editors << ArtistEditor.new(@glade, @dblink.artist.dbs)
+        @editors << RecordEditor.new(@glade, @dblink.record.dbs)
+        @editors << SegmentEditor.new(@glade, @dblink.segment.dbs)
+        @editors << TrackEditor.new(@glade, @dblink.track.dbs)
         @editors.each { |editor| editor.to_widgets }
 
         # TODO: a revoir!!! maintenant que rec & seg sont dans la meme ui...
@@ -282,7 +262,8 @@ class DBEditor
 
         response = @glade[DLG_DB_EDITOR].run
         if response == Gtk::Dialog::RESPONSE_OK
-            @editors.each { |uiclass| uiclass.from_widgets.sql_update }
+            @editors.each { |dbs| dbs.from_widgets }
+            @dblink.flush_main_tables
         end
         @glade[DLG_DB_EDITOR].destroy
         return response
