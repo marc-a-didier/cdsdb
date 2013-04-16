@@ -266,4 +266,9 @@ class DBCacheLink
         cache.artist(@rartist).sql_load
         return self
     end
+
+    def flush_main_tables
+        [cache.track(@rtrack), cache.record(@rrecord),
+         cache.segment(@rsegment), cache.artist(@rartist)].each { |dbclass| dbclass.sql_update }
+    end
 end
