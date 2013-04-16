@@ -513,15 +513,16 @@ Trace.log.debug("*** save memos called")
         Thread.new {
             # Update local database AND remote database if in client mode
             host = Socket::gethostname if host == ""
+
             DBUtils::update_track_stats(uilink.track.rtrack, host)
-
-            MusicClient.new.update_stats(uilink.track.rtrack) if Cfg::instance.remote?
-
-            @charts.live_update(uilink) if Cfg::instance.live_charts_update? && @charts.window.visible?
 
             # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
             @trk_browser.update_infos(uilink.reload_track_cache.track.rtrack)
-        } #.resume
+
+            @charts.live_update(uilink) if Cfg::instance.live_charts_update? && @charts.window.visible?
+
+            MusicClient.new.update_stats(uilink.track.rtrack) if Cfg::instance.remote?
+        }
 
 #         if @glade[UIConsts::MM_VIEW_UPDATENP].active?
 #             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
