@@ -131,19 +131,23 @@ end
 # Classes that handle the full stand-alone editor to the underlying db structure
 #
 #
+#
+# Now that editors work with the cache and do not inherit from any class,
+# the @dbs and @glade members must be set since they are used in the
+# included BaseUI module.
+#
+
 class ArtistEditor
 
     include UIConsts
     include BaseUI
 
     def initialize(glade, dbs)
-        super()
-
         @glade = glade
         @dbs = dbs
         init_baseui("arted_")
 
-        @glade[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
+        glade[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
     end
 end
 
@@ -154,27 +158,25 @@ class RecordEditor
     include BaseUI
 
     def initialize(glade, dbs)
-        super()
-
         @glade = glade
         @dbs = dbs
         init_baseui("reced_")
 
-        @glade[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
-        @glade[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
-        @glade[RECED_BTN_LABEL].signal_connect(:clicked)      { select_dialog("rlabel") }
-        @glade[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog("rmedia") }
-        @glade[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog("rcollection") }
-        @glade[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
+        glade[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
+        glade[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
+        glade[RECED_BTN_LABEL].signal_connect(:clicked)      { select_dialog("rlabel") }
+        glade[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog("rmedia") }
+        glade[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog("rcollection") }
+        glade[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
 
         [RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
-            @glade[ctrl].sensitive = Cfg::instance.admin?
+            glade[ctrl].sensitive = Cfg::instance.admin?
         }
     end
 
     def update_ptime
         return if rmedia != DBIntf::MEDIA_AUDIO_FILE
-        DBUtils::update_record_playtime(self.rrecord)
+        DBUtils::update_record_playtime(@dbs.rrecord)
         self.field_to_widget("iplaytime")
     end
 
@@ -187,22 +189,20 @@ class SegmentEditor
     include BaseUI
 
     def initialize(glade, dbs)
-        super()
-
         @glade = glade
         @dbs = dbs
         init_baseui("seged_")
 
-        @glade[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
-        @glade[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
+        glade[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
+        glade[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
 
         [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
-            @glade[ctrl].sensitive = Cfg::instance.admin?
+            glade[ctrl].sensitive = Cfg::instance.admin?
         }
     end
 
     def update_ptime
-        DBUtils::update_segment_playtime(self.rsegment)
+        DBUtils::update_segment_playtime(@dbs.rsegment)
         #DBUtils::update_record_playtime(self.rrecord)
         self.field_to_widget("iplaytime")
     end
@@ -216,8 +216,6 @@ class TrackEditor
     include BaseUI
 
     def initialize(glade, dbs)
-        super()
-
         @glade = glade
         @dbs = dbs
         init_baseui("trked_")
@@ -225,12 +223,12 @@ class TrackEditor
         #
         # Setup the rating combo
         #
-        RATINGS.each { |rating| @glade[TRKED_CMB_RATING].append_text(rating) }
+        RATINGS.each { |rating| glade[TRKED_CMB_RATING].append_text(rating) }
 
         #
         # Setup the track tags treeview
         #
-        UIUtils::setup_tracks_tags_tv(@glade[UIConsts::TRKED_TV_TAGS])
+        UIUtils::setup_tracks_tags_tv(glade[TRKED_TV_TAGS])
     end
 end
 
