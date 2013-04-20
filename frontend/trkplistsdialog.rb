@@ -29,7 +29,7 @@ class TrkPListsDialog
         sql = %Q{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack FROM pltracks
 				 INNER JOIN plists ON plists.rplist = pltracks.rplist
 				 WHERE pltracks.rtrack=#{rtrack};}
-        DBIntf::connection.execute(sql) { |row|
+        CDSDB.execute(sql) { |row|
             iter = tv.model.append
             row.each_with_index { |val, i| iter[i] = val }
 		}

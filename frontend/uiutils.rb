@@ -19,12 +19,12 @@ private
 
 public
     def self.main
-        #@@main ? @@main : @@main = Gtk::Builder.new.add(Cfg::instance.rsrc_dir+"cdsdb.gtb").connect_signals { |handler| method(handler) }
+        #@@main ? @@main : @@main = Gtk::Builder.new.add(CFG.rsrc_dir+"cdsdb.gtb").connect_signals { |handler| method(handler) }
         @@main ? @@main : @@main = Gtk::Builder.new.add("../glade/cdsdb.glade").connect_signals { |handler| method(handler) }
     end
 
     def self.load(win_id)
-        #build = Gtk::Builder.new.add(Cfg::instance.rsrc_dir+win_id+".glade").connect_signals { |handler| method(handler) }
+        #build = Gtk::Builder.new.add(CFG.rsrc_dir+win_id+".glade").connect_signals { |handler| method(handler) }
         build = Gtk::Builder.new.add("../glade/#{win_id}.glade").connect_signals { |handler| method(handler) }
         return build
     end
@@ -69,7 +69,7 @@ class UIUtils
         dialog = Gtk::FileChooserDialog.new(title, nil, action, nil,
                                             [Gtk::Stock::CANCEL, Gtk::Dialog::RESPONSE_CANCEL],
                                             [Gtk::Stock::OPEN, Gtk::Dialog::RESPONSE_ACCEPT])
-        dialog.current_folder = default_dir.empty? ? Cfg::instance.music_dir : default_dir
+        dialog.current_folder = default_dir.empty? ? CFG.music_dir : default_dir
         file = dialog.filename if dialog.run == Gtk::Dialog::RESPONSE_ACCEPT
         dialog.destroy
         return file
@@ -112,7 +112,8 @@ class UIUtils
     # Pix maps generator for button icons
     #
     def UIUtils::get_btn_icon(fname)
-        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg::instance.icons_dir+"default.svg", 22, 22)
+#         return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(CFG.icons_dir+"default.svg", 22, 22)
+        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(CFG.icons_dir+"default.svg", 22, 22)
     end
 
     #
@@ -154,7 +155,7 @@ class UIUtils
     def UIUtils::import_played_tracks
         return if UIUtils::get_response("OK to import tracks from playedtracks.sql?") != Gtk::Dialog::RESPONSE_OK
         rlogtrack = DBUtils::get_last_id("logtrack")
-        IO.foreach(Cfg::instance.rsrc_dir+"playedtracks.sql") { |line|
+        IO.foreach(CFG.rsrc_dir+"playedtracks.sql") { |line|
             line = line.chomp
             if line.match(/^INSERT/)
                 rlogtrack += 1
@@ -168,9 +169,9 @@ class UIUtils
 
     def UIUtils::delete_artist(rartist)
         msg = ""
-        count = DBIntf::connection.get_first_value("SELECT COUNT(rartist) FROM records WHERE rartist=#{rartist};")
+        count = CDSDB.get_first_value("SELECT COUNT(rartist) FROM records WHERE rartist=#{rartist};")
         msg = "Error: #{count} reference(s) still in records table." if count > 0
-        count = DBIntf::connection.get_first_value("SELECT COUNT(rartist) FROM segments WHERE rartist=#{rartist};")
+        count = CDSDB.get_first_value("SELECT COUNT(rartist) FROM segments WHERE rartist=#{rartist};")
         if count > 0
             msg += "\n" if msg.length > 0
             msg += "Error: #{count} reference(s) still in segments table."
@@ -185,7 +186,7 @@ class UIUtils
     end
 
     def UIUtils::delete_segment(rsegment)
-        count = DBIntf::connection.get_first_value("SELECT COUNT(rsegment) FROM tracks WHERE rsegment=#{rsegment};")
+        count = CDSDB.get_first_value("SELECT COUNT(rsegment) FROM tracks WHERE rsegment=#{rsegment};")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in tracks table.", Gtk::MessageDialog::ERROR)
         else
@@ -195,7 +196,7 @@ class UIUtils
     end
 
     def UIUtils::delete_record(rrecord)
-        count = DBIntf::connection.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rrecord=#{rrecord};")
+        count = CDSDB.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rrecord=#{rrecord};")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in segments table.", Gtk::MessageDialog::ERROR)
         else
@@ -205,14 +206,14 @@ class UIUtils
     end
 
     def UIUtils::delete_track(rtrack)
-        count = DBIntf::connection.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{rtrack};")
+        count = CDSDB.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{rtrack};")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in play lists.", Gtk::MessageDialog::ERROR)
         else
-            row = DBIntf.connection.execute("SELECT rsegment, rrecord FROM tracks WHERE rtrack=#{rtrack}")
-            count = DBIntf.connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{row[0][0]}")
+            row = CDSDB.execute("SELECT rsegment, rrecord FROM tracks WHERE rtrack=#{rtrack}")
+            count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{row[0][0]}")
             del_seg = count == 1 && UIUtils::get_response("This is the last track of its segment. Remove it along?") == Gtk::Dialog::RESPONSE_OK
-            count = DBIntf.connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{row[0][1]}")
+            count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{row[0][1]}")
             del_rec = count == 1 && UIUtils::get_response("This is the last track of its record. Remove it along?") == Gtk::Dialog::RESPONSE_OK
 
             DBUtils::client_sql("DELETE FROM logtracks WHERE rtrack=#{rtrack};")

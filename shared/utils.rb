@@ -5,34 +5,20 @@
 AudioFileStatus = Struct.new(:status, :file_name)
 
 
-class Log
-
-private
-    @@log = nil
-
-public
-    def Log.instance
-        @@log.nil? ? @@log = Logger.new(Cfg::instance.log_file, 100, 2097152) : @@log
-    end
-end
+# Instatiate global Logger object
+LOG = Logger.new(CFG.log_file, 100, 2097152)
 
 
-class Trace
+# Instatiate global Trace object
+TRACE = Logger.new(STDOUT)
 
-    include Singleton
 
-    attr_reader :trace
-
-    def initialize
-        @trace = Logger.new(STDOUT)
-    end
-
-    def self.log
-        return instance.trace
-    end
-end
-
+# Add some very useful methods to the String class
 class String
+    def to_sql
+        return "'"+self.gsub(/'/, "''")+"'"
+    end
+
     def check_plural(quantity)
         return quantity < 2 ? self : self+"s"
     end
@@ -114,6 +100,14 @@ class String
     def reverse; colorize(7);  end
 end
 
+
+class Fixnum
+    def to_sql
+        return self.to_s
+    end
+end
+
+
 SEC_MS_LENGTH  = 1000
 MIN_MS_LENGTH  = 60*SEC_MS_LENGTH
 HOUR_MS_LENGTH = 60*MIN_MS_LENGTH
@@ -178,12 +172,12 @@ class Utils
     #
     def Utils::replace_dir_name(file_info)
         type, name, mtime = file_info.split(Cfg::FILE_INFO_SEP)
-        return Cfg::instance.dirs[type]+name
+        return CFG.dirs[type]+name
     end
 
     def Utils::has_matching_file?(file_info)
         type, name, mdtime = file_info.split(Cfg::FILE_INFO_SEP)
-        local_file = Cfg::instance.dirs[type]+name
+        local_file = CFG.dirs[type]+name
         return File::exists?(local_file) && File::mtime(local_file).to_i >= mdtime.to_i
     end
 
@@ -256,7 +250,7 @@ p rseed
     def Utils::remove_dirs(dir)
         while Dir.entries(dir).size < 3 # Remove dir if entries only contains . & ..
             Dir.rmdir(dir)
-            Log.instance.info("Source dir #{dir} removed.")
+            LOG.info("Source dir #{dir} removed.")
             dir.sub!(/(\/[^\/]+)$/, "")
         end
     end
@@ -269,10 +263,10 @@ p rseed
     def Utils::tag_and_move_file(fname, track_infos)
         tag_file(fname, track_infos)
 
-        root_dir = Cfg::instance.music_dir+track_infos.genre+File::SEPARATOR
+        root_dir = CFG.music_dir+track_infos.genre+File::SEPARATOR
         FileUtils.mkpath(root_dir+track_infos.dir)
         FileUtils.mv(fname, root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
-        Log.instance.info("Source #{fname} tagged and moved to "+root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
+        LOG.info("Source #{fname} tagged and moved to "+root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
         Utils::remove_dirs(File.dirname(fname))
     end
 
@@ -289,7 +283,7 @@ p rseed
     #
     def Utils::tag_and_move_dir(dir, rrecord)
         # Get track count
-        trk_count = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{rrecord}")
+        trk_count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{rrecord}")
 
         # Get recursivelly all music files from the selected dir
         files = []
@@ -317,7 +311,7 @@ p rseed
         # Loops through each track
         track_infos = TrackInfos.new
         i = 0
-        DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
+        CDSDB.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
 #             yield
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], track_infos.get_track_infos(row[0]))
             i += 1
@@ -333,7 +327,7 @@ p rseed
     #
 #     def Utils::search_and_get_audio_file(emitter, tasks, track_infos)
 #         # If client mode and no local store, download any way in the mfiles directory
-#         if Cfg::instance.remote? && !Cfg::instance.local_store?
+#         if CFG.remote? && !CFG.local_store?
 #              tasks.new_track_download(emitter, track_info.track.stitle, track_info.track.rtrack)
 #              return DOWNLOADING
 #         end
@@ -341,7 +335,7 @@ p rseed
 #         fname = Utils::audio_file_exists(track_infos).file_name
 #
 #         # If client mode with local store download file from server if not found on disk
-#         if fname.empty? && Cfg::instance.remote? && Cfg::instance.local_store?
+#         if fname.empty? && CFG.remote? && CFG.local_store?
 #             tasks.new_track_download(emitter, track_infos.track.stitle, track_infos.track.rtrack)
 #             return DOWNLOADING
 #         end
@@ -361,7 +355,7 @@ p rseed
         AUDIO_EXTS.each { |ext| return AudioFileStatus.new(FILE_OK, file+ext) if File::exists?(file+ext) }
 
         file = File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname
-        Dir[Cfg::instance.music_dir+"*"].each { |entry|
+        Dir[CFG.music_dir+"*"].each { |entry|
             next if entry[0] == "." || !FileTest::directory?(entry)
             AUDIO_EXTS.each { |ext| return AudioFileStatus.new(FILE_MISPLACED, entry+file+ext) if File::exists?(entry+file+ext) }
         }
@@ -377,7 +371,7 @@ p rseed
         fname = audio_file_exists(track_infos).file_name;
         unless fname.empty?
             File.unlink(fname)
-            Log.instance.info("File #{fname} removed from file system.")
+            LOG.info("File #{fname} removed from file system.")
             Utils::remove_dirs(File.dirname(fname))
         end
     end
@@ -388,7 +382,7 @@ p rseed
     # Made to speed up search in stats by not checking every track of the record.
     #
     def Utils::record_on_disk?(track_infos)
-        Dir[Cfg::instance.music_dir+"*"].each do |entry|
+        Dir[CFG.music_dir+"*"].each do |entry|
             if FileTest::directory?(entry)
                 return true if FileTest::exists?(entry+File::SEPARATOR+track_infos.dir)
             end
@@ -409,7 +403,7 @@ p rseed
                 tags.close
             end
         }
-        Log.instance.info("Directory #{dir} tagged with genre #{genre}")
+        LOG.info("Directory #{dir} tagged with genre #{genre}")
     end
 
     #
@@ -421,10 +415,10 @@ p rseed
         return if record.iissegmented == 0
 
         segment = SegmentDBClass.new
-        DBIntf.connection.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
+        CDSDB.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
             segment.load_from_row(seg_row)
             seg_order = 1
-            DBIntf.connection.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") { |trk_row|
+            CDSDB.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") { |trk_row|
                 DBUtils::log_exec("UPDATE tracks SET isegorder=#{seg_order} WHERE rtrack=#{trk_row[0]};")
                 seg_order += 1
             }
@@ -439,7 +433,7 @@ p rseed
         return if dir.empty?
 
         stats = [0, 0]
-        res = File.new(Cfg::instance.rsrc_dir+"orphans.txt", "w")
+        res = File.new(CFG.rsrc_dir+"orphans.txt", "w")
         Find::find(dir) { |file|
             if AUDIO_EXTS.include?(File.extname(file).downcase)
 print "Checking #{file}\n"
@@ -475,13 +469,13 @@ print "Checking #{file}\n"
         print "No more supported!!!\n"
         return
 
-        total = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks").to_f
+        total = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks").to_f
         i = 1.0
-        DBIntf::connection.execute("SELECT * FROM tracks") do |row|
+        CDSDB.execute("SELECT * FROM tracks") do |row|
             file = Utils::audio_file_exists(get_track_info(row[FLD_RTRACK]))[1]
             unless file.empty?
-                file.gsub!(Cfg::instance.music_dir, "")
-                DBIntf::connection.execute("UPDATE tracks SET saudioinfo=#{file.to_sql} WHERE rtrack=#{row[FLD_RTRACK]};")
+                file.gsub!(CFG.music_dir, "")
+                CDSDB.execute("UPDATE tracks SET saudioinfo=#{file.to_sql} WHERE rtrack=#{row[FLD_RTRACK]};")
             end
         end
     end
@@ -495,10 +489,10 @@ print "Checking #{file}\n"
     def Utils::get_cover_file_name(rrecord, rtrack, irecsymlink)
         # Can't assign irecsymlink to rrecord because if there's a track cover it won't find it
         files = []
-        dir = Cfg::instance.covers_dir+rrecord.to_s
+        dir = CFG.covers_dir+rrecord.to_s
         files = Dir[dir+"/"+rtrack.to_s+".*"] if rtrack != 0 && File::directory?(dir)
         files = Dir[dir+".*"] if files.size == 0
-        files = Dir[Cfg::instance.covers_dir+irecsymlink.to_s+".*"] if irecsymlink != 0 && files.size == 0
+        files = Dir[CFG.covers_dir+irecsymlink.to_s+".*"] if irecsymlink != 0 && files.size == 0
         return files.size > 0 ? files[0] : ""
     end
 
@@ -510,14 +504,14 @@ print "Checking #{file}\n"
         if recrartist == 0 && rartist != 0
             # We're on a track of a compilation but not on the Compilations
             # so we assign the file to the track rather than the record
-            cover_file = Cfg::instance.covers_dir+rrecord.to_s
+            cover_file = CFG.covers_dir+rrecord.to_s
             File::mkpath(cover_file)
             cover_file += File::SEPARATOR+rtrack.to_s+File::extname(fname)
             ex_name = cover_file+File::SEPARATOR+"ex"+rtrack.to_s+File::extname(fname)
         else
             # Assign file to record
-            cover_file = Cfg::instance.covers_dir+rrecord.to_s+File::extname(fname)
-            ex_name = Cfg::instance.covers_dir+"ex"+rrecord.to_s+File::extname(fname)
+            cover_file = CFG.covers_dir+rrecord.to_s+File::extname(fname)
+            ex_name = CFG.covers_dir+"ex"+rrecord.to_s+File::extname(fname)
         end
         if File::exists?(cover_file)
             File::unlink(ex_name) if File::exists?(ex_name)
@@ -546,7 +540,7 @@ print "Checking #{file}\n"
         end
 
         def Utils.dump_table(xdoc, table)
-            DBIntf::connection.execute("SELECT * FROM #{table}") { |row|
+            CDSDB.execute("SELECT * FROM #{table}") { |row|
                 xdoc.root << new_node(table, row)
             }
         end
@@ -558,15 +552,15 @@ print "Checking #{file}\n"
 
         ["medias", "collections", "labels", "genres"].each { |table| dump_table(xdoc, table) }
 
-        #DBIntf::connection.execute("SELECT * FROM artists WHERE rartist=273 ORDER BY sname") do |artrow|
-        #DBIntf::connection.execute("SELECT * FROM artists ORDER BY sname") do |artrow|
-        DBIntf::connection.execute("SELECT DISTINCT (artists.rartist), artists.sname FROM artists INNER JOIN records ON artists.rartist=records.rartist ORDER BY artists.sname") do |artrow|
+        #CDSDB.execute("SELECT * FROM artists WHERE rartist=273 ORDER BY sname") do |artrow|
+        #CDSDB.execute("SELECT * FROM artists ORDER BY sname") do |artrow|
+        CDSDB.execute("SELECT DISTINCT (artists.rartist), artists.sname FROM artists INNER JOIN records ON artists.rartist=records.rartist ORDER BY artists.sname") do |artrow|
             xdoc.root << artist = new_node("artist", artrow)
-            DBIntf::connection.execute("SELECT * FROM records WHERE rartist=#{artrow[0]} ORDER BY stitle") do |recrow|
+            CDSDB.execute("SELECT * FROM records WHERE rartist=#{artrow[0]} ORDER BY stitle") do |recrow|
                 record = new_node("record", recrow)
-                DBIntf::connection.execute("SELECT * FROM segments WHERE rrecord=#{recrow[0]} ORDER BY stitle") do |segrow|
+                CDSDB.execute("SELECT * FROM segments WHERE rrecord=#{recrow[0]} ORDER BY stitle") do |segrow|
                     segment = new_node("segment", segrow)
-                    DBIntf::connection.execute("SELECT * FROM tracks WHERE rsegment=#{segrow[0]} ORDER BY iorder") do |trkrow|
+                    CDSDB.execute("SELECT * FROM tracks WHERE rsegment=#{segrow[0]} ORDER BY iorder") do |trkrow|
                         segment << new_node("track", trkrow)
                     end
                     record << segment
@@ -575,11 +569,11 @@ print "Checking #{file}\n"
             end
         end
         ["plists", "pltracks", "hostnames", "logtracks"].each { |table| dump_table(xdoc, table) }
-        xdoc.save(Cfg::instance.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
+        xdoc.save(CFG.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
     end
 
     def Utils::test_ratings
-        lnmax_played = Math.log(DBIntf::connection.get_first_value("SELECT MAX(iplayed) FROM tracks").to_f)
+        lnmax_played = Math.log(CDSDB.get_first_value("SELECT MAX(iplayed) FROM tracks").to_f)
         sql = "SELECT tracks.stitle, tracks.iplayed, tracks.irating, records.stitle, artists.sname FROM tracks " \
               "INNER JOIN records ON tracks.rrecord = records.rrecord " \
               "INNER JOIN segments ON tracks.rsegment = segments.rsegment " \
@@ -587,14 +581,14 @@ print "Checking #{file}\n"
               "WHERE tracks.iplayed > 0;"
         puts sql
         rt = []
-        DBIntf::connection.execute(sql) { |row|
+        CDSDB.execute(sql) { |row|
             rating = 100.0*(((Math.log(row[1].to_f)/lnmax_played) + (row[2].to_f/2.0)/ (9.0-row[2].to_f)))
             #print Math.log(row[1].to_f), "/", lnmax_played, "\n"
             rt << [rating, row[0]+" by "+row[4]+" from "+row[3]] if rating > 0.0
             #rt << row[0]+" by "+row[4]+" from "+row[3]+"==> "+rating.to_s
         }
         rt.sort! { |t1, t2| t2 <=> t1 }
-        File.open(Cfg::instance.rsrc_dir+"ratings.txt", "w") { |file|
+        File.open(CFG.rsrc_dir+"ratings.txt", "w") { |file|
             rt.each { |s| file.puts s[0].to_s+": "+s[1] }
         }
     end

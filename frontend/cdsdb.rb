@@ -257,10 +257,9 @@ class Cdsdb
     end
 
     def initialize(path_or_data, root, domain)
-        Cfg::instance.load
-        Cfg::instance.set_admin_mode(has_arg("--admin")) #ARGV[0] == "--admin" || ARGV[1] == "--admin")
+        CFG.set_admin_mode(has_arg("--admin")) #ARGV[0] == "--admin" || ARGV[1] == "--admin")
 
-        DBIntf::connection.execute("PRAGMA synchronous=OFF;")
+        CDSDB.execute("PRAGMA synchronous=OFF;")
 
         #Thread.new { MusicServer.new(self).listen } if has_arg("--server")
         Thread.abort_on_exception = true
@@ -269,6 +268,7 @@ class Cdsdb
     end
 
 end
+
 
 Cdsdb.new(UIConsts::GLADE_MAIN, nil, "cdsdb")
 Gtk.main

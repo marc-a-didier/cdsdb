@@ -109,16 +109,16 @@ class PlayerWindow < TopWindow
 
             # Debug info
             info = @player_data.uilink.tags.nil? ? "[#{@player_data.uilink.track.rtrack}" : "[dropped"
-            Trace.log.debug((info+", #{@player_data.uilink.audio_file}]").green)
+            TRACE.debug((info+", #{@player_data.uilink.audio_file}]").green)
         else
-            Trace.log.debug("[nil]".red)
+            TRACE.debug("[nil]".red)
         end
 
         @tip_pix = nil
         if @player_data.nil?
             reset_player
-            if Cfg::instance.notifications?
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{ImageCache::instance.default_record_file} 'CDs DB' 'End of play list'")
+            if CFG.notifications?
+                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
             end
         else
             @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uilink.html_track_title_no_track_num(false, " ")
@@ -130,9 +130,9 @@ class PlayerWindow < TopWindow
             @source.location = @player_data.uilink.audio_file
             @playbin.play
             setup_hscale
-            if Cfg::instance.notifications?
+            if CFG.notifications?
                 file_name = @player_data.uilink.cover_file_name
-                system("notify-send -t #{(Cfg::instance.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uilink.html_track_title(true)}\"")
+                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uilink.html_track_title(true)}\"")
             end
         end
     end

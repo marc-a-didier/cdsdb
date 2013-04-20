@@ -86,7 +86,7 @@ class SearchDialog
         end
 
         i = 0
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             i += 1
             iter = @ls.append
             iter[0] = i

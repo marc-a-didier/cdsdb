@@ -18,16 +18,24 @@ class ImageCache
     SMALL_SIZE =  64
     LARGE_SIZE = 128
 
+    # ImageData struct stores the file name and bot small and large cover image
+    # for a record or a track.
+    #
+    # Flags directly use a Pixbuf because there's only one size and we don't
+    # have any use of the file name
+    #
     ImageData = Struct.new(:file_name, :small_pix, :large_pix)
 
 
+    # @map stores either an ImageData struct for covers or a Pixbuf for flags.
+    #
+    # The key should begin with 'f' for flags, 'r' for records and 't' for tracks
     def initialize
         @map = Hash.new
         @map[DEFAULT_COVER] = ImageData.new(DEF_RECORD_FILE,
-                                            Gdk::Pixbuf.new(Cfg::instance.covers_dir+DEF_RECORD_FILE, SMALL_SIZE, SMALL_SIZE),
-                                            Gdk::Pixbuf.new(Cfg::instance.covers_dir+DEF_RECORD_FILE, LARGE_SIZE, LARGE_SIZE))
-#         @map[DEFAULT_FLAG] = ImageData.new(DEF_FLAG_FILE, Gdk::Pixbuf.new(Cfg::instance.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE), nil)
-        @map[DEFAULT_FLAG] = Gdk::Pixbuf.new(Cfg::instance.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE)
+                                            Gdk::Pixbuf.new(CFG.covers_dir+DEF_RECORD_FILE, SMALL_SIZE, SMALL_SIZE),
+                                            Gdk::Pixbuf.new(CFG.covers_dir+DEF_RECORD_FILE, LARGE_SIZE, LARGE_SIZE))
+        @map[DEFAULT_FLAG] = Gdk::Pixbuf.new(CFG.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE)
     end
 
     def has_key(key)
@@ -40,14 +48,14 @@ class ImageCache
         data = @map[key]
         if size == SMALL_SIZE
             if data.small_pix.nil?
-# Trace.log.debug "ImageCache check pix load small from cache".brown
-                data.small_pix = Gdk::Pixbuf.new(Cfg::instance.covers_dir+data.file_name, size, size)
+# TRACE.debug "ImageCache check pix load small from cache".brown
+                data.small_pix = Gdk::Pixbuf.new(CFG.covers_dir+data.file_name, size, size)
             end
             return data.small_pix
         else
             if data.large_pix.nil?
-# Trace.log.debug "ImageCache check pix load large from cache".brown
-                data.large_pix = Gdk::Pixbuf.new(Cfg::instance.covers_dir+data.file_name, size, size)
+# TRACE.debug "ImageCache check pix load large from cache".brown
+                data.large_pix = Gdk::Pixbuf.new(CFG.covers_dir+data.file_name, size, size)
             end
             return data.large_pix
         end
@@ -55,8 +63,8 @@ class ImageCache
 
     def load_cover(key, size, file_name)
 #         unless @map[key]
-        fname = Cfg::instance.covers_dir+file_name
-# Trace.log.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
+        fname = CFG.covers_dir+file_name
+# TRACE.debug "ImageCache load_cover from #{fname} size=#{@map.size+1}".red
         if size == SMALL_SIZE
             @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
             return @map[key].small_pix
@@ -70,13 +78,10 @@ class ImageCache
     end
 
     def set_default_pix(key, size)
-# Trace.log.debug "ImageCache for key #{key} rerouted to default".green
-        if key[0] == "f"
-            @map[key] = ImageData.new(DEF_FLAG_FILE, @map[DEFAULT_FLAG].small_pix, nil)
-        else
-            # Load both sizes at once. No memory wasted since it points to pre-allocated images
-            @map[key] = ImageData.new(DEF_RECORD_FILE, @map[DEFAULT_COVER].small_pix, @map[DEFAULT_COVER].large_pix)
-        end
+# TRACE.debug "ImageCache for key #{key} rerouted to default".green
+        # Load both sizes at once. No memory wasted since it points to pre-allocated images
+        # Unused and unusable method for flags
+        @map[key] = ImageData.new(DEF_RECORD_FILE, @map[DEFAULT_COVER].small_pix, @map[DEFAULT_COVER].large_pix)
         return size == SMALL_SIZE ? @map[key].small_pix : @map[key].large_pix
     end
 
@@ -97,11 +102,8 @@ class ImageCache
     end
 
     def full_name(key)
-        if key[0] == "f"
-            return Cfg::instance.flags_dir+@map[key].file_name
-        else
-            return Cfg::instance.covers_dir+@map[key].file_name
-        end
+        # Unused and unusable method for flags
+        return CFG.covers_dir+@map[key].file_name
     end
 
     def get_map(key)
@@ -112,39 +114,42 @@ class ImageCache
     def get_flag(rorigin)
         key = "f"+rorigin.to_s
         if @map[key].nil?
-# Trace.log.debug "--- load flag for origin #{rorigin}".red
-            file = Cfg::instance.flags_dir+rorigin.to_s+".svg"
+# TRACE.debug "--- load flag for origin #{rorigin}".red
+            file = CFG.flags_dir+rorigin.to_s+".svg"
             File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
         end
         return @map[key]
     end
 
     def default_record_file
-        return Cfg::instance.covers_dir+DEF_RECORD_FILE
+        return CFG.covers_dir+DEF_RECORD_FILE
     end
 
     def default_large_record
         return @map[DEFAULT_COVER].large_pix
     end
 
+    # Scan covers dir and preload all tracks cover. It avoids of checking the existence of
+    # a specific directory for a record and search for the cover file each time
+    # a new track is selected in the browser.
     def preload_tracks_cover
-        Dir[Cfg::instance.covers_dir+"*"].each { |entry|
+        Dir[CFG.covers_dir+"*"].each { |entry|
             next unless File::directory?(entry)
             Dir[entry+"/*"].each { |file|
                 next if File::directory?(file)
                 key =  "t"+File::basename(file).gsub(File::extname(file), "")
-                @map[key] = ImageData.new(file.gsub(Cfg::instance.covers_dir, ""), nil, nil)
-# Trace.log.debug("Key #{key} added, file=#{@map[key].file_name}")
+                @map[key] = ImageData.new(file.gsub(CFG.covers_dir, ""), nil, nil)
+# TRACE.debug("Key #{key} added, file=#{@map[key].file_name}")
            }
         }
     end
 
     def dump_infos
-        Trace.log.debug("Image cache size=#{@map.size}")
+        TRACE.debug("Image cache size=#{@map.size}")
     end
 end
 
-
+IMG_CACHE = ImageCache.instance
 
 #
 # Module that handle search and caching of image for a track and/or record.
@@ -157,12 +162,12 @@ module CoverMgr
 
     def record_in_cache?(rrecord, irecsymlink)
         @pix_key = irecsymlink == 0 ? "r"+rrecord.to_s : "r"+irecsymlink.to_s
-        return ImageCache::instance.has_key(@pix_key)
+        return IMG_CACHE.has_key(@pix_key)
     end
 
     def get_cover_file_name
-        files = Dir[Cfg::instance.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
-# Trace.log.debug "CoverMgr search key #{@pix_key} - disk access".red
+        files = Dir[CFG.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
+# TRACE.debug "CoverMgr search key #{@pix_key} - disk access".red
         return files.size > 0 ? File::basename(files[0]) : ImageCache::DEF_RECORD_FILE
     end
 
@@ -170,9 +175,9 @@ module CoverMgr
     def load_record_cover(rrecord, irecsymlink, size)
         file = get_cover_file_name
         if file == ImageCache::DEF_RECORD_FILE
-            return ImageCache::instance.set_default_pix(@pix_key, size)
+            return IMG_CACHE.set_default_pix(@pix_key, size)
         else
-            return ImageCache::instance.load_cover(@pix_key, size, file)
+            return IMG_CACHE.load_cover(@pix_key, size, file)
         end
     end
 
@@ -185,8 +190,8 @@ module CoverMgr
     #
     def track_pix(rtrack, rrecord, irecsymlink, size)
         @pix_key = "t"+rtrack.to_s
-        if ImageCache::instance.has_key(@pix_key)
-            return ImageCache::instance.pix(@pix_key, size)
+        if IMG_CACHE.has_key(@pix_key)
+            return IMG_CACHE.pix(@pix_key, size)
         else
             return record_pix(rrecord, irecsymlink, size)
         end
@@ -194,7 +199,7 @@ module CoverMgr
 
     def record_pix(rrecord, irecsymlink, size)
         if record_in_cache?(rrecord, irecsymlink)
-            return ImageCache::instance.pix(@pix_key, size)
+            return IMG_CACHE.pix(@pix_key, size)
         else
             return load_record_cover(rrecord, irecsymlink, size)
         end
@@ -203,10 +208,10 @@ module CoverMgr
     # Returns the full file name for the cover to display.
     def file_name(rtrack, rrecord, irecsymlink)
         @pix_key = "t"+rtrack.to_s
-        if !ImageCache::instance.has_key(@pix_key) && !record_in_cache?(rrecord, irecsymlink)
-            ImageCache::instance.set_file_name(@pix_key, get_cover_file_name)
+        if !IMG_CACHE.has_key(@pix_key) && !record_in_cache?(rrecord, irecsymlink)
+            IMG_CACHE.set_file_name(@pix_key, get_cover_file_name)
         end
-        return ImageCache::instance.full_name(@pix_key)
+        return IMG_CACHE.full_name(@pix_key)
     end
 end
 
@@ -237,27 +242,27 @@ class UILink < AudioLink
 
     def cover_file_name
         @pix_key.empty? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :
-                          ImageCache::instance.full_name(@pix_key)
+                          IMG_CACHE.full_name(@pix_key)
     end
 
     def large_track_cover
         @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE) :
-                          ImageCache::instance.pix(@pix_key, ImageCache::LARGE_SIZE)
+                          IMG_CACHE.pix(@pix_key, ImageCache::LARGE_SIZE)
     end
 
     def small_track_cover
         @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE) :
-                          ImageCache::instance.pix(@pix_key, ImageCache::SMALL_SIZE)
+                          IMG_CACHE.pix(@pix_key, ImageCache::SMALL_SIZE)
     end
 
     def large_record_cover
         @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, ImageCache::LARGE_SIZE) :
-                          ImageCache::instance.pix(@pix_key, ImageCache::LARGE_SIZE)
+                          IMG_CACHE.pix(@pix_key, ImageCache::LARGE_SIZE)
     end
 
     def small_record_cover
         @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, ImageCache::SMALL_SIZE) :
-                          ImageCache::instance.pix(@pix_key, ImageCache::SMALL_SIZE)
+                          IMG_CACHE.pix(@pix_key, ImageCache::SMALL_SIZE)
     end
 
     def cover_key
@@ -271,8 +276,8 @@ class UILink < AudioLink
         setup_audio_file if audio_status == AudioLink::UNKNOWN
 
         # If called from play list, check_on_server is true to get the file in on server
-#         if @audio_status == AudioLink::NOT_FOUND && Cfg.instance.remote?
-        if audio_status == AudioLink::NOT_FOUND && Cfg.instance.remote?
+#         if @audio_status == AudioLink::NOT_FOUND && CFG.remote?
+        if audio_status == AudioLink::NOT_FOUND && CFG.remote?
             if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0] != AudioLink::NOT_FOUND
 #                 @audio_status = AudioLink::ON_SERVER
                 set_audio_status(AudioLink::ON_SERVER)
@@ -288,7 +293,7 @@ class UILink < AudioLink
     end
 
     def get_remote_audio_file(emitter, tasks)
-        if Cfg::instance.remote? && Cfg::instance.local_store?
+        if CFG.remote? && CFG.local_store?
             tasks.new_track_download(emitter, self)
 #             @audio_status = AudioLink::ON_SERVER
             set_audio_status(AudioLink::ON_SERVER)
@@ -309,14 +314,14 @@ class UILink < AudioLink
         if record.rartist == 0 && !is_compile
             # We're on a track of a compilation but not on the Compilations
             # so we assign the file to the track rather than the record
-            cover_file = Cfg::instance.covers_dir+record.rrecord.to_s
+            cover_file = CFG.covers_dir+record.rrecord.to_s
             File::mkpath(cover_file)
             cover_file += File::SEPARATOR+track.rtrack.to_s+File::extname(fname)
             ex_name = cover_file+File::SEPARATOR+"ex"+track.rtrack.to_s+File::extname(fname)
         else
             # Assign file to record
-            cover_file = Cfg::instance.covers_dir+record.rrecord.to_s+File::extname(fname)
-            ex_name = Cfg::instance.covers_dir+"ex"+record.rrecord.to_s+File::extname(fname)
+            cover_file = CFG.covers_dir+record.rrecord.to_s+File::extname(fname)
+            ex_name = CFG.covers_dir+"ex"+record.rrecord.to_s+File::extname(fname)
         end
         if File::exists?(cover_file)
             File::unlink(ex_name) if File::exists?(ex_name)

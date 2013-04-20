@@ -146,3 +146,6 @@ class Cfg
     end
 
 end
+
+CFG = Cfg.instance
+CFG.load

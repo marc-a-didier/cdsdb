@@ -38,7 +38,7 @@ class TracksBrowser < GenericBrowser
 
     def setup
         renderer = Gtk::CellRendererText.new
-        if Cfg::instance.admin?
+        if CFG.admin?
             renderer.editable = true
             # Reset the text to the true title of the track to remove segment index if any.
             renderer.signal_connect(:editing_started) { |cell, editable, path| editable.text = @trklnk.track.stitle }
@@ -110,7 +110,7 @@ class TracksBrowser < GenericBrowser
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the track tree view except in admin mode (to add track)
-            return if @tv.selection.count_selected_rows < 1 && !Cfg::instance.admin?
+            return if @tv.selection.count_selected_rows < 1 && !CFG.admin?
             # Add segments of the current record to the segment association submenu
             sub_menu = @mc.glade[UIConsts::TRK_POPUP_SEGASS].submenu
             @mc.glade[UIConsts::TRK_POPUP_SEGASS].remove_submenu
@@ -119,7 +119,7 @@ class TracksBrowser < GenericBrowser
                 smtpm = Gtk::Menu.new
                 items = []
                 if @mc.record.segmented?
-                    DBIntf::connection.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") { |row|
+                    CDSDB.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") { |row|
                         items << Gtk::MenuItem.new(row[0], false)
                         items.last.signal_connect(:activate) { |widget| on_trk_segment_assign(widget) }
                         smtpm.append(items.last)
@@ -137,10 +137,10 @@ class TracksBrowser < GenericBrowser
             sub_menu = @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].submenu
             @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].remove_submenu
             sub_menu.destroy if sub_menu
-            if DBIntf::connection.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
+            if CDSDB.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
                 pltpm = Gtk::Menu.new
                 items = []
-                DBIntf::connection.execute("SELECT sname FROM plists ORDER BY sname;") { |row|
+                CDSDB.execute("SELECT sname FROM plists ORDER BY sname;") { |row|
                     items << Gtk::MenuItem.new(row[0], false)
                     items.last.signal_connect(:activate) { |widget| on_trk_add_to_pl(widget) }
                     pltpm.append(items.last)
@@ -215,7 +215,7 @@ class TracksBrowser < GenericBrowser
         #@mc.artist.compile? ? @tv.columns[TTV_ART_OR_SEG].title = "Artist" : @tv.columns[TTV_ART_OR_SEG].title = "Segment"
         @tv.columns[TTV_ART_OR_SEG].title = @mc.artist.compile? ? "Artist" : "Segment"
 
-        DBIntf::connection.execute(generate_sql) { |row| map_row_to_entry(row, @tv.model.append) }
+        CDSDB.execute(generate_sql) { |row| map_row_to_entry(row, @tv.model.append) }
 
         # Sets the icons matching the file status for each entry
         if @mc.glade[UIConsts::MM_VIEW_AUTOCHECK].active?
@@ -235,7 +235,7 @@ class TracksBrowser < GenericBrowser
     end
 
     def update_entry
-        map_row_to_entry(DBIntf::connection.get_first_row(generate_sql(@trklnk.track.rtrack)), position_to(@trklnk.track.rtrack))
+        map_row_to_entry(CDSDB.get_first_row(generate_sql(@trklnk.track.rtrack)), position_to(@trklnk.track.rtrack))
     end
 
     def get_selection
@@ -296,7 +296,7 @@ p sql
         }
 
         # If client mode and some or all files not found, ask if present on the server
-        if Cfg::instance.remote? && check_on_server
+        if CFG.remote? && check_on_server
             # Save track list to avoid threading problems
             tracks = ""
             @tv.model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
@@ -348,13 +348,13 @@ p sql
     def on_selection_changed(widget)
         return if @tv.selection.count_selected_rows == 0
 
-# Trace.log.debug("track selection changed.".green)
+# TRACE.debug("track selection changed.".green)
         trackui = selected_track
         if trackui
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
             return if @trklnk.valid? && @trklnk == trackui
-# Trace.log.debug("track selection changed.".green)
+# TRACE.debug("track selection changed.".green)
 
             @trklnk = trackui
             @trklnk.to_widgets_with_cover
@@ -363,13 +363,13 @@ p sql
             @mc.change_segment_artist(@trklnk.segment.rartist) if @trklnk.segment.rartist != @mc.segment.rartist
         else
             # There's nothing to do... may be set artist infos to empty.
-# Trace.log.debug("--- multi select ---".magenta)
+# TRACE.debug("--- multi select ---".magenta)
         end
     end
 
     def invalidate
         @tv.model.clear
-        @mc.glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
+        @mc.glade[UIConsts::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
         @trklnk.reset.to_widgets if @trklnk.valid?
     end
 
@@ -426,7 +426,7 @@ p sql
         if trackui.track.stitle != new_text
             file = trackui.audio_file
             # Must rename on server BEFORE the sql update is done!!!
-            MusicClient.new.rename_audio(trackui.track.rtrack, new_text) if Cfg::instance.remote?
+            MusicClient.new.rename_audio(trackui.track.rtrack, new_text) if CFG.remote?
             trackui.track.stitle = new_text
             trackui.track.sql_update
             trackui.tag_and_move_file(file) unless file.empty? # May be only on server
@@ -435,7 +435,7 @@ p sql
 
     def on_trk_segment_assign(widget)
         @tv.selection.selected_each { |model, path, iter|
-            rsegment = DBIntf::connection.get_first_value(
+            rsegment = CDSDB.get_first_value(
                                "SELECT rsegment FROM segments " \
                                "WHERE rrecord=#{@track.rrecord} AND stitle=#{widget.child.label.to_sql}")
             DBUtils::client_sql("UPDATE tracks SET rsegment=#{rsegment} WHERE rtrack=#{iter[TTV_REF]}")
@@ -449,7 +449,7 @@ p sql
     end
 
     def on_trk_add_to_pl(widget)
-        rplist = DBIntf::connection.get_first_value("SELECT rplist FROM plists WHERE sname=#{widget.child.label.to_sql}")
+        rplist = CDSDB.get_first_value("SELECT rplist FROM plists WHERE sname=#{widget.child.label.to_sql}")
         @tv.selection.selected_each { |model, path, iter| @mc.plists.add_to_plist(rplist, iter[TTV_REF]) }
     end
 

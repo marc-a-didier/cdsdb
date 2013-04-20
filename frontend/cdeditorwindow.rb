@@ -16,8 +16,8 @@ class CDEditorWindow
         @window = @glade[UIConsts::CD_EDITOR_WINDOW]
         @tv = @glade[UIConsts::CDED_TV]
 
-        @window.signal_connect(:show)         { Prefs::instance.load_main(@glade, UIConsts::CD_EDITOR_WINDOW) }
-        @window.signal_connect(:delete_event) { Prefs::instance.save_window(@window); false }
+        @window.signal_connect(:show)         { PREFS.load_main(@glade, UIConsts::CD_EDITOR_WINDOW) }
+        @window.signal_connect(:delete_event) { PREFS.save_window(@window); false }
 
 
         @tv.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time| on_drag_received(widget, context, x, y, data, info, time) }
@@ -31,7 +31,7 @@ class CDEditorWindow
         @glade[UIConsts::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
         @glade["cded_btn_rip"].signal_connect(:clicked)               { rip_tracks }
         @glade[UIConsts::CDED_BTN_CLOSE].signal_connect(:clicked)     {
-            Prefs::instance.save_window(@window)
+            PREFS.save_window(@window)
             @window.destroy
         }
 
@@ -143,8 +143,8 @@ class CDEditorWindow
     end
 
     def edit_record()
-        @ripper = RipperClient.new(Cfg.instance.cd_device)
-        disc = @ripper.settings['cd'] #Disc.new(Cfg::instance.cd_device) # ("/dev/sr0")
+        @ripper = RipperClient.new(CFG.cd_device)
+        disc = @ripper.settings['cd'] #Disc.new(CFG.cd_device) # ("/dev/sr0")
         if disc.md.nil?
             UIUtils::show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL

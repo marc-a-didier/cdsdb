@@ -95,9 +95,9 @@ class TasksWindow < TopWindow
     end
 
     def check_config
-        if Cfg::instance.remote?
+        if CFG.remote?
             if @chk_thread.nil?
-Trace.log.debug("task thread started...".green)
+TRACE.debug("task thread started...".green)
                 @chk_thread = Thread.new {
                     loop do
                         check_waiting_tasks
@@ -108,7 +108,7 @@ Trace.log.debug("task thread started...".green)
         elsif !@chk_thread.nil?
             @chk_thread.exit
             @chk_thread = nil
-Trace.log.debug("task thread stopped".brown)
+TRACE.debug("task thread stopped".brown)
         end
     end
 

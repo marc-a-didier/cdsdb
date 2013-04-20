@@ -30,7 +30,7 @@ class ArtistUI < DBCacheLink
 
     def build_infos_string
         return "" if !valid? || artist.rorigin == 0
-        return cache.origin(artist.rorigin).sname
+        return DBCACHE.origin(artist.rorigin).sname
     end
 end
 
@@ -62,14 +62,14 @@ class RecordUI < DBCacheLink
 
     def build_rec_infos_string
         return "" unless valid?
-        rec = cache.record(@rrecord) # Cache of the cache!!!
-        str  = cache.media(rec.rmedia).sname
+        rec = DBCACHE.record(@rrecord) # Cache of the cache!!!
+        str  = DBCACHE.media(rec.rmedia).sname
         str += rec.iyear == 0 ? ", Unknown" : ", "+rec.iyear.to_s
-        str += ", "+cache.label(record.rlabel).sname
+        str += ", "+DBCACHE.label(record.rlabel).sname
         str += ", "+rec.scatalog unless rec.scatalog.empty?
         str += ", "+genre.sname
         str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
-        str += ", "+cache.collection(rec.rcollection).sname if rec.rcollection != 0
+        str += ", "+DBCACHE.collection(rec.rcollection).sname if rec.rcollection != 0
         str += ", "+rec.iplaytime.to_ms_length
     end
 
@@ -112,7 +112,7 @@ class TrackUI < UILink
 
     def build_infos_string
         return "" unless valid?
-        trk = cache.track(@rtrack) # Cache of the cache!!!
+        trk = DBCACHE.track(@rtrack) # Cache of the cache!!!
         str  = UIConsts::RATINGS[trk.irating]+", "
         str += trk.iplayed > 0 ? "played "+trk.iplayed.to_s+" time".check_plural(trk.iplayed)+" " : "never played, "
         str += "(Last: "+trk.ilastplayed.to_std_date+"), " if trk.ilastplayed != 0
@@ -170,7 +170,7 @@ class RecordEditor
         glade[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
 
         [RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
-            glade[ctrl].sensitive = Cfg::instance.admin?
+            glade[ctrl].sensitive = CFG.admin?
         }
     end
 
@@ -197,7 +197,7 @@ class SegmentEditor
         glade[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
 
         [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
-            glade[ctrl].sensitive = Cfg::instance.admin?
+            glade[ctrl].sensitive = CFG.admin?
         }
     end
 
@@ -256,7 +256,7 @@ class DBEditor
     end
 
     def run
-        @glade[DBED_BTN_OK].sensitive = Cfg::instance.admin?
+        @glade[DBED_BTN_OK].sensitive = CFG.admin?
 
         response = @glade[DLG_DB_EDITOR].run
         if response == Gtk::Dialog::RESPONSE_OK

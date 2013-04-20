@@ -88,7 +88,7 @@ class Stats
     end
 
     def get_count(stbl)
-        return DBIntf::connection.get_first_value("SELECT COUNT(r#{stbl}) FROM #{stbl}s;")
+        return CDSDB.get_first_value("SELECT COUNT(r#{stbl}) FROM #{stbl}s;")
     end
 
     def init_globals(fname, title)
@@ -136,10 +136,10 @@ class Stats
         @media = Hash.new
 
         @db_tots << get_count('artist') << get_count('record') << get_count('segment') << get_count('track')
-        @db_tots << DBIntf::connection.get_first_value("SELECT SUM(iplaytime) FROM records").to_i
+        @db_tots << CDSDB.get_first_value("SELECT SUM(iplaytime) FROM records").to_i
 
         @genres << [0, "", 0, 0, 0, 0, 0, 0, 0, 0]
-        DBIntf::connection.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
+        CDSDB.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
         @genres.each { |genre| init_table(genre) }
         @genres.delete_if { |genre| genre[GENRE_TOT_TRACKS] == 0 } # Remove genres with no tracks
     end
@@ -153,8 +153,8 @@ class Stats
         end_table
 
         new_table("Records by media type", ["Medium", "Records", "Play time"])
-        DBIntf::connection.execute("SELECT * FROM medias;") do |mediatype|
-            DBIntf::connection.execute("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia=#{mediatype[0]};") do |row|
+        CDSDB.execute("SELECT * FROM medias;") do |mediatype|
+            CDSDB.execute("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia=#{mediatype[0]};") do |row|
                 #Gtk.main_iteration while Gtk.events_pending?
                 @media[mediatype[1]] = [row[0], row[1]]
                 new_row([mediatype[1], row[0], row[1].to_i.to_day_length])
@@ -165,13 +165,13 @@ class Stats
 
     def init_table(genre)
         if genre[GENRE_REF] == 0
-            row = DBIntf::connection.get_first_row("SELECT COUNT(rtrack), SUM(iplaytime) FROM tracks;")
+            row = CDSDB.get_first_row("SELECT COUNT(rtrack), SUM(iplaytime) FROM tracks;")
             genre[GENRE_TOT_TRACKS] = row[0].to_i
             genre[GENRE_TOT_TIME] = row[1].to_i
-            row = DBIntf::connection.get_first_row("SELECT SUM(iplayed), SUM(iplaytime) FROM tracks WHERE iplayed > 0;")
+            row = CDSDB.get_first_row("SELECT SUM(iplayed), SUM(iplaytime) FROM tracks WHERE iplayed > 0;")
             genre[GENRE_PLAYED_TRACKS] = row[0].to_i
             genre[GENRE_PLAYED_TIME] = row[1].to_i
-            row = DBIntf::connection.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia <> #{DBIntf::MEDIA_AUDIO_FILE}")
+            row = CDSDB.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia <> #{DBIntf::MEDIA_AUDIO_FILE}")
             genre[GENRE_TOT_RECS] = row[0].to_i
             genre[GENRE_TOT_RECTIME] = row[1].to_i
         else
@@ -179,19 +179,19 @@ class Stats
                    INNER JOIN segments ON segments.rsegment=tracks.rsegment
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    WHERE records.rgenre=#{genre[GENRE_REF]};"
-            row = DBIntf::connection.get_first_row(sql)
+            row = CDSDB.get_first_row(sql)
             genre[GENRE_TOT_TRACKS] = row[0].to_i
             genre[GENRE_TOT_TIME] = row[1].to_i
             sql = "SELECT COUNT(tracks.rtrack), SUM(tracks.iplaytime) FROM tracks
                    INNER JOIN segments ON segments.rsegment=tracks.rsegment
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]};"
-            row = DBIntf::connection.get_first_row(sql)
+            row = CDSDB.get_first_row(sql)
             genre[GENRE_PLAYED_TRACKS] = row[0].to_i
             genre[GENRE_PLAYED_TIME] = row[1].to_i
             sql = "SELECT COUNT(rrecord), SUM(iplaytime) FROM records
                    WHERE rgenre=#{genre[GENRE_REF]} AND rmedia <> #{DBIntf::MEDIA_AUDIO_FILE};"
-            row = DBIntf::connection.get_first_row(sql)
+            row = CDSDB.get_first_row(sql)
             genre[GENRE_TOT_RECS] = row[0].to_i
             genre[GENRE_TOT_RECTIME] = row[1].to_i
         end
@@ -199,12 +199,12 @@ class Stats
 
     def ripped_stats(genre)
         track_infos = TrackInfos.new
-        DBIntf::connection.execute("SELECT rrecord FROM records WHERE rgenre=#{genre[GENRE_REF]} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
+        CDSDB.execute("SELECT rrecord FROM records WHERE rgenre=#{genre[GENRE_REF]} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
             Gtk.main_iteration while Gtk.events_pending?
-            rtrack = DBIntf::connection.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
+            rtrack = CDSDB.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
             if Utils::record_on_disk?(track_infos.get_track_infos(rtrack))
                 genre[GENRE_RIPPED] += 1
-                genre[GENRE_RIPTIME] += DBIntf::connection.get_first_value("SELECT iplaytime FROM records WHERE rrecord=#{record[0]};").to_i
+                genre[GENRE_RIPTIME] += CDSDB.get_first_value("SELECT iplaytime FROM records WHERE rrecord=#{record[0]};").to_i
             end
         end
         @genres[0][GENRE_RIPPED] += genre[GENRE_RIPPED]
@@ -229,7 +229,7 @@ class Stats
                INNER JOIN records ON artists.rartist=records.rartist
                GROUP BY artists.rartist ORDER BY nrecs DESC;"
         new_table("Records by artists", ["Rank", "Artist", "Records", "Play time"])
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             #Gtk.main_iteration while Gtk.events_pending?
             new_row([@altr.counter+1, row[2], row[0], row[1].to_i.to_day_length])
         end
@@ -243,7 +243,7 @@ class Stats
                WHERE iplayed > 0 GROUP BY records.rgenre ORDER BY totplayed DESC;"
         cols = []
         new_table("Music Style Top Chart", ["Rank", "Play count", "Genre", "Played", "Available", "% Played"]) # "Played/Available"])
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             genre = nil
             @genres.each { |g| if g.index(row[1]) then genre = g; break; end }
@@ -270,7 +270,7 @@ class Stats
             new_table("#{genre[GENRE_NAME]} Artists Top Chart", ["Rank", "Play count", "Artist"])
             sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY artists.rartist ORDER BY totplayed DESC;"
         end
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             new_row([@altr.counter+1, row[0], row[1]])
         end
@@ -289,7 +289,7 @@ class Stats
             new_table("#{genre[GENRE_NAME]} Records Top Chart", ["Rank", "Play count", "Record", "Artist"])
             sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY records.rrecord ORDER BY totplayed DESC;"
         end
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             new_row([@altr.counter+1, row[0], row[1], row[2]])
         end
@@ -308,7 +308,7 @@ class Stats
                    WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} ORDER BY iplayed DESC;"
         end
         track_infos = TrackInfos.new
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             track_infos.load_track(row[0].to_i)
             new_row([@altr.counter+1, row[2], row[1], track_infos.seg_art.sname,
@@ -320,7 +320,7 @@ class Stats
     def top_rated_tracks
         track_infos = TrackInfos.new
         new_table("Most rated tracks", ["Rank", "Rating", "Track", "Artist", "Record", "Segment"])
-        DBIntf::connection.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
+        CDSDB.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
             track_infos.load_track(row[0])
             new_row([@altr.counter+1, UIConsts::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
@@ -341,7 +341,7 @@ class Stats
                  INNER JOIN artists ON artists.rartist=records.rartist
                  WHERE tracks.iplayed > 0
                  ORDER BY logtracks.idateplayed DESC LIMIT #{limit};}
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             track_infos.load_track(row[0])
             new_row([@altr.counter+1, Time.at(row[1].to_i), row[2], track_infos.track.stitle,
@@ -352,14 +352,14 @@ class Stats
 
     def played_tracks_stats
         new_table("Played tracks")
-        tot_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
-        never_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0")
-        diff_played = DBIntf::connection.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks")
+        tot_played = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
+        never_played = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0")
+        diff_played = CDSDB.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks")
         new_row(["Played tracks total", tot_played])
         new_row(["Never played tracks", never_played])
         new_row(["Distinct played tracks", diff_played])
-        DBIntf::connection.execute("SELECT * FROM hostnames") { |host|
-            host_played = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhostname=#{host[0]}")
+        CDSDB.execute("SELECT * FROM hostnames") { |host|
+            host_played = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhostname=#{host[0]}")
             new_row(["Played on #{host[1]}", host_played])
         }
         end_table
@@ -369,19 +369,19 @@ class Stats
         sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                 INNER JOIN records ON records.rrecord=tracks.rrecord
                 WHERE records.rgenre NOT IN (1, 28);}
-        tot_tracks = DBIntf.connection.get_first_value(sql)
+        tot_tracks = CDSDB.get_first_value(sql)
 
         # Number and percentage of rated track
         sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                 INNER JOIN records ON records.rrecord=tracks.rrecord
                 WHERE tracks.irating<>0 AND records.rgenre NOT IN (1, 28);}
-        tot_rated = DBIntf::connection.get_first_value(sql)
+        tot_rated = CDSDB.get_first_value(sql)
         new_table("Rated tracks", ["Rating", "# of tracks", "Percentage"])
         UIConsts::RATINGS.each_with_index { |rating, index|
             sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
                     WHERE tracks.irating=#{index} AND records.rgenre NOT IN (1, 28);}
-            rated = DBIntf::connection.get_first_value(sql)
+            rated = CDSDB.get_first_value(sql)
 #             new_row([rating, rated, "%6.2f" % [rated*100.0/@db_tots[DBTOTS_TRACKS]]])
             new_row([rating, rated, "%6.2f" % [rated*100.0/tot_tracks]])
         }
@@ -394,16 +394,16 @@ class Stats
                 INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
                 INNER JOIN records ON records.rrecord=tracks.rrecord
                 WHERE records.rgenre NOT IN (1, 28);}
-        tot_played = DBIntf::connection.get_first_value(sql)
+        tot_played = CDSDB.get_first_value(sql)
 
         # Number and percentage of played tracks by rating
         new_table("Played tracks by rating", ["Rating", "Played", "Percentage"])
         UIConsts::RATINGS.each_with_index { |rating, index|
-#             played = DBIntf::connection.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE irating=#{index};")
+#             played = CDSDB.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE irating=#{index};")
             sql = %{SELECT SUM(tracks.iplayed) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
                     WHERE tracks.irating=#{index} AND records.rgenre NOT IN (1, 28);}
-            played = DBIntf::connection.get_first_value(sql)
+            played = CDSDB.get_first_value(sql)
             played = 0 if played.nil?
             new_row([rating, played, "%6.2f" % [played*100.0/tot_played]])
         }
@@ -414,13 +414,13 @@ class Stats
         sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                 INNER JOIN records ON records.rrecord=tracks.rrecord
                 WHERE tracks.itags<>0 AND records.rgenre NOT IN (1, 28);}
-        tot_tagged = DBIntf::connection.get_first_value(sql)
+        tot_tagged = CDSDB.get_first_value(sql)
         new_table("Tagged tracks", ["Tags", "# of tracks", "Percentage"])
         UIConsts::TAGS.each_with_index { |tag, index|
             sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
                     WHERE (tracks.itags & #{1 << index})<>0 AND records.rgenre NOT IN (1, 28);}
-            tagged = DBIntf::connection.get_first_value(sql)
+            tagged = CDSDB.get_first_value(sql)
 #             new_row([tag, tagged, "%6.2f" % [tagged*100.0/@db_tots[DBTOTS_TRACKS]]])
             new_row([tag, tagged, "%6.2f" % [tagged*100.0/tot_tracks]])
         }
@@ -435,8 +435,8 @@ class Stats
             sql = %{SELECT SUM(tracks.iplayed) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
                     WHERE (tracks.itags & #{1 << index}) <> 0 AND records.rgenre NOT IN (1, 28);}
-#             played = DBIntf::connection.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE (itags & #{1 << index})<>0;")
-            played = DBIntf::connection.get_first_value(sql)
+#             played = CDSDB.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE (itags & #{1 << index})<>0;")
+            played = CDSDB.get_first_value(sql)
             played = 0 if played.nil?
             new_row([tag, played, "%6.2f" % [played*100.0/tot_played]])
         }
@@ -488,7 +488,7 @@ class Stats
             return
         end
 
-        init_globals(Cfg::instance.rsrc_dir+"dbstats.html", "DB Statistics")
+        init_globals(CFG.rsrc_dir+"dbstats.html", "DB Statistics")
         db_general_infos
 
         # Check to see if a selection needs the ripped records data

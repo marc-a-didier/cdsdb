@@ -5,13 +5,13 @@ class ExportDialog
 
     def initialize()
         @glade = GTBld::load(UIConsts::EXPORT_DEVICE_DIALOG)
-        Prefs::instance.restore_window_content(@glade, @glade[UIConsts::EXPORT_DEVICE_DIALOG])
+        PREFS.restore_window_content(@glade, @glade[UIConsts::EXPORT_DEVICE_DIALOG])
     end
 
     def run(exp_params)
         resp = @glade[UIConsts::EXPORT_DEVICE_DIALOG].run
         if resp == Gtk::Dialog::RESPONSE_OK
-            Prefs::instance.save_window_objects(@glade[UIConsts::EXPORT_DEVICE_DIALOG])
+            PREFS.save_window_objects(@glade[UIConsts::EXPORT_DEVICE_DIALOG])
             exp_params.src_folder   = @glade[UIConsts::EXP_DLG_FC_SOURCE].current_folder+"/"
             exp_params.dest_folder  = @glade[UIConsts::EXP_DLG_FC_DEST].current_folder+"/"
             exp_params.remove_genre = @glade[UIConsts::EXP_DLG_CB_RMGENRE].active?

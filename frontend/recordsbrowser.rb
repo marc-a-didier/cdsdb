@@ -100,7 +100,7 @@ class RecordsBrowser < GenericBrowser
     def load_entries
         @tv.model.clear
 
-        DBIntf::connection.execute(generate_rec_sql) do |row|
+        CDSDB.execute(generate_rec_sql) do |row|
             iter = @tv.model.append(nil)
 
             dblink = RecordUI.new.set_record_ref(row[2]).set_segment_ref(row[0])
@@ -130,7 +130,7 @@ class RecordsBrowser < GenericBrowser
     def on_selection_changed(widget)
         # @tv.selection.selected == nil probably means the previous selection is deselected...
         return if @tv.selection.selected.nil?
-# Trace.log.debug("record selection changed")
+# TRACE.debug("record selection changed")
         update_ui_handlers(@tv.selection.selected)
 
         if @reclnk.record.valid?
@@ -192,7 +192,7 @@ class RecordsBrowser < GenericBrowser
         iter = find_ref(rrecord)
         return true if iter.nil?
 
-        row = DBIntf::connection.get_first_row(generate_rec_sql(rrecord))
+        row = CDSDB.get_first_row(generate_rec_sql(rrecord))
 p row
         if row
             map_rec_row_to_entry(row, iter)
@@ -218,7 +218,7 @@ p row
         # Exit if row has already been loaded, children are already there
         return if iter.first_child && iter.first_child[RTV_REF] != -1
 
-        DBIntf.connection.execute(generate_seg_sql(iter[RTV_REF])) { |row|
+        CDSDB.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             child = @tv.model.append(iter)
 
             dblink = RecordUI.new.set_segment_ref(row[0])
@@ -282,14 +282,14 @@ p row
         uilink = @mc.get_track_uilink(0).clone
         return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
 
-        default_dir = uilink.playable? ? uilink.full_dir : Cfg::instance.rip_dir
+        default_dir = uilink.playable? ? uilink.full_dir : CFG.rip_dir
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
             expected, found = uilink.tag_and_move_dir(dir) { |param| @mc.audio_link_ok(param) }
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
-            elsif dir.match(Cfg::instance.rip_dir)
+            elsif dir.match(CFG.rip_dir)
                 # Set the ripped date only if processing files from the rip directory.
 #                 DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@reclnk.record.rrecord};")
                 @reclnk.record.idateripped = Time::now.to_i

@@ -32,7 +32,7 @@ class DBCache
 #         @artists[rartist] = ArtistDBClass.new.ref_load(rartist) if @artists[rartist].nil?
         if @artists[rartist].nil?
             @artists[rartist] = ArtistDBClass.new.ref_load(rartist)
-# Trace.log.debug("Artist cache loaded key #{rartist}, size=#{@artists.size}")
+# TRACE.debug("Artist cache loaded key #{rartist}, size=#{@artists.size}")
         end
         return @artists[rartist]
     end
@@ -41,7 +41,7 @@ class DBCache
 #         @records[rrecord] = RecordDBClass.new.ref_load(rrecord) if @records[rrecord].nil?
         if @records[rrecord].nil?
             @records[rrecord] = RecordDBClass.new.ref_load(rrecord)
-# Trace.log.debug("Record cache loaded key #{rrecord}, size=#{@records.size}")
+# TRACE.debug("Record cache loaded key #{rrecord}, size=#{@records.size}")
         end
         return @records[rrecord]
     end
@@ -50,7 +50,7 @@ class DBCache
 #         @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment) if @segments[rsegment].nil?
         if @segments[rsegment].nil?
             @segments[rsegment] = SegmentDBClass.new.ref_load(rsegment)
-# Trace.log.debug("Segment cache loaded key #{rsegment}, size=#{@segments.size}")
+# TRACE.debug("Segment cache loaded key #{rsegment}, size=#{@segments.size}")
         end
         return @segments[rsegment]
     end
@@ -60,7 +60,7 @@ class DBCache
         if @tracks[rtrack].nil?
             @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
             @audio_status[rtrack] = 4 # AudioLink::UNKNOWN default value
-# Trace.log.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
+# TRACE.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
         end
         return @tracks[rtrack]
     end
@@ -102,23 +102,24 @@ class DBCache
 #         instance_variables.each { |cache| cache.clear } # Marche pas!!!???
         [@artists, @records, @segments, @tracks,
          @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
-Trace.log.debug("ALL CACHES cleared")
+TRACE.debug("ALL CACHES cleared")
     end
 
     def dump_infos
-        Trace.log.debug("Artist cache size=#{@artists.size}")
-        Trace.log.debug("Record cache size=#{@records.size}")
-        Trace.log.debug("Segment cache size=#{@segments.size}")
-        Trace.log.debug("Track cache size=#{@tracks.size}")
-        Trace.log.debug("Genre cache size=#{@genres.size}")
-        Trace.log.debug("Label cache size=#{@labels.size}")
-        Trace.log.debug("Media cache size=#{@medias.size}")
-        Trace.log.debug("Collection cache size=#{@collections.size}")
-        Trace.log.debug("Origin cache size=#{@origins.size}")
-        Trace.log.debug("Audio status cache size=#{@audio_status.size}")
+        TRACE.debug("Artist cache size=#{@artists.size}")
+        TRACE.debug("Record cache size=#{@records.size}")
+        TRACE.debug("Segment cache size=#{@segments.size}")
+        TRACE.debug("Track cache size=#{@tracks.size}")
+        TRACE.debug("Genre cache size=#{@genres.size}")
+        TRACE.debug("Label cache size=#{@labels.size}")
+        TRACE.debug("Media cache size=#{@medias.size}")
+        TRACE.debug("Collection cache size=#{@collections.size}")
+        TRACE.debug("Origin cache size=#{@origins.size}")
+        TRACE.debug("Audio status cache size=#{@audio_status.size}")
     end
 end
 
+DBCACHE = DBCache.instance
 
 #
 # This class keeps references to the primary key of its tables and makes
@@ -141,11 +142,6 @@ class DBCacheLink
     end
 
 
-    # Alias for DBCache.instance
-    def cache
-        return DBCache.instance
-    end
-
     #
     # Methods that load the row from the primary key
     # First search in cache and load from db if not found
@@ -153,45 +149,45 @@ class DBCacheLink
     # Tries to feed the artist primary key from record or segment if possible
     #
     def track
-        return cache.track(@rtrack)
+        return DBCACHE.track(@rtrack)
     end
 
     def segment
-        @rsegment = cache.segment(track.rsegment).rsegment if @rsegment.nil?
-        return cache.segment(@rsegment)
+        @rsegment = DBCACHE.segment(track.rsegment).rsegment if @rsegment.nil?
+        return DBCACHE.segment(@rsegment)
     end
 
     def record
-        @rrecord = cache.record(track.rrecord).rrecord if @rrecord.nil?
-        return cache.record(@rrecord)
+        @rrecord = DBCACHE.record(track.rrecord).rrecord if @rrecord.nil?
+        return DBCACHE.record(@rrecord)
     end
 
     def artist
-        return cache.artist(@rartist)
+        return DBCACHE.artist(@rartist)
     end
 
     def segment_artist
-        @rartist = cache.artist(segment.rartist).rartist if @rartist.nil? || @rartist != cache.segment(@rsegment).rartist
-        return cache.artist(@rartist)
+        @rartist = DBCACHE.artist(segment.rartist).rartist if @rartist.nil? || @rartist != DBCACHE.segment(@rsegment).rartist
+        return DBCACHE.artist(@rartist)
     end
 
     def record_artist
-        @rartist = cache.artist(record.rartist).rartist if @rartist.nil? || @rartist != cache.record(@rrecord).rartist
-        return cache.artist(@rartist)
+        @rartist = DBCACHE.artist(record.rartist).rartist if @rartist.nil? || @rartist != DBCACHE.record(@rrecord).rartist
+        return DBCACHE.artist(@rartist)
     end
 
     def genre
-        @rgenre = cache.genre(record.rgenre).rgenre if @rgenre.nil?
-        return cache.genre(@rgenre)
+        @rgenre = DBCACHE.genre(record.rgenre).rgenre if @rgenre.nil?
+        return DBCACHE.genre(@rgenre)
     end
 
     def set_audio_status(status)
-        cache.set_audio_status(@rtrack, status)
+        DBCACHE.set_audio_status(@rtrack, status)
         return self
     end
 
     def audio_status
-        return cache.audio_status(@rtrack)
+        return DBCACHE.audio_status(@rtrack)
     end
 
 
@@ -248,27 +244,27 @@ class DBCacheLink
     # Methods to keep the cache in sync with the db in case of modifications
     #
     def reload_track_cache
-        cache.track(@rtrack).sql_load
+        DBCACHE.track(@rtrack).sql_load
         return self
     end
 
     def reload_record_cache
-        cache.record(@rrecord).sql_load
+        DBCACHE.record(@rrecord).sql_load
         return self
     end
 
     def reload_segment_cache
-        cache.segment(@rsegment).sql_load
+        DBCACHE.segment(@rsegment).sql_load
         return self
     end
 
     def reload_artist_cache
-        cache.artist(@rartist).sql_load
+        DBCACHE.artist(@rartist).sql_load
         return self
     end
 
     def flush_main_tables
-        [cache.track(@rtrack), cache.record(@rrecord),
-         cache.segment(@rsegment), cache.artist(@rartist)].each { |dbclass| dbclass.sql_update }
+        [DBCACHE.track(@rtrack), DBCACHE.record(@rrecord),
+         DBCACHE.segment(@rsegment), DBCACHE.artist(@rartist)].each { |dbclass| dbclass.sql_update }
     end
 end

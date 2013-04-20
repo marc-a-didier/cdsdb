@@ -2,14 +2,14 @@
 class Prefs
 
     include Singleton
-    
+
     def initialize
-        @file_name = Cfg::instance.prefs_file
+        @file_name = CFG.prefs_file
         File.exists?(@file_name) ? File.open(@file_name) { |file| @xdoc = REXML::Document.new(file) } : @xdoc = REXML::Document.new
         if @xdoc.root.nil?
             @xdoc << REXML::XMLDecl.new("1.0", "UTF-8", "no")
             @xdoc.add_element("cdsdb", {"version" => 1})
-            @xdoc.root.add_element("database", {"version" => Cfg::instance.db_version})
+            @xdoc.root.add_element("database", {"version" => CFG.db_version})
             @xdoc.root << REXML::Element.new("windows")
             @xdoc.root << REXML::Element.new("menus")
         end
@@ -160,9 +160,11 @@ class Prefs
 
 
     def save_db_version(version)
-        Cfg::instance.db_version = version
+        CFG.db_version = version
         @xdoc.root.elements["database"].attributes["version"] = "#{version}"
         save
     end
 
 end
+
+PREFS = Prefs.instance

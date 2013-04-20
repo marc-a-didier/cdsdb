@@ -25,31 +25,31 @@ class MusicServer
 
     def initialize(parent = nil)
         @parent = parent
-        Cfg::instance.load if @parent.nil?
-        Cfg::instance.set_local_mode # On va pas cascader les serveurs...
+        CFG.load if @parent.nil?
+        CFG.set_local_mode # On va pas cascader les serveurs...
 
         Thread.abort_on_exception = true
 
-        Log::instance.info("Server started")
-        Log::instance.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
-        Log::instance.info("    SQLite3 #{`sqlite3 --version`}")
-        Log::instance.info("    Database #{Cfg::instance.db_version}")
-        Log::instance.info("Server listening on host #{Cfg::instance.server} port #{Cfg::instance.port}.")
+        LOG.info("Server started")
+        LOG.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
+        LOG.info("    SQLite3 #{`sqlite3 --version`}")
+        LOG.info("    Database #{CFG.db_version}")
+        LOG.info("Server listening on host #{CFG.server} port #{CFG.port}.")
 
         # A bit of security...
         @allowed_hosts = []
         IO.foreach("/etc/hosts") { |line| @allowed_hosts << line.split(" ")[0] if line.match('^[0-9]') }
         hosts = "Allowed hosts :"
         @allowed_hosts.each { |host| hosts += " "+host }
-        Log::instance.info(hosts)
+        LOG.info(hosts)
     end
 
     def listen
         Signal.trap("TERM") {
-            Log::instance.info("Server shutdown on TERM signal.")
+            LOG.info("Server shutdown on TERM signal.")
             exit(0)
         }
-        server = TCPServer.new('0.0.0.0', Cfg::instance.port)
+        server = TCPServer.new('0.0.0.0', CFG.port)
         begin
             loop do #while (session = server.accept)
                 Thread.start(server.accept) { |session|
@@ -59,17 +59,17 @@ class MusicServer
                         begin
                             self.send(req.gsub(/ /, "_").to_sym, session)
                         rescue NoMethodError => ex
-                            Log::instance.warn("Unknown request received (#{ex.class} : #{ex}).")
+                            LOG.warn("Unknown request received (#{ex.class} : #{ex}).")
                         end
                     else
-                        Log::instance.warn("Connection refused from #{session.peeraddr[3]}")
+                        LOG.warn("Connection refused from #{session.peeraddr[3]}")
                         session.puts("Fucked up...")
                     end
                     session.close
                 }
             end
         rescue Interrupt
-            Log::instance.info("Server shutdown.")
+            LOG.info("Server shutdown.")
         end
     end
 
@@ -79,12 +79,12 @@ class MusicServer
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
         file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).file_name
-        Log::instance.info("Sending #{file} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
+        LOG.info("Sending #{file} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
         if file.empty?
             session.puts("0")
         else
             session.puts(File.size(file).to_s)
-            session.puts(file.sub(Cfg::instance.music_dir, ""))
+            session.puts(file.sub(CFG.music_dir, ""))
             File.open(file, "rb") { |f|
                 while data = f.read(block_size)
                     session.write(data)
@@ -132,8 +132,8 @@ class MusicServer
     def synchronize_resources(session)
         session.puts("OK")
         Cfg::DIR_NAMES[0..2].each { |name|
-            Find::find(Cfg::instance.dirs[name]) { |file|
-                session.puts(name+Cfg::FILE_INFO_SEP+file.sub(Cfg::instance.dirs[name], "")+
+            Find::find(CFG.dirs[name]) { |file|
+                session.puts(name+Cfg::FILE_INFO_SEP+file.sub(CFG.dirs[name], "")+
                                   Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
             }
         }
@@ -142,9 +142,9 @@ class MusicServer
 
     def synchronize_sources(session)
         session.puts("OK")
-        Find::find(Cfg::instance.sources_dir) { |file|
+        Find::find(CFG.sources_dir) { |file|
             next if file.match(/.*\.bzr/) # Skip hidden dir (.bzr for example...)
-            session.puts("src"+Cfg::FILE_INFO_SEP+file.sub(Cfg::instance.sources_dir, "")+
+            session.puts("src"+Cfg::FILE_INFO_SEP+file.sub(CFG.sources_dir, "")+
                                Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
         }
         session.puts(Cfg::MSG_EOL)
@@ -157,13 +157,13 @@ class MusicServer
         file_name = Utils::replace_dir_name(session.gets.chomp)
         if file_name.match(/.dwl$/)
             file_name.sub!(/.dwl$/, "") # Remove temp ext from client if downloading the database
-            file_name = File::expand_path(Cfg::instance.database_dir+File::basename(file_name))
-        elsif file_name.index("/Music/").nil? && file_name.index(Cfg::instance.rsrc_dir).nil?
-            Log::instance.warn("Attempt to download file #{file_name} from #{session.peeraddr[3]}")
+            file_name = File::expand_path(CFG.database_dir+File::basename(file_name))
+        elsif file_name.index("/Music/").nil? && file_name.index(CFG.rsrc_dir).nil?
+            LOG.warn("Attempt to download file #{file_name} from #{session.peeraddr[3]}")
             session.puts("Fucked up...")
             return
         end
-        Log::instance.info("Sending file #{file_name} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
+        LOG.info("Sending file #{file_name} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
         session.puts(File.size(file_name).to_s)
         File.open(file_name, "rb") { |f|
             while data = f.read(block_size)
@@ -178,17 +178,17 @@ class MusicServer
         new_title   = session.gets.chomp
         file_name   = Utils::audio_file_exists(track_infos).file_name
         if file_name.empty?
-            Log::instance.info("Attempt to rename inexisting track to #{new_title} [#{session.peeraddr(:hostname)[2]}]")
+            LOG.info("Attempt to rename inexisting track to #{new_title} [#{session.peeraddr(:hostname)[2]}]")
         else
             track_infos.track.stitle = new_title
-            Log::instance.info("Track renaming [#{session.peeraddr(:hostname)[2]}]")
+            LOG.info("Track renaming [#{session.peeraddr(:hostname)[2]}]")
             Utils::tag_and_move_file(file_name, track_infos.build_access_infos)
         end
     end
 
     def get_db_version(session)
         session.puts("OK")
-        session.puts(Cfg::instance.db_version)
+        session.puts(CFG.db_version)
     end
 
     def renumber_play_list(session)

@@ -6,7 +6,7 @@
 
 class SQLGenerator
 
-    RESULT_SQL_FILE = Cfg::instance.rsrc_dir+"cdssql.txt"
+    RESULT_SQL_FILE = CFG.rsrc_dir+"cdssql.txt"
 
     HA_ARTIST  = 0
 
@@ -89,7 +89,7 @@ class SQLGenerator
     end
 
     def check_genre
-        row = DBIntf::connection.get_first_row("SELECT * FROM genres WHERE LOWER(sname)=LOWER(#{@disc.genre.to_sql});")
+        row = CDSDB.get_first_row("SELECT * FROM genres WHERE LOWER(sname)=LOWER(#{@disc.genre.to_sql});")
         if row.nil?
             @rgenre = DBUtils::get_last_id("genre")+1
             @sqlf << "INSERT INTO genres VALUES (#{@rgenre}, #{@disc.genre.to_sql});\n"
@@ -101,7 +101,7 @@ class SQLGenerator
     def insert_artists
         rartist = DBUtils.get_last_id("artist")
         @hartists.each_key do |key|
-            row = DBIntf::connection.get_first_row("SELECT * FROM artists WHERE LOWER(sname)=LOWER(#{key.to_sql})")
+            row = CDSDB.get_first_row("SELECT * FROM artists WHERE LOWER(sname)=LOWER(#{key.to_sql})")
             if row.nil?
                 rartist += 1
                 @sqlf << "INSERT INTO artists VALUES (#{rartist}, #{key.to_sql}, '', 0, '');\n"
@@ -114,7 +114,7 @@ class SQLGenerator
     end
 
     def insert_record
-        row = nil #DBIntf::connection.get_first_row("SELECT * FROM records WHERE LOWER(stitle)=LOWER(#{@disc.title.to_sql}) AND rartist=#{@main_rartist}")
+        row = nil #CDSDB.get_first_row("SELECT * FROM records WHERE LOWER(stitle)=LOWER(#{@disc.title.to_sql}) AND rartist=#{@main_rartist}")
         if row.nil?
             issegd = @is_segmented ? 1 : 0
             @recordid = DBUtils::get_last_id("record")+1
@@ -130,7 +130,7 @@ class SQLGenerator
     def insert_segments
         rsegment = DBUtils::get_last_id("segment")
         @hsegments.each do |key, value|
-            row = nil #DBIntf::connection.get_first_row("SELECT * FROM segments WHERE LOWER(stitle)=LOWER(#{@discinfo[value[1]][2].to_sql}) AND rartist=#{@hartists[@discinfo[value[1]][3]]} AND rrecord=#{@recordid}")
+            row = nil #CDSDB.get_first_row("SELECT * FROM segments WHERE LOWER(stitle)=LOWER(#{@discinfo[value[1]][2].to_sql}) AND rartist=#{@hartists[@discinfo[value[1]][3]]} AND rrecord=#{@recordid}")
             if row.nil?
                 rsegment += 1
                 seg_title = @is_segmented ? @discinfo[value[HS_ARTIST]][DI_SEGMENT] : @seg_title
@@ -153,7 +153,7 @@ class SQLGenerator
                 seg_order = (i == 0 || @segments[i] != @segments[i-1]) ? 1 : seg_order+1
             end
             hsegkey = @discinfo[i][DI_ARTIST]+@discinfo[i][DI_SEGMENT]
-            row = nil #DBIntf::connection.get_first_row("SELECT * FROM tracks WHERE LOWER(stitle)=LOWER(#{@tracks[i][0].to_sql}) AND rsegment=#{@hsegments[hsegkey][HS_SEGMENT]}")
+            row = nil #CDSDB.get_first_row("SELECT * FROM tracks WHERE LOWER(stitle)=LOWER(#{@tracks[i][0].to_sql}) AND rsegment=#{@hsegments[hsegkey][HS_SEGMENT]}")
             if row.nil?
                 rtrack += 1
                 @sqlf << "INSERT INTO tracks (rtrack, rsegment, rrecord, iorder, iplaytime, stitle, mnotes, isegorder) " \

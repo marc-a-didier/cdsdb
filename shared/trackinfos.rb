@@ -64,7 +64,7 @@ class TrackInfos
     end
 
     def get_full_dir
-        return Cfg::instance.music_dir+@genre+"/"+@dir
+        return CFG.music_dir+@genre+"/"+@dir
     end
 
     def from_tags(fname)

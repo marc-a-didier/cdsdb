@@ -140,7 +140,7 @@ class ChartsWindow < TopWindow
             links << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            DBIntf::connection.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
+            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
         end
         return links
     end
@@ -155,7 +155,7 @@ class ChartsWindow < TopWindow
         selection = @tvc.selection.selected[COL_ENTRY]-1
         @entries.each { |entry|
             @mc.pqueue.enqueue([entry.uilink]) if entry.entry >= selection
-            break if entry.entry >= Cfg::instance.max_items
+            break if entry.entry >= CFG.max_items
         }
     end
 
@@ -195,11 +195,11 @@ class ChartsWindow < TopWindow
     #
     def generate_play_list
         rplist = DBUtils::get_last_id("plist")+1
-        DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
+        CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
         rpltrack = DBUtils::get_last_id("pltrack")
         count = 1
         @lsc.each { |model, path, iter|
-            DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count});")
+            CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count});")
             count += 1
         }
     end
@@ -263,7 +263,7 @@ class ChartsWindow < TopWindow
                 group_by = "records.rlabel"
         end
         sql += @filter unless @filter.empty?
-        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{Cfg::instance.max_items+50};"
+        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{CFG.max_items+50};"
 # p sql
         return  sql
     end
@@ -275,7 +275,7 @@ class ChartsWindow < TopWindow
         @entries.clear
         i = rank = 0
         last_played = -1
-        DBIntf::connection.execute(generate_sql) do |row|
+        CDSDB.execute(generate_sql) do |row|
             entry = ChartEntry.new
             entry.entry = i
             entry.played = row[0].to_i
@@ -290,8 +290,8 @@ class ChartsWindow < TopWindow
             # If view is other than tracks or record, the entry is fully loaded in this loop
             if ![VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
                 entry.title = row[2].to_html_bold
-                entry.pix   = ImageCache::instance.get_flag(row[3]) if @view_type == VIEW_ARTISTS
-                entry.pix   = ImageCache::instance.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
+                entry.pix   = IMG_CACHE.get_flag(row[3]) if @view_type == VIEW_ARTISTS
+                entry.pix   = IMG_CACHE.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
             end
 
             @entries << entry
@@ -321,7 +321,7 @@ class ChartsWindow < TopWindow
     #
     def display_charts(is_reload)
         @entries.each_with_index { |entry, i|
-            break if i == Cfg::instance.max_items
+            break if i == CFG.max_items
             iter = is_reload ? @lsc.get_iter(i.to_s) : @lsc.append
             iter[COL_ENTRY] = entry.entry+1
             iter[COL_RANK]  = entry.rank.to_s
@@ -357,7 +357,7 @@ class ChartsWindow < TopWindow
         display_charts(false)
 
         @tvc.columns_autosize
-Trace.log.debug("Charts full load done".red)
+TRACE.debug("Charts full load done".red)
         return
 #RubyProf.start
 #result = RubyProf.stop
@@ -391,12 +391,12 @@ Trace.log.debug("Charts full load done".red)
             entry.rank = rank
             pos = entry.entry if entry.ref == ref
         }
-        display_charts(true) if pos < Cfg::instance.max_items
-Trace.log.debug("Charts lazy update done".green)
+        display_charts(true) if pos < CFG.max_items
+TRACE.debug("Charts lazy update done".green)
     end
 
     def show
-        load_view(@view_type) #if !Cfg::instance.live_charts_update? || @lsc.iter_first.nil?
+        load_view(@view_type) #if !CFG.live_charts_update? || @lsc.iter_first.nil?
         super
     end
 end

@@ -71,7 +71,7 @@ class GenericBrowser
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view except in admin mode
-            return if @tv.selection.selected.nil? && !Cfg::instance.admin?
+            return if @tv.selection.selected.nil? && !CFG.admin?
             @mc.update_tags_menu(self, @mc.glade[UIConsts::REC_POPUP_TAGS]) if self.instance_of?(RecordsBrowser)
             @mc.glade[menu_name].popup(nil, nil, event.button, event.time)
         end

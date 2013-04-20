@@ -65,7 +65,7 @@ public
 
     # Load a full sqlite3 row from the pk field
     def sql_load
-        row = DBIntf::connection.get_first_row("SELECT * FROM #{@tbl_name} #{generate_where_on_pk};")
+        row = CDSDB.get_first_row("SELECT * FROM #{@tbl_name} #{generate_where_on_pk};")
         return row.nil? ? reset : load_from_row(row)
     end
 
@@ -76,7 +76,7 @@ public
         if sql[-1] != " "
             sql = sql[0..-2]+" "+generate_where_on_pk+";" # Remove last ,
             DBUtils::client_sql(sql)
-Trace.log.debug("DB update : #{sql}".red)
+TRACE.debug("DB update : #{sql}".red)
         end
         return self
     end
@@ -97,7 +97,7 @@ Trace.log.debug("DB update : #{sql}".red)
     end
 
     def get_last_id
-        id = DBIntf::connection.get_first_value("SELECT MAX(#{@dbs.members[0].to_s}) FROM #{@tbl_name};")
+        id = CDSDB.get_first_value("SELECT MAX(#{@dbs.members[0].to_s}) FROM #{@tbl_name};")
         return 0 if id.nil?
         return id.to_i
     end
@@ -183,7 +183,7 @@ class SegmentDBClass < DBClassIntf
 
     def add_new(rartist, rrecord)
         reset
-        @dbs.iorder = DBIntf::connection.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
+        @dbs.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
         @dbs.iorder = @dbs.iorder.nil? ? 1 : @dbs.iorder.to_i
         @dbs.rsegment = get_last_id+1
         @dbs.rrecord = rrecord
@@ -194,7 +194,7 @@ class SegmentDBClass < DBClassIntf
 
     # Loads values from the first segment of a given record
     def first_segment(rrecord)
-        return load_from_row(DBIntf::connection.get_first_row("SELECT * FROM segments WHERE rrecord=#{rrecord};"))
+        return load_from_row(CDSDB.get_first_row("SELECT * FROM segments WHERE rrecord=#{rrecord};"))
     end
 end
 
@@ -209,7 +209,7 @@ class TrackDBClass < DBClassIntf
 
     def add_new(rrecord, rsegment)
         reset
-        @dbs.iorder = DBIntf::connection.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
+        @dbs.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
         @dbs.iorder = @dbs.iorder.nil? ? 1 : @dbs.iorder.to_i
         @dbs.rtrack = get_last_id+1
         @dbs.rrecord = rrecord

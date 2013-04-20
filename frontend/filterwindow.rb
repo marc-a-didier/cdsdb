@@ -63,7 +63,7 @@ class FilterWindow < TopWindow
 
         tv.append_column(Gtk::TreeViewColumn.new("Include", grenderer, :active => 0))
         tv.append_column(Gtk::TreeViewColumn.new(TITLES[table_name], srenderer, :text => 1))
-        DBIntf::connection.execute("SELECT * FROM #{table_name};") do |row|
+        CDSDB.execute("SELECT * FROM #{table_name};") do |row|
             iter = tv.model.append
             iter[0] = false
             iter[1] = row[1]
@@ -161,12 +161,12 @@ puts wc
         sql = "SELECT tracks.rtrack FROM tracks " \
               "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
 puts sql
-        f = File.new(Cfg::instance.rsrc_dir+"genpl.txt", "w")
+        f = File.new(CFG.rsrc_dir+"genpl.txt", "w")
 
         max_played = 0
         tracks = []
         dblink = AudioLink.new
-        DBIntf.connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             # Skip tracks which aren't ripped
             next if dblink.reset.set_track_ref(row[0]).setup_audio_file == AudioLink::NOT_FOUND
 
@@ -241,13 +241,13 @@ p rvalues
         f.puts; f.puts
 
         rplist = DBUtils::get_last_id("plist")+1
-        DBIntf::connection.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
+        CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
                                     #{Time.now.to_i}, #{Time.now.to_i});")
 
         rpltrack = DBUtils::get_last_id("pltrack")+1
         tracks.each_with_index { |track, i|
             f << "i="<< i << "  Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
-            DBIntf::connection.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track[TRACK_RTRACK]}, #{i+1});")
+            CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track[TRACK_RTRACK]}, #{i+1});")
         }
         f.close
 

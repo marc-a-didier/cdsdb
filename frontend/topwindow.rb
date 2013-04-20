@@ -12,7 +12,7 @@ class TopWindow
         @mc = mc
         @window_id = window_id
 
-        window.signal_connect(:show)         { Prefs::instance.load_window(self) }
+        window.signal_connect(:show)         { PREFS.load_window(self) }
         window.signal_connect(:delete_event) { @mc.notify_closed(self); @mc.reset_filter_receiver; true }
     end
 
@@ -25,7 +25,7 @@ class TopWindow
     end
 
     def hide
-        Prefs::instance.save_window(self)
+        PREFS.save_window(self)
         window.hide
     end
 

@@ -14,7 +14,7 @@ class AudioLink < DBCacheLink
     ON_SERVER = 3 # No local file but available from server
     UNKNOWN   = 4 # Should be default value, no check has been made
 
-    attr_accessor :audio_file #, :audio_status
+    attr_accessor :audio_file
     attr_reader   :tags
 
     def initialize
@@ -25,7 +25,6 @@ class AudioLink < DBCacheLink
 
     def reset
         @audio_file = ""
-#         @audio_status = UNKNOWN
         @tags = nil
 
         return super
@@ -37,7 +36,6 @@ class AudioLink < DBCacheLink
 
     def load_from_tags(file_name)
         @audio_file = file_name
-#         @audio_status = OK
 
         tags = TagLib::File.new(file_name)
         @tags = TagsData.new(tags.artist, tags.album, tags.title, tags.track,
@@ -51,7 +49,6 @@ class AudioLink < DBCacheLink
     # as we may guess the file really exists.
     def set_audio_file(file_name)
         @audio_file = file_name
-#         @audio_status = OK
         set_audio_status(OK)
     end
 
@@ -77,23 +74,20 @@ class AudioLink < DBCacheLink
         fname = sprintf("%02d - %s", track.iorder, title.clean_path)
         dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
 
-        @audio_file = Cfg::instance.music_dir+genre.sname+"/"+dir+"/"+fname
+        @audio_file = CFG.music_dir+genre.sname+"/"+dir+"/"+fname
     end
 
     def setup_audio_file
-#         return @audio_status unless @audio_file.empty?
         return audio_status unless @audio_file.empty?
 
         build_audio_file_name
-#         @audio_status = search_audio_file
         set_audio_status(search_audio_file)
-#         return @audio_status
         return audio_status
     end
 
     # Returns the file name without the music dir and genre
     def track_dir
-        file = @audio_file.sub(Cfg::instance.music_dir, "")
+        file = @audio_file.sub(CFG.music_dir, "")
         return file.sub(file.split("/")[0], "")
     end
 
@@ -102,7 +96,6 @@ class AudioLink < DBCacheLink
     end
 
     def playable?
-#         return @audio_status == OK || @audio_status == MISPLACED
         return audio_status == OK || audio_status == MISPLACED
     end
 
@@ -120,7 +113,7 @@ class AudioLink < DBCacheLink
 
         # Remove the root dir & genre dir to get the appropriate sub dir
         file = track_dir
-        Dir[Cfg::instance.music_dir+"*"].each { |entry|
+        Dir[CFG.music_dir+"*"].each { |entry|
             next if !FileTest::directory?(entry)
             Utils::AUDIO_EXTS.each { |ext|
                 if File::exists?(entry+file+ext)
@@ -169,19 +162,18 @@ class AudioLink < DBCacheLink
         @audio_file += File::extname(file_name)
 
         # Move the original file to it's new location
-        root_dir = Cfg::instance.music_dir+genre.sname+File::SEPARATOR
+        root_dir = CFG.music_dir+genre.sname+File::SEPARATOR
         FileUtils.mkpath(root_dir+File::dirname(track_dir))
         FileUtils.mv(file_name, @audio_file)
-        Log.instance.info("Source #{file_name} tagged and moved to "+@audio_file)
+        LOG.info("Source #{file_name} tagged and moved to "+@audio_file)
         Utils::remove_dirs(File.dirname(file_name))
 
-#         set_audio_status(OK) # Force the track status as we may guess the file is OK...
         call_back.call(self) if block_given?
     end
 
     def tag_and_move_dir(dir, &call_back)
         # Get track count
-        trk_count = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
+        trk_count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
 
         # Get recursivelly all music files from the selected dir
         files = []
@@ -208,7 +200,7 @@ class AudioLink < DBCacheLink
 
         # Loops through each track
         i = 0
-        DBIntf::connection.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
+        CDSDB.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
             set_track_ref(row[0])
             set_segment_ref(track.rsegment)
             set_artist_ref(segment.rartist)

@@ -86,7 +86,7 @@ class RecentItemsDialog
             links << @tv.selection.selected[COL_DATA].clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
-            DBIntf::connection.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
+            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
         end
         return links
     end
@@ -104,14 +104,14 @@ class RecentItemsDialog
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    INNER JOIN artists ON artists.rartist=records.rartist
                    WHERE records.idateadded<>0 #{@filter}
-                   ORDER BY records.idateadded DESC LIMIT #{Cfg::instance.max_items};}
+                   ORDER BY records.idateadded DESC LIMIT #{CFG.max_items};}
             when VIEW_RIPPED
                 %Q{SELECT DISTINCT(records.rrecord), records.stitle, artists.sname, records.idateripped, records.irecsymlink FROM tracks
                    INNER JOIN segments ON tracks.rsegment=segments.rsegment
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    INNER JOIN artists ON artists.rartist=records.rartist
                    WHERE records.idateripped<>0 #{@filter}
-                   ORDER BY records.idateripped DESC LIMIT #{Cfg::instance.max_items};}
+                   ORDER BY records.idateripped DESC LIMIT #{CFG.max_items};}
             when VIEW_PLAYED
                 # The WHERE clause was added to add a WHERE for the filter if any. Should be changed...
                 %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
@@ -121,7 +121,7 @@ class RecentItemsDialog
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    INNER JOIN artists ON artists.rartist=records.rartist
                    WHERE tracks.iplayed > 0 #{@filter}
-                   ORDER BY logtracks.idateplayed DESC LIMIT #{Cfg::instance.max_items};}
+                   ORDER BY logtracks.idateplayed DESC LIMIT #{CFG.max_items};}
             when VIEW_DATES
                 # The WHERE clause was added to add a WHERE for the filter if any. Should be changed...
                 %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
@@ -136,7 +136,7 @@ class RecentItemsDialog
 
         @tv.model.clear
         i = 0
-        DBIntf::connection.execute(sql) do |row|
+        CDSDB.execute(sql) do |row|
             i += 1
             iter = @tv.model.append
             iter[COL_ENTRY] = i

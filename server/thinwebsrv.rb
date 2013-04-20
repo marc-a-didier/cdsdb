@@ -81,9 +81,9 @@ class Navigator
     end
 
     def home_page
-        artists = DBIntf::connection.get_first_value("SELECT COUNT(rartist) FROM artists")
-        records, play_time = DBIntf::connection.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records")
-        tracks = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM tracks")
+        artists = CDSDB.get_first_value("SELECT COUNT(rartist) FROM artists")
+        records, play_time = CDSDB.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records")
+        tracks = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks")
 
 
         page = set_styles([:main_title_style])
@@ -93,7 +93,7 @@ class Navigator
                   </div>}
         page += "<h1>Genres</h1><br><br><ul>"
         sql = "SELECT * FROM genres WHERE rgenre<>0 ORDER BY LOWER(sname)"
-        DBIntf::connection.execute(sql) { |row|
+        CDSDB.execute(sql) { |row|
             page += %{<a href="/muse?genre=#{row[0]}">#{CGI::escapeHTML(row[1])}</a><br/>}
         }
         page += "</ul>"
@@ -110,7 +110,7 @@ class Navigator
                     INNER JOIN segments ON segments.rartist = artists.rartist
                     INNER JOIN records ON records.rrecord = segments.rrecord
                     WHERE records.rgenre=#{rgenre} ORDER BY LOWER(artists.sname)}
-        DBIntf::connection.execute(sql) { |row|
+        CDSDB.execute(sql) { |row|
             page += %{<a href="/muse?artist=#{row[0]}">#{CGI::escapeHTML(row[1])}</a><br>}
         }
         page += "</ul>"
@@ -128,10 +128,10 @@ class Navigator
         page += %Q{<h1>Records</h1><br><h2>#{path}</h2><br><table border="1">}
         sql = %Q{SELECT DISTINCT(rrecord) FROM segments WHERE rartist=#{rartist};}
         record = RecordDBClass.new
-        DBIntf::connection.execute(sql) { |segment|
+        CDSDB.execute(sql) { |segment|
             record.ref_load(segment[0])
             image_file = Utils::get_cover_file_name(record.rrecord, 0, record.irecsymlink)
-            image_file = Cfg::instance.covers_dir+"default.png" if image_file.empty?
+            image_file = CFG.covers_dir+"default.png" if image_file.empty?
             page += "<tr>"
 #             page += %Q{<td><img src="/image?ref=#{URI::escape(image_file)}" width="128" height="128" /></td>}
             page += %Q{<td><img src="/covers/#{File::basename(image_file)}" width="128" height="128" /></td>}
@@ -161,13 +161,13 @@ class Navigator
                  WHERE segments.rrecord=#{rrecord} AND segments.rartist=#{@artist.rartist}
                  ORDER BY tracks.iorder}
         track_infos = TrackInfos.new
-        DBIntf::connection.execute(sql) { |row|
+        CDSDB.execute(sql) { |row|
             @track.ref_load(row[0])
             file_name = Utils::audio_file_exists(track_infos.get_track_infos(@track.rtrack)).file_name
             page += "<tr>"
             page += "<td>#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)}</td>"
             unless file_name.empty?
-                file_name.gsub!(Cfg::instance.music_dir, "")
+                file_name.gsub!(CFG.music_dir, "")
                 page += %{<td><a href="/file?track=#{@track.rtrack}">Download</a></td>}
 #             page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
 #                 page += %{<td><audio src="/Music/#{URI::escape(file_name)}" controls width="300" height="42">Ca dejante...</audio><td/>}
@@ -231,10 +231,10 @@ class PageProvider
   end
 end
 
-# app = Rack::Directory.new(Cfg::instance.music_dir)
+# app = Rack::Directory.new(CFG.music_dir)
 # Thin::Server.start('0.0.0.0', 7125, app)# do
 
-Cfg::instance.load
+CFG.load
 
 Thin::Server.start('0.0.0.0', 7125) do
   use(Rack::CommonLogger)
@@ -243,5 +243,5 @@ Thin::Server.start('0.0.0.0', 7125) do
   map('/muse')  { run(PageProvider.new) }
 #   map('/image') { run(ImageProvider.new) }
 #   map('/audio') { run(AudioProvider.new) }
-  map('/files') { run(Rack::Directory.new(Cfg::instance.music_dir)) }
+  map('/files') { run(Rack::Directory.new(CFG.music_dir)) }
 end

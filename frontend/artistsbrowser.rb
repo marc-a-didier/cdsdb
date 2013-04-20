@@ -306,7 +306,7 @@ class RippedRowProp < GenRowProp
                      WHERE records.idateripped <> 0
                      ORDER BY records.idateripped DESC LIMIT 100;}
             count = 0
-            DBIntf::connection.execute(sql) { |row|
+            CDSDB.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
                 child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+
@@ -380,7 +380,7 @@ class RecordsRowProp < GenRowProp
             sql = %Q{SELECT records.stitle, artists.rartist, artists.sname, records.rrecord FROM records
                      INNER JOIN artists ON records.rartist = artists.rartist;}
 #                      ORDER BY LOWER(records.stitle);}
-            DBIntf::connection.execute(sql) { |row|
+            CDSDB.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
 #                 child[1] = '<span color="green">'+CGI::escapeHTML(row[0])+"</span>\n<i>"+CGI::escapeHTML(row[2])+"</i>"
@@ -429,7 +429,7 @@ class ArtistsBrowser < GenericBrowser
 
     def setup
         name_renderer = Gtk::CellRendererText.new
-#         if Cfg::instance.admin?
+#         if CFG.admin?
 #             name_renderer.editable = true
 #             name_renderer.signal_connect(:edited) { |widget, path, new_text| on_artist_edited(widget, path, new_text) }
 #         end
@@ -557,7 +557,7 @@ class ArtistsBrowser < GenericBrowser
 
         return if iter.first_child && iter.first_child[0] != GenRowProp::FAKE_ID && !force_reload
 
-# Trace.log.debug("*** load new sub tree ***")
+# TRACE.debug("*** load new sub tree ***")
         # Making the first column the sort column greatly speeds up things AND makes sure that the
         # fake item is first in the store.
         @tvm.set_sort_column_id(0)
@@ -571,7 +571,7 @@ class ArtistsBrowser < GenericBrowser
 
         sql = iter[2].select_for_level(@tvm.iter_depth(iter), iter, @mc, @tvm)
 
-        DBIntf::connection.execute(sql) { |row| map_sub_row_to_entry(row, iter) } unless sql.empty?
+        CDSDB.execute(sql) { |row| map_sub_row_to_entry(row, iter) } unless sql.empty?
 
         # Perform any post selection required action. By default, removes the first fake child
         iter[2].post_select(@tvm, iter, @mc)
@@ -589,7 +589,7 @@ class ArtistsBrowser < GenericBrowser
     def on_selection_changed(widget)
         @tvs = @tv.selection.selected
         return if @tvs.nil?
-# Trace.log.debug("artists selection changed".cyan)
+# TRACE.debug("artists selection changed".cyan)
         if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
             @artlnk.reset
         else
@@ -683,16 +683,16 @@ class ArtistsBrowser < GenericBrowser
         sql += " AND tracks.iplayed=0;"
 
 p sql
-        remove_artist(rartist) if DBIntf::connection.get_first_value(sql) == 0
+        remove_artist(rartist) if CDSDB.get_first_value(sql) == 0
     end
 
     def show_artists_infos
         # TODO: the select on distinct playtime is or may be wrong if two rec/seg have the same length...
-        recs_infos = DBIntf::connection.get_first_row(
+        recs_infos = CDSDB.get_first_row(
             %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(records.iplaytime)), COUNT(tracks.rtrack) FROM records
                INNER JOIN tracks ON tracks.rrecord=records.rrecord
                WHERE rartist=#{@tvs[0]};})
-        comp_infos = DBIntf::connection.get_first_row(
+        comp_infos = CDSDB.get_first_row(
             %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(segments.iplaytime)), COUNT(tracks.rtrack) FROM records
                INNER JOIN segments ON segments.rrecord=records.rrecord
                INNER JOIN tracks ON tracks.rsegment=segments.rsegment

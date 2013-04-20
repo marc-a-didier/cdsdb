@@ -154,17 +154,17 @@ public
 
     def exec_sql(sql, log_sql = true)
         if local?
-            log_sql == true ? DBUtils::log_exec(sql) : DBIntf::connection.execute(sql)
+            log_sql == true ? DBUtils::log_exec(sql) : CDSDB.execute(sql)
         else
             DBUtils::client_sql(sql)
         end
     end
 
     def add_to_plist(rplist, rtrack)
-        count = DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM pltracks WHERE rplist=#{rplist} AND rtrack=#{rtrack};")
+        count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM pltracks WHERE rplist=#{rplist} AND rtrack=#{rtrack};")
         count = 0 if count > 0 && UIUtils::get_response("This track is already in this play list. Add anyway?") == Gtk::Dialog::RESPONSE_OK
         if count == 0
-            seq = DBIntf::connection.get_first_value("SELECT MAX(iorder) FROM pltracks WHERE rplist=#{rplist}").to_i+1
+            seq = CDSDB.get_first_value("SELECT MAX(iorder) FROM pltracks WHERE rplist=#{rplist}").to_i+1
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
@@ -243,7 +243,7 @@ public
             @tracks += 1
             @ttime += iter[TT_DATA].track.iplaytime
         }
-#         DBIntf::connection.execute(%Q{SELECT COUNT(pltracks.rtrack), SUM(tracks.iplaytime) FROM pltracks
+#         CDSDB.execute(%Q{SELECT COUNT(pltracks.rtrack), SUM(tracks.iplaytime) FROM pltracks
 #                                       LEFT OUTER JOIN tracks ON pltracks.rtrack = tracks.rtrack
 #                                       WHERE rplist=#{@current_pl.rplist}}) do |row|
 #             @tracks = row[0].to_i
@@ -343,11 +343,11 @@ public
     #
 
     def do_check_orphans
-        p DBIntf::connection.get_first_value("SELECT COUNT(rtrack) FROM pltracks where rplist=8;")
-        p DBIntf::connection.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM pltracks where rplist=8;")
+        p CDSDB.get_first_value("SELECT COUNT(rtrack) FROM pltracks where rplist=8;")
+        p CDSDB.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM pltracks where rplist=8;")
         return
         @pts.each do |model, path, iter|
-            row = DBIntf::connection.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_DATA].track.rtrack};")
+            row = CDSDB.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_DATA].track.rtrack};")
             p iter if row.nil?
         end
     end
@@ -374,7 +374,7 @@ public
 
     def save_plt
         @pts.each do |model, path, iter|
-            #DBIntf::connection.execute("UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]}")
+            #CDSDB.execute("UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]}")
             exec_sql("UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]}")
         end
         exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{@current_pl.rplist};")
@@ -445,7 +445,7 @@ public
     def do_renumber
         return if @tvpl.selection.selected.nil?
         DBUtils::renumber_play_list(@current_pl.rplist)
-        MusicClient.new.renumber_play_list(@current_pl.rplist) if !local? && Cfg::instance.remote?
+        MusicClient.new.renumber_play_list(@current_pl.rplist) if !local? && CFG.remote?
     end
 
     def enqueue_track
@@ -471,7 +471,7 @@ public
 #         xdoc.add_element("playlist", {"version"=>"1", "xmlns"=>"http://xspf.org/ns/0/"})
 #         xdoc.root.add_element("creator").text = "CDsDB #{Cdsdb::VERSION}"
 #         tracklist = xdoc.root.add_element("trackList")
-#         DBIntf::connection.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@tvpl.selection.selected[0]} ORDER BY iorder;") do |row|
+#         CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@tvpl.selection.selected[0]} ORDER BY iorder;") do |row|
 #             track_info = Utils::get_track_info(row[0].to_i)
 #             audio_file = Utils::search_real_audio_file(track_info)
 #             unless audio_file.empty?
@@ -480,7 +480,7 @@ public
 #                 tracklist << track
 #             end
 #         end
-#         fname = Cfg::instance.music_dir+"Playlists/"+@tvpl.selection.selected[1]+".cdsdb.xspf"
+#         fname = CFG.music_dir+"Playlists/"+@tvpl.selection.selected[1]+".cdsdb.xspf"
 #         File.open(fname, "w") { |file| REXML::Formatters::Pretty.new.write_document(xdoc, file) }
 
         track_infos = TrackInfos.new
@@ -490,7 +490,7 @@ public
         xdoc.root["version"] = "1";
         xdoc.root["xmlns"] = "http://xspf.org/ns/0/"
         xdoc.root << tracklist = XML::Node.new("trackList")
-        DBIntf::connection.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
+        CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
             track_infos.get_track_infos(row[0])
             audio_file = Utils::audio_file_exists(track_infos).file_name
             unless audio_file.empty?
@@ -501,14 +501,14 @@ public
             end
         end
         #print xdoc.to_s
-        fname = Cfg::instance.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.xspf"
+        fname = CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.xspf"
         xdoc.save(fname, :indent => true, :encoding => XML::Encoding::UTF_8)
     end
 
     def do_export_m3u
-        file = File.new(Cfg::instance.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.m3u", "w")
+        file = File.new(CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.m3u", "w")
         file << "#EXTM3U\n"
-        DBIntf::connection.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
+        CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
             audio_file = Utils::audio_file_exists(Utils::get_track_info(row[0])).file_name
             file << audio_file+"\n" unless audio_file.empty?
         end
@@ -519,9 +519,9 @@ public
         counter = 0
         track_infos = TrackInfos.new
         rplist = @current_pl.rplist
-        file = File.new(Cfg::instance.music_dir+"Playlists/#{@current_pl.sname}.cdsdb.pls", "w")
+        file = File.new(CFG.music_dir+"Playlists/#{@current_pl.sname}.cdsdb.pls", "w")
         file << "[playlist]\n\n"
-        DBIntf::connection.execute("SELECT rtrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;") do |row|
+        CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;") do |row|
             counter += 1
             track_infos.get_track_infos(row[0])
             audio_file = Utils::audio_file_exists(track_infos).file_name
@@ -566,7 +566,7 @@ public
     end
 
     def position_browser(rpltrack)
-        rplist = DBIntf::connection.get_first_value("SELECT rplist FROM pltracks WHERE rpltrack=#{rpltrack};")
+        rplist = CDSDB.get_first_value("SELECT rplist FROM pltracks WHERE rpltrack=#{rpltrack};")
         if sel_iter = @tvpl.find_ref(rplist)
             @tvpl.set_cursor(sel_iter.path, nil, false)
             @tvpt.set_cursor(sel_iter.path, nil, false) if sel_iter = @tvpt.find_ref(rpltrack)
@@ -575,7 +575,7 @@ public
 
     def update_tvpl
         @pls.clear
-        DBIntf::connection.execute( "SELECT rplist, sname FROM plists" ) do |row|
+        CDSDB.execute( "SELECT rplist, sname FROM plists" ) do |row|
             iter = @pls.append
             iter[0] = row[0]
             iter[1] = row[1]
@@ -589,7 +589,7 @@ public
 
         # The cache mechanism slows the things a bit down when a play list
         # is loaded for the first time
-        DBIntf::connection.execute(
+        CDSDB.execute(
             "SELECT * FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
                 iter = @pts.append
                 iter[TT_REF]   = row[TDB_RPLTRACK]

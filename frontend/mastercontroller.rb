@@ -53,22 +53,22 @@ class MasterController
 
 
         # Set cd image to default image
-        @glade[UIConsts::REC_IMAGE].pixbuf = ImageCache::instance.default_large_record
-        ImageCache.instance.preload_tracks_cover
+        @glade[UIConsts::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
+        IMG_CACHE.preload_tracks_cover
 
-        Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"player.png"))
-        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"pqueue.png"))
-        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"plists.png"))
-        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"charts.png"))
+        Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"player.png"))
+        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"pqueue.png"))
+        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"plists.png"))
+        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"charts.png"))
         @glade[UIConsts::MW_TBBTN_PLAYER].icon_name = "player_icon"
         @glade[UIConsts::MW_TBBTN_PQUEUE].icon_name = "pqueue_icon"
         @glade[UIConsts::MW_TBBTN_PLISTS].icon_name = "plists_icon"
         @glade[UIConsts::MW_TBBTN_CHARTS].icon_name = "charts_icon"
 
-        Gtk::IconTheme.add_builtin_icon("information_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"information.png"))
-        Gtk::IconTheme.add_builtin_icon("tasks_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"tasks.png"))
-        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"filter.png"))
-        Gtk::IconTheme.add_builtin_icon("memos_icon", 22, UIUtils::get_btn_icon(Cfg::instance.icons_dir+"document-edit.png"))
+        Gtk::IconTheme.add_builtin_icon("information_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"information.png"))
+        Gtk::IconTheme.add_builtin_icon("tasks_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"tasks.png"))
+        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"filter.png"))
+        Gtk::IconTheme.add_builtin_icon("memos_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"document-edit.png"))
 
         @glade[UIConsts::MW_TBBTN_APPFILTER].icon_name  = "information_icon"
         @glade[UIConsts::MW_TBBTN_TASKS].icon_name  = "tasks_icon"
@@ -86,14 +86,14 @@ class MasterController
         @glade[UIConsts::MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@memos)  }
         @glade[UIConsts::MW_TBBTN_APPFILTER].signal_connect(:clicked){
             DBCache.instance.dump_infos
-            ImageCache.instance.dump_infos
+            IMG_CACHE.dump_infos
         }
 
         # Action called from the memos window, equivalent to File/Save of the main window
         @glade[UIConsts::MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
 
         # Load view menu before instantiating windows (plists case)
-        Prefs::instance.load_menu_state(self, @glade[UIConsts::VIEW_MENU])
+        PREFS.load_menu_state(self, @glade[UIConsts::VIEW_MENU])
 
         #
         # Create never destroyed windows
@@ -111,16 +111,16 @@ class MasterController
         @search_dlg   = nil
 
         # Set windows icons
-        @pqueue.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"pqueue.png")
-        @player.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"player.png")
-        @plists.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"plists.png")
-        @charts.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"charts.png")
-        @tasks.window.icon  = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"tasks.png")
-        @filter.window.icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"filter.png")
-        @memos.window.icon  = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"document-edit.png")
+        @pqueue.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"pqueue.png")
+        @player.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"player.png")
+        @plists.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"plists.png")
+        @charts.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"charts.png")
+        @tasks.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"tasks.png")
+        @filter.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"filter.png")
+        @memos.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"document-edit.png")
 
         # Reload windows state from the last session BEFORE connecting signals
-        Prefs::instance.load_menu_state(self, @glade[UIConsts::MM_WIN_MENU])
+        PREFS.load_menu_state(self, @glade[UIConsts::MM_WIN_MENU])
 
 
         #
@@ -168,7 +168,7 @@ class MasterController
 
         @glade[UIConsts::MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
         @glade[UIConsts::MAIN_WINDOW].signal_connect(:delete_event) { clean_up; false }
-        @glade[UIConsts::MAIN_WINDOW].signal_connect(:show)         { Prefs::instance.load_main(@glade, UIConsts::MAIN_WINDOW) }
+        @glade[UIConsts::MAIN_WINDOW].signal_connect(:show)         { PREFS.load_main(@glade, UIConsts::MAIN_WINDOW) }
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         @glade[UIConsts::MAIN_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE) # It took me ages to research this
@@ -217,7 +217,7 @@ class MasterController
         tags_sm.show_all
 
         # Disable sensible controls if not in admin mode
-        UIConsts::ADMIN_CTRLS.each { |control| @glade[control].sensitive = false } unless Cfg::instance.admin?
+        UIConsts::ADMIN_CTRLS.each { |control| @glade[control].sensitive = false } unless CFG.admin?
 
         #
         # Setup the treeviews
@@ -230,7 +230,7 @@ class MasterController
         @art_browser.load_entries
 
         # At last, we're ready to go!
-        @glade[UIConsts::MAIN_WINDOW].icon = Gdk::Pixbuf.new(Cfg::instance.icons_dir+"audio-cd.png")
+        @glade[UIConsts::MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
         @glade[UIConsts::MAIN_WINDOW].show
     end
 
@@ -239,9 +239,9 @@ class MasterController
     #
     def clean_up
         @player.stop if @player.playing? || @player.paused?
-        Prefs::instance.save_window(@glade[UIConsts::MAIN_WINDOW])
-        Prefs::instance.save_menu_state(self, @glade[UIConsts::VIEW_MENU])
-        Prefs::instance.save_menu_state(self, @glade[UIConsts::MM_WIN_MENU])
+        PREFS.save_window(@glade[UIConsts::MAIN_WINDOW])
+        PREFS.save_menu_state(self, @glade[UIConsts::VIEW_MENU])
+        PREFS.save_menu_state(self, @glade[UIConsts::MM_WIN_MENU])
         [@plists, @player, @pqueue, @charts, @filter, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
         #system("rm -f ../mfiles/*")
     end
@@ -496,7 +496,7 @@ class MasterController
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
         # Segment is handled in record class
-Trace.log.debug("*** save memos called")
+TRACE.debug("*** save memos called")
         [@art_browser.artlnk, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
     end
 
@@ -526,9 +526,9 @@ Trace.log.debug("*** save memos called")
             # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
             @trk_browser.update_infos(uilink.reload_track_cache.track.rtrack)
 
-            @charts.live_update(uilink) if Cfg::instance.live_charts_update? && @charts.window.visible?
+            @charts.live_update(uilink) if CFG.live_charts_update? && @charts.window.visible?
 
-            MusicClient.new.update_stats(uilink.track.rtrack) if Cfg::instance.remote?
+            MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?
         }
 
 #         if @glade[UIConsts::MM_VIEW_UPDATENP].active?
@@ -614,12 +614,12 @@ Trace.log.debug("*** save memos called")
             file = DBIntf::build_db_name
             File.unlink(file+".back") if File.exists?(file+".back")
             srv_db_version = MusicClient.new.get_server_db_version
-Trace.log.debug("new db version=#{srv_db_version}")
+TRACE.debug("new db version=#{srv_db_version}")
             DBIntf::disconnect
-            if srv_db_version == Cfg::instance.db_version
+            if srv_db_version == CFG.db_version
                 FileUtils.mv(file, file+".back")
             else
-                Prefs::instance.save_db_version(srv_db_version)
+                PREFS.save_db_version(srv_db_version)
             end
             FileUtils.mv(file_name, DBIntf::build_db_name)
             DBCache.instance.clear
@@ -628,10 +628,10 @@ Trace.log.debug("new db version=#{srv_db_version}")
 
     #
     def on_update_resources
-        MusicClient.new.synchronize_resources.each { |file| @tasks.new_file_download(self, file, 0) } if Cfg::instance.remote?
+        MusicClient.new.synchronize_resources.each { |file| @tasks.new_file_download(self, file, 0) } if CFG.remote?
     end
 
     def on_update_sources
-        MusicClient.new.synchronize_sources.each { |file| @tasks.new_file_download(self, file, 1) } if Cfg::instance.remote?
+        MusicClient.new.synchronize_sources.each { |file| @tasks.new_file_download(self, file, 1) } if CFG.remote?
     end
 end

@@ -6,11 +6,11 @@ class MusicClient
 
     def get_connection
         begin
-            socket = TCPSocket.new(Cfg::instance.server, Cfg::instance.port)
+            socket = TCPSocket.new(CFG.server, CFG.port)
         rescue Errno::ECONNREFUSED => ex
             puts "Connection error (#{ex.class} : #{ex})."
-            Cfg::instance.set_local_mode
-            UIUtils::show_message("Can't connect to server #{Cfg::instance.server} on port #{Cfg::instance.port}.\n
+            CFG.set_local_mode
+            UIUtils::show_message("Can't connect to server #{CFG.server} on port #{CFG.port}.\n
                                    Config reset to local browsing mode.", Gtk::MessageDialog::ERROR)
             return nil
         end
@@ -137,19 +137,19 @@ puts "OK"
         file = ""
         if socket.gets.chomp == "OK"
             puts "OK"
-            puts(Cfg::instance.tx_block_size.to_s)
-            socket.puts(Cfg::instance.tx_block_size.to_s)
-            if socket.gets.chomp.to_i == Cfg::instance.tx_block_size
+            puts(CFG.tx_block_size.to_s)
+            socket.puts(CFG.tx_block_size.to_s)
+            if socket.gets.chomp.to_i == CFG.tx_block_size
                 socket.puts(rtrack.to_s)
                 size = socket.gets.chomp.to_i
                 #p size
                 unless size == 0
                     file = socket.gets.chomp
-                    if Cfg::instance.local_store?
-                        FileUtils.mkpath(Cfg::instance.music_dir+File.dirname(file))
-                        file = Cfg::instance.music_dir+file
+                    if CFG.local_store?
+                        FileUtils.mkpath(CFG.music_dir+File.dirname(file))
+                        file = CFG.music_dir+file
                     else
-                        file = Cfg::instance.rsrc_dir+"mfiles/"+File.basename(file)
+                        file = CFG.rsrc_dir+"mfiles/"+File.basename(file)
                     end
                     download_file(tasks, task_id, file, size, socket)
                 end
@@ -167,9 +167,9 @@ puts "OK"
         socket.puts("send file")
         if socket.gets.chomp == "OK"
             puts "OK"
-            puts(Cfg::instance.tx_block_size.to_s)
-            socket.puts(Cfg::instance.tx_block_size.to_s)
-            if socket.gets.chomp.to_i == Cfg::instance.tx_block_size
+            puts(CFG.tx_block_size.to_s)
+            socket.puts(CFG.tx_block_size.to_s)
+            if socket.gets.chomp.to_i == CFG.tx_block_size
                 socket.puts(file_name)
                 size = socket.gets.chomp.to_i
                 download_file(tasks, task_id, Utils::replace_dir_name(file_name), size, socket) unless size == 0
@@ -183,7 +183,7 @@ puts "OK"
         curr_size = 0
         FileUtils.mkpath(File.dirname(file_name)) #unless File.directory?(File.dirname(file_name))
         f = File.new(file_name, "wb")
-        while (data = socket.read(Cfg::instance.tx_block_size))
+        while (data = socket.read(CFG.tx_block_size))
             curr_size += data.size
             tasks.update_file_op(task_id, curr_size, file_size)
             f.write(data)
