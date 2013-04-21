@@ -364,7 +364,7 @@ TRACE.debug("*** save memos called")
         end
         srv_db_version = MusicClient.new.get_server_db_version
         file = File.basename(DBIntf.build_db_name(srv_db_version)+".dwl")
-        @tasks.new_file_download(self, "db"+Cfg::FILE_INFO_SEP+file+Cfg::FILE_INFO_SEP+"0", -1)
+        @mc.tasks.new_file_download(self, "db"+Cfg::FILE_INFO_SEP+file+Cfg::FILE_INFO_SEP+"0", -1)
     end
 
     # Still unused but should re-enable all browsers when updating the database.
