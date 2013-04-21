@@ -45,29 +45,35 @@ class DBUtils
         return id.nil? ? 0 : id
     end
 
-    def DBUtils::update_track_stats(rtrack, hostname)
-        return if rtrack == 0 # Possible when files are dropped into the play queue
-        sql1 = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
-        CDSDB.execute(sql1)
+#     def DBUtils::update_track_stats(dblink, hostname)
+#         return if dblink.track.rtrack <= 0 # Possible when files are dropped into the play queue
+#
+#         dblink.track.iplayed += 1
+#         dblink.track.ilastplayed = Time.now.to_i
+#         self.log_exec(dblink.track.generate_update)
+#
+#         LogDBClass.new.log_track(dblink.track.rtrack, dblink.track.ilastplayed, hostname)
+#         sql1 = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
+#         CDSDB.execute(sql1)
 #         rlogtrack = DBUtils::get_last_id("logtrack")+1
         #sql2 = "INSERT INTO logtracks VALUES (#{rlogtrack}, #{rtrack}, #{Time::now.to_i}, #{hostname.gsub(/\..*/, "").to_sql});"
 #         sql2 = "INSERT INTO logtracks VALUES (#{rlogtrack}, #{rtrack}, #{Time::now.to_i}, #{hostname.to_sql});"
-        sql3 = ""
-        rhost = CDSDB.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
-        if rhost.nil?
-            rhost = DBUtils::get_last_id("hostname")+1
-            sql3 = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
-            DBUtils::log_exec(sql3)
-        end
-        sql2 = "INSERT INTO logtracks VALUES (#{rtrack}, #{Time::now.to_i}, #{rhost});"
-        CDSDB.execute(sql2)
+#         sql3 = ""
+#         rhost = CDSDB.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
+#         if rhost.nil?
+#             rhost = DBUtils::get_last_id("hostname")+1
+#             sql3 = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
+#             DBUtils::log_exec(sql3)
+#         end
+#         sql2 = "INSERT INTO logtracks VALUES (#{dblink.track.rtrack}, #{dblink.track.ilastplayed}, #{rhost});"
+#         CDSDB.execute(sql2)
         #log_exec(sql)
-        File.open("../playedtracks.sql", "a+") { |file|
-            file.puts(sql1)
-            file.puts(sql3) unless sql3.empty?
-            file.puts(sql2)
-        } if CFG.log_played_tracks?
-    end
+#         File.open("../playedtracks.sql", "a+") { |file|
+#             file.puts(sql1)
+#             file.puts(sql3) unless sql3.empty?
+#             file.puts(sql2)
+#         } if CFG.log_played_tracks?
+#     end
 
     def DBUtils::update_record_playtime(rrecord)
         len = CDSDB.get_first_value("SELECT SUM(iplaytime) FROM segments WHERE rrecord=#{rrecord};")
@@ -82,8 +88,7 @@ class DBUtils
     def DBUtils::renumber_play_list(rplist)
         i = 1
         sql = ""
-        CDSDB.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist}
-                                      ORDER BY iorder;}) do |row|
+        CDSDB.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) do |row|
             sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
             i += 1
         end
