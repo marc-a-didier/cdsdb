@@ -198,15 +198,18 @@ class MasterController
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
 
+        uilink.track.iplayed += 1
+        uilink.track.ilastplayed = Time.now.to_i
+        DBUtils.log_exec(uilink.track.generate_update)
+
+        host = Socket::gethostname if host == ""
+        LogDBClass.new.log_track(uilink.track.rtrack, uilink.track.ilastplayed, host)
+
+        # Update gui if the played track is currently selected.
+        # Dangerous if user is modifying the track panel!!!
+        @mw.trk_browser.update_infos
+
         Thread.new {
-            # Update local database AND remote database if in client mode
-            host = Socket::gethostname if host == ""
-
-            DBUtils::update_track_stats(uilink.track.rtrack, host)
-
-            # Update gui if the played track is currently selected. Dangerous if user is modifying the track panel!!!
-            @mw.trk_browser.update_infos(uilink.reload_track_cache.track.rtrack)
-
             @charts.live_update(uilink) if CFG.live_charts_update? && @charts.window.visible?
 
             MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?
