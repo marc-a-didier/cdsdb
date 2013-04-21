@@ -83,6 +83,7 @@ require './genericbrowser'
 require './artistsbrowser'
 require './recordsbrowser'
 require './tracksbrowser'
+require './mainwindow'
 require './mastercontroller'
 
 require './my_rr_lib'
@@ -249,26 +250,25 @@ require './my_rr_lib'
 
 class Cdsdb
 
-    VERSION = "0.8.1"
+    VERSION = "0.8.3"
 
     def has_arg(arg)
         ARGV.each { |the_arg| return true if the_arg == arg }
         return false
     end
 
-    def initialize(path_or_data, root, domain)
-        CFG.set_admin_mode(has_arg("--admin")) #ARGV[0] == "--admin" || ARGV[1] == "--admin")
+    def initialize
+        CFG.set_admin_mode(has_arg("--admin"))
 
         CDSDB.execute("PRAGMA synchronous=OFF;")
 
-        #Thread.new { MusicServer.new(self).listen } if has_arg("--server")
         Thread.abort_on_exception = true
 
-        MasterController.new(path_or_data, root, domain)
+        MasterController.new
     end
 
 end
 
 
-Cdsdb.new(UIConsts::GLADE_MAIN, nil, "cdsdb")
+Cdsdb.new
 Gtk.main
