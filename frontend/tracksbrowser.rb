@@ -336,7 +336,7 @@ p sql
 
     # Redraws infos line
     # Emitted by master controller when a track has been played
-    def update_infos(rtrack)
+    def update_infos
         @trklnk.to_widgets if @trklnk.valid? && selected_track == @trklnk
     end
 
