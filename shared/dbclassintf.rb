@@ -80,8 +80,10 @@ public
 
     def sql_update
         sql = generate_update
-        @server_update ? DBUtils.client_sql(sql) : DBUtils.log_exec(sql)
+        if sql[-1] != " "
 TRACE.debug("DB update : #{sql}".red)
+            @server_update ? DBUtils.client_sql(sql) : DBUtils.log_exec(sql)
+        end
         return self
     end
 
