@@ -43,7 +43,7 @@ public
     #
 
     def self.connection
-        return @db.nil? ? SQLite3::Database.new(build_db_name) : @db
+        return @db.nil? ? @db = SQLite3::Database.new(build_db_name) : @db
     end
 
     # Close and release the database connection
