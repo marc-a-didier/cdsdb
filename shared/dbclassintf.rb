@@ -24,7 +24,6 @@ public
         @tbl_name = @dbs.members[0][1..-1]+"s"
         @dbs.members.each { |member| self.class.class_eval("def #{member}; return @dbs.#{member}; end") }
         @dbs.members.each { |member| self.class.class_eval("def #{member}=(val); @dbs.#{member}=val; end") }
-        @server_update = true
         reset
     end
 
@@ -58,14 +57,6 @@ public
         return sql[0..-2]+");" # Remove last ,
     end
 
-    def generate_update
-        old = self.clone.sql_load
-        sql = "UPDATE #{@tbl_name} SET "
-        @dbs.each_with_index { |value, i| sql += @dbs.members[i].to_s+"="+value.to_sql+"," if value != old.dbs[i] }
-        sql = sql[0..-2]+" "+generate_where_on_pk+";" if sql[-1] != " " # Remove last ,
-        return sql
-    end
-
     # Set class attributes from a full sqlite3 row
     def load_from_row(row)
         row.each_with_index { |val, i| @dbs[i] = @dbs[i].kind_of?(Numeric) ? val.to_i : val }
@@ -79,22 +70,24 @@ public
     end
 
     def sql_update
-        sql = generate_update
+        old = self.clone.sql_load
+        sql = "UPDATE #{@tbl_name} SET "
+        @dbs.each_with_index { |value, i| sql += @dbs.members[i].to_s+"="+value.to_sql+"," if value != old.dbs[i] }
         if sql[-1] != " "
+            sql = sql[0..-2]+" "+generate_where_on_pk+";" # Remove last ,
+            DBUtils.client_sql(sql)
 TRACE.debug("DB update : #{sql}".red)
-            @server_update ? DBUtils.client_sql(sql) : DBUtils.log_exec(sql)
         end
         return self
     end
 
     def sql_add
-        @server_update ? DBUtils.client_sql(generate_insert) : DBUtils.log_exec(generate_insert)
+        DBUtils.client_sql(generate_insert)
         return self
     end
 
     def sql_del
-        sql = "DELETE FROM #{@tbl_name} #{generate_where_on_pk};"
-        @server_update ? DBUtils.client_sql(sql) : DBUtils.log_exec(sql)
+        DBUtils.client_sql("DELETE FROM #{@tbl_name} #{generate_where_on_pk};")
         return self
     end
 
@@ -104,13 +97,8 @@ TRACE.debug("DB update : #{sql}".red)
     end
 
     def get_last_id
-        ref = CDSDB.get_first_value("SELECT MAX(#{@dbs.members[0].to_s}) FROM #{@tbl_name};")
-        return ref.nil? ? 0 : ref.to_i
-    end
-
-    def ref_from_column(col_name, value)
-        ref = CDSDB.get_first_value("SELECT #{@dbs.members[0].to_s} FROM #{@tbl_name} WHERE #{col_name}=#{value.to_sql};")
-        return ref.nil? ? nil : ref.to_i
+        id = CDSDB.get_first_value("SELECT MAX(#{@dbs.members[0].to_s}) FROM #{@tbl_name};")
+        return id.nil? 0 : id.to_i
     end
 
     def valid?
@@ -297,58 +285,4 @@ class OriginDBClass < DBClassIntf
         super(OriginDBS.new)
     end
 
-end
-
-
-#
-# These classes are for local use only. The server updates are done via the MusicClient class.
-#
-HostDBS = Struct.new(:rhostname, :sname)
-
-class HostDBClass < DBClassIntf
-
-    def initialize
-        super(HostDBS.new)
-        @server_update = false
-    end
-
-    def get_host_ref(hostname)
-        self.rhostname = ref_from_column(@dbs.members[1], hostname)
-        self.sname = hostname
-        if self.rhostname.nil?
-            self.rhostname = get_last_id+1
-            sql_add
-        end
-        return self.rhostname
-    end
-
-end
-
-
-
-#
-# The LogDBClass should be used with care: it has no primary key so most of
-# the sql methods will crash.
-#
-# The add method works since it doesn't require a primary key.
-#
-
-LogDBS = Struct.new(:rtrack, :idateplayed, :rhost)
-
-class LogDBClass < DBClassIntf
-
-    def initialize
-        super(LogDBS.new)
-
-        # The log class is the only one "non-standard" class
-        @tbl_name = "logtracks"
-        @server_update = false
-    end
-
-    def log_track(rtrack, idateplayed, hostname)
-        self.rhost = HostDBClass.new.get_host_ref(hostname)
-        self.rtrack = rtrack
-        self.idateplayed = idateplayed
-        return sql_add
-    end
 end
