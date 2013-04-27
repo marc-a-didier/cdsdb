@@ -144,17 +144,17 @@ module UIConsts
     MM_WIN_DATES                = "mm_win_dates"
 
     # Tools menu
-    MM_TOOLS_TAG_GENRE          = "mm_tools_tag_genre"
-    MM_TOOLS_SEARCH_ORPHANS     = "mm_tools_search_orphans"
-    MM_TOOLS_SCANAUDIO          = "mm_tools_scanaudio"
-    MM_TOOLS_IMPORTPLAYEDTRACKS = "mm_tools_importplayedtracks"
-    MM_TOOLS_SYNCSRC            = "mm_tools_syncsrc"
-    MM_TOOLS_SYNCDB             = "mm_tools_syncdb"
-    MM_TOOLS_SYNCRES            = "mm_tools_syncres"
-    MM_TOOLS_EXPORTDB           = "mm_tools_exportdb"
-    MM_TOOLS_GENREORDER		     = "mm_tools_genreorder"
-    MM_TOOLS_RATINGSTEST	     = "mm_tools_testratings"
-    MM_TOOLS_STATS              = "mm_tools_stats"
+    MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
+    MM_TOOLS_SEARCH_ORPHANS  = "mm_tools_search_orphans"
+    MM_TOOLS_SCANAUDIO       = "mm_tools_scanaudio"
+    MM_TOOLS_CHECKLOG        = "mm_tools_checklog"
+    MM_TOOLS_SYNCSRC         = "mm_tools_syncsrc"
+    MM_TOOLS_SYNCDB          = "mm_tools_syncdb"
+    MM_TOOLS_SYNCRES         = "mm_tools_syncres"
+    MM_TOOLS_EXPORTDB        = "mm_tools_exportdb"
+    MM_TOOLS_GENREORDER      = "mm_tools_genreorder"
+    MM_TOOLS_RATINGSTES      = "mm_tools_testratings"
+    MM_TOOLS_STATS           = "mm_tools_stats"
 
     # About menu
     MM_ABOUT                    = "about_imagemenuitem"

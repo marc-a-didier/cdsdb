@@ -147,16 +147,16 @@ class MainWindow < TopWindow
                 Gtk.main_iteration while Gtk.events_pending?
             } )
         }
-        @glade[MM_TOOLS_TAG_GENRE].signal_connect(:activate)          { on_tag_dir_genre }
-        @glade[MM_TOOLS_SCANAUDIO].signal_connect(:activate)          { Utils::scan_for_audio_files(@glade["main_window"]) }
-        @glade[MM_TOOLS_IMPORTPLAYEDTRACKS].signal_connect(:activate) { UIUtils::import_played_tracks }
-        @glade[MM_TOOLS_SYNCSRC].signal_connect(:activate)            { on_update_sources }
-        @glade[MM_TOOLS_SYNCDB].signal_connect(:activate)             { on_update_db }
-        @glade[MM_TOOLS_SYNCRES].signal_connect(:activate)            { on_update_resources }
-        @glade[MM_TOOLS_EXPORTDB].signal_connect(:activate)           { Utils::export_to_xml }
-        @glade[MM_TOOLS_GENREORDER].signal_connect(:activate)         { DBReorderer.new.run }
-        @glade[MM_TOOLS_RATINGSTEST].signal_connect(:activate)        { Utils::test_ratings }
-        @glade[MM_TOOLS_STATS].signal_connect(:activate)              { Stats.new(@mc).db_stats }
+        @glade[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
+        @glade[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(@glade["main_window"]) }
+        @glade[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played }
+        @glade[MM_TOOLS_SYNCSRC].signal_connect(:activate)     { on_update_sources }
+        @glade[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
+        @glade[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
+        @glade[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
+        @glade[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
+        @glade[MM_TOOLS_RATINGSTEST].signal_connect(:activate) { Utils.test_ratings }
+        @glade[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
 
         @glade[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
 
@@ -383,6 +383,7 @@ TRACE.debug("new db version=#{srv_db_version}")
             end
             FileUtils.mv(file_name, DBIntf::build_db_name)
             DBCACHE.clear
+            DBIntf.connect
         end
     end
 

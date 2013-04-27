@@ -1487,6 +1487,31 @@ ou n'importe lequel des tags
       </row>
     </data>
   </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-network</property>
+    <property name="icon-size">1</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-network</property>
+  </object>
+  <object class="GtkListStore" id="liststore1">
+    <columns>
+      <!-- column-name item -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">Top hits</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Random</col>
+      </row>
+    </data>
+  </object>
   <object class="GtkListStore" id="liststore2">
     <columns>
       <!-- column-name item -->
@@ -1514,31 +1539,6 @@ ou n'importe lequel des tags
       <!-- column-name item -->
       <column type="gchararray"/>
     </columns>
-  </object>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-network</property>
-    <property name="icon-size">1</property>
-  </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-network</property>
-  </object>
-  <object class="GtkListStore" id="liststore1">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">Top hits</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Random</col>
-      </row>
-    </data>
   </object>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
@@ -1929,11 +1929,11 @@ ou n'importe lequel des tags
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="mm_tools_importplayedtracks">
+                      <object class="GtkMenuItem" id="mm_tools_checklog">
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Import played tracks</property>
+                        <property name="label" translatable="yes">Check Log Integrity</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
