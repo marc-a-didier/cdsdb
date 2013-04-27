@@ -5,7 +5,10 @@
 
 class DBIntf
 
-    include Singleton
+#     include Singleton
+
+private
+    @@db = nil
 
 public
     TBL_GENRES      = "genre"
@@ -32,7 +35,7 @@ public
 
 
     def initialize
-        @db = nil
+        @@db = nil
     end
 
     # Returns the current SQLite3 database instance (instantiate a new one if needed)
@@ -43,14 +46,18 @@ public
     #
 
     def self.connection
-        return @db.nil? ? @db = SQLite3::Database.new(build_db_name) : @db
+        return @@db.nil? ? connect  : @@db
+    end
+
+    def self.connect
+        @@db = SQLite3::Database.new(self.build_db_name)
     end
 
     # Close and release the database connection
     def self.disconnect
-        return unless @db
-        @db.close
-        @db = nil
+        return unless @@db
+        @@db.close
+        @@db = nil
     end
 
     # Build the database name from the config resource(client)/database(server) dir and the db version
