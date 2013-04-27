@@ -198,15 +198,13 @@ class MasterController
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
 
-        uilink.track.iplayed += 1
-        uilink.track.ilastplayed = Time.now.to_i
-        DBUtils.log_exec(uilink.track.generate_update)
-
         host = Socket::gethostname if host == ""
-        LogDBClass.new.log_track(uilink.track.rtrack, uilink.track.ilastplayed, host)
+
+        DBUtils.update_track_stats(uilink, host)
 
         # Update gui if the played track is currently selected.
         # Dangerous if user is modifying the track panel!!!
+        uilink.reload_track_cache
         @mw.trk_browser.update_infos
 
         Thread.new {
