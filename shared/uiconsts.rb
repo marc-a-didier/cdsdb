@@ -153,7 +153,7 @@ module UIConsts
     MM_TOOLS_SYNCRES         = "mm_tools_syncres"
     MM_TOOLS_EXPORTDB        = "mm_tools_exportdb"
     MM_TOOLS_GENREORDER      = "mm_tools_genreorder"
-    MM_TOOLS_RATINGSTES      = "mm_tools_testratings"
+    MM_TOOLS_RATINGSTEST     = "mm_tools_testratings"
     MM_TOOLS_STATS           = "mm_tools_stats"
 
     # About menu

@@ -98,7 +98,7 @@ TRACE.debug("DB update : #{sql}".red)
 
     def get_last_id
         id = CDSDB.get_first_value("SELECT MAX(#{@dbs.members[0].to_s}) FROM #{@tbl_name};")
-        return id.nil? 0 : id.to_i
+        return id.nil? ? 0 : id.to_i
     end
 
     def valid?

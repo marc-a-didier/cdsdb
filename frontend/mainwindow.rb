@@ -149,7 +149,7 @@ class MainWindow < TopWindow
         }
         @glade[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
         @glade[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(@glade["main_window"]) }
-        @glade[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played }
+        @glade[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played } # update_log_time
         @glade[MM_TOOLS_SYNCSRC].signal_connect(:activate)     { on_update_sources }
         @glade[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
         @glade[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
@@ -317,7 +317,7 @@ class MainWindow < TopWindow
         IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils.exec_batch(batch, Socket.gethostname)
         @art_browser.reload
-        select_record(UILink.new.set_record_ref(RecordDBClass.new.get_last_id)) # The best guess to find the imported record
+        @mc.select_record(UILink.new.set_record_ref(RecordDBClass.new.get_last_id)) # The best guess to find the imported record
     end
 
 
