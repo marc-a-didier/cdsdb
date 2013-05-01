@@ -48,7 +48,10 @@ class DBUtils
     def self.update_track_stats(dblink, hostname)
         return if dblink.track.rtrack <= 0 # Possible when files are dropped into the play queue
 
-        sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{dblink.track.rtrack};"
+        dblink.track.iplayed += 1
+        dblink.track.ilastplayed = Time.now.to_i
+
+        sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{dblink.track.ilastplayed} WHERE rtrack=#{dblink.track.rtrack};"
         CDSDB.execute(sql)
 
         rhost = CDSDB.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
@@ -73,15 +76,19 @@ class DBUtils
     def self.renumber_play_list(rplist)
         i = 1
         sql = ""
-        CDSDB.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) do |row|
+        CDSDB.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) { |row|
             sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
             i += 1
-        end
+        }
         CDSDB.transaction { |db| db.execute_batch(sql) }
         self.log_exec("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
     end
 
 
+    #
+    # Methods to update the database after I made some big fucking mistakes...
+    # Should not exist and never be used.
+    #
     def self.check_log_vs_played
         TRACE.debug("Starting log integrity check...")
         tracks = []
@@ -103,6 +110,14 @@ class DBUtils
                 CDSDB.execute(sql)
             end
             TRACE.debug("End tracks update.")
+        end
+    end
+
+    def self.update_log_time
+        CDSDB.execute("SELECT * FROM logtracks WHERE idateplayed=0") do |row|
+            last = CDSDB.get_first_value("SELECT ilastplayed FROM tracks WHERE rtrack=#{row[0]}")
+            puts "Track #{row[0]} last played on #{last.to_std_date}"
+#             CDSDB.execute("UPDATE logtracks SET idateplayed=#{last} WHERE rtrack=#{row[0]} AND idateplayed=0")
         end
     end
 end
