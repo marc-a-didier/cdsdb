@@ -102,6 +102,7 @@ class MasterController
     def is_on_compilations?; @mw.art_browser.is_on_compile?            end
 
     def invalidate_tabs
+        return if @mw.nil? # Required on fedora
         @mw.rec_browser.invalidate
         @mw.trk_browser.invalidate
     end
@@ -204,7 +205,7 @@ class MasterController
 
         # Update gui if the played track is currently selected.
         # Dangerous if user is modifying the track panel!!!
-        uilink.reload_track_cache
+#         uilink.reload_track_cache
         @mw.trk_browser.update_infos
 
         Thread.new {
