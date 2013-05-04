@@ -114,10 +114,12 @@ class DBUtils
     end
 
     def self.update_log_time
+        TRACE.debug("Starting check log time.")
         CDSDB.execute("SELECT * FROM logtracks WHERE idateplayed=0") do |row|
             last = CDSDB.get_first_value("SELECT ilastplayed FROM tracks WHERE rtrack=#{row[0]}")
             puts "Track #{row[0]} last played on #{last.to_std_date}"
 #             CDSDB.execute("UPDATE logtracks SET idateplayed=#{last} WHERE rtrack=#{row[0]} AND idateplayed=0")
         end
+        TRACE.debug("End check log time.")
     end
 end
