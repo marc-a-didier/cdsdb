@@ -5,12 +5,6 @@
 
 class DBIntf
 
-#     include Singleton
-
-private
-    @@db = nil
-
-public
     TBL_GENRES      = "genre"
     TBL_COLLECTIONS = "collection"
     TBL_LABELS      = "label"
@@ -34,9 +28,7 @@ public
     SQL_NUM_TYPES = ["INTEGER", "SMALLINT"]
 
 
-    def initialize
-        @@db = nil
-    end
+    @@db = nil
 
     # Returns the current SQLite3 database instance (instantiate a new one if needed)
     #
@@ -50,7 +42,9 @@ public
     end
 
     def self.connect
+        Object.instance_eval { remove_const(:CDSDB) } if defined?(::CDSDB)
         @@db = SQLite3::Database.new(self.build_db_name)
+        Object.instance_eval("::CDSDB = DBIntf.connection")
     end
 
     # Close and release the database connection
