@@ -66,7 +66,7 @@ require './credits'
 require './exportdialog'
 require './searchdialog'
 require './chartswindow'
-require './recentitemsdialog'
+require './historydialog'
 require './trkplistsdialog'
 require './datechooser'
 

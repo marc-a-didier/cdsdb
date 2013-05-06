@@ -224,10 +224,10 @@ module UIConsts
     #
     # Recent added/ripped records dialog
     #
-    DLG_RECENT_ITEMS        = "dlg_recent_items"
-    RCTITM_BTN_SHOW         = "rctitm_btn_show"
-    RCTITM_BTN_CLOSE        = "rctitm_btn_close"
-    RCTITM_TV               = "rctitm_tv"
+    DLG_HISTORY       = "dlg_history"
+    HISTORY_BTN_SHOW  = "history_btn_show"
+    HISTORY_BTN_CLOSE = "history_btn_close"
+    HISTORY_TV        = "history_tv"
 
     #
     # Play history dialog

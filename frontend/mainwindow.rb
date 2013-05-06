@@ -112,7 +112,7 @@ class MainWindow < TopWindow
         @mc.memos.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"document-edit.png")
 
         # Stores the recent items window object
-        @recents = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
+        @history = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
@@ -241,23 +241,23 @@ class MainWindow < TopWindow
     end
 
     def handle_recent_items(item)
-        if @recents[item]
-            @recents[item].present
+        if @history[item]
+            @history[item].present
         else
             if item == VIEW_BY_DATES
                 dlg = DateChooser.new.run
                 dates = dlg.dates
                 dlg.close
-                @recents[item] = RecentItemsDialog.new(@mc, item, dates).run if dates
+                @history[item] = HistoryDialog.new(@mc, item, dates).run if dates
             else
-                @recents[item] = RecentItemsDialog.new(@mc, item, nil).run
+                @history[item] = HistoryDialog.new(@mc, item, nil).run
             end
         end
     end
 
     def recent_items_closed(sender)
-#         @recents.each { |dialog| dialog = nil if dialog == sender }
-        (RECENT_ADDED..VIEW_BY_DATES).each { |i| @recents[i] = nil if @recents[i] == sender }
+#         @history.each { |dialog| dialog = nil if dialog == sender }
+        (RECENT_ADDED..VIEW_BY_DATES).each { |i| @history[i] = nil if @history[i] == sender }
     end
 
     #

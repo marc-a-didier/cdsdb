@@ -1,5 +1,5 @@
 
-class RecentItemsDialog
+class HistoryDialog
 
     VIEW_ADDED  = 0
     VIEW_RIPPED = 1
@@ -17,9 +17,9 @@ class RecentItemsDialog
         @filter = ""
         @dates = dates
 
-        @glade = GTBld::load(UIConsts::DLG_RECENT_ITEMS)
+        @glade = GTBld::load(UIConsts::DLG_HISTORY)
 
-        @dlg = @glade[UIConsts::DLG_RECENT_ITEMS]
+        @dlg = @glade[UIConsts::DLG_HISTORY]
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         @dlg.add_events( Gdk::Event::FOCUS_CHANGE)
@@ -30,9 +30,9 @@ class RecentItemsDialog
         # J'aimerais bien piger une fois comment on envoie un delete_event a la fenetre!!!
         #@glade["recrec_btn_close"].signal_connect(:clicked) { @dlg.delete } # @dlg.signal_emit(:delete_event, Gdk::Event.new(Gdk::Event::DESTROY)) }
 #         @glade[UIConsts::RCTITM_BTN_CLOSE].signal_connect(:clicked) { puts "closing"; @mc.reset_filter_receiver; @dlg.destroy }
-        @glade[UIConsts::RCTITM_BTN_CLOSE].signal_connect(:clicked) { notify_and_close }
+        @glade[UIConsts::HISTORY_BTN_CLOSE].signal_connect(:clicked) { notify_and_close }
 
-        @glade[UIConsts::RCTITM_BTN_SHOW].signal_connect(:clicked) {
+        @glade[UIConsts::HISTORY_BTN_SHOW].signal_connect(:clicked) {
             if @view_type == VIEW_PLAYED
                 @mc.select_track(@tv.selection.selected[COL_DATA]) if @tv.selection.selected
             else
@@ -40,7 +40,7 @@ class RecentItemsDialog
             end
         }
 
-        @tv = @glade[UIConsts::RCTITM_TV]
+        @tv = @glade[UIConsts::HISTORY_TV]
 
         srenderer = Gtk::CellRendererText.new()
 
@@ -93,7 +93,7 @@ class RecentItemsDialog
 
     def set_filter(where_clause, must_join_logtracks = false)
         @filter = where_clause
-        exec_sql(@view_type);
+        exec_sql(@view_type)
     end
 
     def exec_sql(view_type)
@@ -123,7 +123,6 @@ class RecentItemsDialog
                    WHERE tracks.iplayed > 0 #{@filter}
                    ORDER BY logtracks.idateplayed DESC LIMIT #{CFG.max_items};}
             when VIEW_DATES
-                # The WHERE clause was added to add a WHERE for the filter if any. Should be changed...
                 %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
                    INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname
                    INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
