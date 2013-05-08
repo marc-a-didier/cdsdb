@@ -78,8 +78,8 @@ class MasterController
         return @glade[MM_VIEW_SEGTITLE].active?
     end
 
-    def recent_items_closed(sender)
-        @mw.recent_items_closed(sender)
+    def history_closed(sender)
+        @mw.history_closed(sender)
     end
 
     def update_tags_menu(pm_owner, menu_item)
@@ -177,9 +177,9 @@ class MasterController
         return @pqueue.get_selection
     end
 
-    # Only selection message with parameter to know from which recent items we deal with
-    def get_recent_selection(param)
-        return @mw.recents[param].get_selection
+    # Only selection message with parameter to know from which kind of history we deal with
+    def get_history_selection(param)
+        return @mw.history[param].get_selection
     end
 
     def get_charts_selection
@@ -199,7 +199,7 @@ class MasterController
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
 
-        host = Socket::gethostname if host == ""
+        host = Socket.gethostname if host == ""
 
         DBUtils.update_track_stats(uilink, host)
 

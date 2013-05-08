@@ -21,7 +21,7 @@ class MainWindow < TopWindow
 #     attr_accessor :filter_receiver
 
     attr_reader :art_browser, :rec_browser, :trk_browser
-    attr_reader :recents, :search_dlg
+    attr_reader :history, :search_dlg
 
 
     RECENT_ADDED  = 0
@@ -111,7 +111,7 @@ class MainWindow < TopWindow
         @mc.filter.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"filter.png")
         @mc.memos.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"document-edit.png")
 
-        # Stores the recent items window object
+        # Stores the history window object
         @history = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
         @search_dlg   = nil
 
@@ -137,10 +137,10 @@ class MainWindow < TopWindow
         @glade[MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 
         # Faudra revoir, on peut ouvrir plusieurs fenetre des recent items en meme temps...
-        @glade[MM_WIN_RECENT].signal_connect(:activate) { handle_recent_items(RECENT_ADDED)  }
-        @glade[MM_WIN_RIPPED].signal_connect(:activate) { handle_recent_items(RECENT_RIPPED) }
-        @glade[MM_WIN_PLAYED].signal_connect(:activate) { handle_recent_items(RECENT_PLAYED) }
-        @glade[MM_WIN_DATES].signal_connect(:activate)  { handle_recent_items(VIEW_BY_DATES) }
+        @glade[MM_WIN_RECENT].signal_connect(:activate) { handle_history(RECENT_ADDED)  }
+        @glade[MM_WIN_RIPPED].signal_connect(:activate) { handle_history(RECENT_RIPPED) }
+        @glade[MM_WIN_PLAYED].signal_connect(:activate) { handle_history(RECENT_PLAYED) }
+        @glade[MM_WIN_DATES].signal_connect(:activate)  { handle_history(VIEW_BY_DATES) }
 
         @glade[MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
@@ -240,7 +240,7 @@ class MainWindow < TopWindow
         return true
     end
 
-    def handle_recent_items(item)
+    def handle_history(item)
         if @history[item]
             @history[item].present
         else
@@ -255,7 +255,7 @@ class MainWindow < TopWindow
         end
     end
 
-    def recent_items_closed(sender)
+    def history_closed(sender)
 #         @history.each { |dialog| dialog = nil if dialog == sender }
         (RECENT_ADDED..VIEW_BY_DATES).each { |i| @history[i] = nil if @history[i] == sender }
     end

@@ -63,7 +63,7 @@ class HistoryDialog
 
         @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            selection_data.set(Gdk::Selection::TYPE_STRING, "recent:message:get_recent_selection:#{@view_type}")
+            selection_data.set(Gdk::Selection::TYPE_STRING, "history:message:get_history_selection:#{@view_type}")
         }
 
         @view_type = view_type
@@ -76,7 +76,7 @@ class HistoryDialog
 
     def notify_and_close
         @mc.reset_filter_receiver
-        @mc.recent_items_closed(self)
+        @mc.history_closed(self)
         @dlg.destroy
     end
 
