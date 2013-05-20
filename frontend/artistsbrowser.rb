@@ -165,18 +165,15 @@ class GenRowProp
         if iter[0] == SELECT_ARTISTS
             if mc.view_compile?
                 sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                        INNER JOIN records ON records.rartist = artists.rartist
-                        WHERE #{@where_fields}=#{iter.parent[0]}}
+                         INNER JOIN records ON records.rartist = artists.rartist }
             else
                 sql = %Q{SELECT DISTINCT(artists.rartist), artists.sname FROM artists
-                        INNER JOIN segments ON segments.rartist = artists.rartist
-                        INNER JOIN records ON records.rrecord = segments.rrecord
-                        WHERE #{@where_fields}=#{iter.parent[0]}}
+                         INNER JOIN segments ON segments.rartist = artists.rartist
+                         INNER JOIN records ON records.rrecord = segments.rrecord }
             end
         else
             sql = %Q{SELECT DISTINCT(records.stitle), artists.rartist, artists.sname, records.rrecord FROM records
-                     INNER JOIN artists ON records.rartist = artists.rartist
-                     WHERE #{@where_fields}=#{iter.parent[0]}}
+                     INNER JOIN artists ON records.rartist = artists.rartist }
         end
     end
 end
@@ -216,7 +213,7 @@ class GenresRowProp < GenRowProp
         return case level
             when 0 then default_main_select("WHERE rgenre > 0")
             when 1 then append_artists_records(model, iter)
-            when 2 then get_select_on_records(mc, iter)
+            when 2 then get_select_on_records(mc, iter)+"WHERE records.rgenre=#{iter.parent[0]}"
         end
     end
 end
@@ -229,7 +226,7 @@ class LabelsRowProp < GenRowProp
         return case level
             when 0 then default_main_select
             when 1 then append_artists_records(model, iter)
-            when 2 then get_select_on_records(mc, iter)
+            when 2 then get_select_on_records(mc, iter)+"WHERE records.rlabel=#{iter.parent[0]}"
         end
     end
 end
@@ -365,6 +362,38 @@ end
 
 
 #
+# View by record length in 10 minutes increments.
+#
+class PTimeRowProp < GenRowProp
+    def select_for_level(level, iter, mc, model)
+        return case level
+            when 0
+                (1..9).each { |i|
+                    child = model.append(iter)
+                    child[0] = i
+                    child[1] = "Up to #{i*10} min.".to_html_italic
+                    child[2] = iter[2]
+                    child[3] = i.to_s
+                    append_fake_child(model, child)
+                }
+                ""
+            when 1 then append_artists_records(model, iter)
+            when 2
+                lo = (iter.parent[0]-1)*10*60*1000
+                hi = iter.parent[0]*60*10*1000
+                get_select_on_records(mc, iter)+
+                        "WHERE records.iplaytime > #{lo} AND records.iplaytime <= #{hi}"
+        end
+    end
+
+    def default_filter(iter)
+        lo = (iter.parent.parent[0]-1)*10*60*1000
+        hi = iter.parent.parent[0]*10*60*1000
+        return " #@where_fields > #{lo} AND #@where_fields <= #{hi} "
+    end
+end
+
+#
 # View by records, a single level that shows all records.
 #
 # It leads to a strange view since each entry in the artist view is replicated in the
@@ -409,7 +438,8 @@ class ArtistsBrowser < GenericBrowser
                      RippedRowProp.new(6, "artists", 1, true, "records.rrecord", "Last ripped"),
                      NeverRowProp.new(7, "tracks", 2, true, "tracks.iplayed", "Never played"),
                      RatingsRowProp.new(8, "ratings", 3, true, "tracks.irating", "Rating"),
-                     RecordsRowProp.new(9, "records", 1, true, "records.rrecord", "All Records")]
+                     PTimeRowProp.new(9, "records", 3, true, "records.iplaytime", "Records play time"),
+                     RecordsRowProp.new(10, "records", 1, true, "records.rrecord", "All Records")]
 
     ATV_REF   = 0
     ATV_NAME  = 1
