@@ -365,12 +365,15 @@ end
 # View by record length in 10 minutes increments.
 #
 class PTimeRowProp < GenRowProp
+
+    TINC = 10*60*1000
+
     def select_for_level(level, iter, mc, model)
         return case level
             when 0
                 (1..9).each { |i|
                     child = model.append(iter)
-                    child[0] = i
+                    child[0] = i*TINC
                     child[1] = "Up to #{i*10} min.".to_html_italic
                     child[2] = iter[2]
                     child[3] = i.to_s
@@ -379,17 +382,15 @@ class PTimeRowProp < GenRowProp
                 ""
             when 1 then append_artists_records(model, iter)
             when 2
-                lo = (iter.parent[0]-1)*10*60*1000
-                hi = iter.parent[0]*60*10*1000
                 get_select_on_records(mc, iter)+
-                        "WHERE records.iplaytime > #{lo} AND records.iplaytime <= #{hi}"
+                        "WHERE records.iplaytime > #{iter.parent[0]-TINC} AND \
+                               records.iplaytime <= #{iter.parent[0]}"
         end
     end
 
     def default_filter(iter)
-        lo = (iter.parent.parent[0]-1)*10*60*1000
-        hi = iter.parent.parent[0]*10*60*1000
-        return " #@where_fields > #{lo} AND #@where_fields <= #{hi} "
+        return " #@where_fields > #{iter.parent.parent[0]-TINC} AND \
+                 #@where_fields <= #{iter.parent.parent[0]} "
     end
 end
 
