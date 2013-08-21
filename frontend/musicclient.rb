@@ -20,11 +20,11 @@ class MusicClient
 
     def get_server_db_version
         return "" unless socket = get_connection
-puts("get db version")
+TRACE.debug("get db version")
         db_version = ""
         socket.puts("get db version")
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("DB version OK".green)
             db_version = socket.gets.chomp
         end
         socket.close
@@ -35,7 +35,7 @@ puts("get db version")
         return [] unless socket = get_connection
         socket.puts("check multiple audio")
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("Check audio OK".green)
             socket.puts(tracks)
             rs = socket.gets.chomp.split(" ")
         end
@@ -47,7 +47,7 @@ puts("get db version")
         return unless socket = get_connection
         socket.puts("update stats")
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("Update stats OK".green)
             socket.puts(rtrack.to_s)
         end
         socket.close
@@ -57,7 +57,7 @@ puts("get db version")
         return unless socket = get_connection
         socket.puts("exec sql")
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("Exec SQL OK".green)
             socket.puts(sql)
         end
         socket.close
@@ -67,7 +67,7 @@ puts("get db version")
         return unless socket = get_connection
         socket.puts("exec batch")
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("Exec batch OK".green)
             socket.puts(sql.gsub(/\n/, '\n'))
         end
         socket.close
@@ -77,7 +77,7 @@ puts("get db version")
         return unless socket = get_connection
         socket.puts("renumber play list")
         if socket.gets.chomp == "OK"
-            puts "renumber play list OK"
+            TRACE.debug("Renumber play list OK".green)
             socket.puts(rplist.to_s)
         end
         socket.close
@@ -88,7 +88,7 @@ puts("get db version")
         resources = []
         socket.puts("synchronize resources")
         if socket.gets.chomp == "OK"
-            puts "sync resources: OK"
+            TRACE.debug("Sync resources OK".green)
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
                 resources << str unless Utils::has_matching_file?(str) #File.exists?(str)
@@ -96,7 +96,7 @@ puts("get db version")
             end
         end
         socket.close
-        puts "Resources list received."
+        TRACE.debug("Resources list received.".green)
 p resources
         return resources
     end
@@ -106,7 +106,7 @@ p resources
         files = []
         socket.puts("synchronize sources")
         if socket.gets.chomp == "OK"
-            puts "sync sources: OK"
+            TRACE.debug("Sync sources OK".green)
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
                 files << str unless Utils::has_matching_file?(str)
@@ -114,16 +114,16 @@ p resources
             end
         end
         socket.close
-        puts "Sources list received."
+        TRACE.debug("Sources list received.".green)
         return files
     end
 
     def rename_audio(rtrack, new_title)
         return "" unless socket = get_connection
-puts("rename audio")
+TRACE.debug("rename audio")
         socket.puts("rename audio")
         if socket.gets.chomp == "OK"
-puts "OK"
+            TRACE.debug("Rename audio OK".green)
             socket.puts(rtrack.to_s)
             socket.puts(new_title)
         end
@@ -132,11 +132,11 @@ puts "OK"
 
     def get_audio_file(tasks, task_id, rtrack)
         return "" unless socket = get_connection
-        puts("send audio")
+        TRACE.debug("send audio")
         socket.puts("send audio")
         file = ""
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("Send audio OK".green)
             puts(CFG.tx_block_size.to_s)
             socket.puts(CFG.tx_block_size.to_s)
             if socket.gets.chomp.to_i == CFG.tx_block_size
@@ -163,10 +163,10 @@ puts "OK"
     def get_file(file_name, tasks, task_id)
         return false unless socket = get_connection
         size = 0
-        puts("send file")
+        TRACE.debug("send file")
         socket.puts("send file")
         if socket.gets.chomp == "OK"
-            puts "OK"
+            TRACE.debug("Send file OK".green)
             puts(CFG.tx_block_size.to_s)
             socket.puts(CFG.tx_block_size.to_s)
             if socket.gets.chomp.to_i == CFG.tx_block_size

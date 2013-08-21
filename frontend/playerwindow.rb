@@ -109,7 +109,7 @@ class PlayerWindow < TopWindow
 
             # Debug info
             info = @player_data.uilink.tags.nil? ? "[#{@player_data.uilink.track.rtrack}" : "[dropped"
-            TRACE.debug((info+", #{@player_data.uilink.audio_file}]").green)
+            TRACE.debug((info+", #{@player_data.uilink.audio_file}]").cyan)
         else
             TRACE.debug("[nil]".red)
         end
