@@ -167,9 +167,9 @@ TRACE.debug("rename audio")
         socket.puts("send file")
         if socket.gets.chomp == "OK"
             TRACE.debug("Send file OK".green)
-            puts(CFG.tx_block_size.to_s)
             socket.puts(CFG.tx_block_size.to_s)
             if socket.gets.chomp.to_i == CFG.tx_block_size
+                TRACE.debug("Negociated block size is #{CFG.tx_block_size.to_s} bytes".brown)
                 socket.puts(file_name)
                 size = socket.gets.chomp.to_i
                 download_file(tasks, task_id, Utils::replace_dir_name(file_name), size, socket) unless size == 0

@@ -222,6 +222,8 @@ require './my_rr_lib'
 #       mettre le numero du morceau pour les covers individuelles.
 # TODO: autoriser des poids negatifs pour le filtre histoire de favoriser les morceaux les moins joues.
 
+# TODO: ajouter un rating sur les records et les artistes???
+
 
 
 # Peu realistes:

@@ -266,7 +266,7 @@ class TracksBrowser < GenericBrowser
         sql += " WHERE rtrack IN ("
         meth.call { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
         sql[-1] = ")"
-p sql
+TRACE.debug("executing: #{sql}")
         DBUtils::threaded_client_sql(sql)
 
         # Refresh the cache
