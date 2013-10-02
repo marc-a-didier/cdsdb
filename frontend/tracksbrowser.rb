@@ -354,13 +354,13 @@ TRACE.debug("executing: #{sql}")
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
             return if @trklnk.valid? && @trklnk == trackui
-# TRACE.debug("track selection changed.".green)
+# TRACE.debug("track selection changed.".brown)
 
             @trklnk = trackui
             @trklnk.to_widgets_with_cover
 
             # Reload artist if artist changed from segment
-            @mc.change_segment_artist(@trklnk.segment.rartist) if @trklnk.segment.rartist != @mc.segment.rartist
+            @mc.set_segment_artist(@trklnk) if @trklnk.segment.rartist != @mc.segment.rartist
         else
             # There's nothing to do... may be set artist infos to empty.
 # TRACE.debug("--- multi select ---".magenta)

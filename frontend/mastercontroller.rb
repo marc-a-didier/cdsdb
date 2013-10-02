@@ -108,8 +108,10 @@ class MasterController
     end
 
     def new_link_from_selection
-        return DBCacheLink.new.set_artist_ref(record.compile? ? segment.rartist : artist.rartist) \
-                              .set_record_ref(record.rrecord) \
+#         return DBCacheLink.new.set_artist_ref(record.compile? ? segment.rartist : artist.rartist)
+        # As we never want to edit artist 0 (compile), the segment has almost all needed infos to fill the link
+        return DBCacheLink.new.set_artist_ref(segment.rartist) \
+                              .set_record_ref(segment.rrecord) \
                               .set_segment_ref(segment.rsegment) \
                               .set_track_ref(track.rtrack)
     end
@@ -122,9 +124,16 @@ class MasterController
         return @glade[MM_VIEW_COMPILE].active?
     end
 
-    # Called when browsing compilations to display the current artist infos
-    def change_segment_artist(rartist)
+    # Update the artist browser infos line from rartist data
+    def update_artist_infos(rartist)
         @mw.art_browser.update_segment_artist(rartist)
+    end
+
+    # Called when browsing tracks from compilations to keep artist and segment synched
+    # Updates the track's artist infos
+    def set_segment_artist(dblink)
+        @mw.rec_browser.set_segment_from_track(dblink.track.rsegment)
+        update_artist_infos(dblink.segment.rartist)
     end
 
     def no_selection

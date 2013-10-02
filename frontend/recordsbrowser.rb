@@ -138,7 +138,7 @@ class RecordsBrowser < GenericBrowser
             if @tv.selection.selected.parent
                 @reclnk.to_widgets(false)
                 # Change artist infos if we're browsing a compile subtree
-                @mc.change_segment_artist(@reclnk.segment.rartist) if @mc.artist.compile?
+                @mc.update_artist_infos(@reclnk.segment.rartist) if @mc.artist.compile?
             else
                 @reclnk.to_widgets(true)
             end
@@ -147,10 +147,15 @@ class RecordsBrowser < GenericBrowser
     end
 
 
-    # Called from master controller to keep tracks synched
+    # Called from master controller to keep tracks synched -- Never called, may be removed
     def load_segment(rsegment, update_infos = false)
         @reclnk.set_segment_ref(rsegment)
         @reclnk.to_widgets(false) if update_infos
+    end
+
+    # Called via mc when a track is changed in tracks browser to keep segment synched
+    def set_segment_from_track(rsegment)
+        @reclnk.set_segment_ref(rsegment)
     end
 
     def select_record(rrecord)
