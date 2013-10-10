@@ -96,12 +96,10 @@ class Stats
         @f << "<!DOCTYPE html><head>"
         @f << '<meta charset="UTF-8">'
         @f << "<title>#{title}</title>"
-        @f << '<style type="text/css">'
-        @f << 'h1 {font-size: 18px; font-family: "sans";}'
-        @f << 'h2 {font-size: 16px; font-family: "sans";}'
-        @f << 'p {font-size: 10px; font-family: "sans";}'
-#         @f << 'td {font-size: 10px; font-family: "sans";}'
-        @f << %{
+        @f << %{<style type="text/css">
+                h1 {font-size: 18px; font-family: "sans";}
+                h2 {font-size: 16px; font-family: "sans";}
+                p {font-size: 10px; font-family: "sans";}
                 #mytbl
                 {
                     font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;

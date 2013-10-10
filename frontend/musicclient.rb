@@ -137,12 +137,11 @@ TRACE.debug("rename audio")
         file = ""
         if socket.gets.chomp == "OK"
             TRACE.debug("Send audio OK".green)
-            puts(CFG.tx_block_size.to_s)
+            TRACE.debug("Negociated block size is #{CFG.tx_block_size.to_s} bytes".brown)
             socket.puts(CFG.tx_block_size.to_s)
             if socket.gets.chomp.to_i == CFG.tx_block_size
                 socket.puts(rtrack.to_s)
                 size = socket.gets.chomp.to_i
-                #p size
                 unless size == 0
                     file = socket.gets.chomp
                     if CFG.local_store?
@@ -153,7 +152,6 @@ TRACE.debug("rename audio")
                     end
                     download_file(tasks, task_id, file, size, socket)
                 end
-                #p file
             end
         end
         socket.close
@@ -187,7 +185,6 @@ TRACE.debug("rename audio")
             curr_size += data.size
             tasks.update_file_op(task_id, curr_size, file_size)
             f.write(data)
-            #sleep(0.5)
         end
         tasks.end_file_op(task_id, file_name)
         f.close

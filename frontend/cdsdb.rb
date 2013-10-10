@@ -224,6 +224,13 @@ require './my_rr_lib'
 
 # TODO: ajouter un rating sur les records et les artistes???
 
+# TODO: ajouter un champ d'association pour les genres? style classic pour tout ce qui y touche de
+#       pres ou de loin (utile pour les stats et le tri des genres)
+#       En faire un bitmap ou une table associee?
+
+# TODO: Dans les charts, faire une vue pour les records avec le nombre de morceaux joues divise par
+#       le nombre du titre du disque?
+
 
 
 # Peu realistes:

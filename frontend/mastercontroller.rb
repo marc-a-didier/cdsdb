@@ -48,12 +48,8 @@ class MasterController
     #
     def clean_up
         @player.stop if @player.playing? || @player.paused?
-#         PREFS.save_window(@glade[MAIN_WINDOW])
-        PREFS.save_menu_state(self, @glade[VIEW_MENU])
-        PREFS.save_menu_state(self, @glade[MM_WIN_MENU])
-        [@plists, @player, @pqueue, @charts, @filter, @tasks, @memos].each { |tw|
-            tw.hide if tw.window.visible?
-        }
+        [VIEW_MENU, MM_WIN_MENU].each { |menu| PREFS.save_menu_state(self, @glade[menu]) }
+        [@plists, @player, @pqueue, @charts, @filter, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
         #system("rm -f ../mfiles/*")
     end
 
@@ -102,7 +98,7 @@ class MasterController
     def is_on_compilations?; @mw.art_browser.is_on_compile?            end
 
     def invalidate_tabs
-        return if @mw.nil? # Required on fedora
+        return if @mw.nil? # Required on fedora at startup
         @mw.rec_browser.invalidate
         @mw.trk_browser.invalidate
     end
@@ -208,7 +204,7 @@ class MasterController
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
 
-        host = Socket.gethostname if host == ""
+        host = Socket.gethostname if host.empty?
 
         DBUtils.update_track_stats(uilink, host)
 
