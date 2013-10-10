@@ -98,6 +98,8 @@ class TasksWindow < TopWindow
         if CFG.remote?
             if @chk_thread.nil?
 TRACE.debug("task thread started...".green)
+                DBCACHE.set_audio_status_from_to(AudioLink::NOT_FOUND, AudioLink::UNKNOWN)
+                @mc.glade[UIConsts::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
                 @chk_thread = Thread.new {
                     loop do
                         check_waiting_tasks
@@ -108,6 +110,8 @@ TRACE.debug("task thread started...".green)
         elsif !@chk_thread.nil?
             @chk_thread.exit
             @chk_thread = nil
+            DBCACHE.set_audio_status_from_to(AudioLink::ON_SERVER, AudioLink::NOT_FOUND)
+            @mc.glade[UIConsts::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
 TRACE.debug("task thread stopped".brown)
         end
     end

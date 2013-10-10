@@ -100,9 +100,16 @@ class DBCache
 
     def clear
 #         instance_variables.each { |cache| cache.clear } # Marche pas!!!???
-        [@artists, @records, @segments, @tracks,
+        [@artists, @records, @segments, @tracks, @audio_status,
          @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
 TRACE.debug("ALL CACHES cleared")
+    end
+
+    # Set audio status from a status to another
+    # Primary use is when switching from local mode to client mode (not found -> unknown)
+    # and from client to local mode (on server -> not found)
+    def set_audio_status_from_to(from_value, to_value)
+        @audio_status.each { |key, value| @audio_status[key] = to_value if value == from_value }
     end
 
     def dump_infos
