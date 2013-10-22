@@ -17,9 +17,9 @@ class MasterController
 
     include UIConsts
 
-    attr_reader   :glade, :main_filter
+    attr_reader   :glade
     attr_reader   :player, :pqueue, :plists, :charts, :tasks, :filter, :memos
-    attr_accessor :filter_receiver
+    attr_accessor :main_filter, :filter_receiver
 
     def initialize
         @glade = GTBld.main
@@ -141,17 +141,6 @@ class MasterController
         @mw.trk_browser.audio_link_ok(uilink)
     end
 
-    #
-    # Filter management
-    #
-    def set_filter(where_clause, must_join_logtracks)
-        if (where_clause != @main_filter)
-            uilink = @mw.trk_browser.trklnk
-            @main_filter = where_clause
-            @mw.art_browser.reload
-            select_track(uilink) if uilink
-        end
-    end
 
     def reload_plists
         @plists.reload

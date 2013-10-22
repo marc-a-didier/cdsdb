@@ -552,6 +552,11 @@ module UIConsts
     FLT_SPIN_RATINGWEIGHT = "flt_spin_ratingweight"
     FLT_CMB_SELECTBY      = "flt_cmb_selectby"
     FLT_BTN_PLGEN         = "flt_btn_plgen"
+    FLT_BTN_SAVE          = "flt_btn_save"
+    FLT_BTN_NEW           = "flt_btn_new"
+    FLT_VBOX_EXPANDERS    = "flt_vbox_expanders"
+
+    FLT_TV_DBASE          = "flt_tv_dbase"
 
 
     #

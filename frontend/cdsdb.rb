@@ -231,6 +231,9 @@ require './my_rr_lib'
 # TODO: Dans les charts, faire une vue pour les records avec le nombre de morceaux joues divise par
 #       le nombre du titre du disque?
 
+# TODO: Charts: ajouter un menu filtre pour les plus utilises (genre sans le classique)
+
+# TODO: Save filter: creer une table filters avec un nom et la clause where dans un champ
 
 
 # Peu realistes:

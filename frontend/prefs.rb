@@ -77,10 +77,13 @@ class Prefs
         get_child_controls(window, [Gtk::HPaned, Gtk::VPaned], objs)
         objs.each { |obj| win.add_element(obj.builder_name, {"method" => "position=", "params" => obj.position.to_s}) }
 
-        objs = []
-        get_child_controls(window, [Gtk::Expander], objs)
-        objs.each { |obj| win.add_element(obj.builder_name, {"method" => "expanded=", "params" => obj.expanded?.to_s}) }
+        unless top_window.class == FilterWindow
+            objs = []
+            get_child_controls(window, [Gtk::Expander], objs)
+            objs.each { |obj| win.add_element(obj.builder_name, {"method" => "expanded=", "params" => obj.expanded?.to_s}) }
+        end
 
+=begin
         if top_window.class == FilterWindow
             object_list = []
             get_child_controls(window, [Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView], object_list)
@@ -96,12 +99,55 @@ class Prefs
                 win.add_element(object.builder_name, {"method" => "value=", "params" => object.value.to_s}) if object.class == Gtk::SpinButton
             }
         end
+=end
 
         save
     end
 
     def save_windows(win_list)
         win_list.each { |window| save_window(window) }
+    end
+
+    def xdoc_from_content(gtk_object)
+        xdoc = REXML::Document.new
+#         xdoc << REXML::XMLDecl.new("1.0", "UTF-8", "no")
+        xdoc.add_element("filter")
+
+        objs = []
+        get_child_controls(gtk_object, [Gtk::Expander], objs)
+        objs.each { |obj| xdoc.root.add_element(obj.builder_name, {"method" => "expanded=", "params" => obj.expanded?.to_s}) }
+
+        object_list = []
+        get_child_controls(gtk_object, [Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView], object_list)
+
+        object_list.each { |object|
+            if (object.class == Gtk::TreeView)
+                object.model.each { |model, path, iter| xdoc.root.add_element(object.builder_name, { "item" => path }) if iter[0] }
+                next
+            end
+            xdoc.root.add_element(object.builder_name, {"method" => "active=", "params" => object.active?.to_s}) if object.class == Gtk::CheckButton
+            xdoc.root.add_element(object.builder_name, {"method" => "active=", "params" => object.active.to_s}) if object.class == Gtk::ComboBox
+            xdoc.root.add_element(object.builder_name, {"method" => "text=", "params" => object.text}) if object.class == Gtk::Entry
+            xdoc.root.add_element(object.builder_name, {"method" => "value=", "params" => object.value.to_s}) if object.class == Gtk::SpinButton
+        }
+
+        return xdoc
+    end
+
+    def content_from_xdoc(glade, xdoc)
+        xdoc.root.each_element { |elm|
+            if elm.attributes['item']
+                glade[elm.name].model.get_iter(elm.attributes['item'])[0] = true
+            else
+                cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']}, "
+                if elm.attributes['method'] == "text="
+                    cmd += "'"+elm.attributes['params']+"')"
+                else
+                    cmd += elm.attributes['params']+")"
+                end
+                eval(cmd)
+            end
+        }
     end
 
     #

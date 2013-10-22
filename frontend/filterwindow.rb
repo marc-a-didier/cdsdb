@@ -23,10 +23,12 @@ class FilterWindow < TopWindow
 
         @mc.glade[FLT_BTN_APPLY].signal_connect(:clicked) { @mc.filter_receiver.set_filter(generate_filter, @must_join_logtracks) }
 #         @mc.glade[FLT_BTN_APPLY].signal_connect(:clicked) do
-# 			wins = Gdk::Window::toplevels
-# 			wins.each { |win| puts win.id }
-# 		end
+#           wins = Gdk::Window::toplevels
+#           wins.each { |win| puts win.id }
+#       end
         @mc.glade[FLT_BTN_CLEAR].signal_connect(:clicked)    { @mc.filter_receiver.set_filter("", false) }
+        @mc.glade[FLT_BTN_NEW].signal_connect(:clicked)      { new_filter }
+        @mc.glade[FLT_BTN_SAVE].signal_connect(:clicked)     { save_filter }
         @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked)    { generate_play_list }
 
         @mc.glade[FLT_BTN_FROMDATE].signal_connect(:clicked) { set_date(@mc.glade[FLT_ENTRY_FROMDATE]) }
@@ -37,13 +39,33 @@ class FilterWindow < TopWindow
         @tv_tags.columns[0].clickable = true
         @tv_tags.columns[0].signal_connect(:clicked) { @tv_tags.model.each { |model, path, iter| iter[0] = !iter[0] } }
 
-		[FLT_CMB_MINRATING, FLT_CMB_MAXRATING].each { |cmb| @mc.glade[cmb].remove_text(0) }
-		RATINGS.each { |rating| @mc.glade[FLT_CMB_MINRATING].append_text(rating) }
-		RATINGS.each { |rating| @mc.glade[FLT_CMB_MAXRATING].append_text(rating) }
+        [FLT_CMB_MINRATING, FLT_CMB_MAXRATING].each { |cmb| @mc.glade[cmb].remove_text(0) }
+        RATINGS.each { |rating| @mc.glade[FLT_CMB_MINRATING].append_text(rating) }
+        RATINGS.each { |rating| @mc.glade[FLT_CMB_MAXRATING].append_text(rating) }
 
         @tvs = []
-		TITLES.each_key { |key| @tvs << setup_tv(key) }
+        TITLES.each_key { |key| @tvs << setup_tv(key) }
         #["genres", "origins", "medias"].each { |table| @tvs << setup_tv(table) }
+
+        edrenderer = Gtk::CellRendererText.new()
+        edrenderer.editable = true
+        edrenderer.signal_connect(:edited) { |widget, path, new_text| ftv_name_edited(widget, path, new_text) }
+
+        @ftv = @mc.glade["flt_tv_dbase"]
+        @ftv.model = Gtk::ListStore.new(Integer, String, String)
+
+        @ftv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new(), :text => 0))
+        @ftv.append_column(Gtk::TreeViewColumn.new("Filter name", edrenderer, :text => 1))
+        @ftv.append_column(Gtk::TreeViewColumn.new("XML", Gtk::CellRendererText.new(), :text => 2))
+#         @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 1) }
+        @ftv.model.set_sort_column_id(1, Gtk::SORT_ASCENDING)
+        @ftv.columns[1].sort_indicator = Gtk::SORT_ASCENDING
+        @ftv.columns[1].clickable = true
+        @ftv.columns[2].visible = false
+
+        set_ref_column_visibility(@mc.glade[MM_VIEW_DBREFS].active?)
+        @ftv.selection.signal_connect(:changed)  { |widget| on_filter_changed(widget) }
+        load_ftv
 
         @must_join_logtracks = false
     end
@@ -75,6 +97,52 @@ class FilterWindow < TopWindow
         tv.model.set_sort_column_id(1, Gtk::SORT_ASCENDING)
 
         return tv
+    end
+
+    def load_ftv
+        @ftv.model.clear
+        CDSDB.execute("SELECT * FROM filters") { |row|
+            iter = @ftv.model.append
+            row.each_index { |column| iter[column] = row[column] }
+        }
+    end
+
+    def set_ref_column_visibility(is_visible)
+        @ftv.columns[0].visible = is_visible
+    end
+
+    def on_filter_changed(widget)
+        # Reset all tree views to false since the xml records only items that are checked
+        # If not done, items remain checked when filter is changed.
+        @tv_tags.model.each { |model, path, iter| iter[0] = false }
+        @tvs.each { |tv| tv.model.each { |model, path, iter| iter[0] = false } }
+
+        xml_data = @ftv.selection.selected[2]
+        xdoc = REXML::Document.new(xml_data)
+        PREFS.content_from_xdoc(@mc.glade, xdoc)
+    end
+
+    def new_filter
+        max_id = 0
+        @ftv.model.each { |model, path, iter| max_id = iter[0] if iter[0] > max_id }
+        CDSDB.execute("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '<filter />')")
+        load_ftv
+    end
+
+    def save_filter
+        xml_data = ""
+        xdoc = PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS])
+        REXML::Formatters::Default.new.write(xdoc, xml_data)
+        CDSDB.execute("UPDATE filters SET sxmldata=#{xml_data.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
+        @ftv.selection.selected[2] = xml_data
+p xml_data
+p @ftv.selection.selected[0]
+p @ftv.selection.selected[2]
+    end
+
+    def ftv_name_edited(widget, path, new_text)
+        CDSDB.execute("UPDATE filters SET sname=#{new_text.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
+        @ftv.selection.selected[1] = new_text
     end
 
     def set_date(control)

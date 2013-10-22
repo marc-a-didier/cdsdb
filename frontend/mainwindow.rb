@@ -306,11 +306,22 @@ class MainWindow < TopWindow
     end
 
     def set_dbrefs_visibility
-        [@art_browser, @rec_browser, @trk_browser, @mc.plists].each { |receiver|
+        [@art_browser, @rec_browser, @trk_browser, @mc.plists, @mc.filter].each { |receiver|
             receiver.set_ref_column_visibility(@glade[MM_VIEW_DBREFS].active?)
         }
     end
 
+    #
+    # Filter management: called by filter window (via mc) when a filter is applied
+    #
+    def set_filter(where_clause, must_join_logtracks)
+        if (where_clause != @mc.main_filter)
+            uilink = trk_browser.trklnk
+            @mc.main_filter = where_clause
+            art_browser.reload
+            @mc.select_track(uilink) if uilink
+        end
+    end
 
     def import_sql_file
         batch = ""
