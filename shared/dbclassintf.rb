@@ -226,7 +226,6 @@ end
 PListDBS = Struct.new(:rplist, :sname, :iislocal, :idatecreated, :idatemodified)
 
 class PListDBClass < DBClassIntf
-
     def initialize
         super(PListDBS.new)
     end
@@ -236,53 +235,52 @@ end
 GenreDBS = Struct.new(:rgenre, :sname)
 
 class GenreDBClass < DBClassIntf
-
     def initialize
         super(GenreDBS.new)
     end
-
 end
 
 
 LabelDBS = Struct.new(:rlabel, :sname)
 
 class LabelDBClass < DBClassIntf
-
     def initialize
         super(LabelDBS.new)
     end
-
 end
 
 
 MediaDBS = Struct.new(:rmedia, :sname)
 
 class MediaDBClass < DBClassIntf
-
     def initialize
         super(MediaDBS.new)
     end
-
 end
 
 
 CollectionDBS = Struct.new(:rcollection, :sname)
 
 class CollectionDBClass < DBClassIntf
-
     def initialize
         super(CollectionDBS.new)
     end
-
 end
 
 
 OriginDBS = Struct.new(:rorigin, :sname)
 
 class OriginDBClass < DBClassIntf
-
     def initialize
         super(OriginDBS.new)
     end
+end
 
+
+FilterDBS = Struct.new(:rfilter, :sname, :sxmldata)
+
+class FilterDBClass < DBClassIntf
+    def initialize
+        super(FilterDBS.new)
+    end
 end

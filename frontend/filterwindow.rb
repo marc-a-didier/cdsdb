@@ -112,6 +112,7 @@ class FilterWindow < TopWindow
     end
 
     def on_filter_changed(widget)
+        return if @ftv.selection.selected.nil? # Happen when new filter created
         # Reset all tree views to false since the xml records only items that are checked
         # If not done, items remain checked when filter is changed.
         @tv_tags.model.each { |model, path, iter| iter[0] = false }
@@ -125,7 +126,7 @@ class FilterWindow < TopWindow
     def new_filter
         max_id = 0
         @ftv.model.each { |model, path, iter| max_id = iter[0] if iter[0] > max_id }
-        CDSDB.execute("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '<filter />')")
+        DBUtils.client_sql("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '<filter />')")
         load_ftv
     end
 
@@ -133,15 +134,12 @@ class FilterWindow < TopWindow
         xml_data = ""
         xdoc = PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS])
         REXML::Formatters::Default.new.write(xdoc, xml_data)
-        CDSDB.execute("UPDATE filters SET sxmldata=#{xml_data.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
+        DBUtils.client_sql("UPDATE filters SET sxmldata=#{xml_data.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
         @ftv.selection.selected[2] = xml_data
-p xml_data
-p @ftv.selection.selected[0]
-p @ftv.selection.selected[2]
     end
 
     def ftv_name_edited(widget, path, new_text)
-        CDSDB.execute("UPDATE filters SET sname=#{new_text.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
+        DBUtils.client_sql("UPDATE filters SET sname=#{new_text.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
         @ftv.selection.selected[1] = new_text
     end
 

@@ -190,6 +190,7 @@ require './my_rr_lib'
 
 # DONE: Dans la vue des artistes, ajouter un sous-viveau avec vue par artiste ou record
 
+# DONE: Save filter: creer une table filters avec un nom et la clause where dans un champ
 
 
 #
@@ -231,9 +232,7 @@ require './my_rr_lib'
 # TODO: Dans les charts, faire une vue pour les records avec le nombre de morceaux joues divise par
 #       le nombre du titre du disque?
 
-# TODO: Charts: ajouter un menu filtre pour les plus utilises (genre sans le classique)
-
-# TODO: Save filter: creer une table filters avec un nom et la clause where dans un champ
+# TODO: Filtres: supprimer les boutons add/new et remplacer par drop down Actions (avec en plus delete)
 
 
 # Peu realistes:
