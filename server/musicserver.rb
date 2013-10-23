@@ -32,7 +32,7 @@ class MusicServer
 
         LOG.info("Server started")
         LOG.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
-        LOG.info("    SQLite3 #{`sqlite3 --version`}")
+        LOG.info("    SQLite3 #{`sqlite3 --version`.chomp}")
         LOG.info("    Database #{CFG.db_version}")
         LOG.info("Server listening on host #{CFG.server} port #{CFG.port}.")
 
