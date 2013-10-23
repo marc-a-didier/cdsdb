@@ -45,21 +45,40 @@ class DBUtils
         return id.nil? ? 0 : id
     end
 
-    def self.update_track_stats(dblink, hostname)
-        return if dblink.track.rtrack <= 0 # Possible when files are dropped into the play queue
+#     def self.update_track_stats(dblink, hostname)
+#         return if dblink.track.rtrack <= 0 # Possible when files are dropped into the play queue
+#
+#         dblink.track.iplayed += 1
+#         dblink.track.ilastplayed = Time.now.to_i
+#
+#         sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{dblink.track.ilastplayed} WHERE rtrack=#{dblink.track.rtrack};"
+#         CDSDB.execute(sql)
+#
+#         rhost = CDSDB.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
+#         if rhost.nil?
+#             rhost = self.get_last_id("hostname")+1
+#             self.log_exec("INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});")
+#         end
+#         sql = "INSERT INTO logtracks VALUES (#{dblink.track.rtrack}, #{dblink.track.ilastplayed}, #{rhost});"
+#         CDSDB.execute(sql)
+#     end
 
-        dblink.track.iplayed += 1
-        dblink.track.ilastplayed = Time.now.to_i
+    # This method is also used by the server. For now, it doesn't know about db cache, link, etc...
+    # So, let's be clear: DON'T TOUCH the parameters type!!!
+    def self.update_track_stats(rtrack, hostname)
+        return if rtrack <= 0 # Possible when files are dropped into the play queue
 
-        sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{dblink.track.ilastplayed} WHERE rtrack=#{dblink.track.rtrack};"
+        sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
         CDSDB.execute(sql)
 
         rhost = CDSDB.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
         if rhost.nil?
             rhost = self.get_last_id("hostname")+1
-            self.log_exec("INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});")
+            sql = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
+            self.log_exec(sql)
         end
-        sql = "INSERT INTO logtracks VALUES (#{dblink.track.rtrack}, #{dblink.track.ilastplayed}, #{rhost});"
+
+        sql = "INSERT INTO logtracks VALUES (#{rtrack}, #{Time::now.to_i}, #{rhost});"
         CDSDB.execute(sql)
     end
 

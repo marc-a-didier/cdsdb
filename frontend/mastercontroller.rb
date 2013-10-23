@@ -195,7 +195,7 @@ class MasterController
 
         host = Socket.gethostname if host.empty?
 
-        DBUtils.update_track_stats(uilink, host)
+        DBUtils.update_track_stats(uilink.track.rtrack, host)
 
         # Update gui if the played track is currently selected.
         # Dangerous if user is modifying the track panel!!!
