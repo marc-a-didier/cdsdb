@@ -3,6 +3,14 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
+  <object class="GtkToggleAction" id="mw_charts_action"/>
+  <object class="GtkToggleAction" id="mw_filter_action"/>
+  <object class="GtkAction" id="mw_memo_save_action"/>
+  <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkAdjustment" id="adjustment10">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -39,14 +47,6 @@
     <property name="page_increment">10</property>
     <property name="page_size">10</property>
   </object>
-  <object class="GtkToggleAction" id="mw_charts_action"/>
-  <object class="GtkToggleAction" id="mw_filter_action"/>
-  <object class="GtkAction" id="mw_memo_save_action"/>
-  <object class="GtkToggleAction" id="mw_memos_action"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkMenu" id="apm_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1204,7 +1204,7 @@
                                         <property name="can_focus">False</property>
                                         <child>
                                           <object class="GtkLabel" id="flt_lbl_maxentries">
-                                            <property name="width_request">120</property>
+                                            <property name="width_request">130</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
@@ -1247,7 +1247,7 @@
                                         <property name="can_focus">False</property>
                                         <child>
                                           <object class="GtkLabel" id="flt_lbl_selectby">
-                                            <property name="width_request">120</property>
+                                            <property name="width_request">130</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
@@ -1291,7 +1291,7 @@
                                         <property name="can_focus">False</property>
                                         <child>
                                           <object class="GtkLabel" id="flt_lbl_playedweight">
-                                            <property name="width_request">120</property>
+                                            <property name="width_request">130</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
@@ -1334,7 +1334,7 @@
                                         <property name="can_focus">False</property>
                                         <child>
                                           <object class="GtkLabel" id="flt_lbl_ratingweight">
-                                            <property name="width_request">120</property>
+                                            <property name="width_request">130</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
@@ -1372,6 +1372,48 @@
                                       </packing>
                                     </child>
                                     <child>
+                                      <object class="GtkHBox" id="hbox3">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <child>
+                                          <object class="GtkLabel" id="flt_lbl_selstart">
+                                            <property name="width_request">130</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="xalign">0</property>
+                                            <property name="label" translatable="yes">Selection start offset</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkHScale" id="flt_hscl_selstart">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="adjustment">flt_hscl_adjselstart</property>
+                                            <property name="show_fill_level">True</property>
+                                            <property name="fill_level">100</property>
+                                            <property name="round_digits">1</property>
+                                            <property name="digits">0</property>
+                                            <property name="value_pos">left</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">1</property>
+                                          </packing>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">4</property>
+                                      </packing>
+                                    </child>
+                                    <child>
                                       <object class="GtkHButtonBox" id="hbuttonbox2">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -1393,7 +1435,7 @@
                                       <packing>
                                         <property name="expand">True</property>
                                         <property name="fill">True</property>
-                                        <property name="position">4</property>
+                                        <property name="position">5</property>
                                       </packing>
                                     </child>
                                   </object>
@@ -1532,6 +1574,11 @@
       </object>
     </child>
   </object>
+  <object class="GtkAdjustment" id="flt_hscl_adjselstart">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkListStore" id="flt_sto_select">
     <columns>
       <!-- column-name mode -->
@@ -1539,13 +1586,13 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">Random</col>
+        <col id="0" translatable="yes">Alll matches shuffled</col>
       </row>
       <row>
-        <col id="0" translatable="yes">First hits</col>
+        <col id="0" translatable="yes">In order</col>
       </row>
       <row>
-        <col id="0" translatable="yes">First hits shuffled</col>
+        <col id="0" translatable="yes">In order shuffled</col>
       </row>
     </data>
   </object>

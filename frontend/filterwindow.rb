@@ -274,6 +274,19 @@ p rvalues
 
             tracks.sort! { |t1, t2| t2[TRACK_WEIGHT] <=> t1[TRACK_WEIGHT] } # reverse sort, most weighted first
 
+            # Manage the starting offset in results if set
+            start_offset = 0
+            if @mc.glade[FLT_HSCL_ADJSELSTART].value > 0.0
+                start_offset = tracks.size*@mc.glade[FLT_HSCL_ADJSELSTART].value.round/100
+                if start_offset+max_tracks > tracks.size
+                    start_offset = tracks.size-max_tracks
+                    start_offset = 0 if start_offset < 0
+                end
+
+                # Remove all elements before start_offset
+                tracks.shift(start_offset)
+            end
+
             if @mc.glade[FLT_CMB_SELECTBY].active == 2 # Randomize hits with same weight
                 # Search for the number of entries with same weight. While we don't have
                 # enough tracks, shuffle the first result and append it to the selected tracks

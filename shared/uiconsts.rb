@@ -551,6 +551,7 @@ module UIConsts
     FLT_SPIN_PCWEIGHT     = "flt_spin_pcweight"
     FLT_SPIN_RATINGWEIGHT = "flt_spin_ratingweight"
     FLT_CMB_SELECTBY      = "flt_cmb_selectby"
+    FLT_HSCL_ADJSELSTART  = "flt_hscl_adjselstart"
     FLT_BTN_PLGEN         = "flt_btn_plgen"
     FLT_BTN_SAVE          = "flt_btn_save"
     FLT_BTN_NEW           = "flt_btn_new"
