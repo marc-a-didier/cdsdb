@@ -199,7 +199,7 @@ class MasterController
 
         # Update gui if the played track is currently selected.
         # Dangerous if user is modifying the track panel!!!
-#         uilink.reload_track_cache
+        uilink.reload_track_cache
         @mw.trk_browser.update_infos
 
         Thread.new {
