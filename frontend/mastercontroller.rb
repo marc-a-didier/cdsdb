@@ -18,7 +18,7 @@ class MasterController
     include UIConsts
 
     attr_reader   :glade
-    attr_reader   :player, :pqueue, :plists, :charts, :tasks, :filter, :memos
+    attr_reader   :player, :pqueue, :plists, :charts, :tasks, :filters, :memos
     attr_accessor :main_filter, :filter_receiver
 
     def initialize
@@ -37,7 +37,7 @@ class MasterController
         @plists   = PListsWindow.new(self)
         @charts   = ChartsWindow.new(self)
         @tasks    = TasksWindow.new(self)
-        @filter   = FilterWindow.new(self)
+        @filters  = FilterWindow.new(self)
         @memos    = MemosWindow.new(self)
 
         @mw = MainWindow.new(self)
@@ -49,7 +49,7 @@ class MasterController
     def clean_up
         @player.stop if @player.playing? || @player.paused?
         [VIEW_MENU, MM_WIN_MENU].each { |menu| PREFS.save_menu_state(self, @glade[menu]) }
-        [@plists, @player, @pqueue, @charts, @filter, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
+        [@plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
         #system("rm -f ../mfiles/*")
     end
 
@@ -61,7 +61,7 @@ class MasterController
         @glade[MM_WIN_PLAYQUEUE].active = false if window == @pqueue
         @glade[MM_WIN_PLAYLISTS].active = false if window == @plists
         @glade[MM_WIN_CHARTS].active = false if window == @charts
-        @glade[MM_WIN_FILTER].active = false if window == @filter
+        @glade[MM_WIN_FILTER].active = false if window == @filters
         @glade[MM_WIN_TASKS].active = false if window == @tasks
         @glade[MM_WIN_MEMOS].active = false if window == @memos
     end
@@ -144,6 +144,12 @@ class MasterController
 
     def reload_plists
         @plists.reload
+        return self
+    end
+
+    def reload_filters
+        @filters.load_ftv
+        return self
     end
 
 

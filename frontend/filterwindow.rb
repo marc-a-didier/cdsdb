@@ -27,9 +27,11 @@ class FilterWindow < TopWindow
 #           wins.each { |win| puts win.id }
 #       end
         @mc.glade[FLT_BTN_CLEAR].signal_connect(:clicked)    { @mc.filter_receiver.set_filter("", false) }
-        @mc.glade[FLT_BTN_NEW].signal_connect(:clicked)      { new_filter }
         @mc.glade[FLT_BTN_SAVE].signal_connect(:clicked)     { save_filter }
         @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked)    { generate_play_list }
+
+        @mc.glade[FLT_POPITM_NEW].signal_connect(:activate)    { new_filter }
+        @mc.glade[FLT_POPITM_DELETE].signal_connect(:activate) { delete_filter }
 
         @mc.glade[FLT_BTN_FROMDATE].signal_connect(:clicked) { set_date(@mc.glade[FLT_ENTRY_FROMDATE]) }
         @mc.glade[FLT_BTN_TODATE].signal_connect(:clicked)   { set_date(@mc.glade[FLT_ENTRY_TODATE]) }
@@ -65,6 +67,7 @@ class FilterWindow < TopWindow
 
         set_ref_column_visibility(@mc.glade[MM_VIEW_DBREFS].active?)
         @ftv.selection.signal_connect(:changed)  { |widget| on_filter_changed(widget) }
+        @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, FLT_POP_ACTIONS) }
         load_ftv
 
         @must_join_logtracks = false
@@ -99,6 +102,13 @@ class FilterWindow < TopWindow
         return tv
     end
 
+    def show_popup(widget, event, menu_name)
+        if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
+            # No popup if no selection in the tree view
+            @mc.glade[menu_name].popup(nil, nil, event.button, event.time) unless @ftv.selection.selected.nil?
+        end
+    end
+
     def load_ftv
         @ftv.model.clear
         CDSDB.execute("SELECT * FROM filters") { |row|
@@ -127,6 +137,11 @@ class FilterWindow < TopWindow
         max_id = 0
         @ftv.model.each { |model, path, iter| max_id = iter[0] if iter[0] > max_id }
         DBUtils.client_sql("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '<filter />')")
+        load_ftv
+    end
+
+    def delete_filter
+        DBUtils.client_sql("DELETE FROM filters WHERE rfilter=#{@ftv.selection.selected[0]}")
         load_ftv
     end
 
@@ -283,6 +298,7 @@ p rvalues
                     start_offset = 0 if start_offset < 0
                 end
 
+                f << "\nStart offset set, starting from offset #{start_offset} of #{tracks.size} tracks\n\n"
                 # Remove all elements before start_offset
                 tracks.shift(start_offset)
             end

@@ -3,14 +3,6 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
-  <object class="GtkToggleAction" id="mw_charts_action"/>
-  <object class="GtkToggleAction" id="mw_filter_action"/>
-  <object class="GtkAction" id="mw_memo_save_action"/>
-  <object class="GtkToggleAction" id="mw_memos_action"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkAdjustment" id="adjustment10">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -47,6 +39,14 @@
     <property name="page_increment">10</property>
     <property name="page_size">10</property>
   </object>
+  <object class="GtkToggleAction" id="mw_charts_action"/>
+  <object class="GtkToggleAction" id="mw_filter_action"/>
+  <object class="GtkAction" id="mw_memo_save_action"/>
+  <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkMenu" id="apm_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -342,7 +342,7 @@
   </object>
   <object class="GtkWindow" id="filter_window">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Filter</property>
+    <property name="title" translatable="yes">Filters</property>
     <child>
       <object class="GtkVBox" id="fmain_vbox">
         <property name="visible">True</property>
@@ -1208,7 +1208,7 @@
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
-                                            <property name="label" translatable="yes">Max. entries</property>
+                                            <property name="label" translatable="yes">Number of tracks</property>
                                           </object>
                                           <packing>
                                             <property name="expand">False</property>
@@ -1485,19 +1485,7 @@
                 <property name="can_focus">False</property>
                 <property name="spacing">10</property>
                 <child>
-                  <object class="GtkButton" id="flt_btn_new">
-                    <property name="label">gtk-new</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="use_stock">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                    <property name="position">0</property>
-                  </packing>
+                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkButton" id="flt_btn_save">
@@ -1579,6 +1567,30 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkMenu" id="flt_pop_actions">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="flt_popitm_new">
+        <property name="label">gtk-new</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="flt_popitm_delete">
+        <property name="label">gtk-delete</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkListStore" id="flt_sto_select">
     <columns>
       <!-- column-name mode -->
@@ -1586,13 +1598,13 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">Alll matches shuffled</col>
+        <col id="0" translatable="yes">Random selection from all matches</col>
       </row>
       <row>
-        <col id="0" translatable="yes">In order</col>
+        <col id="0" translatable="yes">Weight order</col>
       </row>
       <row>
-        <col id="0" translatable="yes">In order shuffled</col>
+        <col id="0" translatable="yes">Random from weight selection</col>
       </row>
     </data>
   </object>

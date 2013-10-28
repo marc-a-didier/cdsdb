@@ -539,6 +539,7 @@ module UIConsts
     FLT_ENTRY_TODATE    = "flt_entry_todate"
     FLT_BTN_APPLY       = "flt_btn_apply"
     FLT_BTN_CLEAR       = "flt_btn_clear"
+    FLT_BTN_SAVE        = "flt_btn_save"
     FLT_SPIN_MINP       = "flt_spin_minp"
     FLT_SPIN_MAXP       = "flt_spin_maxp"
 
@@ -553,9 +554,12 @@ module UIConsts
     FLT_CMB_SELECTBY      = "flt_cmb_selectby"
     FLT_HSCL_ADJSELSTART  = "flt_hscl_adjselstart"
     FLT_BTN_PLGEN         = "flt_btn_plgen"
-    FLT_BTN_SAVE          = "flt_btn_save"
-    FLT_BTN_NEW           = "flt_btn_new"
+
     FLT_VBOX_EXPANDERS    = "flt_vbox_expanders"
+
+    FLT_POP_ACTIONS       = "flt_pop_actions"
+    FLT_POPITM_NEW        = "flt_popitm_new"
+    FLT_POPITM_DELETE     = "flt_popitm_delete"
 
     FLT_TV_DBASE          = "flt_tv_dbase"
 

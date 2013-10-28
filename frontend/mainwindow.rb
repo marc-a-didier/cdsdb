@@ -84,13 +84,13 @@ class MainWindow < TopWindow
 
 
         # Connect signals needed to restore windows positions
-        @glade[MW_PLAYER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.player) }
-        @glade[MW_PQUEUE_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.pqueue) }
-        @glade[MW_PLISTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.plists) }
-        @glade[MW_CHARTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.charts) }
-        @glade[MW_TASKS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.tasks ) }
-        @glade[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filter) }
-        @glade[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)  }
+        @glade[MW_PLAYER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.player)  }
+        @glade[MW_PQUEUE_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.pqueue)  }
+        @glade[MW_PLISTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.plists)  }
+        @glade[MW_CHARTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.charts)  }
+        @glade[MW_TASKS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.tasks )  }
+        @glade[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filters) }
+        @glade[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
         @glade[MW_TBBTN_APPFILTER].signal_connect(:clicked){
             DBCACHE.dump_infos
             IMG_CACHE.dump_infos
@@ -103,13 +103,13 @@ class MainWindow < TopWindow
         PREFS.load_menu_state(@mc, @glade[VIEW_MENU])
 
         # Set windows icons
-        @mc.pqueue.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"pqueue.png")
-        @mc.player.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"player.png")
-        @mc.plists.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"plists.png")
-        @mc.charts.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"charts.png")
-        @mc.tasks.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"tasks.png")
-        @mc.filter.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"filter.png")
-        @mc.memos.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"document-edit.png")
+        @mc.pqueue.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"pqueue.png")
+        @mc.player.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"player.png")
+        @mc.plists.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"plists.png")
+        @mc.charts.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"charts.png")
+        @mc.tasks.window.icon   = Gdk::Pixbuf.new(CFG.icons_dir+"tasks.png")
+        @mc.filters.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"filter.png")
+        @mc.memos.window.icon   = Gdk::Pixbuf.new(CFG.icons_dir+"document-edit.png")
 
         # Stores the history window object
         @history = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
@@ -306,7 +306,7 @@ class MainWindow < TopWindow
     end
 
     def set_dbrefs_visibility
-        [@art_browser, @rec_browser, @trk_browser, @mc.plists, @mc.filter].each { |receiver|
+        [@art_browser, @rec_browser, @trk_browser, @mc.plists, @mc.filters].each { |receiver|
             receiver.set_ref_column_visibility(@glade[MM_VIEW_DBREFS].active?)
         }
     end
@@ -395,6 +395,7 @@ TRACE.debug("new db version=#{srv_db_version}")
             FileUtils.mv(file_name, DBIntf::build_db_name)
             DBCACHE.clear
             DBIntf.connect
+            @mc.reload_plists.reload_filters
         end
     end
 
