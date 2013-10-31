@@ -1,10 +1,6 @@
 
 class FilterWindow < TopWindow
 
-    #
-    # TODO: add a save/load filter!!!
-    #
-
     include UIConsts
 
     TRACK_WEIGHT    = 0 # Global computed weight
@@ -168,7 +164,8 @@ class FilterWindow < TopWindow
         dlg_glade[DLG_DATE_SELECTOR].destroy
     end
 
-    def generate_filter(is_for_charts = false)
+    def generate_filter()
+        is_for_charts = @mc.filter_receiver == @mc.charts
         @must_join_logtracks = @mc.glade[FLT_EXP_PLAYDATES].expanded?
 
         wc = ""

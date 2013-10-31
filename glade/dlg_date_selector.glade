@@ -63,9 +63,6 @@
           <object class="GtkCalendar" id="dated_calendar">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="year">2011</property>
-            <property name="month">2</property>
-            <property name="day">21</property>
           </object>
           <packing>
             <property name="expand">True</property>

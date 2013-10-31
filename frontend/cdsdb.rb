@@ -183,6 +183,9 @@ require './my_rr_lib'
 # DONE: Ajouter un mecanisme trace qui par sur stdout par defaut ou un fichier plutot que balancer des
 #       puts n'importe ou.
 
+# DONE: desimbriquer la main window du master controller pour en faire une top window comme les autres.
+# DONE: autoriser des poids negatifs pour le filtre histoire de favoriser les morceaux les moins joues.
+
 # DONE: What did WE play on that day (24th of november, as example...)
 
 # DONE: Faire pour la base comme pour les images: une map qui enregistre une dbclass pour
@@ -191,6 +194,7 @@ require './my_rr_lib'
 # DONE: Dans la vue des artistes, ajouter un sous-viveau avec vue par artiste ou record
 
 # DONE: Save filter: creer une table filters avec un nom et la clause where dans un champ
+# DONE: Filtres: supprimer les boutons add/new et remplacer par drop down Actions (avec en plus delete)
 
 
 #
@@ -204,8 +208,6 @@ require './my_rr_lib'
 # TODO: ajouter un tag 'a checker' quand un disque est mal rippe (ex: MM Vol.13)
 
 # TODO: ajouter un index sur rtrack dans logtracks pour voir si ca accelere les requetes pour les charts
-
-# TODO: desimbriquer la main window du master controller pour en faire une top window comme les autres.
 
 # TODO: piger comment on envoie un delete event a une fenetre!!!
 
@@ -221,9 +223,11 @@ require './my_rr_lib'
 
 # TODO: deplacer les covers dans le dir des morceaux. suffixer avec f pour front, b pour back, etc...
 #       mettre le numero du morceau pour les covers individuelles.
-# TODO: autoriser des poids negatifs pour le filtre histoire de favoriser les morceaux les moins joues.
 
 # TODO: ajouter un rating sur les records et les artistes???
+
+# TODO: Ajouter un spin edit pour le poids dans les tree-view (genres, tags...) pour
+#       obtenir une meilleure granularite???
 
 # TODO: ajouter un champ d'association pour les genres? style classic pour tout ce qui y touche de
 #       pres ou de loin (utile pour les stats et le tri des genres)
@@ -232,7 +236,6 @@ require './my_rr_lib'
 # TODO: Dans les charts, faire une vue pour les records avec le nombre de morceaux joues divise par
 #       le nombre du titre du disque?
 
-# TODO: Filtres: supprimer les boutons add/new et remplacer par drop down Actions (avec en plus delete)
 
 
 # Peu realistes:
