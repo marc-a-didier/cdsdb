@@ -122,7 +122,9 @@ class Prefs
 
         object_list.each { |object|
             if (object.class == Gtk::TreeView)
-                object.model.each { |model, path, iter| xdoc.root.add_element(object.builder_name, { "item" => path }) if iter[0] }
+                items = ""
+                object.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
+                xdoc.root.add_element(object.builder_name, { "items" => items })
                 next
             end
             xdoc.root.add_element(object.builder_name, {"method" => "active=", "params" => object.active?.to_s}) if object.class == Gtk::CheckButton
@@ -136,8 +138,8 @@ class Prefs
 
     def content_from_xdoc(glade, xdoc)
         xdoc.root.each_element { |elm|
-            if elm.attributes['item']
-                glade[elm.name].model.get_iter(elm.attributes['item'])[0] = true
+            if elm.attributes['items']
+                elm.attributes['items'].bytes.each_with_index { |byte, i| glade[elm.name].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
             else
                 cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']}, "
                 if elm.attributes['method'] == "text="

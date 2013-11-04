@@ -121,8 +121,8 @@ class FilterWindow < TopWindow
         return if @ftv.selection.selected.nil? # Happen when new filter created
         # Reset all tree views to false since the xml records only items that are checked
         # If not done, items remain checked when filter is changed.
-        @tv_tags.model.each { |model, path, iter| iter[0] = false }
-        @tvs.each { |tv| tv.model.each { |model, path, iter| iter[0] = false } }
+#         @tv_tags.model.each { |model, path, iter| iter[0] = false }
+#         @tvs.each { |tv| tv.model.each { |model, path, iter| iter[0] = false } }
 
         xml_data = @ftv.selection.selected[2]
         xdoc = REXML::Document.new(xml_data)
