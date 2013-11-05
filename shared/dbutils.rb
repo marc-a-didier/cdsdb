@@ -111,16 +111,38 @@ class DBUtils
     def self.check_log_vs_played
         TRACE.debug("Starting log integrity check...")
         tracks = []
-        CDSDB.execute("SELECT rtrack, iplayed FROM tracks WHERE iplayed > 0") do |row|
-            CDSDB.execute("SELECT COUNT(rtrack), MAX(idateplayed) FROM logtracks WHERE rtrack=#{row[0]}") do |log|
-                if log[0] != row[1]
-                    puts("Track #{row[0]}: played=#{row[1]}, logged=#{log[0]}, last=#{log[1].to_std_date}")
-                    tracks << [row[0], log[0], log[1]]
+        CDSDB.execute("SELECT COUNT(rtrack) FROM logtracks WHERE rtrack <= 0") do |log|
+            if log[0] > 0
+                TRACE.debug("#{log[0]} bad rtrack id(s) found in db.")
+            else
+                TRACE.debug("No bad rtrack ids found in db.")
+            end
+        end
+        CDSDB.execute("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks") do |log|
+            CDSDB.execute("SELECT COUNT(rtrack) FROM tracks WHERE iplayed > 0") do |track|
+                if log[0] != track[0]
+                    TRACE.debug("Size mismatch, #{log[0]} in log, #{track[0]} in tracks")
                 end
             end
         end
-        TRACE.debug("Check integrity ended with #{tracks.size} mismatch.")
-
+#         CDSDB.execute("SELECT DISTINCT(rtrack) FROM logtracks") do |log|
+#             CDSDB.execute("SELECT rtrack, stitle, iplayed FROM tracks WHERE rtrack=#{log[0]}") do |track|
+#                 if track[2] == 0
+#                     puts("Track #{track[0]} (#{track[1]}) played=#{track[2]}")
+#                 end
+#             end
+#         end
+#         CDSDB.execute("SELECT rtrack, iplayed FROM tracks WHERE iplayed > 0") do |row|
+#             CDSDB.execute("SELECT COUNT(rtrack), MAX(idateplayed) FROM logtracks WHERE rtrack=#{row[0]}") do |log|
+#                 if log[0] != row[1]
+#                     puts("Track #{row[0]}: played=#{row[1]}, logged=#{log[0]}, last=#{log[1].to_std_date}")
+#                     tracks << [row[0], log[0], log[1]]
+#                 end
+#             end
+#         end
+        TRACE.debug("Check integrity ended with #{tracks.size} mismatches.")
+        return
+        
         if tracks.size > 0 && CFG.admin?
             TRACE.debug("Starting tracks update.")
             tracks.each do |track|
