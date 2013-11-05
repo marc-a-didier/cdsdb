@@ -101,7 +101,7 @@ class FilterWindow < TopWindow
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view
-            @mc.glade[menu_name].popup(nil, nil, event.button, event.time) unless @ftv.selection.selected.nil?
+            @mc.glade[menu_name].popup(nil, nil, event.button, event.time) if @ftv.selection.selected
         end
     end
 
@@ -118,15 +118,8 @@ class FilterWindow < TopWindow
     end
 
     def on_filter_changed(widget)
-        return if @ftv.selection.selected.nil? # Happen when new filter created
-        # Reset all tree views to false since the xml records only items that are checked
-        # If not done, items remain checked when filter is changed.
-#         @tv_tags.model.each { |model, path, iter| iter[0] = false }
-#         @tvs.each { |tv| tv.model.each { |model, path, iter| iter[0] = false } }
-
-        xml_data = @ftv.selection.selected[2]
-        xdoc = REXML::Document.new(xml_data)
-        PREFS.content_from_xdoc(@mc.glade, xdoc)
+        # @ftv.selection.selected may be nil when a new filter is created
+        PREFS.content_from_xdoc(@mc.glade, REXML::Document.new(@ftv.selection.selected[2])) if @ftv.selection.selected
     end
 
     def new_filter
@@ -143,8 +136,7 @@ class FilterWindow < TopWindow
 
     def save_filter
         xml_data = ""
-        xdoc = PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS])
-        REXML::Formatters::Default.new.write(xdoc, xml_data)
+        REXML::Formatters::Default.new.write(PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS]), xml_data)
         DBUtils.client_sql("UPDATE filters SET sxmldata=#{xml_data.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
         @ftv.selection.selected[2] = xml_data
     end
