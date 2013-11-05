@@ -40,7 +40,8 @@ module UIConsts
     MW_FILTER_ACTION    = "mw_filter_action"
     MW_MEMOS_ACTION     = "mw_memos_action"
     MW_MEMO_SAVE_ACTION = "mw_memo_save_action"
-
+    MW_SERVER_ACTION    = "mw_server_action"
+    
     #
     # Main window browser infos bars
     MW_INFLBL_ARTIST    = "mw_inflbl_artist"
@@ -116,6 +117,7 @@ module UIConsts
     MM_FILE_QUIT                = "mm_file_quit"
 
     # Edit menu
+    MM_EDIT_MENU                = "edit_menu"
     MM_EDIT_SEARCH              = "mm_edit_search"
     MM_EDIT_PREFS               = "mm_edit_prefs"
 
@@ -157,16 +159,16 @@ module UIConsts
     MM_TOOLS_STATS           = "mm_tools_stats"
 
     # About menu
-    MM_ABOUT                    = "about_imagemenuitem"
+    MM_ABOUT                 = "about_imagemenuitem"
 
 
 
     # Toolbars buttons
 
-    MW_TBBTN_APPFILTER  = "mw_tbbtn_appfilter"
-    MW_TBBTN_TASKS      = "mw_tbbtn_tasks"
-    MW_TBBTN_FILTER     = "mw_tbbtn_filter"
-    MW_TBBTN_MEMOS      = "mw_tbbtn_memos"
+    MW_TBBTN_SERVER = "mw_tbbtn_server"
+    MW_TBBTN_TASKS  = "mw_tbbtn_tasks"
+    MW_TBBTN_FILTER = "mw_tbbtn_filter"
+    MW_TBBTN_MEMOS  = "mw_tbbtn_memos"
 
     MW_TBBTN_PLAYER = "mw_tbbtn_player"
     MW_TBBTN_PQUEUE = "mw_tbbtn_pqueue"

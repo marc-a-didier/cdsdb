@@ -393,20 +393,7 @@
                             <property name="can_focus">False</property>
                             <property name="spacing">4</property>
                             <child>
-                              <object class="GtkRadioButton" id="prefs_rb_local">
-                                <property name="label" translatable="yes">Local mode</property>
-                                <property name="use_action_appearance">False</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="draw_indicator">True</property>
-                                <property name="group">prefs_rb_remote</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                             <child>
                               <object class="GtkVBox" id="vbox21">
@@ -414,20 +401,7 @@
                                 <property name="can_focus">False</property>
                                 <property name="spacing">4</property>
                                 <child>
-                                  <object class="GtkRadioButton" id="prefs_rb_remote">
-                                    <property name="label" translatable="yes">Client mode</property>
-                                    <property name="use_action_appearance">False</property>
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="receives_default">False</property>
-                                    <property name="draw_indicator">True</property>
-                                    <property name="group">prefs_rb_local</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <object class="GtkHBox" id="hbox34">

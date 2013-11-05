@@ -72,12 +72,12 @@ class MainWindow < TopWindow
         @glade[MW_TBBTN_PLISTS].icon_name = "plists_icon"
         @glade[MW_TBBTN_CHARTS].icon_name = "charts_icon"
 
-        Gtk::IconTheme.add_builtin_icon("information_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"information.png"))
-        Gtk::IconTheme.add_builtin_icon("tasks_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"tasks.png"))
+        Gtk::IconTheme.add_builtin_icon("server_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"network-server.png"))
+        Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, UIUtils::get_btn_icon(CFG.icons_dir+"tasks.png"))
         Gtk::IconTheme.add_builtin_icon("filter_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"filter.png"))
-        Gtk::IconTheme.add_builtin_icon("memos_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"document-edit.png"))
+        Gtk::IconTheme.add_builtin_icon("memos_icon",  22, UIUtils::get_btn_icon(CFG.icons_dir+"document-edit.png"))
 
-        @glade[MW_TBBTN_APPFILTER].icon_name  = "information_icon"
+        @glade[MW_TBBTN_SERVER].icon_name = "server_icon"
         @glade[MW_TBBTN_TASKS].icon_name  = "tasks_icon"
         @glade[MW_TBBTN_FILTER].icon_name = "filter_icon"
         @glade[MW_TBBTN_MEMOS].icon_name  = "memos_icon"
@@ -91,9 +91,11 @@ class MainWindow < TopWindow
         @glade[MW_TASKS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.tasks )  }
         @glade[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filters) }
         @glade[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
-        @glade[MW_TBBTN_APPFILTER].signal_connect(:clicked){
-            DBCACHE.dump_infos
-            IMG_CACHE.dump_infos
+        @glade[MW_SERVER_ACTION].signal_connect(:activate) {
+            CFG.set_remote(@glade[MW_SERVER_ACTION].active?)
+            @mc.tasks.check_config
+#             DBCACHE.dump_infos
+#             IMG_CACHE.dump_infos
         }
 
         # Action called from the memos window, equivalent to File/Save of the main window
@@ -116,7 +118,8 @@ class MainWindow < TopWindow
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
-        PREFS.load_menu_state(@mc, @glade[MM_WIN_MENU])
+#         PREFS.load_menu_state(@mc, @glade[MM_WIN_MENU])
+        [MM_WIN_MENU, MM_EDIT_MENU].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
 
 
         #
