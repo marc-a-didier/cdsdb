@@ -305,7 +305,7 @@ class MainWindow < TopWindow
     def change_view_mode
         uilink = @trk_browser.trklnk
         @art_browser.reload
-        @mc.select_track(uilink) if uilink
+        @mc.select_track(uilink) if uilink && uilink.valid_track_ref?
     end
 
     def set_dbrefs_visibility
@@ -322,7 +322,7 @@ class MainWindow < TopWindow
             uilink = trk_browser.trklnk
             @mc.main_filter = where_clause
             art_browser.reload
-            @mc.select_track(uilink) if uilink
+            @mc.select_track(uilink) if uilink && uilink.valid_track_ref?
         end
     end
 
