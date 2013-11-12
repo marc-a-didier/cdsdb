@@ -54,7 +54,6 @@ class Cfg
         end
 
         REXML::XPath.first(xdoc.root, "windows/prefs_dialog").each_element { |elm|
-            @remote = false #elm.attributes['params'] == 'true' if elm.name == UIConsts::PREFS_RB_REMOTE
             @server = elm.attributes['params'] if elm.name == UIConsts::PREFS_ENTRY_SERVER
             @port = elm.attributes['params'].to_i if elm.name == UIConsts::PREFS_ENTRY_PORT
             @tx_block_size = elm.attributes['params'].to_i if elm.name == UIConsts::PREFS_ENTRY_BLKSIZE
