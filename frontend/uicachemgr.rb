@@ -315,7 +315,7 @@ class UILink < AudioLink
             # We're on a track of a compilation but not on the Compilations
             # so we assign the file to the track rather than the record
             cover_file = CFG.covers_dir+record.rrecord.to_s
-            File::mkpath(cover_file)
+            FileUtils::mkpath(cover_file)
             cover_file += File::SEPARATOR+track.rtrack.to_s+File::extname(fname)
             ex_name = cover_file+File::SEPARATOR+"ex"+track.rtrack.to_s+File::extname(fname)
         else
