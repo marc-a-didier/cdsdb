@@ -488,6 +488,9 @@ class ArtistsBrowser < GenericBrowser
             end
         }
 
+        # This line has NO effect when incremental search fails to find a string. The selection is empty...
+        # @tv.selection.mode = Gtk::SELECTION_BROWSE
+
         @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
 #         @tv.signal_connect(:key_press_event) { |widget, event|
 #             searching = !@tv.search_entry.nil?;
@@ -597,7 +600,7 @@ class ArtistsBrowser < GenericBrowser
         # If not force_reload, we have just one child, the fake entry, so don't remove it now
         if force_reload
             @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
-            iter[1] = iter[1].gsub(/\ -\ .*$/, "") # Remove the number of entries since it's re-set later
+            iter[1] = iter[1].gsub(/ - .*$/, "") # Remove the number of entries since it's re-set later
         end
 
         sql = iter[2].select_for_level(@tvm.iter_depth(iter), iter, @mc, @tvm)

@@ -114,6 +114,8 @@ class DBUtils
         CDSDB.execute("SELECT COUNT(rtrack) FROM logtracks WHERE rtrack <= 0") do |log|
             if log[0] > 0
                 TRACE.debug("#{log[0]} bad rtrack id(s) found in db.")
+                CDSDB.execute("DELETE FROM logtracks WHERE rtrack <= 0")
+                TRACE.debug("Bad tracks id(s) deleted.")
             else
                 TRACE.debug("No bad rtrack ids found in db.")
             end
@@ -142,7 +144,7 @@ class DBUtils
 #         end
         TRACE.debug("Check integrity ended with #{tracks.size} mismatches.")
         return
-        
+
         if tracks.size > 0 && CFG.admin?
             TRACE.debug("Starting tracks update.")
             tracks.each do |track|
