@@ -171,6 +171,10 @@ public
         end
     end
 
+    def selected_track
+        return @tvpt.selection.count_selected_rows == 1 ? @tvpt.model.get_iter(@tvpt.selection.selected_rows[0]) : nil
+    end
+
     def on_drag_received(widget, context, x, y, data, info, time)
         # Returns directly if data don't come from a CDs DB browser
         if info != 700 || @tvpl.selection.selected.nil? #DragType::BROWSER_SELECTION
@@ -180,9 +184,8 @@ public
 
         sender, type, call_back = data.text.split(":")
         if sender == "plist" # -> reordering
-#             iref = @tvpt.selection.selected[4].track.rtrack
-            itr = find_ref(@tvpt.selection.selected[0])
-#             @pts.each { |model, path, iter| if iter[TT_REF] == track.to_i then itr = iter; break end }
+            # Won't work in case of multi-selection
+            itr = selected_track
             if itr
                 r = @tvpt.get_dest_row(x, y)
                 if r.nil?
