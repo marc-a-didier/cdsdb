@@ -376,10 +376,9 @@ public
     end
 
     def save_plt
-        @pts.each do |model, path, iter|
-            #CDSDB.execute("UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]}")
-            exec_sql("UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]}")
-        end
+        sql = ""
+        @pts.each { |model, path, iter| sql << "UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]};\n" }
+        local? ? DBUtils.exec_local_batch(sql, Socket.gethostname) : DBUtils.exec_batch(sql, Socket.gethostname)
         exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{@current_pl.rplist};")
         @pt_changed = false
     end

@@ -29,11 +29,15 @@ class DBUtils
         Thread.new { MusicClient.new.exec_sql(sql) } if CFG.remote?
     end
 
-    def self.exec_batch(sql, host)
+    def self.exec_local_batch(sql, host)
         CDSDB.transaction { |db|
             db.execute_batch(sql)
             LOG.info(sql+" [#{host}]")
         }
+    end
+
+    def self.exec_batch(sql, host)
+        self.exec_local_batch(sql, host)
         MusicClient.new.exec_batch(sql) if CFG.remote?
         # May be dangerous to spawn a thread... if request made on the record being inserted,
         # don't know what happen...
@@ -92,6 +96,7 @@ class DBUtils
         self.client_sql("UPDATE segments SET iplaytime=#{len} WHERE rsegment=#{rsegment};")
     end
 
+    # This method is useful ONLY when tracks are removed, otherwise it doesn't make sense.
     def self.renumber_play_list(rplist)
         i = 1
         sql = ""
