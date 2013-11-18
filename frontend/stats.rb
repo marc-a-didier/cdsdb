@@ -74,12 +74,19 @@ class Stats
         @f << "<h1>" << title << "</h1><br />"
         @f << '<table id="mytbl">'
         @altr.reset
-        headers.each { |header| @f << "<th>" << header << "</th>" }
+        @alignments = []
+        headers.each { |header|
+            @alignments << (header.match(/:R$/) ? "r" : "l")
+            @f << "<th>" << header.sub(/:R$/, "") << "</th>"
+        }
     end
 
     def new_row(cols)
         @f << @altr.get_color
-        cols.each { |col_title| @f << "<td>" << col_title.to_s << "</td>" }
+        cols.each_with_index { |col_title, i|
+            align = @alignments[i] && @alignments[i] == "r" ? '<td class="alt">' : '<td>'
+            @f << align << col_title.to_s << '</td>'
+        }
         @f << "</tr>"
     end
 
@@ -125,6 +132,10 @@ class Stats
                     color:#000000;
                     background-color:#B5DDF7;
                 }
+                #mytbl td.alt
+                {
+                    text-align:right;
+                }
                 }
 #                     background-color:#EAF2D3;
         @f << '</style></head><body>'
@@ -150,7 +161,7 @@ class Stats
         new_row(["Total number of tracks", @db_tots[DBTOTS_TRACKS]])
         end_table
 
-        new_table("Records by media type", ["Medium", "Records", "Play time"])
+        new_table("Records by media type", ["Medium", "Records:R", "Play time:R"])
         CDSDB.execute("SELECT * FROM medias;") do |mediatype|
             CDSDB.execute("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia=#{mediatype[0]};") do |row|
                 #Gtk.main_iteration while Gtk.events_pending?
@@ -210,7 +221,7 @@ class Stats
     end
 
     def records_by_genre
-        new_table("Ripped records", ["Genre", "Ripped", "Available", "Ripped play time", "Available play time"])
+        new_table("Ripped records", ["Genre", "Ripped:R", "Available:R", "Ripped play time:R", "Available play time:R"])
         @genres.each { |genre|
             next if genre[GENRE_REF] == 0
             new_row([genre[GENRE_NAME], genre[GENRE_RIPPED], genre[GENRE_TOT_RECS],
@@ -226,7 +237,7 @@ class Stats
         sql = "SELECT COUNT(records.rrecord) AS nrecs, SUM(records.iplaytime), artists.sname FROM artists
                INNER JOIN records ON artists.rartist=records.rartist
                GROUP BY artists.rartist ORDER BY nrecs DESC;"
-        new_table("Records by artists", ["Rank", "Artist", "Records", "Play time"])
+        new_table("Records by artists", ["Rank:R", "Artist", "Records:R", "Play time:R"])
         CDSDB.execute(sql) do |row|
             #Gtk.main_iteration while Gtk.events_pending?
             new_row([@altr.counter+1, row[2], row[0], row[1].to_i.to_day_length])
@@ -240,7 +251,7 @@ class Stats
                LEFT OUTER JOIN genres ON records.rgenre=genres.rgenre
                WHERE iplayed > 0 GROUP BY records.rgenre ORDER BY totplayed DESC;"
         cols = []
-        new_table("Music Style Top Chart", ["Rank", "Play count", "Genre", "Played", "Available", "% Played"]) # "Played/Available"])
+        new_table("Music Style Top Chart", ["Rank:R", "Play count:R", "Genre", "Played:R", "Available:R", "% Played:R"])
         CDSDB.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             genre = nil
@@ -262,10 +273,10 @@ class Stats
                LEFT OUTER JOIN records ON tracks.rrecord=records.rrecord "
 
         if genre[GENRE_REF] == 0
-            new_table("All Styles Artists Top Chart", ["Rank", "Play count", "Artist"])
+            new_table("All Styles Artists Top Chart", ["Rank:R", "Play count:R", "Artist"])
             sql += "WHERE iplayed > 0 GROUP BY artists.rartist ORDER BY totplayed DESC;"
         else
-            new_table("#{genre[GENRE_NAME]} Artists Top Chart", ["Rank", "Play count", "Artist"])
+            new_table("#{genre[GENRE_NAME]} Artists Top Chart", ["Rank:R", "Play count:R", "Artist"])
             sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY artists.rartist ORDER BY totplayed DESC;"
         end
         CDSDB.execute(sql) do |row|
@@ -281,10 +292,10 @@ class Stats
                LEFT OUTER JOIN artists ON artists.rartist=records.rartist "
 
         if genre[GENRE_REF] == 0
-            new_table("All Styles Records Top Chart", ["Rank", "Play count", "Record", "Artist"])
+            new_table("All Styles Records Top Chart", ["Rank:R", "Play count:R", "Record", "Artist"])
             sql += "WHERE iplayed > 0 GROUP BY records.rrecord ORDER BY totplayed DESC;"
         else
-            new_table("#{genre[GENRE_NAME]} Records Top Chart", ["Rank", "Play count", "Record", "Artist"])
+            new_table("#{genre[GENRE_NAME]} Records Top Chart", ["Rank:R", "Play count:R", "Record", "Artist"])
             sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY records.rrecord ORDER BY totplayed DESC;"
         end
         CDSDB.execute(sql) do |row|
@@ -296,10 +307,10 @@ class Stats
 
     def top_tracks(genre)
         if genre[GENRE_REF] == 0
-            new_table("All Styles Tracks Top Chart", ["Rank", "Play count", "Track", "Artist", "Record", "Segment"])
+            new_table("All Styles Tracks Top Chart", ["Rank:R", "Play count:R", "Track", "Artist", "Record", "Segment"])
             sql = "SELECT rtrack, stitle, iplayed FROM tracks WHERE iplayed > 0 ORDER BY iplayed DESC;"
         else
-            new_table("#{genre[GENRE_NAME]} Tracks Top Chart", ["Rank", "Play count", "Track", "Artist", "Record", "Segment"])
+            new_table("#{genre[GENRE_NAME]} Tracks Top Chart", ["Rank:R", "Play count:R", "Track", "Artist", "Record", "Segment"])
             sql = "SELECT tracks.rtrack, tracks.stitle, tracks.iplayed FROM tracks
                    INNER JOIN segments ON segments.rsegment=tracks.rsegment
                    INNER JOIN records ON records.rrecord=segments.rrecord
@@ -317,7 +328,7 @@ class Stats
 
     def top_rated_tracks
         track_infos = TrackInfos.new
-        new_table("Most rated tracks", ["Rank", "Rating", "Track", "Artist", "Record", "Segment"])
+        new_table("Most rated tracks", ["Rank:R", "Rating", "Track", "Artist", "Record", "Segment"])
         CDSDB.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
             track_infos.load_track(row[0])
@@ -330,7 +341,7 @@ class Stats
     def gen_play_history
         limit = 1000
         track_infos = TrackInfos.new
-        new_table("Last #{limit} played tracks", ["Order", "When", "Where", "Track", "Artist", "Record", "Segment"])
+        new_table("Last #{limit} played tracks", ["Order:R", "When", "Where", "Track", "Artist", "Record", "Segment"])
         sql = %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
                  INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname
                  INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
@@ -349,7 +360,7 @@ class Stats
     end
 
     def played_tracks_stats
-        new_table("Played tracks")
+        new_table("Played tracks", ["", ":R"])
         tot_played = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
         never_played = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0")
         diff_played = CDSDB.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks")
@@ -364,81 +375,71 @@ class Stats
     end
 
     def rating_tags_stats
+        # Don't take classical music in these stats
+        sql_filter = "records.rgenre NOT IN (1, 28)"
+
         sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                 INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE records.rgenre NOT IN (1, 28);}
+                WHERE #{sql_filter};}
         tot_tracks = CDSDB.get_first_value(sql)
+
+        # Number of played tracks is selected from logtracks here and from tracks
+        # in the tags table. It enables to check that both sums are equals
+        # and the database integrity.
+        sql = %{SELECT COUNT(logtracks.rtrack) FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE #{sql_filter};}
+        tot_played = CDSDB.get_first_value(sql)
 
         # Number and percentage of rated track
         sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                 INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE tracks.irating<>0 AND records.rgenre NOT IN (1, 28);}
+                WHERE tracks.irating<>0 AND #{sql_filter};}
         tot_rated = CDSDB.get_first_value(sql)
-        new_table("Rated tracks", ["Rating", "# of tracks", "Percentage"])
-        UIConsts::RATINGS.each_with_index { |rating, index|
-            sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
-                    INNER JOIN records ON records.rrecord=tracks.rrecord
-                    WHERE tracks.irating=#{index} AND records.rgenre NOT IN (1, 28);}
-            rated = CDSDB.get_first_value(sql)
-#             new_row([rating, rated, "%6.2f" % [rated*100.0/@db_tots[DBTOTS_TRACKS]]])
-            new_row([rating, rated, "%6.2f" % [rated*100.0/tot_tracks]])
-        }
-#         new_row(["Qualified total", tot_rated, "%6.2f" % [tot_rated*100.0/@db_tots[DBTOTS_TRACKS]]])
-        new_row(["Qualified total", tot_rated, "%6.2f" % [tot_rated*100.0/tot_tracks]])
-        new_row(["Tracks total", tot_tracks, ""])
-        end_table
 
-        sql = %{SELECT COUNT(logtracks.rtrack) FROM logtracks
-                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE records.rgenre NOT IN (1, 28);}
-        tot_played = CDSDB.get_first_value(sql)
-
-        # Number and percentage of played tracks by rating
-        new_table("Played tracks by rating", ["Rating", "Played", "Percentage"])
+        new_table("Rated tracks without Classical/Baroque", ["Rating", "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R"])
         UIConsts::RATINGS.each_with_index { |rating, index|
-#             played = CDSDB.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE irating=#{index};")
-            sql = %{SELECT SUM(tracks.iplayed) FROM tracks
+            sql = %{SELECT COUNT(tracks.rtrack), SUM(tracks.iplayed) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
-                    WHERE tracks.irating=#{index} AND records.rgenre NOT IN (1, 28);}
-            played = CDSDB.get_first_value(sql)
+                    WHERE tracks.irating=#{index} AND #{sql_filter};}
+            rated, played = CDSDB.get_first_row(sql)
             played = 0 if played.nil?
-            new_row([rating, played, "%6.2f" % [played*100.0/tot_played]])
+            new_row([rating, rated, "%6.2f" % [rated*100.0/tot_tracks], played, "%6.2f" % [played*100.0/tot_played]])
         }
-        new_row(["Tracks total", tot_played, ""])
+        new_row(["Qualified total", tot_rated, "%6.2f" % [tot_rated*100.0/tot_tracks], "", ""])
+        new_row(["Tracks total", tot_tracks, "", tot_played, ""])
         end_table
 
         # Number and percentage of tagged track
         sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
                 INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE tracks.itags<>0 AND records.rgenre NOT IN (1, 28);}
+                WHERE tracks.itags<>0 AND #{sql_filter};}
         tot_tagged = CDSDB.get_first_value(sql)
-        new_table("Tagged tracks", ["Tags", "# of tracks", "Percentage"])
-        UIConsts::TAGS.each_with_index { |tag, index|
-            sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
-                    INNER JOIN records ON records.rrecord=tracks.rrecord
-                    WHERE (tracks.itags & #{1 << index})<>0 AND records.rgenre NOT IN (1, 28);}
-            tagged = CDSDB.get_first_value(sql)
-#             new_row([tag, tagged, "%6.2f" % [tagged*100.0/@db_tots[DBTOTS_TRACKS]]])
-            new_row([tag, tagged, "%6.2f" % [tagged*100.0/tot_tracks]])
-        }
-#         new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/@db_tots[DBTOTS_TRACKS]]])
-        new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/tot_tracks]])
-        new_row(["Tracks total", tot_tracks, ""])
-        end_table
 
-        # Number and percentil of played tracks by tag
-        new_table("Played tracks by tag", ["Tags", "Played", "Percentage"])
+        sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE tracks.itags = 0 AND #{sql_filter};}
+        tot_untagged = CDSDB.get_first_value(sql)
+
+        sql = %{SELECT SUM(tracks.iplayed) FROM tracks
+                INNER JOIN records ON records.rrecord=tracks.rrecord
+                WHERE tracks.itags = 0 AND #{sql_filter};}
+        untagged_played = CDSDB.get_first_value(sql)
+
+        new_table("Tagged tracks without Classical/Baroque", ["Tags", "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R"])
+        new_row(["Untagged", tot_untagged, "%6.2f" % [tot_untagged*100.0/tot_tracks], untagged_played, "%6.2f" % [untagged_played*100.0/tot_played]])
         UIConsts::TAGS.each_with_index { |tag, index|
-            sql = %{SELECT SUM(tracks.iplayed) FROM tracks
+            sql = %{SELECT COUNT(tracks.rtrack), SUM(tracks.iplayed) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
-                    WHERE (tracks.itags & #{1 << index}) <> 0 AND records.rgenre NOT IN (1, 28);}
-#             played = CDSDB.get_first_value("SELECT SUM(iplayed) FROM tracks WHERE (itags & #{1 << index})<>0;")
-            played = CDSDB.get_first_value(sql)
+                    WHERE (tracks.itags & #{1 << index}) <> 0 AND #{sql_filter};}
+            tagged, played = CDSDB.get_first_row(sql)
             played = 0 if played.nil?
-            new_row([tag, played, "%6.2f" % [played*100.0/tot_played]])
+
+            new_row([tag, tagged, "%6.2f" % [tagged*100.0/tot_tracks], played, "%6.2f" % [played*100.0/tot_played]])
         }
-        new_row(["Tracks total", tot_played, ""])
+        new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/tot_tracks], "", ""])
+        new_row(["Tracks total", tot_tracks, "", tot_played, ""])
         end_table
     end
 
