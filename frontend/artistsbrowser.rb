@@ -574,12 +574,14 @@ class ArtistsBrowser < GenericBrowser
             new_child[3] = row[0]+"@@@"+row[3].to_s # Magouille magouille...
         else
             new_child[0] = row[0]
-            new_child[1] = CGI::escapeHTML(row[1])
+            new_child[1] = row[1].to_html
             new_child[2] = iter[2]
             new_child[3] = row[1]
         end
         if @tvm.iter_depth(new_child) < iter[2].max_level
-            new_child[1] = new_child[1].to_html_italic
+            # The italic tag is hardcoded because to_hml has already been called and it sucks
+            # when called twice on the same string
+            new_child[1] = "<i>"+new_child[1]+"</i>" #.to_html_italic
             iter[2].append_fake_child(@tvm, new_child)
         end
     end
