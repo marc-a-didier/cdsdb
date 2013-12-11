@@ -404,7 +404,10 @@ TRACE.debug("executing: #{sql}")
         return if !trackui || trackui.audio_status == AudioLink::UNKNOWN
 
         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
-        trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) } unless file.empty?
+        unless file.empty?
+            trackui.set_artist_ref(@mc.segment.rartist)        
+            trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) } 
+        end
     end
 
     def on_update_playtime
