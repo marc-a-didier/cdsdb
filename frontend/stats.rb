@@ -31,10 +31,13 @@ class Stats
     DBTOTS_SEGS    = 2
     DBTOTS_TRACKS  = 3
     DBTOTS_PTIME   = 4
+    DBTOTS_PLAYED  = 5
+    DBTOTS_PPTIME  = 6 # Total played time for all tracks
 
     TV_ITEMS = {"Played tracks" => [false, :played_tracks_stats],
                 "Rated and tagged tracks" => [false, :rating_tags_stats],
-
+                "Played tracks by genre" => [false, :played_by_genre],
+                
                 "Records by artists" => [false,  :records_by_artists],
                 "Records by genres" => [true, :records_by_genre],
 
@@ -145,7 +148,9 @@ class Stats
         @media = Hash.new
 
         @db_tots << get_count('artist') << get_count('record') << get_count('segment') << get_count('track')
-        @db_tots << CDSDB.get_first_value("SELECT SUM(iplaytime) FROM records").to_i
+        @db_tots << CDSDB.get_first_value("SELECT SUM(iplaytime) FROM records;").to_i
+        @db_tots << CDSDB.get_first_value("SELECT COUNT(rtrack) FROM logtracks;")
+        @db_tots << CDSDB.get_first_value("SELECT SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
 
         @genres << [0, "", 0, 0, 0, 0, 0, 0, 0, 0]
         CDSDB.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
@@ -177,7 +182,8 @@ class Stats
             row = CDSDB.get_first_row("SELECT COUNT(rtrack), SUM(iplaytime) FROM tracks;")
             genre[GENRE_TOT_TRACKS] = row[0].to_i
             genre[GENRE_TOT_TIME] = row[1].to_i
-            row = CDSDB.get_first_row("SELECT SUM(iplayed), SUM(iplaytime) FROM tracks WHERE iplayed > 0;")
+#             row = CDSDB.get_first_row("SELECT SUM(iplayed), SUM(iplaytime) FROM tracks WHERE iplayed > 0;")
+            row = CDSDB.get_first_row("SELECT SUM(iplayed), SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
             genre[GENRE_PLAYED_TRACKS] = row[0].to_i
             genre[GENRE_PLAYED_TIME] = row[1].to_i
             row = CDSDB.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia <> #{DBIntf::MEDIA_AUDIO_FILE}")
@@ -185,15 +191,13 @@ class Stats
             genre[GENRE_TOT_RECTIME] = row[1].to_i
         else
             sql = "SELECT COUNT(tracks.rtrack), SUM(tracks.iplaytime) FROM tracks
-                   INNER JOIN segments ON segments.rsegment=tracks.rsegment
-                   INNER JOIN records ON records.rrecord=segments.rrecord
+                   INNER JOIN records ON records.rrecord=tracks.rrecord
                    WHERE records.rgenre=#{genre[GENRE_REF]};"
             row = CDSDB.get_first_row(sql)
             genre[GENRE_TOT_TRACKS] = row[0].to_i
             genre[GENRE_TOT_TIME] = row[1].to_i
-            sql = "SELECT COUNT(tracks.rtrack), SUM(tracks.iplaytime) FROM tracks
-                   INNER JOIN segments ON segments.rsegment=tracks.rsegment
-                   INNER JOIN records ON records.rrecord=segments.rrecord
+            sql = "SELECT SUM(tracks.iplayed), SUM(tracks.iplaytime*tracks.iplayed) FROM tracks
+                   INNER JOIN records ON records.rrecord=tracks.rrecord
                    WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]};"
             row = CDSDB.get_first_row(sql)
             genre[GENRE_PLAYED_TRACKS] = row[0].to_i
@@ -440,6 +444,21 @@ class Stats
         }
         new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/tot_tracks], "", ""])
         new_row(["Tracks total", tot_tracks, "", tot_played, ""])
+        end_table
+    end
+    
+    def played_by_genre
+        new_table("Played tracks by genre", ["Genre", "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R", "Played time:R", "Percentage:R"])
+        @genres.each_with_index do |genre, i|
+            next if i == 0
+            new_row([genre[GENRE_NAME], genre[GENRE_TOT_TRACKS], "%6.2f" % [genre[GENRE_TOT_TRACKS]*100.0/@db_tots[DBTOTS_TRACKS]],
+                     genre[GENRE_PLAYED_TRACKS], "%6.2f" % [genre[GENRE_PLAYED_TRACKS]*100.0/@db_tots[DBTOTS_PLAYED]],
+                     genre[GENRE_PLAYED_TIME].to_day_length, "%6.2f" % [genre[GENRE_PLAYED_TIME]*100.0/@db_tots[DBTOTS_PPTIME]] ])
+        end
+        genre = @genres[0]
+        new_row(["Total", genre[GENRE_TOT_TRACKS], "%6.2f" % [genre[GENRE_TOT_TRACKS]*100.0/@db_tots[DBTOTS_TRACKS]],
+                 genre[GENRE_PLAYED_TRACKS], "%6.2f" % [genre[GENRE_PLAYED_TRACKS]*100.0/@db_tots[DBTOTS_PLAYED]],
+                 genre[GENRE_PLAYED_TIME].to_day_length, "%6.2f" % [genre[GENRE_PLAYED_TIME]*100.0/@db_tots[DBTOTS_PPTIME]] ])
         end_table
     end
 
