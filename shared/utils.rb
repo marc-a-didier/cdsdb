@@ -215,7 +215,7 @@ p rseed
         i = val = 0
         sysvals = `head -c #{how_many*4} /dev/random`
         sysvals.each_byte { |b|
-            val += b << (i*8)
+            val |= b << (i*8)
             if i == 3
                 values << (val % max_value)
                 i = val = 0
@@ -226,6 +226,43 @@ p rseed
         return values
     end
 
+    # Tries to get random numbers from a file of raw bytes downloaded from random.org
+    # Reads the how_many*4 last bytes from the file then truncates it and returns an 
+    # array of values that are max_value at most.
+    # If there's no file or it's too short, use reading from /dev/random as a fallback.
+    def self.rnd_from_file(max_value, how_many)
+        nbytes = how_many*4
+        file_name = ENV['HOME']+"/Downloads/randomorg.bin"
+        unless File.exists?(file_name)
+            TRACE.debug("Random file doesn't exist, will use /dev/random".red)
+            return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value)
+        end
+        size = File.size(file_name)
+        if size < nbytes
+            TRACE.debug("Random file too short, will use /dev/random".red)
+            return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value)
+        else
+            str = String.new.force_encoding(Encoding::ASCII_8BIT)
+            str = IO.binread(file_name, nbytes, size-nbytes)
+            File.truncate(file_name, size-nbytes)
+            return self.gen_from_str(str, max_value)
+        end
+    end
+    
+    def self.gen_from_str(str, max_value)
+        values = []
+        i = val = 0
+        str.each_byte { |b|
+            val |= b << (i*8)
+            if i == 3
+                values << (val % max_value)
+                i = val = 0
+            else
+                i += 1
+            end
+        }
+        return values
+    end
 
     #
     # Tags a music file with data provided by the track_info class

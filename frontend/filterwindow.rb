@@ -200,7 +200,7 @@ class FilterWindow < TopWindow
         @tvs.each_with_index { |tv, i| wc += add_tv_clause(tv.model, COND_FIELDS[i]) if @mc.glade[EXP_FILEDS[i]].expanded? }
 
         wc += " " unless wc.empty?
-puts wc
+# puts wc
         return wc
     end
 
@@ -230,8 +230,9 @@ puts wc
         wc = " WHERE "+wc[5..-1] unless wc.empty?
         sql = "SELECT tracks.rtrack FROM tracks " \
               "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
-puts sql
+
         f = File.new(CFG.rsrc_dir+"genpl.txt", "w")
+        f.puts("SQL: #{sql}\n\n")
 
         max_played = 0
         tracks = []
@@ -247,7 +248,11 @@ puts sql
         f.puts
 
         # Filter was too restrictive, no match, exit silently
-        return if tracks.size == 0
+        if tracks.size == 0
+            f.puts("No tracks found to match the filter.")
+            f.close
+            return
+        end
 
         #
         max_tracks = @mc.glade[FLT_SPIN_PLENTRIES].value.round
@@ -259,9 +264,11 @@ puts sql
         # The array is ready. If random selection, shuffle it else compute and sort by weight
         if @mc.glade[FLT_CMB_SELECTBY].active == 0 # Random selection
 #             Utils::init_random_generator
-puts "start get rnd"
-            rvalues = Utils::get_randoms(tracks.size, max_tracks)
-p rvalues
+# puts "start get rnd"
+#             rvalues = Utils::get_randoms(tracks.size, max_tracks)
+            rvalues = Utils::rnd_from_file(tracks.size, max_tracks)
+# p rvalues
+            f << "\nRandom values: " << rvalues.to_s << "\n"
             tmp = []
             rvalues.each { |rnd| tmp << tracks[rnd] }
             tracks = tmp
