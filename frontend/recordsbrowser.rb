@@ -243,11 +243,15 @@ p row
     end
 
     def on_rec_edit
+        rgenre = @reclnk.record.rgenre
         if DBEditor.new(@mc, @tv.selection.selected.parent ? @reclnk.segment : @reclnk.record).run == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
-#             @tv.selection.selected[RTV_DBLNK].reload_segment_cache.reload_record_cache
-            # update_ui_handlers(@tv.selection.selected)
             @reclnk.to_widgets(!@tv.selection.selected.parent)
+            # If genre changed in editor, reset the audio status to unknown to force reload
+            if @reclnk.record.rgenre != rgenre
+                @mc.get_tracks_list.each { |dblink| dblink.set_audio_status(AudioLink::UNKNOWN) }
+                @mc.record_changed
+            end
         end
     end
 
@@ -287,6 +291,7 @@ p row
         uilink = @mc.get_track_uilink(0).clone
         return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
 
+# p uilink.full_dir        
         default_dir = uilink.playable? ? uilink.full_dir : CFG.rip_dir
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
@@ -296,7 +301,6 @@ p row
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
             elsif dir.match(CFG.rip_dir)
                 # Set the ripped date only if processing files from the rip directory.
-#                 DBUtils::client_sql("UPDATE records SET idateripped=#{Time::now.to_i} WHERE rrecord=#{@reclnk.record.rrecord};")
                 @reclnk.record.idateripped = Time::now.to_i
                 @reclnk.record.sql_update
             end
