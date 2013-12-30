@@ -105,7 +105,7 @@ class Gtk::TreeView
 
   def button_press_event(event)
     return false if event.button == 3
-    return false if event.window != self.bin_window
+#     return false if event.window != self.bin_window
     return false if @context.events.include?(event)
 
     if @context.pending_event?
