@@ -158,7 +158,7 @@ class MainWindow < TopWindow
         @glade[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
         @glade[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
         @glade[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
-        @glade[MM_TOOLS_RATINGSTEST].signal_connect(:activate) { Utils.test_ratings }
+        @glade[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
         @glade[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
 
         @glade[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
@@ -366,6 +366,10 @@ TRACE.debug("*** save memos called")
         dlg.destroy
     end
 
+    def dump_cacheinfo
+        DBCACHE.dump_infos
+        IMG_CACHE.dump_infos
+    end
 
     #
     # Download database from the server
