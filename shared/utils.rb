@@ -230,32 +230,35 @@ p rseed
     # Reads the how_many*4 last bytes from the file then truncates it and returns an 
     # array of values that are max_value at most.
     # If there's no file or it's too short, use reading from /dev/random as a fallback.
-    def self.rnd_from_file(max_value, how_many)
-        nbytes = how_many*4
+    def self.rnd_from_file(max_value, how_many, debug_file)
+        wsize = max_value < 16000 ? 2 : 4
+        nbytes = how_many*wsize
         file_name = ENV['HOME']+"/Downloads/randomorg.bin"
         unless File.exists?(file_name)
             TRACE.debug("Random file doesn't exist, will use /dev/random".red)
-            return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value)
+            return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value, wsize, debug_file)
         end
         size = File.size(file_name)
         if size < nbytes
             TRACE.debug("Random file too short, will use /dev/random".red)
-            return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value)
+            return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value, wsize, debug_file)
         else
             str = String.new.force_encoding(Encoding::ASCII_8BIT)
             str = IO.binread(file_name, nbytes, size-nbytes)
             File.truncate(file_name, size-nbytes)
-            return self.gen_from_str(str, max_value)
+            return self.gen_from_str(str, max_value, wsize, debug_file)
         end
     end
     
-    def self.gen_from_str(str, max_value)
+    def self.gen_from_str(str, max_value, wsize, debug_file)
         values = []
         i = val = 0
         str.each_byte { |b|
+            debug_file << "%02x " % b             
             val |= b << (i*8)
-            if i == 3
+            if i == wsize-1
                 values << (val % max_value)
+                debug_file << "%08x" % val << " mod " << max_value << " -> " << values.last << "\n"             
                 i = val = 0
             else
                 i += 1
