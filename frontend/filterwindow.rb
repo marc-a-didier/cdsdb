@@ -10,6 +10,9 @@ class FilterWindow < TopWindow
     TRACK_TITLE     = 4 # Not used, only for debug. To remove asap
     #TRACK_SELECTION = 5
 
+    DEST_PLIST  = 0
+    DEST_PQUEUE = 1
+    
     TITLES = { "genres" => "Genre", "origins" => "Country", "medias" => "Medium" } # "labels" => "Label"
     COND_FIELDS = ["records.rgenre", "artists.rorigin", "records.rmedia"] # Fields to sort on
     EXP_FILEDS = [FLT_EXP_GENRES, FLT_EXP_ORIGINS, FLT_EXP_MEDIAS]
@@ -24,7 +27,8 @@ class FilterWindow < TopWindow
 #       end
         @mc.glade[FLT_BTN_CLEAR].signal_connect(:clicked)    { @mc.filter_receiver.set_filter("", false) }
         @mc.glade[FLT_BTN_SAVE].signal_connect(:clicked)     { save_filter }
-        @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked)    { generate_play_list }
+        @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked)    { generate_play_list(DEST_PLIST) }
+        @mc.glade[FLT_BTN_PQGEN].signal_connect(:clicked)    { generate_play_list(DEST_PQUEUE) }
 
         @mc.glade[FLT_POPITM_NEW].signal_connect(:activate)    { new_filter }
         @mc.glade[FLT_POPITM_DELETE].signal_connect(:activate) { delete_filter }
@@ -225,7 +229,7 @@ class FilterWindow < TopWindow
     #
     # Generate play list from filter
     #
-    def generate_play_list
+    def generate_play_list(destination)
         wc = generate_filter
         wc = " WHERE "+wc[5..-1] unless wc.empty?
         sql = "SELECT tracks.rtrack FROM tracks " \
@@ -266,9 +270,9 @@ class FilterWindow < TopWindow
 #             Utils::init_random_generator
 # puts "start get rnd"
 #             rvalues = Utils::get_randoms(tracks.size, max_tracks)
-            rvalues = Utils::rnd_from_file(tracks.size, max_tracks)
+            rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
 # p rvalues
-            f << "\nRandom values: " << rvalues.to_s << "\n"
+#             f << "\nRandom values: " << rvalues.to_s << "\n"
             tmp = []
             rvalues.each { |rnd| tmp << tracks[rnd] }
             tracks = tmp
@@ -331,18 +335,24 @@ class FilterWindow < TopWindow
 
         f.puts; f.puts
 
-        rplist = DBUtils::get_last_id("plist")+1
-        CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, \
-                                    #{Time.now.to_i}, #{Time.now.to_i});")
-
-        rpltrack = DBUtils::get_last_id("pltrack")+1
+        links = []                                                                         
+        if destination == DEST_PLIST                                                                          
+            rplist = DBUtils::get_last_id("plist")+1
+            CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, #{Time.now.to_i}, #{Time.now.to_i});")
+            rpltrack = DBUtils::get_last_id("pltrack")+1
+        end
+                                                                                 
         tracks.each_with_index { |track, i|
             f << "i="<< i << "  Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
-            CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track[TRACK_RTRACK]}, #{i+1});")
+            if destination == DEST_PLIST                   
+                CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track[TRACK_RTRACK]}, #{i+1});")
+            else
+                links << UILink.new.set_track_ref(track[TRACK_RTRACK])                
+            end
         }
         f.close
 
-        @mc.reload_plists
+        destination == DEST_PLIST ? @mc.reload_plists : @mc.pqueue.enqueue(links)
     end
 
 end

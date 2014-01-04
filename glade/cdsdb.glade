@@ -1420,7 +1420,7 @@
                                         <property name="can_focus">False</property>
                                         <child>
                                           <object class="GtkButton" id="flt_btn_plgen">
-                                            <property name="label" translatable="yes">Generate</property>
+                                            <property name="label" translatable="yes">Generate Play List</property>
                                             <property name="use_action_appearance">False</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
@@ -1430,6 +1430,20 @@
                                             <property name="expand">False</property>
                                             <property name="fill">False</property>
                                             <property name="position">0</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkButton" id="flt_btn_pqgen">
+                                            <property name="label" translatable="yes">Generate Play Queue</property>
+                                            <property name="use_action_appearance">False</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">False</property>
+                                            <property name="position">1</property>
                                           </packing>
                                         </child>
                                       </object>
@@ -2129,11 +2143,11 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="mm_tools_testratings">
+                      <object class="GtkMenuItem" id="mm_tools_cacheinfo">
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Ratings test</property>
+                        <property name="label" translatable="yes">Cache info to console</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>

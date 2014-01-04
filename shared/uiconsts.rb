@@ -155,7 +155,7 @@ module UIConsts
     MM_TOOLS_SYNCRES         = "mm_tools_syncres"
     MM_TOOLS_EXPORTDB        = "mm_tools_exportdb"
     MM_TOOLS_GENREORDER      = "mm_tools_genreorder"
-    MM_TOOLS_RATINGSTEST     = "mm_tools_testratings"
+    MM_TOOLS_CACHEINFO       = "mm_tools_cacheinfo"
     MM_TOOLS_STATS           = "mm_tools_stats"
 
     # About menu
@@ -556,6 +556,7 @@ module UIConsts
     FLT_CMB_SELECTBY      = "flt_cmb_selectby"
     FLT_HSCL_ADJSELSTART  = "flt_hscl_adjselstart"
     FLT_BTN_PLGEN         = "flt_btn_plgen"
+    FLT_BTN_PQGEN         = "flt_btn_pqgen"
 
     FLT_VBOX_EXPANDERS    = "flt_vbox_expanders"
 
