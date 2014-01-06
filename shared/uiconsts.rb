@@ -557,6 +557,7 @@ module UIConsts
     FLT_HSCL_ADJSELSTART  = "flt_hscl_adjselstart"
     FLT_BTN_PLGEN         = "flt_btn_plgen"
     FLT_BTN_PQGEN         = "flt_btn_pqgen"
+    FLT_CHK_MUSICFILE     = "flt_chk_musicfile"
 
     FLT_VBOX_EXPANDERS    = "flt_vbox_expanders"
 
