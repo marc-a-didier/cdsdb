@@ -78,6 +78,10 @@ class AudioLink < DBCacheLink
     end
 
     def setup_audio_file
+        # Must reset @audio_file to empty if status is unknown because then
+        # audio status cache may have been reset when toggling conneted/local mode.
+        @audio_file.clear if audio_status == UNKNOWN
+        
         return audio_status unless @audio_file.empty?
 
         build_audio_file_name
