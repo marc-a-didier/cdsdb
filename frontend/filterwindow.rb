@@ -3,13 +3,14 @@ class FilterWindow < TopWindow
 
     include UIConsts
 
-    TRACK_WEIGHT    = 0 # Global computed weight
-    TRACK_RTRACK    = 1 # DB ref
-    TRACK_PLAYED    = 2 # Played weight in % in regard of the most played track of the selection
-    TRACK_RATING    = 3 # Rating weight in %
-    TRACK_TITLE     = 4 # Not used, only for debug. To remove asap
-    #TRACK_SELECTION = 5
-
+    # Struct that keeps the infos needed to compute a weight or to sort on given criteria
+    #     weight:  Global computed weight
+    #     rtrack:  DB ref
+    #     played:  Played weight in % in regard of the most played track of the selection
+    #     rating:  Rating weight in %
+    #     title:   Not used, only for debug.
+    TrackData = Struct.new(:weight, :played, :rating, :rtrack, :title)
+    
     DEST_PLIST  = 0
     DEST_PQUEUE = 1
     
@@ -21,14 +22,10 @@ class FilterWindow < TopWindow
         super(mc, FILTER_WINDOW)
 
         @mc.glade[FLT_BTN_APPLY].signal_connect(:clicked) { @mc.filter_receiver.set_filter(generate_filter, @must_join_logtracks) }
-#         @mc.glade[FLT_BTN_APPLY].signal_connect(:clicked) do
-#           wins = Gdk::Window::toplevels
-#           wins.each { |win| puts win.id }
-#       end
-        @mc.glade[FLT_BTN_CLEAR].signal_connect(:clicked)    { @mc.filter_receiver.set_filter("", false) }
-        @mc.glade[FLT_BTN_SAVE].signal_connect(:clicked)     { save_filter }
-        @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked)    { generate_play_list(DEST_PLIST) }
-        @mc.glade[FLT_BTN_PQGEN].signal_connect(:clicked)    { generate_play_list(DEST_PQUEUE) }
+        @mc.glade[FLT_BTN_CLEAR].signal_connect(:clicked) { @mc.filter_receiver.set_filter("", false) }
+        @mc.glade[FLT_BTN_SAVE].signal_connect(:clicked)  { save_filter }
+        @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked) { generate_play_list(DEST_PLIST) }
+        @mc.glade[FLT_BTN_PQGEN].signal_connect(:clicked) { generate_play_list(DEST_PQUEUE) }
 
         @mc.glade[FLT_POPITM_NEW].signal_connect(:activate)    { new_filter }
         @mc.glade[FLT_POPITM_DELETE].signal_connect(:activate) { delete_filter }
@@ -47,7 +44,6 @@ class FilterWindow < TopWindow
 
         @tvs = []
         TITLES.each_key { |key| @tvs << setup_tv(key) }
-        #["genres", "origins", "medias"].each { |table| @tvs << setup_tv(table) }
 
         edrenderer = Gtk::CellRendererText.new()
         edrenderer.editable = true
@@ -243,14 +239,14 @@ class FilterWindow < TopWindow
         dblink = AudioLink.new
         CDSDB.execute(sql) do |row|
             # Skip tracks which aren't ripped
-#             next if dblink.reset.set_track_ref(row[0]).setup_audio_file == AudioLink::NOT_FOUND
             dblink.reset.set_track_ref(row[0])
             if @mc.glade[FLT_CHK_MUSICFILE].active?
                 next if dblink.setup_audio_file == AudioLink::NOT_FOUND
             end
 
             max_played = dblink.track.iplayed if dblink.track.iplayed > max_played
-            tracks << [0.0, row[0], dblink.track.iplayed.to_f, dblink.track.irating.to_f/6.0*100.0, dblink.track.stitle]
+            
+            tracks << TrackData.new(0.0, dblink.track.iplayed.to_f, dblink.track.irating.to_f/6.0*100.0, row[0], dblink.track.stitle)
             f << row[0] << " - " << dblink.track.iplayed << " - " << dblink.track.irating << " - " << dblink.track.stitle << "\n"
         end
         f.puts
@@ -274,24 +270,23 @@ class FilterWindow < TopWindow
 #             Utils::init_random_generator
 # puts "start get rnd"
 #             rvalues = Utils::get_randoms(tracks.size, max_tracks)
+            tracks.shuffle! # Added to add randomness!!!
             rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
 # p rvalues
 #             f << "\nRandom values: " << rvalues.to_s << "\n"
             tmp = []
             rvalues.each { |rnd| tmp << tracks[rnd] }
             tracks = tmp
-# #             tmp.each_with_index { |track, index| tracks[index] = tmp[index] }
 #             tracks.shuffle!
         else
             tracks.each { |track|
-                track[TRACK_PLAYED]  = track[TRACK_PLAYED]/max_played*100.0 if max_played > 0
-                track[TRACK_WEIGHT] += track[TRACK_PLAYED]*pcweight # if pcweight > 0.0
-                track[TRACK_WEIGHT] += track[TRACK_RATING]*rtweight # if rtweight > 0.0
-                f << track[TRACK_RTRACK] << " - pcp: " << track[TRACK_PLAYED] << " - rtp: " << track[TRACK_RATING] \
-                  << " - Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
+                track.played = track.played/max_played*100.0 if max_played > 0          
+                track.weight = track.played*pcweight+track.rating*rtweight        
+                f << track.rtrack << " - pcp: " << track.played << " - rtp: " << track.rating \
+                  << " - Weight: " << track.weight << " for " << track.title << "\n"
             }
 
-            tracks.sort! { |t1, t2| t2[TRACK_WEIGHT] <=> t1[TRACK_WEIGHT] } # reverse sort, most weighted first
+            tracks.sort! { |t1, t2| t2.weight <=> t1.weight } # reverse sort, most weighted first
 
             # Manage the starting offset in results if set
             start_offset = 0
@@ -316,21 +311,21 @@ class FilterWindow < TopWindow
                 stracks = []
                 ttracks = []
                 count = 0
-                curr_weight = tracks[0][TRACK_WEIGHT]
+                curr_weight = tracks[0].weight
                 tracks.each { |track|
-                    if curr_weight != track[TRACK_WEIGHT]
+                    if curr_weight != track.weight
                         ttracks.shuffle!
                         stracks += ttracks
                         ttracks.clear
                         break if count >= max_tracks
-                        curr_weight = track[TRACK_WEIGHT]
+                        curr_weight = track.weight
                     end
                     count += 1
                     ttracks << track
                 }
 
                 f << "\n" << stracks.size << " tracks selected until weight " << curr_weight << "\n"
-                stracks.each { |track| f << track[TRACK_WEIGHT] << "\n" }
+                stracks.each { |track| f << track.weight << "\n" }
                 tracks = stracks
             end
         end
@@ -347,11 +342,11 @@ class FilterWindow < TopWindow
         end
                                                                                  
         tracks.each_with_index { |track, i|
-            f << "i="<< i << "  Weight: " << track[TRACK_WEIGHT] << " for " << track[TRACK_TITLE] << "\n"
+            f << "i="<< i << "  Weight: " << track.weight << " for " << track.title << "\n"
             if destination == DEST_PLIST                   
-                CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track[TRACK_RTRACK]}, #{i+1});")
+                CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{i+1});")
             else
-                links << UILink.new.set_track_ref(track[TRACK_RTRACK])                
+                links << UILink.new.set_track_ref(track.rtrack)
             end
         }
         f.close
