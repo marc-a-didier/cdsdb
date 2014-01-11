@@ -1,4 +1,7 @@
 
+# Default random numbers file name
+RANDOM_FILE = ENV['HOME']+"/Downloads/randomorg.bin"
+
 #
 # Structure returned by check_audio_file
 #
@@ -199,13 +202,16 @@ class Utils
     end
 
 
+    # Misc methods to try to get some randomness as by experience every
+    # random based run is almost predictible...
+    
     #
     # Another attempt to get more randomness...
     #
     def Utils::init_random_generator
         sysrand = `head -c 8 /dev/random`
         i = rseed = 0
-        sysrand.each_byte { |c| rseed += c << i*8; i += 1 }
+        sysrand.each_byte { |c| rseed |= c << i*8; i += 1 }
 p rseed
         srand(rseed)
     end
@@ -226,6 +232,15 @@ p rseed
         return values
     end
 
+    # Builds a string from file containing randome bytes from random.org
+    def self.str_from_rnd_file(nbytes)
+        size = File.size(RANDOM_FILE)
+        str = String.new.force_encoding(Encoding::ASCII_8BIT)
+        str = IO.binread(RANDOM_FILE, nbytes, size-nbytes)
+        File.truncate(RANDOM_FILE, size-nbytes)
+        return str
+    end
+    
     # Tries to get random numbers from a file of raw bytes downloaded from random.org
     # Reads the how_many*4 last bytes from the file then truncates it and returns an 
     # array of values that are max_value at most.
@@ -243,13 +258,16 @@ p rseed
             TRACE.debug("Random file too short, will use /dev/random".red)
             return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value, wsize, debug_file)
         else
-            str = String.new.force_encoding(Encoding::ASCII_8BIT)
-            str = IO.binread(file_name, nbytes, size-nbytes)
-            File.truncate(file_name, size-nbytes)
-            return self.gen_from_str(str, max_value, wsize, debug_file)
+#             str = String.new.force_encoding(Encoding::ASCII_8BIT)
+#             str = IO.binread(file_name, nbytes, size-nbytes)
+#             File.truncate(file_name, size-nbytes)
+#             return self.gen_from_str(str, max_value, wsize, debug_file)
+            return self.gen_from_str(self.str_from_rnd_file(nbytes), max_value, wsize, debug_file)
         end
     end
     
+    # Builds an array of numeric values from bytes of a given string and applies a range
+    # of value by using modulo max value
     def self.gen_from_str(str, max_value, wsize, debug_file)
         values = []
         i = val = 0
@@ -265,6 +283,17 @@ p rseed
             end
         }
         return values
+    end
+    
+    # Builds a numeric from bytes taken from a string
+    def self.value_from_rnd_str(str, debug_file)
+        i = value = 0
+        str.each_byte { |b|
+            debug_file << "%02x " % b             
+            value |= b << (i*8)
+            i += 1
+        }
+        return value
     end
 
     #
