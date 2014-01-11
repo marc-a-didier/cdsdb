@@ -224,6 +224,7 @@ class ChartsWindow < TopWindow
                         WHERE tracks.iplayed > 0 }
                 group_by = "tracks.rtrack"
             when VIEW_RECORDS
+#                 field = "(COUNT(logtracks.rtrack)/COUNT(tracks.rtrack)) AS totplayed" if @count_type == COUNT_PLAYED
                 sql = "SELECT #{field}, records.rrecord, records.stitle, records.irecsymlink, artists.sname FROM tracks " \
                       "INNER JOIN records ON tracks.rrecord=records.rrecord " \
                       "INNER JOIN artists ON artists.rartist=records.rartist " \
