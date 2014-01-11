@@ -172,9 +172,9 @@ class FilterWindow < TopWindow
         end
         if @mc.glade[FLT_EXP_PLAYTIME].expanded?
             len = @mc.glade[FLT_SPIN_MINPTIMEM].value.round*60*1000+@mc.glade[FLT_SPIN_MINPTIMES].value.round*1000
-            wc += " AND tracks.iplaytime >= #{len}"
+            wc += " AND tracks.iplaytime >= #{len}" if len > 0
             len = @mc.glade[FLT_SPIN_MAXPTIMEM].value.round*60*1000+@mc.glade[FLT_SPIN_MAXPTIMES].value.round*1000
-            wc += " AND tracks.iplaytime <= #{len}"
+            wc += " AND tracks.iplaytime <= #{len}" if len > 0
         end
         if @mc.glade[FLT_EXP_PLAYDATES].expanded?
             from_date = @mc.glade[FLT_ENTRY_FROMDATE].text.to_date
@@ -277,7 +277,8 @@ class FilterWindow < TopWindow
             tmp = []
             rvalues.each { |rnd| tmp << tracks[rnd] }
             tracks = tmp
-#             tracks.shuffle!
+            # Looks like same bullshit as before...
+            # tracks.shuffle!(random: Utils.value_from_rnd_str(Utils.str_from_rnd_file(8), f))
         else
             tracks.each { |track|
                 track.played = track.played/max_played*100.0 if max_played > 0          
