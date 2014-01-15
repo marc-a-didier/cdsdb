@@ -199,16 +199,18 @@ class MasterController
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
 
-        host = Socket.gethostname if host.empty?
-
-        DBUtils.update_track_stats(uilink.track.rtrack, host)
-
-        # Update gui if the played track is currently selected.
-        # Dangerous if user is modifying the track panel!!!
-        uilink.reload_track_cache
-        @mw.trk_browser.update_infos
-
+        # Attempt to minimize time spent between tracks to have the smallest possible gap.
         Thread.new {
+            host = Socket.gethostname if host.empty?
+
+            DBUtils.update_track_stats(uilink.track.rtrack, host)
+
+            # Update gui if the played track is currently selected.
+            # Dangerous if user is modifying the track panel!!!
+            uilink.reload_track_cache
+            @mw.trk_browser.update_infos
+
+#         Thread.new {
             @charts.live_update(uilink) if CFG.live_charts_update? && @charts.window.visible?
 
             MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?

@@ -102,10 +102,12 @@ class PlayerWindow < TopWindow
             # The status cache prevent the file name to be reloaded when selection is changed
             # in the track browser. So, from now, we may receive an empty file name but the
             # status is valid. If audio link is OK, we just have to find the file name for the track.
-            if @player_data.uilink.audio_file.empty? #&& @player_data.uilink.playable?
-                @player_data.uilink.setup_audio_file
-                # @player_data.uilink.search_audio_file
-            end
+            
+            # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
+#             if @player_data.uilink.audio_file.empty? #&& @player_data.uilink.playable?
+#                 @player_data.uilink.setup_audio_file
+#                 # @player_data.uilink.search_audio_file
+#             end
 
             # Debug info
             info = @player_data.uilink.tags.nil? ? "[#{@player_data.uilink.track.rtrack}" : "[dropped"
@@ -121,15 +123,15 @@ class PlayerWindow < TopWindow
                 system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
             end
         else
+            reinit_player
+            @source.location = @player_data.uilink.audio_file
+            @playbin.play
+            setup_hscale
             @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = @player_data.uilink.html_track_title_no_track_num(false, " ")
             @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
             @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
             @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = true
             @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
-            reinit_player
-            @source.location = @player_data.uilink.audio_file
-            @playbin.play
-            setup_hscale
             if CFG.notifications?
                 file_name = @player_data.uilink.cover_file_name
                 system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{@player_data.uilink.html_track_title(true)}\"")
