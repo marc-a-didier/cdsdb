@@ -108,6 +108,7 @@ class AudioLink < DBCacheLink
     # Returns the status of for the file.
     # If a matching file is found, set the full name to the match.
     def search_audio_file
+TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
         Utils::AUDIO_EXTS.each { |ext|
             if File::exists?(@audio_file+ext)
                 @audio_file += ext

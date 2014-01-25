@@ -270,7 +270,7 @@ class FilterWindow < TopWindow
 #             Utils::init_random_generator
 # puts "start get rnd"
 #             rvalues = Utils::get_randoms(tracks.size, max_tracks)
-            tracks.shuffle! # Added to add randomness!!!
+            # tracks.shuffle! # Added to add randomness!!!
             rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
 # p rvalues
 #             f << "\nRandom values: " << rvalues.to_s << "\n"

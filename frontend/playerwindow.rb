@@ -104,10 +104,11 @@ class PlayerWindow < TopWindow
             # status is valid. If audio link is OK, we just have to find the file name for the track.
             
             # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
-#             if @player_data.uilink.audio_file.empty? #&& @player_data.uilink.playable?
-#                 @player_data.uilink.setup_audio_file
-#                 # @player_data.uilink.search_audio_file
-#             end
+            if @player_data.uilink.audio_file.empty? #&& @player_data.uilink.playable?
+                @player_data.uilink.setup_audio_file
+                # @player_data.uilink.search_audio_file
+TRACE.debug("Player audio file was empty!".red)
+            end
 
             # Debug info
             info = @player_data.uilink.tags.nil? ? "[#{@player_data.uilink.track.rtrack}" : "[dropped"
@@ -140,6 +141,7 @@ class PlayerWindow < TopWindow
     end
 
     def next_track(has_ended = false)
+        start = Time.now.to_f
         @player_data.owner.notify_played(@player_data) if @player_data
 
         @mc.notify_played(@player_data.uilink) if has_ended
@@ -147,6 +149,7 @@ class PlayerWindow < TopWindow
         @player_data = @mc.get_next_track(true)
 
         play_track
+        TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     def init_player

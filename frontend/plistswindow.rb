@@ -197,16 +197,14 @@ public
                 end
                 @pts.n_columns.times { |i| iter[i] = itr[i] }
                 @pts.remove(itr)
+                
+                renumber_tracks_list_store
+                @pt_changed = true
             end
         else
             @mc.send(call_back).each { |uilink|
                 add_to_plist(@current_pl.rplist, uilink.track.rtrack)
             }
-        end
-
-        if sender == "plist" # Have to renumber because of a reordering
-            renumber_tracks_list_store
-            @pt_changed = true
         end
 
         Gtk::Drag.finish(context, true, false, Time.now.to_i)

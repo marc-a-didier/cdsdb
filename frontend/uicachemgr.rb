@@ -272,8 +272,12 @@ class UILink < AudioLink
 
     def get_audio_file(emitter, tasks)
         # Try to find a local file if status is unknown
-        setup_audio_file if audio_status == AudioLink::UNKNOWN
-
+        setup_audio_file if audio_status == AudioLink::UNKNOWN || @audio_file.empty?
+#         if audio_status == AudioLink::UNKNOWN || @audio_file.empty?
+#             setup_audio_file 
+#             TRACE.debug("Setup audio called for track #{@rtrack.to_s.brown}")
+#         end
+        
         # If called from play list, check_on_server is true to get the file in on server
         if audio_status == AudioLink::NOT_FOUND && CFG.remote?
             if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0] != AudioLink::NOT_FOUND
