@@ -3,21 +3,6 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
-  <object class="GtkAdjustment" id="adjustment16">
-    <property name="upper">100</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-    <property name="page_size">10</property>
-  </object>
-  <object class="GtkToggleAction" id="mw_charts_action"/>
-  <object class="GtkToggleAction" id="mw_filter_action"/>
-  <object class="GtkAction" id="mw_memo_save_action"/>
-  <object class="GtkToggleAction" id="mw_memos_action"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_server_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkAdjustment" id="adjustment10">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -48,6 +33,21 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="adjustment16">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">10</property>
+  </object>
+  <object class="GtkToggleAction" id="mw_charts_action"/>
+  <object class="GtkToggleAction" id="mw_filter_action"/>
+  <object class="GtkAction" id="mw_memo_save_action"/>
+  <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_server_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkMenu" id="apm_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -3036,17 +3036,6 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="pl_mb_save">
-                        <property name="label">gtk-save</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                        <property name="accel_group">accelgroup1</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkImageMenuItem" id="pl_mb_delete">
                         <property name="label">gtk-delete</property>
                         <property name="use_action_appearance">False</property>
@@ -3359,17 +3348,6 @@
   <object class="GtkMenu" id="pm_pl">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <child>
-      <object class="GtkImageMenuItem" id="pm_pl_save">
-        <property name="label">gtk-save</property>
-        <property name="use_action_appearance">False</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <property name="accel_group">accelgroup1</property>
-      </object>
-    </child>
     <child>
       <object class="GtkImageMenuItem" id="pm_pl_add">
         <property name="label">gtk-add</property>

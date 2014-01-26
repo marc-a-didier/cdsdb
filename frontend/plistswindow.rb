@@ -10,6 +10,7 @@ private
     TT_RECORD = 5
     TT_LENGTH = 6
     TT_DATA   = 7 # Stores the cache
+    TT_IORDER = 8 # Stores iorder from db
 
     TDB_RPLTRACK = 0
     TDB_RPLIST   = 1
@@ -27,9 +28,6 @@ public
     def initialize(mc)
         super(mc, UIConsts::PLISTS_WINDOW)
 
-        @pt_changed = false # True if tracks play list has changed
-
-        @mc.glade[UIConsts::PM_PL_SAVE].signal_connect(:activate)          { save_plt if @pt_changed }
         @mc.glade[UIConsts::PM_PL_ADD].signal_connect(:activate)           { do_add }
         @mc.glade[UIConsts::PM_PL_DELETE].signal_connect(:activate)        { |widget| do_del(widget) }
         @mc.glade[UIConsts::PM_PL_INFOS].signal_connect(:activate)         { show_infos(true) }
@@ -44,10 +42,8 @@ public
         }
 
         @mc.glade[UIConsts::PL_MB_NEW].signal_connect(:activate)           { do_add }
-        @mc.glade[UIConsts::PL_MB_SAVE].signal_connect(:activate)          { save_plt if @pt_changed }
         #@mc.glade[UIConsts::PL_MB_DELETE].signal_connect(:activate) { do_del }
         @mc.glade[UIConsts::PL_MB_INFOS].signal_connect(:activate)         { show_infos(false) }
-#         @mc.glade[UIConsts::PL_MB_GENERATE].signal_connect(:activate)      { do_generate }
         @mc.glade[UIConsts::PL_MB_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
         @mc.glade[UIConsts::PL_MB_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
         @mc.glade[UIConsts::PL_MB_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
@@ -83,7 +79,7 @@ public
         @tvpl.signal_connect(:cursor_changed) { on_pl_change }
 
         @tvpt = @mc.glade[UIConsts::TV_PLTRACKS]
-        @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class)
+        @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class, Integer)
 
         ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index { |name, i|
             @tvpt.append_column(Gtk::TreeViewColumn.new(name, trk_renderer, :text => i))
@@ -187,19 +183,26 @@ public
             # Won't work in case of multi-selection
             itr = selected_track
             if itr
-                r = @tvpt.get_dest_row(x, y)
+                r = @tvpt.get_dest_row(x, y) # Returns [path, position]
                 if r.nil?
                     iter = @pts.append
+                    new_iorder = @pts.get_iter((iter.path.to_s.to_i-1).to_s)[TT_IORDER]+1024
+puts("new=#{new_iorder}")                    
                 else
                     pos = r[0].to_s.to_i
                     pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
                     iter = @pts.insert(pos)
+                    prev = pos == 0 ? nil : @pts.get_iter((pos-1).to_s)
+                    succ = @pts.get_iter((pos+1).to_s) # succ can't be nil, handled by r.nil? test
+                    new_iorder = prev.nil? ? succ[TT_IORDER]/2 : (succ[TT_IORDER]+prev[TT_IORDER])/2
+p new_iorder                    
                 end
                 @pts.n_columns.times { |i| iter[i] = itr[i] }
                 @pts.remove(itr)
+                iter[TT_IORDER] = new_iorder
+                exec_sql("UPDATE pltracks SET iorder=#{new_iorder} WHERE rpltrack=#{iter[0]};")
                 
                 renumber_tracks_list_store
-                @pt_changed = true
             end
         else
             @mc.send(call_back).each { |uilink|
@@ -244,12 +247,6 @@ public
             @tracks += 1
             @ttime += iter[TT_DATA].track.iplaytime
         }
-#         CDSDB.execute(%Q{SELECT COUNT(pltracks.rtrack), SUM(tracks.iplaytime) FROM pltracks
-#                                       LEFT OUTER JOIN tracks ON pltracks.rtrack = tracks.rtrack
-#                                       WHERE rplist=#{@current_pl.rplist}}) do |row|
-#             @tracks = row[0].to_i
-#             @ttime = row[1].to_i
-#         end
         @current_pl.rplist == @playing_pl ? update_tracks_label : plist_infos
     end
 
@@ -344,9 +341,6 @@ public
     #
 
     def do_check_orphans
-        p CDSDB.get_first_value("SELECT COUNT(rtrack) FROM pltracks where rplist=8;")
-        p CDSDB.get_first_value("SELECT COUNT(DISTINCT(rtrack)) FROM pltracks where rplist=8;")
-        return
         @pts.each do |model, path, iter|
             row = CDSDB.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_DATA].track.rtrack};")
             p iter if row.nil?
@@ -360,7 +354,6 @@ public
 
     def on_pl_change
         return if @tvpl.selection.selected.nil?
-        ask_save_if_changed
         reset_player_track
         @current_pl.ref_load(@tvpl.selection.selected[0])
         update_tvpt
@@ -373,14 +366,6 @@ public
         @tvpl.selection.selected[1] = new_text
     end
 
-    def save_plt
-        sql = ""
-        @pts.each { |model, path, iter| sql << "UPDATE pltracks SET iorder=#{iter[1]} WHERE rpltrack=#{iter[0]};\n" }
-        local? ? DBUtils.exec_local_batch(sql, Socket.gethostname) : DBUtils.exec_batch(sql, Socket.gethostname)
-        exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{@current_pl.rplist};")
-        @pt_changed = false
-    end
-
     def do_add
         exec_sql(%{INSERT INTO plists VALUES (#{DBUtils::get_last_id('plist')+1}, 'New Play List', 0, #{Time.now.to_i}, 0);})
         update_tvpl
@@ -388,18 +373,7 @@ public
 
     def do_del(widget)
         # Check if the add item is sensitive to determinate if the popup is in the play lists or tracks
-#         pltracks = []
         unless @mc.glade[UIConsts::PM_PL_ADD].sensitive?
-#             @tvpt.selection.selected_each { |model, path, iter| pltracks << iter[0] }
-#             pltracks.each { |rpltrack|
-#                 @pts.each { |model, path, iter|
-#                     next if iter[0] != rpltrack
-#                     exec_sql("DELETE FROM pltracks WHERE rpltrack=#{rpltrack};")
-#                     @remaining_time -= iter[TT_DATA].track.iplaytime if @curr_track != -1 && path.to_s.to_i > @curr_track
-#                     @pts.remove(iter)
-#                     break
-#                 }
-#             }
             iters = []
             sql = "DELETE FROM pltracks WHERE rpltrack IN ("
             @tvpt.selection.selected_each { |model, path, iter| sql += iter[0].to_s+","; iters << iter }
@@ -415,7 +389,6 @@ public
                 end
                 @pts.remove(iter)
             }
-            do_renumber
             renumber_tracks_list_store
             update_tracks_time_infos
         else
@@ -589,11 +562,14 @@ public
 
         # The cache mechanism slows the things a bit down when a play list
         # is loaded for the first time
+        order = 0
         CDSDB.execute(
             "SELECT * FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
+                order += 1
                 iter = @pts.append
                 iter[TT_REF]   = row[TDB_RPLTRACK]
-                iter[TT_ORDER] = row[TDB_IORDER]
+                iter[TT_ORDER] = iter.path.to_s.to_i
+                iter[TT_IORDER] = row[TDB_IORDER]
                 iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
                 iter[TT_TRACK] = iter[TT_DATA].track.iorder
                 if iter[TT_DATA].segment.stitle.empty?
@@ -607,18 +583,6 @@ public
         end
         update_tracks_time_infos
         @tvpt.columns_autosize
-    end
-
-    def ask_save_if_changed
-        if @pt_changed == true
-            save_plt if UIUtils::get_response("Play list has been modified! Save changes?") == Gtk::Dialog::RESPONSE_OK
-            @pt_changed = false
-        end
-    end
-
-    def hide
-        ask_save_if_changed
-        super
     end
 
     def show

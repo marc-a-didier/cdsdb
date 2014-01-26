@@ -298,7 +298,6 @@ module UIConsts
     #
     PLISTS_WINDOW       = "plists_window"
     PM_PL               = "pm_pl"
-    PM_PL_SAVE          = "pm_pl_save"
     PM_PL_ADD           = "pm_pl_add"
     PM_PL_DELETE        = "pm_pl_delete"
     PM_PL_INFOS         = "pm_pl_infos"
@@ -311,7 +310,6 @@ module UIConsts
     PM_PL_SHOWINBROWSER = "pm_pl_showinbrowser"
 
     PL_MB_NEW           = "pl_mb_new"
-    PL_MB_SAVE          = "pl_mb_save"
     PL_MB_DELETE        = "pl_mb_delete"
     PL_MB_INFOS         = "pl_mb_infos"
     PL_MB_EXPORT_XSPF   = "pl_mb_export_xspf"

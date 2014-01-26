@@ -98,11 +98,11 @@ class DBUtils
 
     # This method is useful ONLY when tracks are removed, otherwise it doesn't make sense.
     def self.renumber_play_list(rplist)
-        i = 1
+        i = 1024
         sql = ""
         CDSDB.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) { |row|
             sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
-            i += 1
+            i += 1024
         }
         CDSDB.transaction { |db| db.execute_batch(sql) }
         self.log_exec("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
