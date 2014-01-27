@@ -151,6 +151,18 @@ class Numeric
     end
 end
 
+
+class MyFormatter < REXML::Formatters::Pretty
+
+    def initialize
+        super
+        @compact = true
+        @width = 2048
+    end
+
+end
+
+
 class Utils
 
     # Returned values by audio_file_exists
