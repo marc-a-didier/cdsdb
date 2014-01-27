@@ -562,13 +562,11 @@ p new_iorder
 
         # The cache mechanism slows the things a bit down when a play list
         # is loaded for the first time
-        order = 0
         CDSDB.execute(
             "SELECT * FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
-                order += 1
                 iter = @pts.append
                 iter[TT_REF]   = row[TDB_RPLTRACK]
-                iter[TT_ORDER] = iter.path.to_s.to_i
+                iter[TT_ORDER] = iter.path.to_s.to_i+1
                 iter[TT_IORDER] = row[TDB_IORDER]
                 iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
                 iter[TT_TRACK] = iter[TT_DATA].track.iorder
