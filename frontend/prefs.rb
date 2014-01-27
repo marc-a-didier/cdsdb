@@ -17,7 +17,7 @@ class Prefs
     end
 
     def save
-        File.open(@file_name, "w") { |file| REXML::Formatters::Pretty.new.write(@xdoc, file) }
+        File.open(@file_name, "w") { |file| MyFormatter.new.write(@xdoc, file) }
     end
 
 
