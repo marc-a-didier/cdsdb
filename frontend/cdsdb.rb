@@ -236,6 +236,10 @@ require './my_rr_lib'
 # TODO: Dans les charts, faire une vue pour les records avec le nombre de morceaux joues divise par
 #       le nombre du titre du disque?
 
+# TODO: A refaire au plus vite: virer le generic browser et mettre les methodes dans 
+#       multi_drag_treeview ou une classe descendante, meme mecanisme pour topwindow.
+#       Refaire les browser qui descendent de generic browser et virer les tv & model,
+#       c'est debile. Utiliser model a la place et virer le treeview.
 
 
 # Peu realistes:
