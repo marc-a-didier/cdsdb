@@ -438,70 +438,44 @@ p new_iorder
     end
 
     def do_export_xspf
-
-        # La version REXML marche pas parce que ce putain de moteur de merde fout un lf dans le tag location!!!
-#         xdoc = REXML::Document.new << REXML::XMLDecl.new("1.0", "UTF-8", "no")
-#         xdoc.add_element("playlist", {"version"=>"1", "xmlns"=>"http://xspf.org/ns/0/"})
-#         xdoc.root.add_element("creator").text = "CDsDB #{Cdsdb::VERSION}"
-#         tracklist = xdoc.root.add_element("trackList")
-#         CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@tvpl.selection.selected[0]} ORDER BY iorder;") do |row|
-#             track_info = Utils::get_track_info(row[0].to_i)
-#             audio_file = Utils::search_real_audio_file(track_info)
-#             unless audio_file.empty?
-#                 track = REXML::Element.new("track")
-#                 track.add_element("location").text = URI::escape("file://"+audio_file)
-#                 tracklist << track
-#             end
-#         end
-#         fname = CFG.music_dir+"Playlists/"+@tvpl.selection.selected[1]+".cdsdb.xspf"
-#         File.open(fname, "w") { |file| REXML::Formatters::Pretty.new.write_document(xdoc, file) }
-
-        track_infos = TrackInfos.new
-
-        xdoc = XML::Document.new
-        xdoc.root = XML::Node.new("playlist")
-        xdoc.root["version"] = "1";
-        xdoc.root["xmlns"] = "http://xspf.org/ns/0/"
-        xdoc.root << tracklist = XML::Node.new("trackList")
-        CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
-            track_infos.get_track_infos(row[0])
-            audio_file = Utils::audio_file_exists(track_infos).file_name
-            unless audio_file.empty?
-                track = XML::Node.new("track")
-                location = XML::Node.new("location") << URI::escape("file://"+audio_file)
-                track << location
-                tracklist << track
-            end
-        end
-        #print xdoc.to_s
+        xdoc = REXML::Document.new << REXML::XMLDecl.new("1.0", "UTF-8", "no")
+        
+        xdoc.add_element("playlist", {"version"=>"1", "xmlns"=>"http://xspf.org/ns/0/"})
+        xdoc.root.add_element("creator").text = "CDsDB #{Cdsdb::VERSION}"
+        tracklist = xdoc.root.add_element("trackList")
+        
+        @pts.each { |model, path, iter|
+            next if iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
+            track = REXML::Element.new("track")
+            # In xspf specs, file name must be URI style formatted.
+            track.add_element("location").text = URI::escape("file://"+iter[TT_DATA].audio_file)
+            tracklist << track
+        }
+        
         fname = CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.xspf"
-        xdoc.save(fname, :indent => true, :encoding => XML::Encoding::UTF_8)
+        File.open(fname, "w") { |file| MyFormatter.new.write(xdoc, file) }
     end
 
     def do_export_m3u
         file = File.new(CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.m3u", "w")
         file << "#EXTM3U\n"
-        CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
-            audio_file = Utils::audio_file_exists(Utils::get_track_info(row[0])).file_name
-            file << audio_file+"\n" unless audio_file.empty?
-        end
+        @pts.each { |model, path, iter|
+            file << iter[TT_DATA].audio_file+"\n" unless iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
+        }
         file.close
     end
 
     def do_export_pls
         counter = 0
-        track_infos = TrackInfos.new
-        rplist = @current_pl.rplist
         file = File.new(CFG.music_dir+"Playlists/#{@current_pl.sname}.cdsdb.pls", "w")
         file << "[playlist]\n\n"
-        CDSDB.execute("SELECT rtrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;") do |row|
+        @pts.each { |model, path, iter|
+            next if iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
             counter += 1
-            track_infos.get_track_infos(row[0])
-            audio_file = Utils::audio_file_exists(track_infos).file_name
-            file << "File#{counter}=#{URI::escape("file://"+audio_file)}\n" <<
-                    "Title#{counter}=#{track_infos.title}\n" <<
-                    "Length#{counter}=#{track_infos.length/1000}\n\n"
-        end
+            file << "File#{counter}=#{URI::escape("file://"+iter[TT_DATA].audio_file)}\n" <<
+                    "Title#{counter}=#{iter[TT_DATA].track.stitle}\n" <<
+                    "Length#{counter}=#{iter[TT_DATA].track.ilength/1000}\n\n"
+        }
         file << "NumberOfEntries=#{counter}\n\n" << "Version=2\n"
         file.close
     end
