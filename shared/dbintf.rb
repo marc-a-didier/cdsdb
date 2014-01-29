@@ -45,7 +45,7 @@ class DBIntf
         Object.instance_eval { remove_const(:CDSDB) } if defined?(::CDSDB)
         @@db = SQLite3::Database.new(self.build_db_name)
         Object.instance_eval("::CDSDB = DBIntf.connection")
-        return @@db
+#         return @@db
     end
 
     # Close and release the database connection
