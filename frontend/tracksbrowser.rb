@@ -1,6 +1,6 @@
 
 
-class TracksBrowser < GenericBrowser
+class TracksBrowser < Gtk::TreeView
 
 
     TTV_REF         = 0
@@ -28,15 +28,19 @@ class TracksBrowser < GenericBrowser
 
     attr_reader :trklnk
 
-    def initialize(mc)
-        super(mc, mc.glade[UIConsts::TRACKS_TREEVIEW])
+    def initialize
+        super
         @trklnk = TrackUI.new # Lost instance but setting to nil is not possible
 
         @stocks = [Gtk::Stock::NO, Gtk::Stock::YES, Gtk::Stock::DIALOG_WARNING,
                    Gtk::Stock::NETWORK, Gtk::Stock::DIALOG_QUESTION]
     end
 
-    def setup
+    def setup(mc)
+        @mc = mc
+        @mc.glade[UIConsts::TRACKS_TVC].add(self)
+        self.visible = true
+        
         renderer = Gtk::CellRendererText.new
         if CFG.admin?
             renderer.editable = true
@@ -51,29 +55,29 @@ class TracksBrowser < GenericBrowser
         pixcol.set_cell_data_func(pix) { |column, cell, model, iter| cell.pixbuf = iter.get_value(TTV_PIX) }
 
         colNames = ["Ref.", "Track", "Title", "Play time", "Artist"]
-        @tv.append_column(Gtk::TreeViewColumn.new(colNames[0], Gtk::CellRendererText.new, :text => TTV_REF))
-        @tv.append_column(pixcol)
-        @tv.append_column(Gtk::TreeViewColumn.new(colNames[1], Gtk::CellRendererText.new, :text => TTV_ORDER))
-        @tv.append_column(Gtk::TreeViewColumn.new(colNames[2], renderer, :text => TTV_TITLE))
-        @tv.append_column(Gtk::TreeViewColumn.new(colNames[3], Gtk::CellRendererText.new, :text => TTV_PLAY_TIME))
-        @tv.append_column(Gtk::TreeViewColumn.new(colNames[4], Gtk::CellRendererText.new, :text => TTV_ART_OR_SEG))
-        (TTV_ORDER..TTV_PLAY_TIME).each { |i| @tv.columns[i].resizable = true }
-        @tv.columns[TTV_ART_OR_SEG].visible = false
+        append_column(Gtk::TreeViewColumn.new(colNames[0], Gtk::CellRendererText.new, :text => TTV_REF))
+        append_column(pixcol)
+        append_column(Gtk::TreeViewColumn.new(colNames[1], Gtk::CellRendererText.new, :text => TTV_ORDER))
+        append_column(Gtk::TreeViewColumn.new(colNames[2], renderer, :text => TTV_TITLE))
+        append_column(Gtk::TreeViewColumn.new(colNames[3], Gtk::CellRendererText.new, :text => TTV_PLAY_TIME))
+        append_column(Gtk::TreeViewColumn.new(colNames[4], Gtk::CellRendererText.new, :text => TTV_ART_OR_SEG))
+        (TTV_ORDER..TTV_PLAY_TIME).each { |i| columns[i].resizable = true }
+        columns[TTV_ART_OR_SEG].visible = false
 
-        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
-                                     [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
-                                     Gdk::DragContext::ACTION_COPY)
-        @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
+        enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
+                                   [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
+                                   Gdk::DragContext::ACTION_COPY)
+        signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             tracks = "tracks:message:get_tracks_selection"
 #             @tv.selection.selected_each { |model, path, iter| tracks += ":"+iter[0].to_s }
             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
         }
 
-        @tv.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, Integer, String, String, String, Class)
+        self.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, Integer, String, String, String, Class)
 
-        @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
-        @tv.selection.mode = Gtk::SELECTION_MULTIPLE
-        @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::TRK_POPUP_MENU) }
+        selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
+        selection.mode = Gtk::SELECTION_MULTIPLE
+        signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::TRK_POPUP_MENU) }
 #         @tv.signal_connect(:start_interactive_search, "mydata") { |tv, data| puts "search started...".green }
 
         @mc.glade[UIConsts::TRK_POPUP_EDIT].signal_connect(:activate)      { edit_track }
@@ -104,13 +108,13 @@ class TracksBrowser < GenericBrowser
         # Current track index in browser when it's the player provider
         @curr_track = -1
 
-        return super
+        return finalize_setup
     end
 
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the track tree view except in admin mode (to add track)
-            return if @tv.selection.count_selected_rows < 1 && !CFG.admin?
+            return if selection.count_selected_rows < 1 && !CFG.admin?
             # Add segments of the current record to the segment association submenu
             sub_menu = @mc.glade[UIConsts::TRK_POPUP_SEGASS].submenu
             @mc.glade[UIConsts::TRK_POPUP_SEGASS].remove_submenu
@@ -152,12 +156,12 @@ class TracksBrowser < GenericBrowser
             @mc.update_tags_menu(self, @mc.glade[UIConsts::TRK_POPUP_TAGS])
 
             download_enabled = false
-            @tv.selection.selected_each { |model, path, iter|
+            selection.selected_each { |model, path, iter|
                 if iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
                     download_enabled = true
                     break
                 end
-            } if @tv.selection
+            } if self.selection
             @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].sensitive = download_enabled
 
 
@@ -199,7 +203,7 @@ class TracksBrowser < GenericBrowser
         iter[TTV_TITLE]     = row[ROW_TITLE]
         iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && @mc.glade[UIConsts::MM_VIEW_TRACKINDEX].active?
         iter[TTV_PLAY_TIME] = row[ROW_PLAY_TIME].to_ms_length
-        if @tv.columns[TTV_ART_OR_SEG].visible?
+        if columns[TTV_ART_OR_SEG].visible?
             iter[TTV_ART_OR_SEG] = @mc.artist.compile? ? row[ROW_ART_NAME] : row[ROW_SEG_TITLE]
         else
             iter[TTV_ART_OR_SEG] = ""
@@ -208,29 +212,29 @@ class TracksBrowser < GenericBrowser
     end
 
     def load_entries
-        @tv.model.clear
+        model.clear
 
-        @tv.columns[TTV_ART_OR_SEG].visible = @mc.artist.compile? ||
-                                             (@mc.record.segmented? || !@mc.segment.stitle.empty?) # Show segment name if title not empty
+        columns[TTV_ART_OR_SEG].visible = @mc.artist.compile? ||
+                                         (@mc.record.segmented? || !@mc.segment.stitle.empty?) # Show segment name if title not empty
         #@mc.artist.compile? ? @tv.columns[TTV_ART_OR_SEG].title = "Artist" : @tv.columns[TTV_ART_OR_SEG].title = "Segment"
-        @tv.columns[TTV_ART_OR_SEG].title = @mc.artist.compile? ? "Artist" : "Segment"
+        columns[TTV_ART_OR_SEG].title = @mc.artist.compile? ? "Artist" : "Segment"
 
-        CDSDB.execute(generate_sql) { |row| map_row_to_entry(row, @tv.model.append) }
+        CDSDB.execute(generate_sql) { |row| map_row_to_entry(row, model.append) }
 
         # Sets the icons matching the file status for each entry
         if @mc.glade[UIConsts::MM_VIEW_AUTOCHECK].active?
             check_for_audio_file
         else
-            @tv.model.each { |model, path, iter| iter[TTV_PIX] = @tv.render_icon(@stocks[TRK_UNKOWN], Gtk::IconSize::MENU) }
+            model.each { |model, path, iter| iter[TTV_PIX] = render_icon(@stocks[TRK_UNKOWN], Gtk::IconSize::MENU) }
         end
-        @tv.columns_autosize
+        columns_autosize
 
         return self
     end
 
     def load_entries_select_first
         load_entries
-        @tv.set_cursor(@tv.model.iter_first.path, nil, false) if @tv.model.iter_first
+        set_cursor(model.iter_first.path, nil, false) if model.iter_first
         return self
     end
 
@@ -240,21 +244,21 @@ class TracksBrowser < GenericBrowser
 
     def get_selection
         links = []
-        @tv.selection.selected_each { |model, path, iter| links << iter[TTV_DATA].clone }
+        selection.selected_each { |model, path, iter| links << iter[TTV_DATA].clone }
         return links
     end
 
     # Returns a list of the the currently visible tracks
     def get_tracks_list
         links = []
-        @tv.model.each { |model, path, iter| links << iter[TTV_DATA].clone }
+        model.each { |model, path, iter| links << iter[TTV_DATA].clone }
         return links
     end
 
 
     # Set the tags or rating for a selected track(s) or all tracks (when set from records)
     def set_track_field(field, value, to_all)
-        meth = to_all ? @tv.model.method(:each) : @tv.selection.method(:selected_each)
+        meth = to_all ? model.method(:each) : selection.method(:selected_each)
 
         sql = "UPDATE tracks SET #{field}="
         if field == "itags"
@@ -277,7 +281,7 @@ TRACE.debug("executing: #{sql}")
 
     # Returns the uilink for the track at position track_index in the view
     def get_track_uilink(track_index)
-        itr = @tv.model.get_iter(track_index.to_s)
+        itr = model.get_iter(track_index.to_s)
         return itr ? itr[TTV_DATA] : nil
     end
 
@@ -289,7 +293,7 @@ TRACE.debug("executing: #{sql}")
         check_on_server = false
 
         # Get local files first and stores the state of each track
-        @tv.model.each { |model, path, iter|
+        model.each { |model, path, iter|
             if iter[TTV_DATA].audio_status.nil? || iter[TTV_DATA].audio_status == AudioLink::UNKNOWN
                 check_on_server = true if iter[TTV_DATA].setup_audio_file == AudioLink::NOT_FOUND
             end
@@ -299,17 +303,17 @@ TRACE.debug("executing: #{sql}")
         if CFG.remote? && check_on_server
             # Save track list to avoid threading problems
             tracks = ""
-            @tv.model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
+            model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
             # Replace each file not found state with server state
             MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
-                iter = @tv.model.get_iter(i.to_s)
+                iter = model.get_iter(i.to_s)
                 iter[TTV_DATA].set_audio_status(AudioLink::ON_SERVER) if (iter[TTV_DATA].audio_status == AudioLink::NOT_FOUND) && found != '0'
             }
         end
 
         # Update tracks icons
-        @tv.model.each { |model, path, iter|
-            iter[TTV_PIX] = @tv.render_icon(@stocks[iter[TTV_DATA].audio_status], Gtk::IconSize::MENU)
+        model.each { |model, path, iter|
+            iter[TTV_PIX] = render_icon(@stocks[iter[TTV_DATA].audio_status], Gtk::IconSize::MENU)
         }
     end
 
@@ -322,7 +326,7 @@ TRACE.debug("executing: #{sql}")
     def audio_link_ok(uilink)
         uilink.set_audio_status(AudioLink::OK)
         if iter = find_ref(uilink.track.rtrack)
-            iter[TTV_PIX] = @tv.render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
+            iter[TTV_PIX] = render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
             iter[TTV_DATA].audio_file = uilink.audio_file
         end
     end
@@ -330,7 +334,7 @@ TRACE.debug("executing: #{sql}")
     # Returns the TrackUI for the currently selected track in the browser.
     # Returns nil if no selection or multi-selection.
     def selected_track
-        return @tv.selection.count_selected_rows == 1 ? @tv.model.get_iter(@tv.selection.selected_rows[0])[TTV_DATA] : nil
+        return selection.count_selected_rows == 1 ? model.get_iter(selection.selected_rows[0])[TTV_DATA] : nil
     end
 
 
@@ -346,7 +350,7 @@ TRACE.debug("executing: #{sql}")
     #   - second time with count_selected_rows 1
     #
     def on_selection_changed(widget)
-        return if @tv.selection.count_selected_rows == 0
+        return if selection.count_selected_rows == 0
 
 # TRACE.debug("track selection changed.".green)
         trackui = selected_track
@@ -368,7 +372,7 @@ TRACE.debug("executing: #{sql}")
     end
 
     def invalidate
-        @tv.model.clear
+        model.clear
         @mc.glade[UIConsts::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
         @trklnk.reset.to_widgets if @trklnk.valid?
     end
@@ -384,17 +388,17 @@ TRACE.debug("executing: #{sql}")
     end
 
     def on_trk_del
-        msg = @tv.selection.count_selected_rows == 1 ? "Sure to delete this track?" : "Sure to delete these tracks?"
+        msg = selection.count_selected_rows == 1 ? "Sure to delete this track?" : "Sure to delete these tracks?"
         if UIUtils::get_response(msg) == Gtk::Dialog::RESPONSE_OK
-            @tv.selection.selected_each { |model, path, iter| UIUtils::delete_track(iter[TTV_REF]); model.remove(iter) }
+            selection.selected_each { |model, path, iter| UIUtils::delete_track(iter[TTV_REF]); model.remove(iter) }
             load_entries_select_first
         end
     end
 
     def on_del_from_fs
-        msg = @tv.selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
+        msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
         if UIUtils::get_response(msg) == Gtk::Dialog::RESPONSE_OK
-            @tv.selection.selected_each { |model, path, iter| Utils::remove_file(iter[TTV_REF]) }
+            selection.selected_each { |model, path, iter| Utils::remove_file(iter[TTV_REF]) }
             load_entries_select_first
         end
     end
@@ -411,7 +415,7 @@ TRACE.debug("executing: #{sql}")
     end
 
     def on_update_playtime
-        return unless @tv.selection.count_selected_rows == 1
+        return unless selection.count_selected_rows == 1
         track_infos = TrackInfos.new.get_track_infos(@track.rtrack)
         fname = Utils::audio_file_exists(track_infos).file_name
         return if fname.empty?
@@ -437,7 +441,7 @@ TRACE.debug("executing: #{sql}")
     end
 
     def on_trk_segment_assign(widget)
-        @tv.selection.selected_each { |model, path, iter|
+        selection.selected_each { |model, path, iter|
             rsegment = CDSDB.get_first_value(
                                "SELECT rsegment FROM segments " \
                                "WHERE rrecord=#{@track.rrecord} AND stitle=#{widget.child.label.to_sql}")
@@ -446,14 +450,14 @@ TRACE.debug("executing: #{sql}")
     end
 
     def on_trk_assign_first_segment(widget)
-        @tv.selection.selected_each { |model, path, iter|
+        selection.selected_each { |model, path, iter|
             DBUtils::client_sql("UPDATE tracks SET rsegment=#{@mc.segment.rsegment} WHERE rtrack=#{iter[TTV_REF]}")
         }
     end
 
     def on_trk_add_to_pl(widget)
         rplist = CDSDB.get_first_value("SELECT rplist FROM plists WHERE sname=#{widget.child.label.to_sql}")
-        @tv.selection.selected_each { |model, path, iter| @mc.plists.add_to_plist(rplist, iter[TTV_REF]) }
+        selection.selected_each { |model, path, iter| @mc.plists.add_to_plist(rplist, iter[TTV_REF]) }
     end
 
     def on_trk_enqueue(is_from)
@@ -461,10 +465,10 @@ TRACE.debug("executing: #{sql}")
         # If is_from is true, sends all tracks starting from the current selection
         links = []
         if is_from
-            iter = @tv.model.get_iter(@tv.selection.selected_rows[0])
+            iter = model.get_iter(selection.selected_rows[0])
             begin links << iter[TTV_DATA] end while iter.next!
         else
-            @tv.selection.selected_each { |model, path, iter| links << iter[TTV_DATA] }
+            selection.selected_each { |model, path, iter| links << iter[TTV_DATA] }
         end
         @mc.pqueue.enqueue(links)
     end
@@ -490,7 +494,7 @@ TRACE.debug("executing: #{sql}")
     end
 
     def on_download_trk
-        @tv.selection.selected_each { |model, path, iter|
+        selection.selected_each { |model, path, iter|
             if iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
@@ -498,7 +502,7 @@ TRACE.debug("executing: #{sql}")
     end
 
     def download_tracks(use_selection)
-        meth = use_selection ? @tv.selection.method(:selected_each) : @tv.model.method(:each)
+        meth = use_selection ? selection.method(:selected_each) : model.method(:each)
         meth.call { |model, path, iter|
             if iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
@@ -510,7 +514,7 @@ TRACE.debug("executing: #{sql}")
     # Messages sent by the player when track treeview is the track provider
     #
     def get_audio_file
-        iter = @tv.model.get_iter(@curr_track.to_s)
+        iter = model.get_iter(@curr_track.to_s)
         if iter.nil?
             @curr_track = -1
             return nil
@@ -537,7 +541,7 @@ TRACE.debug("executing: #{sql}")
 
     def get_next_track
         if @curr_track == -1
-            @curr_track = @tv.selection.count_selected_rows == 0 ? 0 : @tv.selection.selected_rows[0].to_s.to_i
+            @curr_track = selection.count_selected_rows == 0 ? 0 : selection.selected_rows[0].to_s.to_i
         else
             @curr_track += 1
         end
@@ -552,7 +556,7 @@ TRACE.debug("executing: #{sql}")
 
     def has_more_tracks(is_next)
         if is_next
-            return !@tv.model.get_iter((@curr_track+1).to_s).nil?
+            return !model.get_iter((@curr_track+1).to_s).nil?
         else
             return @curr_track-1 >= 0
         end

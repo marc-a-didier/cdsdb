@@ -428,7 +428,7 @@ class RecordsRowProp < GenRowProp
     end
 end
 
-class ArtistsBrowser < GenericBrowser
+class ArtistsBrowser < Gtk::TreeView
 
     # Initialize all top levels rows
     MB_TOP_LEVELS = [AllArtistsRowProp.new(1, "artists", 1, false, "", "All Artists"),
@@ -452,13 +452,21 @@ class ArtistsBrowser < GenericBrowser
 
     attr_reader :artlnk
 
-    def initialize(mc)
-        super(mc, mc.glade[UIConsts::ARTISTS_TREEVIEW])
+    def initialize
+        super
         @artlnk = ArtistUI.new # Cache link for the current artist
         @seg_art = ArtistUI.new # Cache link used to update data when browsing a compilation
     end
 
-    def setup
+    def setup(mc)
+        @mc = mc
+        @mc.glade[UIConsts::ARTISTS_TVC].add(self)
+        self.visible = true
+        self.enable_search = true
+        self.search_column = 3
+        
+        selection.mode = Gtk::SELECTION_SINGLE
+        
         name_renderer = Gtk::CellRendererText.new
 #         if CFG.admin?
 #             name_renderer.editable = true
@@ -467,23 +475,23 @@ class ArtistsBrowser < GenericBrowser
         name_column = Gtk::TreeViewColumn.new("Views", name_renderer)
         name_column.set_cell_data_func(name_renderer) { |col, renderer, model, iter| renderer.markup = iter[ATV_NAME] }
 
-        @tv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new, :text => ATV_REF))
-        @tv.append_column(name_column)
+        append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new, :text => ATV_REF))
+        append_column(name_column)
 
-        @tv.columns[ATV_NAME].resizable = true
+        columns[ATV_NAME].resizable = true
 
-        @tvm = Gtk::TreeStore.new(Integer, String, Class, String)
+        self.model = Gtk::TreeStore.new(Integer, String, Class, String)
 
         @tvs = nil # Intended to be a shortcut to @tv.selection.selected. Set in selection change
 
-        @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
-        @tv.signal_connect(:button_press_event) { |widget, event|
+        selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
+        signal_connect(:button_press_event) { |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS || event.button == 3 # left mouse button
                 [UIConsts::ART_POPUP_ADD, UIConsts::ART_POPUP_DEL,
                  UIConsts::ART_POPUP_EDIT, UIConsts::ART_POPUP_INFOS].each { |item|
-                    @mc.glade[item].sensitive = @tvs && @tvm.iter_depth(@tvs) == @tvs[2].max_level
+                    @mc.glade[item].sensitive = @tvs && model.iter_depth(@tvs) == @tvs[2].max_level
                 }
-                @mc.glade[UIConsts::ART_POPUP_REFRESH].sensitive = @tvs && @tvm.iter_depth(@tvs) < @tvs[2].max_level
+                @mc.glade[UIConsts::ART_POPUP_REFRESH].sensitive = @tvs && model.iter_depth(@tvs) < @tvs[2].max_level
                 show_popup(widget, event, UIConsts::ART_POPUP_MENU) if @tvs
             end
         }
@@ -491,7 +499,7 @@ class ArtistsBrowser < GenericBrowser
         # This line has NO effect when incremental search fails to find a string. The selection is empty...
         # @tv.selection.mode = Gtk::SELECTION_BROWSE
 
-        @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
+        signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
 #         @tv.signal_connect(:key_press_event) { |widget, event|
 #             searching = !@tv.search_entry.nil?;
 #             puts "searching=#{searching}";
@@ -509,22 +517,21 @@ class ArtistsBrowser < GenericBrowser
         @mc.glade[UIConsts::ART_POPUP_INFOS].signal_connect(:activate)   { show_artists_infos }
         @mc.glade[UIConsts::ART_POPUP_REFRESH].signal_connect(:activate) { reload_sub_tree    }
 
-        return super
+        return finalize_setup
     end
 
     def load_entries
-        @tvm.clear
+        model.clear
         MB_TOP_LEVELS.each { |entry|
-            iter = @tvm.append(nil)
+            iter = model.append(nil)
             iter[0] = entry.ref
             iter[1] = entry.title.to_html_bold
             iter[2] = entry
             iter[3] = entry.title
-            entry.append_fake_child(@tvm, iter)
+            entry.append_fake_child(model, iter)
             load_sub_tree(iter) if entry.ref == 1 # Load subtree if all artists
         }
-        @tv.model = @tvm
-        @tvm.set_sort_column_id(3, Gtk::SORT_ASCENDING)
+        model.set_sort_column_id(3, Gtk::SORT_ASCENDING)
 
         return self
     end
@@ -536,7 +543,7 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def reload_sub_tree
-        return if @tvs.nil? || @tvm.iter_depth(@tvs) == @tvs[2].max_level
+        return if @tvs.nil? || model.iter_depth(@tvs) == @tvs[2].max_level
         load_sub_tree(@tvs, true)
 
     end
@@ -549,7 +556,7 @@ class ArtistsBrowser < GenericBrowser
     # !!! iter.next! returns true if set to next iter and false if no next iter
     #     BUT iter itself is reset to iter_first => iter is NOT nil
     def select_artist(rartist, iter = nil)
-        iter = @tvm.iter_first unless iter
+        iter = model.iter_first unless iter
         if iter.has_child?
             if iter.first_child[0] != GenRowProp::FAKE_ID
                 self.select_artist(rartist, iter.first_child)
@@ -560,13 +567,13 @@ class ArtistsBrowser < GenericBrowser
             while iter[0] != rartist
                 return unless iter.next!
             end
-            @tv.expand_row(iter.parent.path, false) unless @tv.row_expanded?(iter.parent.path)
-            @tv.set_cursor(iter.path, nil, false)
+            expand_row(iter.parent.path, false) unless row_expanded?(iter.parent.path)
+            set_cursor(iter.path, nil, false)
         end
     end
 
     def map_sub_row_to_entry(row, iter)
-        new_child = @tvm.append(iter)
+        new_child = model.append(iter)
         if iter[0] == GenRowProp::SELECT_RECORDS
             new_child[0] = row[1]
             new_child[1] = row[0].to_html_bold+"\nby "+row[2].to_html_italic
@@ -578,11 +585,11 @@ class ArtistsBrowser < GenericBrowser
             new_child[2] = iter[2]
             new_child[3] = row[1]
         end
-        if @tvm.iter_depth(new_child) < iter[2].max_level
+        if model.iter_depth(new_child) < iter[2].max_level
             # The italic tag is hardcoded because to_hml has already been called and it sucks
             # when called twice on the same string
             new_child[1] = "<i>"+new_child[1]+"</i>" #.to_html_italic
-            iter[2].append_fake_child(@tvm, new_child)
+            iter[2].append_fake_child(model, new_child)
         end
     end
 
@@ -596,26 +603,26 @@ class ArtistsBrowser < GenericBrowser
 # TRACE.debug("*** load new sub tree ***")
         # Making the first column the sort column greatly speeds up things AND makes sure that the
         # fake item is first in the store.
-        @tvm.set_sort_column_id(0)
+        model.set_sort_column_id(0)
 
         # Remove all children EXCEPT the first one, it's a gtk treeview requirement!!!
         # If not force_reload, we have just one child, the fake entry, so don't remove it now
         if force_reload
-            @tvm.remove(iter.nth_child(1)) while iter.nth_child(1)
+            model.remove(iter.nth_child(1)) while iter.nth_child(1)
             iter[1] = iter[1].gsub(/ - .*$/, "") # Remove the number of entries since it's re-set later
         end
 
-        sql = iter[2].select_for_level(@tvm.iter_depth(iter), iter, @mc, @tvm)
+        sql = iter[2].select_for_level(model.iter_depth(iter), iter, @mc, model)
 
         CDSDB.execute(sql) { |row| map_sub_row_to_entry(row, iter) } unless sql.empty?
 
         # Perform any post selection required action. By default, removes the first fake child
-        iter[2].post_select(@tvm, iter, @mc)
+        iter[2].post_select(model, iter, @mc)
 
         # Called before the set sort column, so it's sorted by ref, not by name!
         iter[1] = iter[1]+" - (#{iter.n_children})" if iter.first_child[0] != GenRowProp::SELECT_RECORDS
 
-        @tvm.set_sort_column_id(3, Gtk::SORT_ASCENDING)
+        model.set_sort_column_id(3, Gtk::SORT_ASCENDING)
     end
 
     def on_row_expanded(widget, iter, path)
@@ -623,10 +630,10 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def on_selection_changed(widget)
-        @tvs = @tv.selection.selected
+        @tvs = selection.selected
         return if @tvs.nil?
 # TRACE.debug("artists selection changed".cyan)
-        if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
+        if @tvs.nil? || model.iter_depth(@tvs) < @tvs[2].max_level
             @artlnk.reset
         else
             @artlnk.set_artist_ref(@tvs[ATV_REF])
@@ -638,7 +645,7 @@ class ArtistsBrowser < GenericBrowser
     # This method is called via the mastercontroller to get the current filter for
     # the records browser.
     def sub_filter
-        if @tvs.nil? || @tvs[2].where_fields.empty? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
+        if @tvs.nil? || @tvs[2].where_fields.empty? || model.iter_depth(@tvs) < @tvs[2].max_level
             return ""
         else
             return @tvs[2].sub_filter(@tvs)
@@ -651,11 +658,11 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def on_art_popup_del
-        @tvm.remove(@tvs) if UIUtils::delete_artist(@tvs[ATV_REF]) == 0 if !@tvs.nil? && UIUtils::get_response("Sure to delete this artist?") == Gtk::Dialog::RESPONSE_OK
+        model.remove(@tvs) if UIUtils::delete_artist(@tvs[ATV_REF]) == 0 if !@tvs.nil? && UIUtils::get_response("Sure to delete this artist?") == Gtk::Dialog::RESPONSE_OK
     end
 
     def on_art_popup_edit
-        @tv.set_cursor(@tvs.path, @tv.columns[ATV_NAME], true) if @tvs
+        set_cursor(@tvs.path, columns[ATV_NAME], true) if @tvs
     end
 
     def on_artist_edited(widget, path, new_text)
@@ -672,7 +679,7 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def is_on_compile?
-        return false if @tvs.nil? || @tvm.iter_depth(@tvs) < @tvs[2].max_level
+        return false if @tvs.nil? || model.iter_depth(@tvs) < @tvs[2].max_level
         return @tvs[0] == 0
     end
 
@@ -681,7 +688,7 @@ class ArtistsBrowser < GenericBrowser
     end
 
     def never_played_iter
-        iter = @tvm.iter_first
+        iter = model.iter_first
         iter.next! while iter[2].ref != 7
         return !iter || iter.first_child[0] == GenRowProp::FAKE_ID ? nil : iter
     end
@@ -692,7 +699,7 @@ class ArtistsBrowser < GenericBrowser
         sub_iter = iter.first_child
         sub_iter.next! while sub_iter[0] != rartist
         if sub_iter[0] == rartist
-            @tvm.remove(sub_iter)
+            model.remove(sub_iter)
             iter[1] = iter[1].gsub(/\ -\ .*$/, "")
             iter[1] = iter[1]+" - (#{iter.n_children})"
         end

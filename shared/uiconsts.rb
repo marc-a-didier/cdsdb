@@ -16,10 +16,10 @@ module UIConsts
 
 
 
-    # Treeviews
-    ARTISTS_TREEVIEW    = "tva"
-    RECORDS_TREEVIEW    = "tvr"
-    TRACKS_TREEVIEW     = "tvt"
+    # Scrolled window containers for main tree views
+    ARTISTS_TVC = "artists_tv_sw"
+    RECORDS_TVC = "records_tv_sw"
+    TRACKS_TVC  = "tracks_tv_sw"
 
 
     # Main window tool bar

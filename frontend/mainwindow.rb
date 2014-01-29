@@ -223,9 +223,12 @@ class MainWindow < TopWindow
         #
         # Setup the treeviews
         #
-        @art_browser = ArtistsBrowser.new(@mc).setup
-        @rec_browser = RecordsBrowser.new(@mc).setup
-        @trk_browser = TracksBrowser.new(@mc).setup
+#         @art_browser = ArtistsBrowser.new(@mc).setup
+        @art_browser = ArtistsBrowser.new.setup(@mc)
+#         @rec_browser = RecordsBrowser.new(@mc).setup
+        @rec_browser = RecordsBrowser.new.setup(@mc)
+#         @trk_browser = TracksBrowser.new(@mc).setup
+        @trk_browser = TracksBrowser.new.setup(@mc)
 
         # Load artists entries
         @art_browser.load_entries

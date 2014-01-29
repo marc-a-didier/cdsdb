@@ -40,6 +40,7 @@ require '../shared/trackinfos'
 require '../shared/audiolink'
 
 require './multi_drag_treeview'
+require './extendedtreeview'
 
 require './uicachemgr'
 require './uiutils'
@@ -79,7 +80,7 @@ require './dbuiclass'
 
 require './dbreorderer'
 
-require './genericbrowser'
+# require './genericbrowser'
 require './artistsbrowser'
 require './recordsbrowser'
 require './tracksbrowser'

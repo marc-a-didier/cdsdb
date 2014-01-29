@@ -31,14 +31,14 @@ public
 end
 
 # A bit of treeview extension...
-class Gtk::TreeView
-
-    def find_ref(ref, column = 0)
-        model.each { |model, path, iter| return iter if iter[column] == ref }
-        return nil
-    end
-
-end
+# class Gtk::TreeView
+# 
+#     def find_ref(ref, column = 0)
+#         model.each { |model, path, iter| return iter if iter[column] == ref }
+#         return nil
+#     end
+# 
+# end
 
 
 class UIUtils

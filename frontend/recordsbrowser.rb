@@ -1,6 +1,6 @@
 
 
-class RecordsBrowser < GenericBrowser
+class RecordsBrowser < Gtk::TreeView
 
     RTV_REF   = 0
     RTV_TITLE = 1
@@ -10,32 +10,38 @@ class RecordsBrowser < GenericBrowser
     attr_reader :reclnk
 
 
-    def initialize(mc)
-        super(mc, mc.glade[UIConsts::RECORDS_TREEVIEW])
+    def initialize
+        super
         @reclnk = RecordUI.new # Lost instance but setting to nil is not possible
     end
 
-    def setup
+    def setup(mc)
+        @mc = mc
+        @mc.glade[UIConsts::RECORDS_TVC].add(self)
+        self.visible = true
+        self.enable_search = true
+        self.search_column = 1
+        
         renderer = Gtk::CellRendererText.new
 
-        ["Ref.", "Title", "Play time"].each_with_index { |name, i| @tv.append_column(Gtk::TreeViewColumn.new(name, renderer, :text => i)) }
-        @tv.columns[RTV_TITLE].resizable = @tv.columns[RTV_TITLE].sort_indicator = @tv.columns[RTV_TITLE].clickable = true
-        @tv.columns[RTV_TITLE].signal_connect(:clicked) { change_sort_order(RTV_TITLE) } #{ load_entries } }
+        ["Ref.", "Title", "Play time"].each_with_index { |name, i| append_column(Gtk::TreeViewColumn.new(name, renderer, :text => i)) }
+        columns[RTV_TITLE].resizable = columns[RTV_TITLE].sort_indicator = columns[RTV_TITLE].clickable = true
+        columns[RTV_TITLE].signal_connect(:clicked) { change_sort_order(RTV_TITLE) } #{ load_entries } }
 
         # Last column is the record reference, not shown in the tree view.
-        @tv.model = Gtk::TreeStore.new(Integer, String, String, Class)
+        self.model = Gtk::TreeStore.new(Integer, String, String, Class)
         #!! Si on est mode Gtk::SELECTION_BROWSE, on recoit un selection_changed meme si on clique sur la meme entree!!
-        @tv.selection.mode = Gtk::SELECTION_SINGLE
+        selection.mode = Gtk::SELECTION_SINGLE
         #@tv.selection.mode = Gtk::SELECTION_BROWSE
 
-        @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
-        @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
+        enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
             selection_data.set(Gdk::Selection::TYPE_STRING, "records:message:get_tracks_list")
         }
-        @tv.selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
-        @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::REC_POPUP_MENU) }
+        selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
+        signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::REC_POPUP_MENU) }
 
-        @tv.signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
+        signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
 
         @mc.glade[UIConsts::REC_POPUP_EDIT].signal_connect(:activate)     { on_rec_edit }
         @mc.glade[UIConsts::REC_POPUP_ADD].signal_connect(:activate)      { on_rec_add }
@@ -50,7 +56,7 @@ class RecordsBrowser < GenericBrowser
             PlayHistoryDialog.new.show_record(@reclnk.record.rrecord)
         }
 
-        return super
+        return finalize_setup
     end
 
     # Generate required sql to load all records or a specific record (rrecord != 1) for the current artist
@@ -67,7 +73,7 @@ class RecordsBrowser < GenericBrowser
         sql += @mc.main_filter if @mc.sub_filter.empty? # Don't apply 2 filters at once!!!
         sql += @mc.artist.compile? ? " GROUP BY records.rrecord " : " GROUP BY segments.rrecord " # ??? ca change quoi ???
         sql += " ORDER BY LOWER(records.stitle)"
-        sql += " DESC" if @tv.columns[RTV_TITLE].sort_order == Gtk::SORT_DESCENDING
+        sql += " DESC" if columns[RTV_TITLE].sort_order == Gtk::SORT_DESCENDING
         sql += ", segments.rsegment" # End of order by
 
 #p sql
@@ -98,10 +104,10 @@ class RecordsBrowser < GenericBrowser
 
     # Fills the record tv with all entries matching current artist and filter
     def load_entries
-        @tv.model.clear
+        model.clear
 
         CDSDB.execute(generate_rec_sql) do |row|
-            iter = @tv.model.append(nil)
+            iter = model.append(nil)
 
             dblink = RecordUI.new.set_record_ref(row[2]).set_segment_ref(row[0])
             iter[RTV_REF]   = dblink.record.rrecord
@@ -110,9 +116,9 @@ class RecordsBrowser < GenericBrowser
             iter[RTV_DBLNK] = dblink
 
             # Add a fake entry to have the arrow indicator
-            @tv.model.append(iter)[RTV_REF] = -1
+            model.append(iter)[RTV_REF] = -1
         end
-        @tv.columns_autosize
+        columns_autosize
 
         return self
     end
@@ -123,19 +129,19 @@ class RecordsBrowser < GenericBrowser
 
     def load_entries_select_first
         load_entries
-        @tv.selection.select_iter(@tv.model.iter_first) if @tv.model.iter_first
+        selection.select_iter(model.iter_first) if model.iter_first
         return self
     end
 
     def on_selection_changed(widget)
         # @tv.selection.selected == nil probably means the previous selection is deselected...
-        return if @tv.selection.selected.nil?
+        return if selection.selected.nil?
 # TRACE.debug("record selection changed")
-        update_ui_handlers(@tv.selection.selected)
+        update_ui_handlers(selection.selected)
 
         if @reclnk.record.valid?
             # Redraw segment only if on a segment or the infos string will overwrite the record infos
-            if @tv.selection.selected.parent
+            if selection.selected.parent
                 @reclnk.to_widgets(false)
                 # Change artist infos if we're browsing a compile subtree
                 @mc.update_artist_infos(@reclnk.segment.rartist) if @mc.artist.compile?
@@ -163,26 +169,26 @@ class RecordsBrowser < GenericBrowser
     end
 
     def select_segment_from_record_selection(rsegment)
-        iter = @tv.selection.selected
+        iter = selection.selected
         if iter
-            @tv.expand_row(iter.path, false)
+            expand_row(iter.path, false)
             siter = iter.first_child
             while siter && siter[0] != rsegment
                 siter.next!
             end
-            @tv.set_cursor(siter.path, nil, false) if siter
+            set_cursor(siter.path, nil, false) if siter
         end
     end
 
     def set_selection(rrecord, rsegment)
         iter = position_to(rrecord)
         if iter && rsegment != 0
-            @tv.expand_row(iter.path, false)
+            expand_row(iter.path, false)
             siter = iter.first_child
             while siter && siter[0] != rsegment
                 siter.next!
             end
-            @tv.set_cursor(siter.path, nil, false) if siter
+            set_cursor(siter.path, nil, false) if siter
             return siter
         end
         return iter
@@ -202,20 +208,20 @@ p row
         if row
             map_rec_row_to_entry(row, iter)
         else
-            @tv.model.remove(iter)
+            model.remove(iter)
         end
         @mc.record_changed
         return row.nil?
     end
 
     def invalidate
-        @tv.model.clear
+        model.clear
         @reclnk.reset.to_widgets(true) if @reclnk.valid?
     end
 
     def is_on_record
-        return true if @tv.selection.selected.nil?
-        return @tv.selection.selected.parent.nil?
+        return true if selection.selected.nil?
+        return selection.selected.parent.nil?
     end
 
     # Fills all children of a record (its segments)
@@ -224,7 +230,7 @@ p row
         return if iter.first_child && iter.first_child[RTV_REF] != -1
 
         CDSDB.execute(generate_seg_sql(iter[RTV_REF])) { |row|
-            child = @tv.model.append(iter)
+            child = model.append(iter)
 
             dblink = RecordUI.new.set_segment_ref(row[0])
             dblink.set_record_ref(dblink.segment.rrecord)
@@ -239,14 +245,14 @@ p row
             child[RTV_PTIME] = row[1].to_ms_length
             child[RTV_DBLNK] = dblink
         }
-        @tv.model.remove(iter.first_child)
+        model.remove(iter.first_child)
     end
 
     def on_rec_edit
         rgenre = @reclnk.record.rgenre
-        if DBEditor.new(@mc, @tv.selection.selected.parent ? @reclnk.segment : @reclnk.record).run == Gtk::Dialog::RESPONSE_OK
+        if DBEditor.new(@mc, selection.selected.parent ? @reclnk.segment : @reclnk.record).run == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
-            @reclnk.to_widgets(!@tv.selection.selected.parent)
+            @reclnk.to_widgets(!selection.selected.parent)
             # If genre changed in editor, reset the audio status to unknown to force reload
             if @reclnk.record.rgenre != rgenre
                 @mc.get_tracks_list.each { |dblink| dblink.set_audio_status(AudioLink::UNKNOWN) }
@@ -274,12 +280,12 @@ p row
     end
 
     def on_rec_or_seg_del
-        return if @tv.cursor.nil?
-        iter = @tv.model.get_iter(@tv.cursor[RTV_REF])
+        return if cursor.nil?
+        iter = model.get_iter(cursor[RTV_REF])
         txt = iter.parent ? "segment" : "record"
         if UIUtils::get_response("Sure to delete this #{txt}?") == Gtk::Dialog::RESPONSE_OK
             res = iter.parent ? UIUtils::delete_segment(iter[RTV_REF]) : UIUtils::delete_record(iter[RTV_REF])
-            @tv.model.remove(iter) if res == 0
+            model.remove(iter) if res == 0
         end
     end
 
