@@ -236,23 +236,33 @@ class DBEditor
 
     include UIConsts
 
-    def initialize(mc, initiating_class)
+    ARTIST_PAGE  = 0
+    RECORD_PAGE  = 1
+    SEGMENT_PAGE = 2
+    TRACK_PAGE   = 3
+    
+    def initialize(mc, dblink, default_page)
         @glade = GTBld::load(DLG_DB_EDITOR)
 
-        @dblink = mc.new_link_from_selection
+        @dblink = dblink
 
-        @editors = []
-        @editors << ArtistEditor.new(@glade, @dblink.artist.dbs)
-        @editors << RecordEditor.new(@glade, @dblink.record.dbs)
-        @editors << SegmentEditor.new(@glade, @dblink.segment.dbs)
-        @editors << TrackEditor.new(@glade, @dblink.track.dbs)
-        @editors.each { |editor| editor.to_widgets }
+        # Try to set a maximum of reference if possible
+        @dblink.set_segment_ref(@dblink.track.rsegment) if !@dblink.valid_segment_ref? && @dblink.valid_track_ref?
+        @dblink.set_record_ref(@dblink.segment.rrecord) if !@dblink.valid_record_ref? && @dblink.valid_segment_ref?
+        @dblink.set_artist_ref(@dblink.segment.rartist) if !@dblink.valid_artist_ref? && @dblink.valid_segment_ref?
 
-        # TODO: a revoir!!! maintenant que rec & seg sont dans la meme ui...
-        @glade[DBED_NBOOK].page = 0 if initiating_class.kind_of?(ArtistDBClass)
-        @glade[DBED_NBOOK].page = 1 if initiating_class.kind_of?(RecordDBClass)
-        @glade[DBED_NBOOK].page = 2 if initiating_class.kind_of?(SegmentDBClass)
-        @glade[DBED_NBOOK].page = 3 if initiating_class.kind_of?(TrackDBClass)
+        # Add editor only if there are data for it
+        @editors = [nil, nil, nil, nil]
+        @editors[0] = ArtistEditor.new(@glade, @dblink.artist.dbs)   if @dblink.valid_artist_ref?
+        @editors[1] = RecordEditor.new(@glade, @dblink.record.dbs)   if @dblink.valid_record_ref?
+        @editors[2] = SegmentEditor.new(@glade, @dblink.segment.dbs) if @dblink.valid_segment_ref?
+        @editors[3] = TrackEditor.new(@glade, @dblink.track.dbs)     if @dblink.valid_track_ref?
+        
+        # Set data to fields or remove page if no data. Do it backward so it doesn't screw with page
+        # number since pages are in the tables hierarchy order
+        3.downto(0) { |i|  @editors[i] ? @editors[i].to_widgets : @glade[DBED_NBOOK].remove_page(i) }
+                              
+        @glade[DBED_NBOOK].page = default_page # default page is in theory always visible
     end
 
     def run
@@ -260,7 +270,7 @@ class DBEditor
 
         response = @glade[DLG_DB_EDITOR].run
         if response == Gtk::Dialog::RESPONSE_OK
-            @editors.each { |dbs| dbs.from_widgets }
+            @editors.each { |dbs| dbs.from_widgets if dbs }
             @dblink.flush_main_tables
         end
         @glade[DLG_DB_EDITOR].destroy

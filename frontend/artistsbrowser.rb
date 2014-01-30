@@ -549,7 +549,7 @@ class ArtistsBrowser < Gtk::TreeView
     end
 
     def edit_artist
-        @artlnk.to_widgets if @artlnk.valid? && DBEditor.new(@mc, @artlnk).run == Gtk::Dialog::RESPONSE_OK
+        @artlnk.to_widgets if @artlnk.valid? && DBEditor.new(@mc, @artlnk, DBEditor::ARTIST_PAGE).run == Gtk::Dialog::RESPONSE_OK
     end
 
     # Recursively search for rartist from iter. If iter is nil, search from tree root.

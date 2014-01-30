@@ -250,7 +250,7 @@ p row
 
     def on_rec_edit
         rgenre = @reclnk.record.rgenre
-        if DBEditor.new(@mc, selection.selected.parent ? @reclnk.segment : @reclnk.record).run == Gtk::Dialog::RESPONSE_OK
+        if DBEditor.new(@mc, @reclnk, selection.selected.parent ? DBEditor::SEGMENT_PAGE : DBEditor::RECORD_PAGE).run == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
             @reclnk.to_widgets(!selection.selected.parent)
             # If genre changed in editor, reset the audio status to unknown to force reload

@@ -430,7 +430,8 @@ p new_iorder
             if @mc.glade[UIConsts::PM_PL_ADD].sensitive?
                 PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected
             else
-                TrackEditor.new(@pts.get_iter(@tvpt.selection.selected_rows[0][TT_DATA]).track.rrtrack).run if @tvpt.selection.count_selected_rows > 0
+                iter = @tvpt.selection.count_selected_rows > 0 ? @pts.get_iter(@tvpt.selection.selected_rows[0]) : nil
+                DBEditor.new(@mc, iter[TT_DATA], DBEditor::TRACK_PAGE).run if iter
             end
         else
             PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected

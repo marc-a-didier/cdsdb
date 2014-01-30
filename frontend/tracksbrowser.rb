@@ -478,7 +478,7 @@ TRACE.debug("executing: #{sql}")
         # Voire si c'est vraiment utile de traiter des cas plus qu'exceptionnels...:
         # s'en fout si on a change qqch dans les db refs et qu'on se repositionne pas automatiquement
         # TODO: faire le rename/retag local/remote si le titre/genre a change
-        if DBEditor.new(@mc, @trklnk.track).run == Gtk::Dialog::RESPONSE_OK
+        if DBEditor.new(@mc, @trklnk, DBEditor::TRACK_PAGE).run == Gtk::Dialog::RESPONSE_OK
             # TODO: review this code. It's useless or poorly coded
 #             load_entries
 #             @trklnk.track.sql_load

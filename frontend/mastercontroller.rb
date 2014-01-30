@@ -103,15 +103,6 @@ class MasterController
         @mw.trk_browser.invalidate
     end
 
-    def new_link_from_selection
-#         return DBCacheLink.new.set_artist_ref(record.compile? ? segment.rartist : artist.rartist)
-        # As we never want to edit artist 0 (compile), the segment has almost all needed infos to fill the link
-        return DBCacheLink.new.set_artist_ref(segment.rartist) \
-                              .set_record_ref(segment.rrecord) \
-                              .set_segment_ref(segment.rsegment) \
-                              .set_track_ref(track.rtrack)
-    end
-
     def sub_filter
         return @mw.art_browser.sub_filter
     end
