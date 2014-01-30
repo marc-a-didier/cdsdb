@@ -26,12 +26,13 @@ class TrkPListsDialog
         tv.append_column(Gtk::TreeViewColumn.new("Play list", srenderer, :text => COL_PLIST))
         tv.append_column(Gtk::TreeViewColumn.new("Entry", srenderer, :text => COL_ENTRY))
 
-        sql = %Q{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack FROM pltracks
+        sql = %Q{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack, plists.rplist FROM pltracks
 				 INNER JOIN plists ON plists.rplist = pltracks.rplist
 				 WHERE pltracks.rtrack=#{rtrack};}
         CDSDB.execute(sql) { |row|
             iter = tv.model.append
-            row.each_with_index { |val, i| iter[i] = val }
+            row[1] = CDSDB.get_first_value("SELECT COUNT(rpltrack)+1 FROM pltracks WHERE rplist=#{row[3]} AND iorder<#{row[1]};")
+            row.each_with_index { |val, i| iter[i] = val if i < 3 }
 		}
     end
 
