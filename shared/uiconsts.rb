@@ -340,6 +340,7 @@ module UIConsts
     PM_PQ_CLEAR         = "pm_pq_clear"
     PM_PQ_SHOWINBROWSER = "pm_pq_showinbrowser"
     PM_PQ_SHUFFLE       = "pm_pq_shuffle"
+    PM_PQ_INFOS         = "pm_pq_infos"
 
     SCROLLEDWINDOW_PQUEUE   = "scrolledwindow_pqueue"
     TV_PQUEUE               = "tv_pqueue"

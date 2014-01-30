@@ -10,10 +10,13 @@ class PQueueWindow < TopWindow
         @mc.glade[UIConsts::PM_PQ_REMOVE].signal_connect(:activate)     { |widget| do_del(widget, false) }
         @mc.glade[UIConsts::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
         @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { @plq.clear; update_status; @tvpq.columns_autosize }
-        @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
-            @mc.select_track(@tvpq.selection.selected[4].uilink) if @tvpq.selection.selected
-        }
         @mc.glade[UIConsts::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
+        @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
+            @mc.select_track(@tvpq.selection.selected[4].uilink) #if @tvpq.selection.selected
+        }
+        @mc.glade[UIConsts::PM_PQ_INFOS].signal_connect(:activate) {
+            DBEditor.new(@mc, @tvpq.selection.selected[4].uilink, DBEditor::TRACK_PAGE).run
+        }
 
         srenderer = Gtk::CellRendererText.new()
         @tvpq = @mc.glade[UIConsts::TV_PQUEUE]
@@ -92,6 +95,7 @@ class PQueueWindow < TopWindow
             @mc.glade[UIConsts::PM_PQ_REMOVE].sensitive = has_sel
             @mc.glade[UIConsts::PM_PQ_RMFROMHERE].sensitive = has_sel
             @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].sensitive = has_sel
+            @mc.glade[UIConsts::PM_PQ_INFOS].sensitive = has_sel && @tvpq.selection.selected[4].uilink.tags == nil
             @mc.glade[UIConsts::PM_PQ].popup(nil, nil, event.button, event.time)
         end
     end
