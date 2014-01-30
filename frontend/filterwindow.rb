@@ -345,7 +345,7 @@ class FilterWindow < TopWindow
         tracks.each_with_index { |track, i|
             f << "i="<< i << "  Weight: " << track.weight << " for " << track.title << "\n"
             if destination == DEST_PLIST                   
-                CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{i+1});")
+                CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{(i+1)*1024});")
             else
                 links << UILink.new.set_track_ref(track.rtrack)
             end

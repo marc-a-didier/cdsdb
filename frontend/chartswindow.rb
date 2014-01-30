@@ -199,7 +199,7 @@ class ChartsWindow < TopWindow
         rpltrack = DBUtils::get_last_id("pltrack")
         count = 1
         @lsc.each { |model, path, iter|
-            CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count});")
+            CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count*1024});")
             count += 1
         }
     end
