@@ -38,7 +38,8 @@ class PQueueWindow < TopWindow
         @tvpq.append_column(trk_column)
         @tvpq.append_column(Gtk::TreeViewColumn.new("Play time", srenderer, :text => 3))
         @tvpq.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
-        @tvpq.signal_connect(:drag_end) { |widget, context| i = 0; @plq.each { |model, path, iter| i += 1; iter[0] = i } }
+        # Seems that drag_end is only called when reordering.
+        @tvpq.signal_connect(:drag_end) { |widget, context| TRACE.debug("drag_end called"); @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 } }
 
         @tvpq.columns[2].resizable = true
 
@@ -116,13 +117,6 @@ class PQueueWindow < TopWindow
     end
 
     def on_drag_received(widget, context, x, y, data, info, time)
-#p info
-#   p *data
-#   p data.type
-#p data.text
-#   p data.selection
-#   p data.selection.name
-#   p data.uris
         case info
             when 700 #DragType::BROWSER_SELECTION
                 sender, type, call_back, param = data.text.split(":")
@@ -252,6 +246,8 @@ class PQueueWindow < TopWindow
         return player_data
     end
 
+    # Check if there's an entry after current entry which is not removed yet.
+    # Backward is not supported so return false.
     def has_more_tracks(is_next)
         return is_next ? !@plq.get_iter("1").nil? : false
     end
