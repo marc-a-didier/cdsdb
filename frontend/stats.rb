@@ -49,6 +49,9 @@ class Stats
                 "Charts by genre & tracks" => [false, :charts_by_tracks],
 
                 "List of rated tracks" => [false, :top_rated_tracks] }
+    
+    # SQL filter for sorting classic/baroque/gregorian out of selection
+    NO_CBG = "records.rgenre NOT IN (1, 28, 41)"
 
     class ColorAlternator
 
@@ -379,90 +382,71 @@ class Stats
     end
 
     def rating_tags_stats
-        # Don't take classical music in these stats
-        sql_filter = "records.rgenre NOT IN (1, 28, 41)"
-
-        sql = %{SELECT COUNT(tracks.rtrack) FROM tracks
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE #{sql_filter};}
-        tot_tracks = CDSDB.get_first_value(sql)
-
-        # Number of played tracks is selected from logtracks here and from tracks
-        # in the tags table. It enables to check that both sums are equals
-        # and the database integrity.
-        sql = %{SELECT COUNT(logtracks.rtrack) FROM logtracks
-                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE #{sql_filter};}
-        tot_played = CDSDB.get_first_value(sql)
-
-        # Number and percentage of rated track
-        sql = %{SELECT COUNT(tracks.rtrack), SUM(tracks.iplayed*tracks.iplaytime) FROM tracks
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE tracks.irating<>0 AND #{sql_filter};}
-        tot_rated, tot_rtime = CDSDB.get_first_row(sql)
         
-        # Get total played time of rated tracks here since the total is get from logtracks
-        sql = %{SELECT SUM(tracks.iplayed*tracks.iplaytime) FROM tracks
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE #{sql_filter};}
-        tot_ptime = CDSDB.get_first_value(sql)
-
-        new_table("Rated tracks without Classical/Baroque", ["Rating", "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R", "Played time:R", "Percentage:R"])
-        UIConsts::RATINGS.each_with_index { |rating, index|
-            break if index > 6                                
+        def exec_filtered_sql(filter)
+            filter = filter.empty? ? NO_CBG : filter+" AND #{NO_CBG}"
             sql = %{SELECT COUNT(tracks.rtrack), SUM(tracks.iplayed), SUM(tracks.iplayed*tracks.iplaytime) FROM tracks
                     INNER JOIN records ON records.rrecord=tracks.rrecord
-                    WHERE tracks.irating=#{index} AND #{sql_filter};}
-            rated, played, ptime = CDSDB.get_first_row(sql)
-#             played = 0 if played.nil?
-            new_row([rating, rated, "%6.2f" % [rated*100.0/tot_tracks], 
-                     played, "%6.2f" % [played*100.0/tot_played],
-                     ptime.to_day_length, "%6.2f" % [ptime*100.0/tot_ptime]])
+                    WHERE #{filter};}
+            return CDSDB.get_first_row(sql)
+        end
+        
+        def gen_table(title, first_col)
+            new_table(title+" tracks without Classical/Baroque",
+                      [first_col, "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R", 
+                       "Played time:R", "Percentage:R"])
+        end
+
+        def gen_row(title, data_row, tot_row)
+            new_row([title, 
+                     data_row[0], "%6.2f" % [data_row[0]*100.0/tot_row[0]], 
+                     data_row[1], "%6.2f" % [data_row[1]*100.0/tot_row[1]],
+                     data_row[2].to_day_length, "%6.2f" % [data_row[2]*100.0/tot_row[2]]])
+        end
+        
+        # Total tracks, played tracks and total playtime without classic. 
+        # Valid for both rating and tags.
+        tot_row = exec_filtered_sql("")
+
+        #
+        # Ratings
+        #
+        
+        tot_rated_row = exec_filtered_sql("tracks.irating<>0")
+        tot_unrated_row = exec_filtered_sql("tracks.irating=0")
+        
+        gen_table("Rated", "Rating")
+        (1..6).each { |index|
+            data_row = exec_filtered_sql("tracks.irating=#{index}")
+
+            gen_row(UIConsts::RATINGS[index], data_row, tot_row)                              
         }
-        new_row(["Qualified total", tot_rated, "%6.2f" % [tot_rated*100.0/tot_tracks], 
-                 "", "",
-                 tot_rtime.to_day_length, ""])
-        new_row(["Tracks total", tot_tracks, "", tot_played, "", tot_ptime.to_day_length, ""])
+        gen_row("Qualified", tot_rated_row, tot_row)
+        gen_row("Unqualified", tot_unrated_row, tot_row)
+
+        3.times { |i| tot_rated_row[i] += tot_unrated_row[i] }
+        gen_row("Tracks", tot_rated_row, tot_row)
+
         end_table
 
-        # Number and percentage of tagged track
-        sql = %{SELECT COUNT(tracks.rtrack), SUM(tracks.iplayed*tracks.iplaytime) FROM tracks
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE tracks.itags<>0 AND #{sql_filter};}
-        tot_tagged, tot_tagptime = CDSDB.get_first_row(sql)
+        #
+        # Tags
+        #
+        tot_tagged_row = exec_filtered_sql("tracks.itags<>0")
+        tot_untagged_row = exec_filtered_sql("tracks.itags=0")
 
-        sql = %{SELECT SUM(tracks.iplayed), COUNT(tracks.rtrack), SUM(tracks.iplayed*tracks.iplaytime) FROM tracks
-                INNER JOIN records ON records.rrecord=tracks.rrecord
-                WHERE tracks.itags = 0 AND #{sql_filter};}
-        untagged_played, tot_untagged, tot_untptime = CDSDB.get_first_row(sql)
-
-#         sql = %{SELECT SUM(tracks.iplayed) FROM tracks
-#                 INNER JOIN records ON records.rrecord=tracks.rrecord
-#                 WHERE tracks.itags = 0 AND #{sql_filter};}
-#         untagged_played = CDSDB.get_first_value(sql)
-
-        tot_ptime = tot_tagptime+tot_untptime
-        
-        new_table("Tagged tracks without Classical/Baroque", ["Tags", "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R", "Played time:R", "Percentage:R"])
+        gen_table("Tagged", "Tag")
         UIConsts::TAGS.each_with_index { |tag, index|
-            sql = %{SELECT COUNT(tracks.rtrack), SUM(tracks.iplayed), SUM(tracks.iplayed*tracks.iplaytime) FROM tracks
-                    INNER JOIN records ON records.rrecord=tracks.rrecord
-                    WHERE (tracks.itags & #{1 << index}) <> 0 AND #{sql_filter};}
-            tagged, played, ptime = CDSDB.get_first_row(sql)
-#             played = 0 if played.nil?
+            data_row = exec_filtered_sql("(tracks.itags & #{1 << index}) <> 0")
 
-            new_row([tag, tagged, "%6.2f" % [tagged*100.0/tot_tracks], 
-                     played, "%6.2f" % [played*100.0/tot_played],
-                     ptime.to_day_length, "%6.2f" % [ptime*100.0/tot_tagptime]])
+            gen_row(tag, data_row, tot_row)                           
         }
-        new_row(["Tagged total", tot_tagged, "%6.2f" % [tot_tagged*100.0/tot_tracks],
-                 "", "",
-                 tot_tagptime.to_day_length, "%6.2f" % [tot_tagptime*100.0/tot_ptime]])
-        new_row(["Untagged", tot_untagged, "%6.2f" % [tot_untagged*100.0/tot_tracks], 
-                 untagged_played, "%6.2f" % [untagged_played*100.0/tot_played],
-                 tot_untptime.to_day_length, "%6.2f" % [tot_untptime*100.0/tot_ptime]])
-        new_row(["Tracks total", tot_tracks, "", tot_played, "", tot_ptime.to_day_length, ""])
+        gen_row("Tagged", tot_tagged_row, tot_row)                           
+        gen_row("Untagged", tot_untagged_row, tot_row)
+
+        3.times { |i| tot_tagged_row[i] += tot_untagged_row[i] }
+        gen_row("Tracks", tot_tagged_row, tot_row)
+
         end_table
     end
     
