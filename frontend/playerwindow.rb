@@ -6,12 +6,14 @@ class PlayerWindow < TopWindow
 
     LEVEL_ELEMENT_NAME = "my_level_meter"
     MINIMUM_LEVEL = -60.0  # The scale range will be from this value to 0 dB, has to be negative
+    POS_MIN_LEVEL = -1 * MINIMUM_LEVEL
     METER_WIDTH = 100 #70
     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
 
     ELAPSED   = 0
     REMAINING = 1
 
+    PLAY_STATE_BTN = { false => Gtk::Stock::MEDIA_PLAY, true => Gtk::Stock::MEDIA_PAUSE }
 
     def initialize(mc)
         super(mc, UIConsts::PLAYER_WINDOW)
@@ -29,10 +31,10 @@ class PlayerWindow < TopWindow
 
         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
-        @pstate = {false => Gtk::Stock::MEDIA_PLAY, true => Gtk::Stock::MEDIA_PAUSE}
         @player_data = nil
 
-        @track_infos = TrackInfos.new
+        # Intended to be a PlayerData array to pre-fetch tracks to play
+        @queue = [] 
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
@@ -66,7 +68,7 @@ class PlayerWindow < TopWindow
     def on_btn_play
         if playing? || paused?
             playing? ? @playbin.pause : @playbin.play
-            @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = @pstate[playing?]
+            @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = PLAY_STATE_BTN[playing?]
             @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = paused?
             @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = playing?
             @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
@@ -144,18 +146,30 @@ TRACE.debug("Player audio file was empty!".red)
         start = Time.now.to_f
         @player_data.owner.notify_played(@player_data) if @player_data
 
-        @mc.notify_played(@player_data.uilink) if has_ended
-
-        @player_data = @mc.get_next_track(true)
-
-        play_track
-        TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+#         @mc.notify_played(@player_data.uilink) if has_ended
+# 
+#         @player_data = @mc.get_next_track(true)
+# 
+#         play_track
+        # Test to lessen gap between tracks
+        if has_ended
+            tmp_link = @player_data.uilink.clone
+            @player_data = @mc.get_next_track(true)
+            play_track
+            TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+            @mc.notify_played(tmp_link)
+        else
+            @player_data = @mc.get_next_track(true)
+            play_track
+#             TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+        end            
+            
+#         TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     def init_player
         @seeking = false
 
-        @minimum_level_positive = -1 * MINIMUM_LEVEL # convert that only once, to save CPU power
         @playbin = Gst::Pipeline.new("levelmeter")
         bus = @playbin.bus
         bus.add_watch do |bus, message|
@@ -171,8 +185,8 @@ TRACE.debug("Player audio file was empty!".red)
                     if message.source.name == LEVEL_ELEMENT_NAME
                         channels = message.structure["peak"].size
                         channels.times do |i|
-                            peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / @minimum_level_positive).round + METER_WIDTH : 0
-                            #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / @minimum_level_positive).round + METER_WIDTH : 0
+                            peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
+                            #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
                             peak = 100.0 if peak > 100.0
                             if i == 0
                                 @lmeter.fraction = peak/100.0
@@ -203,10 +217,6 @@ TRACE.debug("Player audio file was empty!".red)
             #false
         #}
         #@seek_handler = @slider.signal_connect(:value_changed) { puts @slider.value.to_s; seek_set; seek; }
-    end
-
-    def reinit_player
-        @source = Gst::ElementFactory.make("filesrc")
 
         @convertor = Gst::ElementFactory.make("audioconvert")
 
@@ -215,6 +225,10 @@ TRACE.debug("Player audio file was empty!".red)
         @level.message = true
 
         @sink = Gst::ElementFactory.make("autoaudiosink")
+    end
+
+    def reinit_player
+        @source = Gst::ElementFactory.make("filesrc")
 
         @decoder = Gst::ElementFactory.make("decodebin")
         @decoder.signal_connect(:new_decoded_pad) do | dbin, pad, is_last |
