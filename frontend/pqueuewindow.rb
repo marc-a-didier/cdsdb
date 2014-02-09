@@ -9,7 +9,7 @@ class PQueueWindow < TopWindow
 
         @mc.glade[UIConsts::PM_PQ_REMOVE].signal_connect(:activate)     { |widget| do_del(widget, false) }
         @mc.glade[UIConsts::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
-        @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { @plq.clear; update_status; @tvpq.columns_autosize }
+        @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { clear }
         @mc.glade[UIConsts::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
         @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
             @mc.select_track(@tvpq.selection.selected[4].uilink) #if @tvpq.selection.selected
@@ -80,14 +80,23 @@ class PQueueWindow < TopWindow
             @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
         end
         update_status
+        @mc.track_provider_changed(self)
     end
 
+    def clear
+        @plq.clear
+        update_status
+        @tvpq.columns_autosize 
+        @mc.track_provider_changed(self)
+    end
+    
     def shuffle
         order = []
         @plq.each { |model, path, iter| order << path.to_s.to_i }
         return if order.size < 2
         @plq.reorder(order.shuffle!)
         @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
+        @mc.track_provider_changed(self)
     end
 
     def show_popup(widget, event)
@@ -158,12 +167,13 @@ class PQueueWindow < TopWindow
         end
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
         update_status
+        @mc.track_provider_changed(self)
         return true
     end
 
     def enqueue(uilinks)
         uilinks.each { |uilink|
-            uilink.get_audio_file(self, @mc.tasks)
+            uilink.get_audio_file(self, @mc.tasks) #unless uilink.audio_status == AudioLink::OK
             unless uilink.audio_status == AudioLink::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
@@ -181,6 +191,7 @@ class PQueueWindow < TopWindow
 
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
+        @mc.track_provider_changed(self)
     end
 
     def update_status
@@ -231,23 +242,32 @@ class PQueueWindow < TopWindow
     end
 
     def get_next_track
-        entry = player_data = nil
         @plq.each { |model, path, iter|
             unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
-                entry = iter
-                break
+                return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
             end
         }
-        if entry
-            player_data = PlayerData.new(self, entry[4].internal_ref, entry[4].uilink)
-        else
-            @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
-        end
-        return player_data
+        @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
+        return nil
+    end
+    
+    # Return an array of PlayerData that's max_entries in size and contain the next
+    # tracks to play.
+    # player_data is the current top of stack track of the player
+    def prefetch_tracks(player_data, max_entries)
+        queue = []
+        @plq.each { |model, path, iter|
+            next if player_data && player_data.internal_ref == iter[4].internal_ref        
+            unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
+                queue << PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
+                break if queue.size >= max_entries  
+            end
+        }
+        return queue
     end
 
     # Check if there's an entry after current entry which is not removed yet.
-    # Backward is not supported so return false.
+    # Backward is not supported in play queue so return false.
     def has_more_tracks(is_next)
         return is_next ? !@plq.get_iter("1").nil? : false
     end

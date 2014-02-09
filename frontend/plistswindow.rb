@@ -164,6 +164,7 @@ public
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
+            @mc.track_provider_changed(self)
         end
     end
 
@@ -211,6 +212,7 @@ p new_iorder
         end
 
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
+        @mc.track_provider_changed(self)
         return true
     end
 
@@ -235,6 +237,7 @@ p new_iorder
 
         @tvpt.columns[col_id].sort_indicator = order
         @pts.set_sort_column_id(col_id, order)
+        @mc.track_provider_changed(self)
     end
 
     #
@@ -277,6 +280,7 @@ p new_iorder
 
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
+        @mc.track_provider_changed(self)
     end
 
     def get_audio_file
@@ -307,6 +311,20 @@ p new_iorder
         return PlayerData.new(self, @curr_track, iter[TT_DATA])
     end
 
+    # Return an array of PlayerData that's max_entries in size and contain the next
+    # tracks to play.
+    # player_data is the current top of stack track of the player
+    def prefetch_tracks(player_data, max_entries)
+        queue = []
+        max_entries.times do |i|
+            iter = @pts.get_iter((@curr_track+i+1).to_s)
+            break if iter.nil?
+            queue << PlayerData.new(self, @curr_track+i+1, iter[TT_DATA])
+            # TODO: get_audio_file(iter)
+        end
+        return queue
+    end
+
     def reset_player_track
         @curr_track = -1
         @playing_pl = 0
@@ -315,7 +333,7 @@ p new_iorder
 
     def get_next_track
         if @curr_track == -1
-            @tvpt.cursor.nil? ? @curr_track = 0 : @curr_track = @tvpt.cursor[0].to_s.to_i
+            @curr_track = @tvpt.cursor.nil? ? 0 : @tvpt.cursor[0].to_s.to_i
             @playing_pl = @current_pl.rplist
         else
             @curr_track += 1
@@ -329,11 +347,7 @@ p new_iorder
     end
 
     def has_more_tracks(is_next)
-        if is_next
-            return !@pts.get_iter((@curr_track+1).to_s).nil?
-        else
-            return @curr_track-1 >= 0
-        end
+        return is_next ? !@pts.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
     end
 
     #
@@ -357,6 +371,7 @@ p new_iorder
         reset_player_track
         @current_pl.ref_load(@tvpl.selection.selected[0])
         update_tvpt
+        @mc.track_provider_changed(self)
     end
 
     def on_tv_edited(widget, path, new_text)
@@ -369,6 +384,7 @@ p new_iorder
     def do_add
         exec_sql(%{INSERT INTO plists VALUES (#{DBUtils::get_last_id('plist')+1}, 'New Play List', 0, #{Time.now.to_i}, 0);})
         update_tvpl
+        @mc.track_provider_changed(self)
     end
 
     def do_del(widget)
@@ -391,12 +407,14 @@ p new_iorder
             }
             renumber_tracks_list_store
             update_tracks_time_infos
+            @mc.track_provider_changed(self)
         else
             if UIUtils::get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
                 exec_sql("DELETE FROM pltracks WHERE rplist=#{@current_pl.rplist};")
                 exec_sql("DELETE FROM plists WHERE rplist=#{@current_pl.rplist};")
                 update_tvpl
                 update_tvpt
+                @mc.track_provider_changed(self)
             end
         end
     end
@@ -413,6 +431,7 @@ p new_iorder
         @curr_track = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
         @pts.reorder(new_order) # It's magic!
+        @mc.track_provider_changed(self)
     end
 
     def do_renumber
@@ -423,6 +442,7 @@ p new_iorder
 
     def enqueue_track
         @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue([iter[TT_DATA]]) }
+        @mc.track_provider_changed(self)
     end
 
     def show_infos(is_popup)
@@ -518,6 +538,7 @@ p new_iorder
         if sel_iter = @tvpl.find_ref(rplist)
             @tvpl.set_cursor(sel_iter.path, nil, false)
             @tvpt.set_cursor(sel_iter.path, nil, false) if sel_iter = @tvpt.find_ref(rpltrack)
+            @mc.track_provider_changed(self)
         end
     end
 
