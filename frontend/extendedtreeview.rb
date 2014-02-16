@@ -21,8 +21,8 @@ class Gtk::TreeView
         model.clear
     end
 
-    def find_ref(ref)
-        model.each { |model, path, iter| return iter if iter[0] == ref }
+    def find_ref(ref, column = 0)
+        model.each { |model, path, iter| return iter if iter[column] == ref }
         return nil
     end
 

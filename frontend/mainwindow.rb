@@ -33,7 +33,7 @@ class MainWindow < TopWindow
         super(mc, MAIN_WINDOW)
 
 #         @glade = GTBld.main
-        @mc = mc
+#         @mc = mc
         @glade = mc.glade
 
 
