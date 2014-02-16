@@ -164,7 +164,7 @@ public
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
-            @mc.track_provider_changed(self)
+            @mc.track_list_changed(self)
         end
     end
 
@@ -188,7 +188,7 @@ public
                 if r.nil?
                     iter = @pts.append
                     new_iorder = @pts.get_iter((iter.path.to_s.to_i-1).to_s)[TT_IORDER]+1024
-puts("new=#{new_iorder}")                    
+puts("new=#{new_iorder}")
                 else
                     pos = r[0].to_s.to_i
                     pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
@@ -196,13 +196,13 @@ puts("new=#{new_iorder}")
                     prev = pos == 0 ? nil : @pts.get_iter((pos-1).to_s)
                     succ = @pts.get_iter((pos+1).to_s) # succ can't be nil, handled by r.nil? test
                     new_iorder = prev.nil? ? succ[TT_IORDER]/2 : (succ[TT_IORDER]+prev[TT_IORDER])/2
-p new_iorder                    
+p new_iorder
                 end
                 @pts.n_columns.times { |i| iter[i] = itr[i] }
                 @pts.remove(itr)
                 iter[TT_IORDER] = new_iorder
                 exec_sql("UPDATE pltracks SET iorder=#{new_iorder} WHERE rpltrack=#{iter[0]};")
-                
+
                 renumber_tracks_list_store
             end
         else
@@ -212,7 +212,7 @@ p new_iorder
         end
 
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
         return true
     end
 
@@ -237,7 +237,7 @@ p new_iorder
 
         @tvpt.columns[col_id].sort_indicator = order
         @pts.set_sort_column_id(col_id, order)
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     #
@@ -253,6 +253,7 @@ p new_iorder
         @current_pl.rplist == @playing_pl ? update_tracks_label : plist_infos
     end
 
+    # Displayed infos when plists window is not the current player provider
     def plist_infos
         @mc.glade[UIConsts::PL_LBL_TRACKS].text = @tracks.to_s+" track".check_plural(@tracks)
         @mc.glade[UIConsts::PL_LBL_PTIME].text = @ttime.to_hr_length
@@ -274,13 +275,40 @@ p new_iorder
         end
     end
 
-    def notify_played(player_data)
-        #@curr_track += 1
+    def update_remaining_time(iter)
+        @remaining_time = 0
+        local_iter = iter.clone
+        while local_iter
+            @remaining_time += local_iter[TT_DATA].track.iplaytime
+            break unless local_iter.next!
+        end
+#         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
+        update_tracks_label
+        update_ptime_label(@remaining_time)
+    end
+
+    def started_playing(player_data)
+        @curr_track = player_data.internal_ref
+        iter = @pts.get_iter(@curr_track.to_s)
+        if iter
+            @tvpt.set_cursor(iter.path, nil, false)
+            @playing_pl = @current_pl.rplist
+            update_remaining_time(iter)
+        end
+    end
+
+    def notify_played(player_data, is_last_one, was_stopped)
+        if is_last_one
+            @curr_track = -1
+            @playing_pl = 0
+            plist_infos
+        end
+        plist_infos if was_stopped
     end
 
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def get_audio_file
@@ -304,25 +332,37 @@ p new_iorder
             sleep(0.1)
         end
 
-        @remaining_time = 0
-        @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
-        update_tracks_label
-        update_ptime_label(@remaining_time)
+#         @remaining_time = 0
+#         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
+#         update_tracks_label
+#         update_ptime_label(@remaining_time)
+        update_remaining_time(iter)
         return PlayerData.new(self, @curr_track, iter[TT_DATA])
     end
 
     # Return an array of PlayerData that's max_entries in size and contain the next
     # tracks to play.
     # player_data is the current top of stack track of the player
-    def prefetch_tracks(player_data, max_entries)
-        queue = []
-        max_entries.times do |i|
-            iter = @pts.get_iter((@curr_track+i+1).to_s)
-            break if iter.nil?
-            queue << PlayerData.new(self, @curr_track+i+1, iter[TT_DATA])
-            # TODO: get_audio_file(iter)
+    def prefetch_tracks(queue, max_entries)
+#         queue = []
+        while queue.size < max_entries+1 # queue has at least the [0] element -> +1
+            iter = @pts.get_iter((@curr_track+queue.size).to_s)
+            break if iter.nil? # Reached the end of the play list
+
+            iter[TT_DATA].setup_audio_file
+            if iter[TT_DATA].playable? # OK or MISPLACED
+                queue << PlayerData.new(self, @curr_track+queue.size, iter[TT_DATA])
+            else
+                # If track available on server, start downloading it.
+                # If not finished before the end of the current playing track,
+                # player will stop.
+                if iter[TT_DATA].available_on_server?
+                    iter[TT_DATA].get_remote_audio_file(self, @mc.tasks)
+                    break
+                end
+            end
         end
-        return queue
+#         return queue
     end
 
     def reset_player_track
@@ -371,7 +411,7 @@ p new_iorder
         reset_player_track
         @current_pl.ref_load(@tvpl.selection.selected[0])
         update_tvpt
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def on_tv_edited(widget, path, new_text)
@@ -384,7 +424,7 @@ p new_iorder
     def do_add
         exec_sql(%{INSERT INTO plists VALUES (#{DBUtils::get_last_id('plist')+1}, 'New Play List', 0, #{Time.now.to_i}, 0);})
         update_tvpl
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def do_del(widget)
@@ -407,14 +447,14 @@ p new_iorder
             }
             renumber_tracks_list_store
             update_tracks_time_infos
-            @mc.track_provider_changed(self)
+            @mc.track_list_changed(self)
         else
             if UIUtils::get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
                 exec_sql("DELETE FROM pltracks WHERE rplist=#{@current_pl.rplist};")
                 exec_sql("DELETE FROM plists WHERE rplist=#{@current_pl.rplist};")
                 update_tvpl
                 update_tvpt
-                @mc.track_provider_changed(self)
+                @mc.track_list_changed(self)
             end
         end
     end
@@ -431,7 +471,7 @@ p new_iorder
         @curr_track = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
         @pts.reorder(new_order) # It's magic!
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def do_renumber
@@ -442,7 +482,7 @@ p new_iorder
 
     def enqueue_track
         @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue([iter[TT_DATA]]) }
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def show_infos(is_popup)
@@ -460,11 +500,11 @@ p new_iorder
 
     def do_export_xspf
         xdoc = REXML::Document.new << REXML::XMLDecl.new("1.0", "UTF-8", "no")
-        
+
         xdoc.add_element("playlist", {"version"=>"1", "xmlns"=>"http://xspf.org/ns/0/"})
         xdoc.root.add_element("creator").text = "CDsDB #{Cdsdb::VERSION}"
         tracklist = xdoc.root.add_element("trackList")
-        
+
         @pts.each { |model, path, iter|
             next if iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
             track = REXML::Element.new("track")
@@ -472,7 +512,7 @@ p new_iorder
             track.add_element("location").text = URI::escape("file://"+iter[TT_DATA].audio_file)
             tracklist << track
         }
-        
+
         fname = CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.xspf"
         File.open(fname, "w") { |file| MyFormatter.new.write(xdoc, file) }
     end
@@ -538,7 +578,7 @@ p new_iorder
         if sel_iter = @tvpl.find_ref(rplist)
             @tvpl.set_cursor(sel_iter.path, nil, false)
             @tvpt.set_cursor(sel_iter.path, nil, false) if sel_iter = @tvpt.find_ref(rpltrack)
-            @mc.track_provider_changed(self)
+            @mc.track_list_changed(self)
         end
     end
 

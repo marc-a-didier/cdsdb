@@ -64,6 +64,8 @@ class MasterController
         @glade[MM_WIN_FILTER].active = false if window == @filters
         @glade[MM_WIN_TASKS].active = false if window == @tasks
         @glade[MM_WIN_MEMOS].active = false if window == @memos
+        
+        @player.unfetch(window) if window == @pqueue || window == @plists
     end
 
     def reset_filter_receiver
@@ -185,10 +187,6 @@ class MasterController
         return @mw.trk_browser.get_track_uilink(track_index)
     end
 
-    def track_provider_changed(sender)
-        @player.refetch(sender)
-    end
-
     def notify_played(uilink, host = "")
         # If rtrack is -1 the track has been dropped into the pq from the file system
         return if uilink.track.rtrack == -1 || uilink.track.banned?
@@ -251,11 +249,18 @@ class MasterController
     #
     # Messages sent by the player to get a track provider
     #
+    def track_provider
+        return @pqueue if @pqueue.window.visible?
+        return @plists if @plists.window.visible?
+        return @mw.trk_browser
+    end
+    
     def get_next_track(is_next)
-        meth = is_next ? :get_next_track : :get_prev_track
-        return @pqueue.send(meth) if @pqueue.window.visible?
-        return @plists.send(meth) if @plists.window.visible?
-        return @mw.trk_browser.send(meth)
+        track_provider.send(is_next ? :get_next_track : :get_prev_track)
+    end
+
+    def track_list_changed(sender)
+        @player.refetch(sender)
     end
 
 end

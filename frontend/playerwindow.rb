@@ -1,5 +1,4 @@
 
-# PlayerData = Struct.new(:owner, :internal_ref, :fname, :rtrack, :rrecord, :irecsymlink)
 PlayerData = Struct.new(:owner, :internal_ref, :uilink)
 
 class PlayerWindow < TopWindow
@@ -14,9 +13,9 @@ class PlayerWindow < TopWindow
     REMAINING = 1
 
     PLAY_STATE_BTN = { false => Gtk::Stock::MEDIA_PLAY, true => Gtk::Stock::MEDIA_PAUSE }
-    
+
     PREFETCH_SIZE = 1
-    
+
 
     def initialize(mc)
         super(mc, UIConsts::PLAYER_WINDOW)
@@ -34,10 +33,10 @@ class PlayerWindow < TopWindow
 
         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
-        @player_data = nil
+#         @player_data = nil
 
         # Intended to be a PlayerData array to pre-fetch tracks to play
-        @queue = [nil] 
+        @queue = [nil]
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
@@ -57,11 +56,16 @@ class PlayerWindow < TopWindow
         update_hscale
     end
 
-    def reset_player
-#         @player_data.owner.reset_player_track if @player_data
-        @queue[0].owner.reset_player_track #if @player_data
-#         @player_data = nil
-#         @queue = []
+    def reset_player(notify)
+        @tip_pix = nil
+
+        if notify
+            TRACE.debug("[nil]".red)
+            if CFG.notifications?
+                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
+            end
+        end
+
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
         @seeking = false
         window.title = "Player - [Stopped]"
@@ -78,7 +82,7 @@ class PlayerWindow < TopWindow
             @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = playing?
             @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
         else
-            next_track
+            new_track(:start)
         end
         window.title = playing? ? "Player - [Playing]" : "Player - [Paused]"
     end
@@ -86,40 +90,37 @@ class PlayerWindow < TopWindow
     def on_btn_stop
         return unless playing? || paused?
         stop
-        @player_data.owner.timer_notification(-1) if @player_data.owner.respond_to?(:timer_notification)
-        reset_player
+        @queue[0].owner.notify_played(@queue[0], true, true)
+        reset_player(false)
         @queue.clear
     end
 
     def on_btn_next
-        return if !playing? || paused? || !@player_data.owner.has_more_tracks(true)
+        return if !playing? || paused? || !@queue[1]
         stop
-        next_track
+        new_track(:next)
     end
 
     def on_btn_prev
-        return if !playing? || paused? || !@player_data.owner.has_more_tracks(false)
-        @player_data.owner.notify_played(@player_data)
-        @player_data = @mc.get_next_track(false)
+        return if !playing? || paused? || !@queue[0].owner.has_more_tracks(false)
         stop
-        play_track
+        new_track(:prev)
     end
 
     def play_track(player_data)
-        @tip_pix = nil
-        unless player_data
-            TRACE.debug("[nil]".red)
-            reset_player
-            if CFG.notifications?
-                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
-            end
-            return
-        end
-        
+#         unless player_data
+#             TRACE.debug("[nil]".red)
+#             reset_player
+#             if CFG.notifications?
+#                 system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
+#             end
+#             return
+#         end
+
         # The status cache prevent the file name to be reloaded when selection is changed
         # in the track browser. So, from now, we may receive an empty file name but the
         # status is valid. If audio link is OK, we just have to find the file name for the track.
-        
+
         # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
         if player_data.uilink.audio_file.empty? #&& player_data.uilink.playable?
             player_data.uilink.setup_audio_file
@@ -131,14 +132,17 @@ TRACE.debug("Player audio file was empty!".red)
         reinit_player
         @source.location = player_data.uilink.audio_file
         @playbin.play
-        
+
         # Debug info
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
         TRACE.debug((info+", #{player_data.uilink.audio_file}]").cyan)
 
         # UI operations may be delayed
+        @tip_pix = nil
         setup_hscale
-        
+
+        player_data.owner.started_playing(player_data)
+
         @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = player_data.uilink.html_track_title_no_track_num(false, " ")
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
         @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
@@ -150,45 +154,63 @@ TRACE.debug("Player audio file was empty!".red)
         end
     end
 
-    def next_track(has_ended = false)
+    def new_track(msg)
         start = Time.now.to_f
 #         @player_data.owner.notify_played(@player_data) if @player_data
 
 #         @mc.notify_played(@player_data.uilink) if has_ended
-# 
+#
 #         @player_data = @mc.get_next_track(true)
-# 
+#
 #         play_track
         # Test to lessen gap between tracks
-        if has_ended
-            play_track(@queue[1])
+        if msg == :stream_ended
+#             play_track(@queue[1])
+            @queue[1] ? play_track(@queue[1]) : reset_player(true)
             TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-            @queue[0].owner.notify_played(@queue[0])
+            @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, false)
             @mc.notify_played(@queue[0].uilink)
             @queue.shift # Remove first entry, no more needed
         else
-            @queue[0] = @mc.get_next_track(true)
-            play_track(@queue[0])
-#             TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+            case msg
+                when :next
+                    @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, true)
+                    @queue.shift
+                when :prev
+                    @queue[0] = @mc.get_next_track(false)
+                when :start
+                    @queue[0] = @mc.get_next_track(true)
+            end
+
+            # queue[0] may be nil only if play button is pressed while there's nothing to play
+            play_track(@queue[0]) if @queue[0]
         end
+
         @queue.compact! # Remove nil entries
         if @queue[0]
-#             @queue << @queue[0].owner.prefetch_tracks(@queue[0], PREFETCH_SIZE)[0]
-            @queue[0].owner.prefetch_tracks(@queue[0], PREFETCH_SIZE).each { |pdata| @queue << pdata }
+#             @queue[0].owner.prefetch_tracks(@queue[0], PREFETCH_SIZE-@queue.size, PREFTECH_SIZE).each { |pdata| @queue << pdata }
+            @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
-        @player_data = @queue[0]
-            
+
 #         TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
-    def refetch(sender)
-        if @queue[0] && sender == @queue[0].owner
-            @queue.slice!(1) # Remove all entries after the first one
-#             @queue << sender.prefetch_tracks(@queue[0], PREFETCH_SIZE)[0]
-            sender.prefetch_tracks(@queue[0], PREFETCH_SIZE).each { |pdata| @queue << pdata }
+    # Called by mc if any change made in the provider track list
+    def refetch(track_provider)
+        if @queue[0] && track_provider == @queue[0].owner
+TRACE.debug("Player refetched".green)
+            @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
+#             track_provider.prefetch_tracks(@queue[0], PREFETCH_SIZE).each { |pdata| @queue << pdata }
+            track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
     end
-    
+
+    # Provider has been closed so remove all its remaining entries
+    def unfetch(track_provider)
+TRACE.debug("Player unfetched".brown)
+        @queue.slice!(1, PREFETCH_SIZE) if @queue[0] && track_provider == @queue[0].owner
+    end
+
     def init_player
         @seeking = false
 
@@ -200,7 +222,7 @@ TRACE.debug("Player audio file was empty!".red)
             case message.type
                 when Gst::Message::EOS
                     stop
-                    next_track(true)
+                    new_track(:stream_ended)
                 when Gst::Message::ERROR
                     stop
                 when Gst::Message::Type::ELEMENT
@@ -309,7 +331,7 @@ TRACE.debug("Player audio file was empty!".red)
 #             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
 #         end
 
-        @player_data.owner.timer_notification(itime) if @player_data.owner.respond_to?(:timer_notification)
+        @queue[0].owner.timer_notification(itime) if @queue[0].owner.respond_to?(:timer_notification)
         #show_tooltip(@tool_tip) if @tool_tip && @tooltip.visible?
     end
 
@@ -349,9 +371,9 @@ TRACE.debug("Player audio file was empty!".red)
     end
 
     def show_tooltip(si, tool_tip)
-        @tip_pix = @player_data.uilink.large_track_cover if @tip_pix.nil?
+        @tip_pix = @queue[0].uilink.large_track_cover if @tip_pix.nil?
         tool_tip.set_icon(@tip_pix)
-        text = @player_data.uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
+        text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
         tool_tip.set_markup(text)
     end
 

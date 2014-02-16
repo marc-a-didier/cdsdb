@@ -1,7 +1,6 @@
 
 class PQueueWindow < TopWindow
 
-#     PQExtra = Struct.new(:internal_ref, :rtrack, :rrecord, :ptime, :fname, :irecsymlink)
     PQData = Struct.new(:internal_ref, :uilink)
 
     def initialize(mc)
@@ -80,23 +79,23 @@ class PQueueWindow < TopWindow
             @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
         end
         update_status
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def clear
         @plq.clear
         update_status
-        @tvpq.columns_autosize 
-        @mc.track_provider_changed(self)
+        @tvpq.columns_autosize
+        @mc.track_list_changed(self)
     end
-    
+
     def shuffle
         order = []
         @plq.each { |model, path, iter| order << path.to_s.to_i }
         return if order.size < 2
         @plq.reorder(order.shuffle!)
         @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def show_popup(widget, event)
@@ -167,7 +166,7 @@ class PQueueWindow < TopWindow
         end
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
         update_status
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
         return true
     end
 
@@ -191,7 +190,7 @@ class PQueueWindow < TopWindow
 
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
-        @mc.track_provider_changed(self)
+        @mc.track_list_changed(self)
     end
 
     def update_status
@@ -226,19 +225,28 @@ class PQueueWindow < TopWindow
         end
     end
 
-    def notify_played(player_data)
-        curr_trk = nil
-        @plq.each { |model, path, iter| if iter[4].internal_ref == player_data.internal_ref then curr_trk = iter; break; end }
-        if curr_trk
-            @plq.remove(curr_trk)
-            @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
-            @tvpq.columns_autosize
-            update_status
+    def started_playing(player_data)
+        # Don't care...
+    end
+
+    def notify_played(player_data, is_last_one, was_stopped)
+        unless was_stopped
+            curr_trk = nil
+            @plq.each { |model, path, iter| if iter[4].internal_ref == player_data.internal_ref then curr_trk = iter; break; end }
+            if curr_trk
+                @plq.remove(curr_trk)
+                @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
+                @tvpq.columns_autosize
+                update_status
+            end
         end
+#         @mc.glade[UIConsts::PQ_LBL_ETA].text = "" if is_last_one
+        timer_notification(-1) if is_last_one || was_stopped
     end
 
     def reset_player_track
         # Nothing to do... but have to respond to the message
+#         @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
     end
 
     def get_next_track
@@ -247,23 +255,24 @@ class PQueueWindow < TopWindow
                 return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
             end
         }
-        @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
+#         @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
         return nil
     end
-    
+
     # Return an array of PlayerData that's max_entries in size and contain the next
     # tracks to play.
     # player_data is the current top of stack track of the player
-    def prefetch_tracks(player_data, max_entries)
-        queue = []
+    def prefetch_tracks(queue, max_entries)
+#         queue = []
         @plq.each { |model, path, iter|
-            next if player_data && player_data.internal_ref == iter[4].internal_ref        
-            unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
+#             next if queue[0].internal_ref == iter[4].internal_ref
+            in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
+            if !in_queue && iter[4].uilink.audio_status != AudioLink::ON_SERVER
                 queue << PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
-                break if queue.size >= max_entries  
+                break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
         }
-        return queue
+#         return queue
     end
 
     # Check if there's an entry after current entry which is not removed yet.
