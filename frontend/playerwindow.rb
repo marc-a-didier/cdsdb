@@ -14,7 +14,14 @@ class PlayerWindow < TopWindow
 
     PLAY_STATE_BTN = { false => Gtk::Stock::MEDIA_PLAY, true => Gtk::Stock::MEDIA_PAUSE }
 
-    PREFETCH_SIZE = 1
+    PREFETCH_SIZE = 2
+
+
+    SKIP_TO_NEXT = true
+    DONT_SKIP    = false
+
+    LAST_TRACK     = true
+    NOT_LAST_TRACK = false
 
 
     def initialize(mc)
@@ -90,7 +97,7 @@ class PlayerWindow < TopWindow
     def on_btn_stop
         return unless playing? || paused?
         stop
-        @queue[0].owner.notify_played(@queue[0], true, true)
+        @queue[0].owner.notify_played(@queue[0], LAST_TRACK, DONT_SKIP)
         reset_player(false)
         @queue.clear
     end
@@ -168,15 +175,17 @@ TRACE.debug("Player audio file was empty!".red)
 #             play_track(@queue[1])
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
             TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-            @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, false)
+            @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, SKIP_TO_NEXT)
             @mc.notify_played(@queue[0].uilink)
             @queue.shift # Remove first entry, no more needed
         else
             case msg
                 when :next
-                    @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, true)
+                    # We know it's not the last track because :next is not sent if no more track
+                    @queue[0].owner.notify_played(@queue[0], NOT_LAST_TRACK, SKIP_TO_NEXT)
                     @queue.shift
                 when :prev
+                    @queue.clear
                     @queue[0] = @mc.get_next_track(false)
                 when :start
                     @queue[0] = @mc.get_next_track(true)

@@ -297,13 +297,13 @@ p new_iorder
         end
     end
 
-    def notify_played(player_data, is_last_one, was_stopped)
-        if is_last_one
+    def notify_played(player_data, is_last_track, skip_to_next)
+        if is_last_track
             @curr_track = -1
             @playing_pl = 0
             plist_infos
         end
-        plist_infos if was_stopped
+        plist_infos unless skip_to_next
     end
 
     def dwl_file_name_notification(uilink, file_name)

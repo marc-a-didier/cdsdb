@@ -229,8 +229,8 @@ class PQueueWindow < TopWindow
         # Don't care...
     end
 
-    def notify_played(player_data, is_last_one, was_stopped)
-        unless was_stopped
+    def notify_played(player_data, is_last_track, skip_to_next)
+        if skip_to_next
             curr_trk = nil
             @plq.each { |model, path, iter| if iter[4].internal_ref == player_data.internal_ref then curr_trk = iter; break; end }
             if curr_trk
@@ -240,8 +240,7 @@ class PQueueWindow < TopWindow
                 update_status
             end
         end
-#         @mc.glade[UIConsts::PQ_LBL_ETA].text = "" if is_last_one
-        timer_notification(-1) if is_last_one || was_stopped
+        timer_notification(-1) if is_last_track
     end
 
     def reset_player_track
