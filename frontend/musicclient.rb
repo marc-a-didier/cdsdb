@@ -179,15 +179,23 @@ TRACE.debug("rename audio")
 
     def download_file(tasks, task_id, file_name, file_size, socket)
         curr_size = 0
+        status = 1
         FileUtils.mkpath(File.dirname(file_name)) #unless File.directory?(File.dirname(file_name))
         f = File.new(file_name, "wb")
         while (data = socket.read(CFG.tx_block_size))
             curr_size += data.size
-            tasks.update_file_op(task_id, curr_size, file_size)
+puts "data size=#{data.size}, curr size=#{curr_size}"
+            status = tasks.update_file_op(task_id, curr_size, file_size)
+            socket.puts(status == 1 ? "CONTINUE" : "CANCELLED") if data.size == CFG.tx_block_size
+# puts "conitnuing..."
+            break if status == 0
             f.write(data)
+#             break if status == 0 || data.size < CFG.tx_block_size
         end
-        tasks.end_file_op(task_id, file_name)
+#         socket.puts(curr_size.to_s)
+        tasks.end_file_op(task_id, file_name, status)
         f.close
+        FileUtils.rm(file_name) if status == 0
     end
 
 end

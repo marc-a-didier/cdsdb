@@ -568,7 +568,7 @@ p new_iorder
                     outf.write(data)
                     Gtk.main_iteration while Gtk.events_pending?
                 end
-                @mc.tasks.end_file_op(dl_id, audio_file)
+                @mc.tasks.end_file_op(dl_id, audio_file, 0)
             end
         }
     end

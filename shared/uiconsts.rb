@@ -41,7 +41,7 @@ module UIConsts
     MW_MEMOS_ACTION     = "mw_memos_action"
     MW_MEMO_SAVE_ACTION = "mw_memo_save_action"
     MW_SERVER_ACTION    = "mw_server_action"
-    
+
     #
     # Main window browser infos bars
     MW_INFLBL_ARTIST    = "mw_inflbl_artist"
@@ -402,6 +402,7 @@ module UIConsts
     # Tasks poopup menu
     TASKS_POPUP_MENU    = "tasks_pm"
     TKPM_CLEAR          = "tkpm_clear"
+    TKPM_CANCEL         = "tkpm_cancel"
     TKPM_CLOSE          = "tkpm_close"
 
     #

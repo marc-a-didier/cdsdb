@@ -1,13 +1,14 @@
 
 class TasksWindow < TopWindow
 
-    STATUS = ["Waiting", "Downloading...", "Done", "Uploading...", "Running..."]
+    STATUS = ["Waiting", "Downloading...", "Done", "Uploading...", "Running...", "Cancelled"]
 
     STAT_WAITING    = 0
     STAT_DOWNLOAD   = 1
     STAT_DONE       = 2
     STAT_UPLOAD     = 3
     STAT_RUN        = 4
+    STAT_CANCELLED  = 5
 
     OP_AUDIO_DL = 0
     OP_FILE_DL  = 1
@@ -65,17 +66,25 @@ class TasksWindow < TopWindow
 
         @mc.glade[UIConsts::TKPM_CLOSE].signal_connect(:activate) { @mc.glade[UIConsts::MM_WIN_TASKS].signal_emit(:activate) }
         @mc.glade[UIConsts::TKPM_CLEAR].signal_connect(:activate) {
+            @check_suspended = true
             while @tv.model.get_iter("0") && @tv.model.get_iter("0")[COL_STATUS] == STATUS[STAT_DONE]
                 @tv.model.remove(@tv.model.get_iter("0"))
             end
             @tv.columns_autosize
+            @check_suspended = false
         }
+        @mc.glade[UIConsts::TKPM_CANCEL].signal_connect(:activate) { @cancel_flag = true }
 
         @chk_thread = nil
+        @cancel_flag = false
+        @check_suspended = false
+
         check_config
     end
 
     def check_waiting_tasks
+        return if @check_suspended
+
         @tv.model.each { |model, path, iter|
             #next if iter[COL_OP] > OP_FILE_DL
             break if iter.nil? || iter[COL_STATUS] == STATUS[STAT_DOWNLOAD]
@@ -138,13 +147,25 @@ TRACE.debug("task thread stopped".brown)
 
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size.to_f*100.0/tot_size.to_f).to_i
+        return @cancel_flag ? 0 : 1
     end
 
-    def end_file_op(iter, file_name)
-        iter[COL_PROGRESS] = 100
-        iter[COL_STATUS]   = STATUS[STAT_DONE]
-        iter[COL_REF].set_audio_file(file_name) if iter[COL_REF].kind_of?(AudioLink)
-        iter[COL_CLASS].dwl_file_name_notification(iter[COL_REF], file_name) if iter[COL_CLASS]
+    def end_file_op(iter, file_name, status)
+        if status == 0 && @cancel_flag
+            @check_suspended = true
+            @tv.model.each { |model, path, iter|
+                if iter[COL_STATUS] == STATUS[STAT_DOWNLOAD] || iter[COL_STATUS] == STATUS[STAT_WAITING]
+                    iter[COL_STATUS] == STATUS[STAT_CANCELLED]
+                end
+            }
+            @check_suspended = false
+            @cancel_flag = false
+        else
+            iter[COL_PROGRESS] = 100
+            iter[COL_STATUS]   = STATUS[STAT_DONE]
+            iter[COL_REF].set_audio_file(file_name) if iter[COL_REF].kind_of?(AudioLink)
+            iter[COL_CLASS].dwl_file_name_notification(iter[COL_REF], file_name) if iter[COL_CLASS]
+        end
     end
 
     def new_upload(title)

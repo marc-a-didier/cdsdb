@@ -3,12 +3,6 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
-  <object class="GtkToggleAction" id="mw_memos_action"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_server_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkAdjustment" id="adjustment10">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -48,6 +42,12 @@
   <object class="GtkToggleAction" id="mw_charts_action"/>
   <object class="GtkToggleAction" id="mw_filter_action"/>
   <object class="GtkAction" id="mw_memo_save_action"/>
+  <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_server_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
   <object class="GtkMenu" id="apm_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1678,6 +1678,11 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-info</property>
+  </object>
+  <object class="GtkImage" id="image4">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-cancel</property>
   </object>
   <object class="GtkListStore" id="liststore1">
     <columns>
@@ -3805,6 +3810,16 @@
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
         <property name="accel_group">accelgroup1</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="tkpm_cancel">
+        <property name="label" translatable="yes">Cancel downloads</property>
+        <property name="use_action_appearance">False</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image4</property>
+        <property name="use_stock">False</property>
       </object>
     </child>
     <child>
