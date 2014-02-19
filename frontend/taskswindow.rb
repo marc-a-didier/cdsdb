@@ -67,12 +67,18 @@ class TasksWindow < TopWindow
         @mc.glade[UIConsts::TKPM_CLOSE].signal_connect(:activate) { @mc.glade[UIConsts::MM_WIN_TASKS].signal_emit(:activate) }
         @mc.glade[UIConsts::TKPM_CLEAR].signal_connect(:activate) {
             @check_suspended = true
-            while @tv.model.get_iter("0") && @tv.model.get_iter("0")[COL_STATUS] == STATUS[STAT_DONE]
-                @tv.model.remove(@tv.model.get_iter("0"))
+            index = 0
+            while iter = @tv.model.get_iter(index.to_s)
+                if iter[COL_STATUS] == STATUS[STAT_DONE] || iter[COL_STATUS] == STATUS[STAT_CANCELLED]
+                    @tv.model.remove(iter)
+                else
+                    index += 1
+                end
             end
             @tv.columns_autosize
             @check_suspended = false
         }
+        # TODO: check if there is at least one download in progress before setting the flag
         @mc.glade[UIConsts::TKPM_CANCEL].signal_connect(:activate) { @cancel_flag = true }
 
         @chk_thread = nil
@@ -147,15 +153,15 @@ TRACE.debug("task thread stopped".brown)
 
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size.to_f*100.0/tot_size.to_f).to_i
-        return @cancel_flag ? 0 : 1
+        return @cancel_flag ? Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
     end
 
     def end_file_op(iter, file_name, status)
-        if status == 0 && @cancel_flag
+        if status == Cfg::STAT_CANCELLED && @cancel_flag
             @check_suspended = true
             @tv.model.each { |model, path, iter|
                 if iter[COL_STATUS] == STATUS[STAT_DOWNLOAD] || iter[COL_STATUS] == STATUS[STAT_WAITING]
-                    iter[COL_STATUS] == STATUS[STAT_CANCELLED]
+                    iter[COL_STATUS] = STATUS[STAT_CANCELLED]
                 end
             }
             @check_suspended = false

@@ -184,15 +184,12 @@ TRACE.debug("rename audio")
         f = File.new(file_name, "wb")
         while (data = socket.read(CFG.tx_block_size))
             curr_size += data.size
-puts "data size=#{data.size}, curr size=#{curr_size}"
             status = tasks.update_file_op(task_id, curr_size, file_size)
-            socket.puts(status == 1 ? "CONTINUE" : "CANCELLED") if data.size == CFG.tx_block_size
-# puts "conitnuing..."
+            socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED) if curr_size < file_size
             break if status == 0
             f.write(data)
-#             break if status == 0 || data.size < CFG.tx_block_size
+# sleep(0.5)
         end
-#         socket.puts(curr_size.to_s)
         tasks.end_file_op(task_id, file_name, status)
         f.close
         FileUtils.rm(file_name) if status == 0

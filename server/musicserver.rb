@@ -88,7 +88,7 @@ class MusicServer
             File.open(file, "rb") { |f|
                 while data = f.read(block_size)
                     session.write(data)
-                    break if data.size < block_size || session.gets.chomp == "CANCELLED"
+                    break if session.gets.chomp == Cfg::MSG_CANCELLED unless f.eof?
                 end
             }
         end
@@ -169,7 +169,7 @@ class MusicServer
         File.open(file_name, "rb") { |f|
             while data = f.read(block_size)
                 session.write(data)
-                break if data.size < block_size || session.gets.chomp == "CANCELLED"
+                break if session.gets.chomp == Cfg::MSG_CANCELLED unless f.eof?
             end
         }
     end

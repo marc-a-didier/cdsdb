@@ -8,6 +8,11 @@ class Cfg
     MSG_EOL       = "EOL"
     FILE_INFO_SEP = "@:@"
 
+    MSG_CONTINUE   = "CONTINUE"
+    MSG_CANCELLED  = "CANCELLED"
+    STAT_CONTINUE  = 1
+    STAT_CANCELLED = 0
+
     DIR_NAMES       = ["covers", "icons", "flags", "src", "db"]
     SERVER_RSRC_DIR = "../../"
 #     PREFS_DIR       = ENV["HOME"]+"/.cdsdb/"
