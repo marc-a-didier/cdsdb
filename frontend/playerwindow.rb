@@ -45,6 +45,8 @@ class PlayerWindow < TopWindow
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = [nil]
 
+        @file_preread = false
+
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
         @rmeter = @mc.glade[UIConsts::PLAYER_PB_RIGHT]
@@ -201,6 +203,8 @@ TRACE.debug("Player audio file was empty!".red)
             @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
 
+        @file_preread = false
+
 #         TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
@@ -341,7 +345,14 @@ TRACE.debug("Player unfetched".brown)
 #         end
 
         @queue[0].owner.timer_notification(itime) if @queue[0].owner.respond_to?(:timer_notification)
-        #show_tooltip(@tool_tip) if @tool_tip && @tooltip.visible?
+
+        # If there's a next playable track in queue, read 512k of it in an attempt to make
+        # it cached by the system and lose less time when skipping to it
+        if @queue[1] && !@file_preread && @total_time-itime < 10000 && @queue[1].uilink.audio_status == AudioLink::OK
+            File.open(@queue[1].uilink.audio_file) { |f| f.read(512*1024) }
+            @file_preread = true
+TRACE.debug("File pre-read for #{@queue[1].uilink.audio_file}".green)
+        end
     end
 
     def seek_set
