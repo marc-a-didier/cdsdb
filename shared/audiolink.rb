@@ -81,7 +81,7 @@ class AudioLink < DBCacheLink
         # Must reset @audio_file to empty if status is unknown because then
         # audio status cache may have been reset when toggling conneted/local mode.
         @audio_file.clear if audio_status == UNKNOWN
-        
+
         return audio_status unless @audio_file.empty?
 
         build_audio_file_name
@@ -108,7 +108,7 @@ class AudioLink < DBCacheLink
     # Returns the status of for the file.
     # If a matching file is found, set the full name to the match.
     def search_audio_file
-TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
+# TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
         Utils::AUDIO_EXTS.each { |ext|
             if File::exists?(@audio_file+ext)
                 @audio_file += ext
