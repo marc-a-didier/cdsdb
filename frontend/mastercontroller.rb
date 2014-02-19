@@ -64,7 +64,7 @@ class MasterController
         @glade[MM_WIN_FILTER].active = false if window == @filters
         @glade[MM_WIN_TASKS].active = false if window == @tasks
         @glade[MM_WIN_MEMOS].active = false if window == @memos
-        
+
         @player.unfetch(window) if window == @pqueue || window == @plists
     end
 
@@ -254,7 +254,7 @@ class MasterController
         return @plists if @plists.window.visible?
         return @mw.trk_browser
     end
-    
+
     def get_next_track(is_next)
         track_provider.send(is_next ? :get_next_track : :get_prev_track)
     end
