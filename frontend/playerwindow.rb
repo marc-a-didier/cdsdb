@@ -138,9 +138,19 @@ TRACE.debug("Player audio file was empty!".red)
         end
 
         # Restart player as soon as possible
-        reinit_player
+#         reinit_player
+        @source = Gst::ElementFactory.make("filesrc")
+
+        @playbin.clear
+        @playbin.add(@source, @decoder, @convertor, @level, @sink)
+
+        @source >> @decoder
+
         @source.location = player_data.uilink.audio_file
         @playbin.play
+
+        @was_playing = false # Probably useless
+
 
         # Debug info
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
@@ -282,22 +292,28 @@ TRACE.debug("Player unfetched".brown)
         @level.message = true
 
         @sink = Gst::ElementFactory.make("autoaudiosink")
-    end
-
-    def reinit_player
-        @source = Gst::ElementFactory.make("filesrc")
 
         @decoder = Gst::ElementFactory.make("decodebin")
-        @decoder.signal_connect(:new_decoded_pad) do | dbin, pad, is_last |
+        @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
             pad.link(@convertor.get_pad("sink"))
             @convertor >> @level >> @sink
-        end
-
-        @playbin.clear
-        @playbin.add(@source, @decoder, @convertor, @level, @sink)
-        @source >> @decoder
-        @was_playing = false
+        }
     end
+
+#     def reinit_player
+#         @source = Gst::ElementFactory.make("filesrc")
+#
+# #         @decoder = Gst::ElementFactory.make("decodebin")
+# #         @decoder.signal_connect(:new_decoded_pad) do | dbin, pad, is_last |
+# #             pad.link(@convertor.get_pad("sink"))
+# #             @convertor >> @level >> @sink
+# #         end
+#
+#         @playbin.clear
+#         @playbin.add(@source, @decoder, @convertor, @level, @sink)
+#         @source >> @decoder
+#         @was_playing = false
+#     end
 
     def setup_hscale
         sleep(0.01) while not playing? # We're threaded and async
