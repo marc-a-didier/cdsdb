@@ -238,30 +238,52 @@ TRACE.debug("Player unfetched".brown)
         @seeking = false
 
         @playbin = Gst::Pipeline.new("levelmeter")
-        bus = @playbin.bus
-        bus.add_watch do |bus, message|
+#         bus = @playbin.bus
+#         bus.add_watch do |bus, message|
+        @playbin.bus.add_watch do |bus, message|
             #p message.type
             #p message.parse if message.respond_to?(:parse)
             case message.type
+                when Gst::Message::Type::ELEMENT
+                    if message.source.name == LEVEL_ELEMENT_NAME
+#                         channels = message.structure["peak"].size
+                        peak = message.structure["peak"][0] > -60.0 ? (100.0 * message.structure["peak"][0] / 60.0) + 100.0 : 0.0
+#                         peak = message.structure["peak"][0] > -60.0 ? message.structure["peak"][0] + 100.0 : 0.0
+                        peak = 100.0 if peak > 100.0
+                        @lmeter.fraction = peak/100.0
+
+#                         peak = message.structure["peak"][1] > -60.0 ? message.structure["peak"][1] + 100.0 : 0.0
+                        peak = message.structure["peak"][1] > -60.0 ? (100.0 * message.structure["peak"][1] / 60.0) + 100.0 : 0.0
+                        peak = 100.0 if peak > 100.0
+                        @rmeter.fraction = peak/100.0
+#                         2.times do |i|
+# #                             peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
+#                             peak = message.structure["peak"][i] > -60.0 ? (100.0 * message.structure["peak"][i] / 60.0) + 100.0 : 0.0
+#                             #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
+#                             peak = 100.0 if peak > 100.0
+#                             if i == 0
+#                                 @lmeter.fraction = peak/100.0
+#                             else
+#                                 @rmeter.fraction = peak/100.0
+#                             end
+#                         end
+#                         channels = message.structure["peak"].size
+#                         channels.times do |i|
+#                             peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
+#                             #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
+#                             peak = 100.0 if peak > 100.0
+#                             if i == 0
+#                                 @lmeter.fraction = peak/100.0
+#                             else
+#                                 @rmeter.fraction = peak/100.0
+#                             end
+#                         end
+                    end
                 when Gst::Message::EOS
                     stop
                     new_track(:stream_ended)
                 when Gst::Message::ERROR
                     stop
-                when Gst::Message::Type::ELEMENT
-                    if message.source.name == LEVEL_ELEMENT_NAME
-                        channels = message.structure["peak"].size
-                        channels.times do |i|
-                            peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
-                            #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
-                            peak = 100.0 if peak > 100.0
-                            if i == 0
-                                @lmeter.fraction = peak/100.0
-                            else
-                                @rmeter.fraction = peak/100.0
-                            end
-                        end
-                    end
             end
             true
         end
