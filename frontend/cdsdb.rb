@@ -272,7 +272,7 @@ require './my_rr_lib'
 
 class Cdsdb
 
-    VERSION = "0.8.3"
+    VERSION = "0.9.0"
 
     def has_arg(arg)
         ARGV.each { |the_arg| return true if the_arg == arg }

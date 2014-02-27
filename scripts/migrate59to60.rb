@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
 #
-# Migration from 5.8 cds db to 5.9
+# Migration from 5.9 cds db to 6.0
 #
-# Added filters table
+# Added fmaxrms & fmaxpeak to tracks table
 #
 #
 
@@ -24,16 +24,16 @@ end
 
 path = "../../db/"
 
-$src = SQLite3::Database.new(path+"cds5.8.db")
+$src = SQLite3::Database.new(path+"cds5.9.db")
 $src.execute("PRAGMA synchronous=OFF;")
 
-$dst = SQLite3::Database.new(path+"cds5.9.db")
+$dst = SQLite3::Database.new(path+"cds6.0.db")
 $dst.execute('PRAGMA synchronous=OFF;')
 $dst.execute('PRAGMA encoding="UTF-8";')
 
 if ARGV[0] == "--create"
     sql = ""
-    IO.foreach("./sqlitecds5.9.sql") { |line| sql += line.chomp }
+    IO.foreach("./sqlitecds6.0.sql") { |line| sql += line.chomp }
     $dst.execute_batch(sql)
 end
 
@@ -44,7 +44,7 @@ def dup_table(table) # Copy table as it, that is there are no change
         sql = "INSERT INTO #{table} VALUES ("
         row.each { |val| sql += val.to_sql+"," }
 
-#         sql += "0,0," if ["records", "artists"].include?(table)
+        sql += "10.0,10.0," if table == "tracks"
 
         sql = sql[0..-2]+");"
 puts sql
@@ -55,5 +55,3 @@ end
 
 ["collections", "medias", "genres", "labels", "plists", "pltracks", "origins",
  "artists", "records", "segments", "tracks", "hostnames", "logtracks"].each { |table| dup_table(table) }
-
-$dst.execute("INSERT INTO filters VALUES (0, 'Default filter', '<filter />');")

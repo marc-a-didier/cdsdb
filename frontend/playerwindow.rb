@@ -51,10 +51,12 @@ class PlayerWindow < TopWindow
         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
         @rmeter = @mc.glade[UIConsts::PLAYER_PB_RIGHT]
 
+        # Min value for peak detected so far: -349.9999999218161
+
 @max_l_peak = -60.0
 @max_r_peak = -60.0
-@min_l_peak = 1.0
-@min_r_peak = 1.0
+@max_l_rms  = -60.0
+@max_r_rms  = -60.0
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -153,6 +155,7 @@ TRACE.debug("Player audio file was empty!".red)
 
         @source.location = player_data.uilink.audio_file
         @playbin.play
+# puts("volume=#{@playbin.bin.get_property("volume")}")
 
         @was_playing = false # Probably useless
 
@@ -243,6 +246,7 @@ TRACE.debug("Player unfetched".brown)
         @seeking = false
 
         @playbin = Gst::Pipeline.new("levelmeter")
+p @playbin
 #         bus = @playbin.bus
 #         bus.add_watch do |bus, message|
         @playbin.bus.add_watch do |bus, message|
@@ -254,6 +258,8 @@ TRACE.debug("Player unfetched".brown)
 # p message.structure["peak"]
                         lpeak = message.structure["peak"][0]
                         rpeak = message.structure["peak"][1]
+                        lrms  = message.structure["rms"][0]
+                        rrms  = message.structure["rms"][1]
 
 #                         channels = message.structure["peak"].size
                         if lpeak < 0.0
@@ -278,8 +284,9 @@ TRACE.debug("Player unfetched".brown)
 
                         @max_l_peak = lpeak if lpeak > @max_l_peak
                         @max_r_peak = rpeak if rpeak > @max_r_peak
-                        @min_l_peak = lpeak if lpeak < @min_l_peak
-                        @min_r_peak = rpeak if rpeak < @min_r_peak
+
+                        @max_l_rms = lrms if lrms > @max_l_rms
+                        @max_r_rms = rrms if rrms > @max_r_rms
 #                         2.times do |i|
 #                         2.times do |i|
 # #                             peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
@@ -308,14 +315,14 @@ TRACE.debug("Player unfetched".brown)
                     stop
 File.open("../../peaks.txt", "a") do |f|
 f.puts("\n"+@queue[0].uilink.audio_file)
-f.puts("max LEFT  = #{@max_l_peak}")
-f.puts("max RIGHT = #{@max_r_peak}")
+f.puts("max peak LEFT  = #{@max_l_peak}")
+f.puts("max peak RIGHT = #{@max_r_peak}")
 @max_l_peak = -60.0
 @max_r_peak = -60.0
-f.puts("min LEFT  = #{@min_l_peak}")
-f.puts("min RIGHT = #{@min_r_peak}")
-@min_l_peak = 1.0
-@min_r_peak = 1.0
+f.puts("max rms LEFT   = #{@max_l_rms}")
+f.puts("max rms RIGHT  = #{@max_r_rms}")
+@max_l_rms = -60.0
+@max_r_rms = -60.0
 end
                     new_track(:stream_ended)
                 when Gst::Message::ERROR

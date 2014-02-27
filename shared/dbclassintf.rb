@@ -38,6 +38,7 @@ public
                 case member.to_s[0]
                     when "r", "i" then @dbs[i] = 0  # r or i
                     when "s", "m" then @dbs[i] = "" # s or m
+                    when "f"      then @dbs[i] = 0.0
                     else
                         puts "Unknow data type"
                         raise
@@ -59,7 +60,7 @@ public
 
     # Set class attributes from a full sqlite3 row
     def load_from_row(row)
-        row.each_with_index { |val, i| @dbs[i] = @dbs[i].kind_of?(Numeric) ? val.to_i : val }
+        row.each_with_index { |val, i| @dbs[i] = val } # @dbs[i].kind_of?(Numeric) ? val.to_i : val }
         return self
     end
 
@@ -198,7 +199,7 @@ class SegmentDBClass < DBClassIntf
 end
 
 TrackDBS = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
-                      :iplayed, :irating, :itags, :ilastplayed)
+                      :iplayed, :irating, :itags, :ilastplayed, :fmaxrms, :fmaxpeak)
 
 class TrackDBClass < DBClassIntf
 
@@ -214,6 +215,8 @@ class TrackDBClass < DBClassIntf
         @dbs.rrecord = rrecord
         @dbs.rsegment = rsegment
         @dbs.stitle = "New track"
+        @dbs.fmaxrms = 10.0
+        @dbs.fminrms = 10.0
         return sql_add
     end
 

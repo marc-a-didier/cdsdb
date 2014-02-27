@@ -17,6 +17,7 @@ module BaseUI
     TV_HDL    = 7
     STR_HDL   = 8
     TXT_HDL   = 9
+    FLT_HDL   = 10
 
     FLD_CTRL = 0
     FLD_PROC = 1
@@ -26,7 +27,7 @@ module BaseUI
 
     TYPES_MAP = {"entry_"      => INT_HDL, "lkentry_" => LKUP_HDL, "timeentry_" => TIME_HDL, "dateentry_" => UDT_HDL,
                  "ndateentry_" => NDT_HDL, "cb_"      => CB_HDL,   "cmb_"       => CMB_HDL,  "tv_"        => TV_HDL,
-                 "sentry_"     => STR_HDL, "txtview_" => TXT_HDL }
+                 "sentry_"     => STR_HDL, "txtview_" => TXT_HDL,  "fltentry_"  => FLT_HDL }
 
 
     #
@@ -76,10 +77,13 @@ TRACE.debug("in init_handlers")
         @@handlers << Proc.new { |control, dbs, field, is_to|
             is_to ? control.buffer.text = dbs[field].to_memo : dbs[field] = control.buffer.text.to_dbstring
         }
+        @@handlers << Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field].to_s : dbs[field] = control.text.to_f
+        }
     end
 
     def init_baseui(prefix)
-TRACE.debug("in init_baseui: prefix=#{prefix}")
+# TRACE.debug("in init_baseui: prefix=#{prefix}")
         @controls = {}
 
         init_handlers if @@handlers.size == 0

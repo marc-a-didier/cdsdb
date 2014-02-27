@@ -110,6 +110,12 @@ class Fixnum
     end
 end
 
+class Float
+    def to_sql
+        return self.to_s
+    end
+end
+
 
 SEC_MS_LENGTH  = 1000
 MIN_MS_LENGTH  = 60*SEC_MS_LENGTH
@@ -216,7 +222,7 @@ class Utils
 
     # Misc methods to try to get some randomness as by experience every
     # random based run is almost predictible...
-    
+
     #
     # Another attempt to get more randomness...
     #
@@ -252,9 +258,9 @@ p rseed
         File.truncate(RANDOM_FILE, size-nbytes)
         return str
     end
-    
+
     # Tries to get random numbers from a file of raw bytes downloaded from random.org
-    # Reads the how_many*4 last bytes from the file then truncates it and returns an 
+    # Reads the how_many*4 last bytes from the file then truncates it and returns an
     # array of values that are max_value at most.
     # If there's no file or it's too short, use reading from /dev/random as a fallback.
     def self.rnd_from_file(max_value, how_many, debug_file)
@@ -277,18 +283,18 @@ p rseed
             return self.gen_from_str(self.str_from_rnd_file(nbytes), max_value, wsize, debug_file)
         end
     end
-    
+
     # Builds an array of numeric values from bytes of a given string and applies a range
     # of value by using modulo max value
     def self.gen_from_str(str, max_value, wsize, debug_file)
         values = []
         i = val = 0
         str.each_byte { |b|
-            debug_file << "%02x " % b             
+            debug_file << "%02x " % b
             val |= b << (i*8)
             if i == wsize-1
                 values << (val % max_value)
-                debug_file << "%08x" % val << " mod " << max_value << " -> " << values.last << "\n"             
+                debug_file << "%08x" % val << " mod " << max_value << " -> " << values.last << "\n"
                 i = val = 0
             else
                 i += 1
@@ -296,12 +302,12 @@ p rseed
         }
         return values
     end
-    
+
     # Builds a numeric from bytes taken from a string
     def self.value_from_rnd_str(str, debug_file)
         i = value = 0
         str.each_byte { |b|
-            debug_file << "%02x " % b             
+            debug_file << "%02x " % b
             value |= b << (i*8)
             i += 1
         }
