@@ -149,7 +149,7 @@ TRACE.debug("Player audio file was empty!".red)
         @source = Gst::ElementFactory.make("filesrc")
 
         @playbin.clear
-        @playbin.add(@source, @decoder, @convertor, @level, @sink)
+        @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
 
         @source >> @decoder
 
@@ -246,7 +246,7 @@ TRACE.debug("Player unfetched".brown)
         @seeking = false
 
         @playbin = Gst::Pipeline.new("levelmeter")
-p @playbin
+# p @playbin
 #         bus = @playbin.bus
 #         bus.add_watch do |bus, message|
         @playbin.bus.add_watch do |bus, message|
@@ -356,12 +356,16 @@ end
         @level.interval = INTERVAL
         @level.message = true
 
+        @rgain = Gst::ElementFactory.make("rgvolume")
+#         @rgain.fallback_gain = -14
+# p @rgain
+
         @sink = Gst::ElementFactory.make("autoaudiosink")
 
         @decoder = Gst::ElementFactory.make("decodebin")
         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
             pad.link(@convertor.get_pad("sink"))
-            @convertor >> @level >> @sink
+            @convertor >> @level >> @rgain >> @sink
         }
     end
 

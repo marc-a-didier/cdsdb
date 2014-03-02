@@ -44,7 +44,7 @@ def dup_table(table) # Copy table as it, that is there are no change
         sql = "INSERT INTO #{table} VALUES ("
         row.each { |val| sql += val.to_sql+"," }
 
-        sql += "10.0,10.0," if table == "tracks"
+        sql += "10,10," if table == "tracks" || table == "records"
 
         sql = sql[0..-2]+");"
 puts sql
@@ -53,5 +53,7 @@ puts sql
     $dst.execute("COMMIT;")
 end
 
-["collections", "medias", "genres", "labels", "plists", "pltracks", "origins",
- "artists", "records", "segments", "tracks", "hostnames", "logtracks"].each { |table| dup_table(table) }
+["collections", "medias", "genres", "labels",
+ "plists", "pltracks", "origins",
+ "artists", "records", "segments", "tracks",
+ "hostnames", "logtracks", "filters"].each { |table| dup_table(table) }

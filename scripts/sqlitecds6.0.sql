@@ -72,7 +72,9 @@ CREATE TABLE "records"
   "idateadded"  INTEGER NOT NULL DEFAULT 0,
   "idateripped" INTEGER NOT NULL DEFAULT 0,
   "iissegmented" SMALLINT NOT NULL DEFAULT 0,
-  "irecsymlink" INTEGER NOT NULL DEFAULT 0
+  "irecsymlink" INTEGER NOT NULL DEFAULT 0,
+  "fpeak"       FLOAT   NOT NULL DEFAULT 10.0,
+  "fgain"       FLOAT   NOT NULL DEFAULT 10.0
 );
 
 CREATE TABLE "tracks"
@@ -89,8 +91,8 @@ CREATE TABLE "tracks"
   "irating"     INTEGER NOT NULL DEFAULT 0,
   "itags"       INTEGER NOT NULL DEFAULT 0,
   "ilastplayed" INTEGER NOT NULL DEFAULT 0,
-  "fmaxrms"     FLOAT   NOT NULL DEFAULT 10.0,
-  "fmaxpeak"    FLOAT   NOT NULL DEFAULT 10.0
+  "fpeak"       FLOAT   NOT NULL DEFAULT 10.0,
+  "fgain"       FLOAT   NOT NULL DEFAULT 10.0
 );
 
 CREATE TABLE "plists" (
