@@ -51,13 +51,6 @@ class PlayerWindow < TopWindow
         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
         @rmeter = @mc.glade[UIConsts::PLAYER_PB_RIGHT]
 
-        # Min value for peak detected so far: -349.9999999218161
-
-@max_l_peak = -60.0
-@max_r_peak = -60.0
-@max_l_rms  = -60.0
-@max_r_rms  = -60.0
-
         @time_view_mode = ELAPSED
         @total_time = 0
 
@@ -124,15 +117,6 @@ class PlayerWindow < TopWindow
     end
 
     def play_track(player_data)
-#         unless player_data
-#             TRACE.debug("[nil]".red)
-#             reset_player
-#             if CFG.notifications?
-#                 system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
-#             end
-#             return
-#         end
-
         # The status cache prevent the file name to be reloaded when selection is changed
         # in the track browser. So, from now, we may receive an empty file name but the
         # status is valid. If audio link is OK, we just have to find the file name for the track.
@@ -145,7 +129,14 @@ TRACE.debug("Player audio file was empty!".red)
         end
 
         # Restart player as soon as possible
-#         reinit_player
+
+        # Can't use replay gain if track has been dropped.
+        # Replay gain should work if tags are set in the audio file
+        if player_data.uilink.tags.nil?
+            @rgain.fallback_gain = player_data.uilink.track.fgain
+TRACE.debug("Gain set to #{player_data.uilink.track.fgain}".brown)
+        end
+
         @source = Gst::ElementFactory.make("filesrc")
 
         @playbin.clear
@@ -155,7 +146,6 @@ TRACE.debug("Player audio file was empty!".red)
 
         @source.location = player_data.uilink.audio_file
         @playbin.play
-# puts("volume=#{@playbin.bin.get_property("volume")}")
 
         @was_playing = false # Probably useless
 
@@ -246,84 +236,30 @@ TRACE.debug("Player unfetched".brown)
         @seeking = false
 
         @playbin = Gst::Pipeline.new("levelmeter")
-# p @playbin
-#         bus = @playbin.bus
-#         bus.add_watch do |bus, message|
+
         @playbin.bus.add_watch do |bus, message|
-            #p message.type
-            #p message.parse if message.respond_to?(:parse)
             case message.type
                 when Gst::Message::Type::ELEMENT
                     if message.source.name == LEVEL_ELEMENT_NAME
-# p message.structure["peak"]
                         lpeak = message.structure["peak"][0]
                         rpeak = message.structure["peak"][1]
-                        lrms  = message.structure["rms"][0]
-                        rrms  = message.structure["rms"][1]
 
-#                         channels = message.structure["peak"].size
                         if lpeak < 0.0
-                            peak = lpeak > -60.0 ? (90.0 * lpeak / 60.0) + 90.0 : 0.0
+                            lpeak = lpeak > -60.0 ? (90.0 * lpeak / 60.0) + 90.0 : 0.0
                         else
-                            peak = 90.0+lpeak*10.0
+                            lpeak = 90.0+lpeak*10.0
                         end
-#                         peak = lpeak > -60.0 ? (100.0 * lpeak / 60.0) + 100.0 : 0.0
-#                         peak = message.structure["peak"][0] > -60.0 ? message.structure["peak"][0] + 100.0 : 0.0
-#                         peak = 100.0 if peak > 100.0
-                        @lmeter.fraction = peak/100.0
+                        @lmeter.fraction = lpeak/100.0
 
-#                         peak = message.structure["peak"][1] > -60.0 ? message.structure["peak"][1] + 100.0 : 0.0
                         if rpeak < 0.0
-                            peak = rpeak > -60.0 ? (90.0 * rpeak / 60.0) + 90.0 : 0.0
+                            rpeak = rpeak > -60.0 ? (90.0 * rpeak / 60.0) + 90.0 : 0.0
                         else
-                            peak = 90.0+rpeak*10.0
+                            rpeak = 90.0+rpeak*10.0
                         end
-#                         peak = rpeak > -60.0 ? (100.0 * rpeak / 60.0) + 100.0 : 0.0
-#                         peak = 100.0 if peak > 100.0
-                        @rmeter.fraction = peak/100.0
-
-                        @max_l_peak = lpeak if lpeak > @max_l_peak
-                        @max_r_peak = rpeak if rpeak > @max_r_peak
-
-                        @max_l_rms = lrms if lrms > @max_l_rms
-                        @max_r_rms = rrms if rrms > @max_r_rms
-#                         2.times do |i|
-#                         2.times do |i|
-# #                             peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
-#                             peak = message.structure["peak"][i] > -60.0 ? (100.0 * message.structure["peak"][i] / 60.0) + 100.0 : 0.0
-#                             #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
-#                             peak = 100.0 if peak > 100.0
-#                             if i == 0
-#                                 @lmeter.fraction = peak/100.0
-#                             else
-#                                 @rmeter.fraction = peak/100.0
-#                             end
-#                         end
-#                         channels = message.structure["peak"].size
-#                         channels.times do |i|
-#                             peak = message.structure["peak"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["peak"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
-#                             #rms = message.structure["rms"][i] > MINIMUM_LEVEL ? (METER_WIDTH * (message.structure["rms"][i]) / POS_MIN_LEVEL).round + METER_WIDTH : 0
-#                             peak = 100.0 if peak > 100.0
-#                             if i == 0
-#                                 @lmeter.fraction = peak/100.0
-#                             else
-#                                 @rmeter.fraction = peak/100.0
-#                             end
-#                         end
+                        @rmeter.fraction = rpeak/100.0
                     end
                 when Gst::Message::EOS
                     stop
-File.open("../../peaks.txt", "a") do |f|
-f.puts("\n"+@queue[0].uilink.audio_file)
-f.puts("max peak LEFT  = #{@max_l_peak}")
-f.puts("max peak RIGHT = #{@max_r_peak}")
-@max_l_peak = -60.0
-@max_r_peak = -60.0
-f.puts("max rms LEFT   = #{@max_l_rms}")
-f.puts("max rms RIGHT  = #{@max_r_rms}")
-@max_l_rms = -60.0
-@max_r_rms = -60.0
-end
                     new_track(:stream_ended)
                 when Gst::Message::ERROR
                     stop
@@ -357,8 +293,6 @@ end
         @level.message = true
 
         @rgain = Gst::ElementFactory.make("rgvolume")
-#         @rgain.fallback_gain = -14
-# p @rgain
 
         @sink = Gst::ElementFactory.make("autoaudiosink")
 
@@ -368,21 +302,6 @@ end
             @convertor >> @level >> @rgain >> @sink
         }
     end
-
-#     def reinit_player
-#         @source = Gst::ElementFactory.make("filesrc")
-#
-# #         @decoder = Gst::ElementFactory.make("decodebin")
-# #         @decoder.signal_connect(:new_decoded_pad) do | dbin, pad, is_last |
-# #             pad.link(@convertor.get_pad("sink"))
-# #             @convertor >> @level >> @sink
-# #         end
-#
-#         @playbin.clear
-#         @playbin.add(@source, @decoder, @convertor, @level, @sink)
-#         @source >> @decoder
-#         @was_playing = false
-#     end
 
     def setup_hscale
         sleep(0.01) while not playing? # We're threaded and async

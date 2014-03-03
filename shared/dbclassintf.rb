@@ -146,7 +146,8 @@ end
 
 RecordDBS = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
                        :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
-                       :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink)
+                       :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink,
+                       :fpeak, :fgain)
 
 class RecordDBClass < DBClassIntf
 
@@ -160,6 +161,8 @@ class RecordDBClass < DBClassIntf
         @dbs.rartist = rartist
         @dbs.stitle = "New record"
         @dbs.idateadded = Time.now.to_i
+        @dbs.fpeak = 0.0
+        @dbs.fgain = 0.0
         return sql_add
     end
 
@@ -199,7 +202,7 @@ class SegmentDBClass < DBClassIntf
 end
 
 TrackDBS = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
-                      :iplayed, :irating, :itags, :ilastplayed, :fmaxrms, :fmaxpeak)
+                      :iplayed, :irating, :itags, :ilastplayed, :fpeak, :fgain)
 
 class TrackDBClass < DBClassIntf
 
@@ -215,8 +218,8 @@ class TrackDBClass < DBClassIntf
         @dbs.rrecord = rrecord
         @dbs.rsegment = rsegment
         @dbs.stitle = "New track"
-        @dbs.fmaxrms = 10.0
-        @dbs.fminrms = 10.0
+        @dbs.fpeak = 0.0
+        @dbs.fgain = 0.0
         return sql_add
     end
 

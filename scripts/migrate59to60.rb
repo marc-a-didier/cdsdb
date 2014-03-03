@@ -3,7 +3,7 @@
 #
 # Migration from 5.9 cds db to 6.0
 #
-# Added fmaxrms & fmaxpeak to tracks table
+# Added fmaxrms & fmaxpeak to tracks & records table
 #
 #
 
@@ -44,7 +44,7 @@ def dup_table(table) # Copy table as it, that is there are no change
         sql = "INSERT INTO #{table} VALUES ("
         row.each { |val| sql += val.to_sql+"," }
 
-        sql += "10,10," if table == "tracks" || table == "records"
+        sql += "0.0,0.0," if table == "tracks" || table == "records"
 
         sql = sql[0..-2]+");"
 puts sql

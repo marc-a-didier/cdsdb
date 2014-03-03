@@ -21,7 +21,7 @@ class RecordsBrowser < Gtk::TreeView
         self.visible = true
         self.enable_search = true
         self.search_column = 1
-        
+
         renderer = Gtk::CellRendererText.new
 
         ["Ref.", "Title", "Play time"].each_with_index { |name, i| append_column(Gtk::TreeViewColumn.new(name, renderer, :text => i)) }
@@ -55,6 +55,8 @@ class RecordsBrowser < Gtk::TreeView
         @mc.glade[UIConsts::REC_POPUP_PHISTORY].signal_connect(:activate) {
             PlayHistoryDialog.new.show_record(@reclnk.record.rrecord)
         }
+
+        @mc.glade[UIConsts::REC_POPUP_GETRPGAIN].signal_connect(:activate) { get_replay_gain }
 
         return finalize_setup
     end
@@ -297,7 +299,7 @@ p row
         uilink = @mc.get_track_uilink(0).clone
         return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
 
-# p uilink.full_dir        
+# p uilink.full_dir
         default_dir = uilink.playable? ? uilink.full_dir : CFG.rip_dir
 
         dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
@@ -311,6 +313,78 @@ p row
                 @reclnk.record.sql_update
             end
         end
+    end
+
+    def get_replay_gain
+        tracks = @mc.get_tracks_list
+        tracks.each do |trackui|
+            unless trackui.playable?
+                UIUtils.show_message("All tracks must be avaiable on disk.",  Gtk::MessageDialog::ERROR)
+                return
+            end
+        end
+
+        tpeak = tgain = 0.0
+        done = false
+
+        pipe = Gst::Pipeline.new("getgain")
+
+        pipe.bus.add_watch do |bus, message|
+        #     p message.type
+            #p message.parse if message.respond_to?(:parse)
+            case message.type
+#                 when Gst::Message::Type::ELEMENT
+#                     p message
+                when Gst::Message::Type::TAG
+                    tpeak = message.structure['replaygain-track-peak'] if message.structure['replaygain-track-peak']
+#                     p tpeak
+                    tgain = message.structure['replaygain-track-gain'] if message.structure['replaygain-track-gain']
+                when Gst::Message::Type::EOS
+#                     p message
+                    done = true
+            end
+            true
+        end
+
+        convertor = Gst::ElementFactory.make("audioconvert")
+        resample = Gst::ElementFactory.make("audioresample")
+        rgana = Gst::ElementFactory.make("rganalysis")
+        sink = Gst::ElementFactory.make("fakesink")
+
+        decoder = Gst::ElementFactory.make("decodebin")
+        decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
+            pad.link(convertor.get_pad("sink"))
+            convertor >> resample >> rgana >> sink
+        }
+
+
+        tracks.each do |trackui|
+            done = false
+
+            source = Gst::ElementFactory.make("filesrc")
+
+            pipe.clear
+            pipe.add(source, decoder, convertor, resample, rgana, sink)
+
+            source >> decoder
+
+            source.location = trackui.audio_file
+            begin
+                pipe.set_state(Gst::STATE_PLAYING)
+                while !done
+                    Gtk.main_iteration while Gtk.events_pending?
+                    sleep(0.01)
+                end
+            rescue Interrupt
+            ensure
+                pipe.stop
+            end
+            trackui.track.fpeak = tpeak
+            trackui.track.fgain = tgain
+            trackui.track.sql_update
+            puts("gain=#{tgain}, peak=#{tpeak}")
+        end
+
     end
 
 end

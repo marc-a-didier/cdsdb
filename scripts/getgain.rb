@@ -1,9 +1,15 @@
 #!/usr/bin/env ruby
 
 require 'gst'
+require 'sqlite3'
+
 
 $peak = -100.0
 $gain = -100.0
+
+path = "../../db/"
+
+# $db = SQLite3::Database.new(path+"cds6.0.db")
 
 mainloop = GLib::MainLoop.new(nil, false)
 

@@ -75,6 +75,7 @@ module UIConsts
     REC_POPUP_SEGORDER  = "rpm_set_seg_order"
     REC_POPUP_RATING    = "rpm_rating"
     REC_POPUP_TAGS      = "rpm_tags"
+    REC_POPUP_GETRPGAIN = "rpm_getrpgain"
     REC_POPUP_PHISTORY  = "rpm_phistory"
     REC_POPUP_DOWNLOAD  = "rpm_download"
 
