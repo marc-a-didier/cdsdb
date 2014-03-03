@@ -319,7 +319,7 @@ p row
         tracks = @mc.get_tracks_list
         tracks.each do |trackui|
             unless trackui.playable?
-                UIUtils.show_message("All tracks must be avaiable on disk.",  Gtk::MessageDialog::ERROR)
+                UIUtils.show_message("All tracks must be available on disk.",  Gtk::MessageDialog::ERROR)
                 return
             end
         end
@@ -339,6 +339,7 @@ p row
                     tpeak = message.structure['replaygain-track-peak'] if message.structure['replaygain-track-peak']
 #                     p tpeak
                     tgain = message.structure['replaygain-track-gain'] if message.structure['replaygain-track-gain']
+                    p message.structure
                 when Gst::Message::Type::EOS
 #                     p message
                     done = true
@@ -358,6 +359,8 @@ p row
         }
 
 
+        rgana.num_tracks = tracks.size
+        
         tracks.each do |trackui|
             done = false
 
@@ -381,7 +384,7 @@ p row
             end
             trackui.track.fpeak = tpeak
             trackui.track.fgain = tgain
-            trackui.track.sql_update
+#             trackui.track.sql_update
             puts("gain=#{tgain}, peak=#{tpeak}")
         end
 

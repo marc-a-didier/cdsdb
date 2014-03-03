@@ -137,7 +137,7 @@ TRACE.debug("Player audio file was empty!".red)
 TRACE.debug("Gain set to #{player_data.uilink.track.fgain}".brown)
         end
 
-        @source = Gst::ElementFactory.make("filesrc")
+#         @source = Gst::ElementFactory.make("filesrc")
 
         @playbin.clear
         @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
@@ -301,6 +301,8 @@ TRACE.debug("Player unfetched".brown)
             pad.link(@convertor.get_pad("sink"))
             @convertor >> @level >> @rgain >> @sink
         }
+
+        @source = Gst::ElementFactory.make("filesrc")
     end
 
     def setup_hscale
