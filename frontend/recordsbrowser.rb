@@ -324,7 +324,7 @@ p row
             end
         end
 
-        tpeak = tgain = 0.0
+        tpeak = tgain = rpeak = rgain = 0.0
         done = false
 
         pipe = Gst::Pipeline.new("getgain")
@@ -337,9 +337,10 @@ p row
 #                     p message
                 when Gst::Message::Type::TAG
                     tpeak = message.structure['replaygain-track-peak'] if message.structure['replaygain-track-peak']
-#                     p tpeak
                     tgain = message.structure['replaygain-track-gain'] if message.structure['replaygain-track-gain']
-                    p message.structure
+                    rpeak = message.structure['replaygain-album-peak'] if message.structure['replaygain-album-peak']
+                    rgain = message.structure['replaygain-album-gain'] if message.structure['replaygain-album-gain']
+#                     p message.structure
                 when Gst::Message::Type::EOS
 #                     p message
                     done = true
@@ -358,13 +359,12 @@ p row
             convertor >> resample >> rgana >> sink
         }
 
+        source = Gst::ElementFactory.make("filesrc")
 
         rgana.num_tracks = tracks.size
-        
+
         tracks.each do |trackui|
             done = false
-
-            source = Gst::ElementFactory.make("filesrc")
 
             pipe.clear
             pipe.add(source, decoder, convertor, resample, rgana, sink)
@@ -373,21 +373,27 @@ p row
 
             source.location = trackui.audio_file
             begin
-                pipe.set_state(Gst::STATE_PLAYING)
+                pipe.play #set_state(Gst::STATE_PLAYING)
                 while !done
                     Gtk.main_iteration while Gtk.events_pending?
                     sleep(0.01)
                 end
             rescue Interrupt
             ensure
+                rgana.set_locked_state(true)
                 pipe.stop
             end
             trackui.track.fpeak = tpeak
             trackui.track.fgain = tgain
 #             trackui.track.sql_update
-            puts("gain=#{tgain}, peak=#{tpeak}")
+            puts("track gain=#{tgain}, peak=#{tpeak}".cyan)
+            puts("rec gain=#{rgain}, peak=#{rpeak}".brown)
         end
+        rgana.set_state(Gst::STATE_NULL)
 
+        tracks.first.record.fpeak = rpeak
+        tracks.first.record.fgain = rgain
+#         tracks.first.record.sql_update
     end
 
 end

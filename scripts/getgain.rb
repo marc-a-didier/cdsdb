@@ -8,6 +8,8 @@ require 'find'
 $peak = -100.0
 $gain = -100.0
 
+$done = false
+
 path = "../../db/"
 
 # $db = SQLite3::Database.new(path+"cds6.0.db")
@@ -28,6 +30,7 @@ pipe.bus.add_watch do |bus, message|
             $gain = message.structure['replaygain-track-gain'] if message.structure['replaygain-track-gain']
         when Gst::Message::Type::EOS
             p message
+            $done = true
 #             mainloop.quit
     end
     true
@@ -56,7 +59,7 @@ rgana.num_tracks = tracks.size
 # rgana.locked_state = Gst::STATE_PLAYING
 # rgana.set_locked_state(true)
 
-mainloop.run
+# mainloop.run
 
 tracks.each { |track|
     pipe.clear
@@ -73,9 +76,13 @@ tracks.each { |track|
 #     rgana.set_locked_state(true)
 #     p pipe.get_state[1]
     begin
-#         mainloop.run
+#         while !$done
+#             mainloop.run
+#         end
+        mainloop.run unless $done
     rescue Interrupt
     ensure
+        rgana.set_locked_state(true)
         pipe.stop
     end
     puts("gain=#{$gain}, peak=#{$peak}")
