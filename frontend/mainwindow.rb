@@ -145,11 +145,11 @@ class MainWindow < TopWindow
         @glade[MM_WIN_PLAYED].signal_connect(:activate) { handle_history(RECENT_PLAYED) }
         @glade[MM_WIN_DATES].signal_connect(:activate)  { handle_history(VIEW_BY_DATES) }
 
-        @glade[MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate)     {
-            Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
-                Gtk.main_iteration while Gtk.events_pending?
-            } )
-        }
+        @glade[MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate) { Utils.replay_gain_for_genre }
+#             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
+#                 Gtk.main_iteration while Gtk.events_pending?
+#             } )
+#         }
         @glade[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
         @glade[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(@glade["main_window"]) }
         @glade[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played } # update_log_time

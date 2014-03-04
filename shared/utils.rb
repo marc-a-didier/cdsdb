@@ -679,4 +679,114 @@ print "Checking #{file}\n"
             rt.each { |s| file.puts s[0].to_s+": "+s[1] }
         }
     end
+
+    # tracks is an array of all tracks of a record.
+    # replay gain is set for each track and for the record
+    def self.compute_replay_gain(tracks)
+        if tracks[0].record.fpeak != 0.0 || tracks[0].record.fgain != 0.0
+            LOG.info("Already gained: skipped #{tracks[0].record.stitle}")
+TRACE.debug("Already gained: skipped #{tracks[0].record.stitle}".red)
+            return
+        end
+
+        tracks.each do |trackui|
+            unless trackui.playable?
+                LOG.info("Not playable: skipped #{trackui.record.stitle}")
+TRACE.debug("Already gained: skipped #{trackui.record.stitle}".red)
+                return
+            end
+        end
+
+TRACE.debug("Started gain evaluation...".green)
+        tpeak = tgain = rpeak = rgain = 0.0
+        done = error = false
+
+        pipe = Gst::Pipeline.new("getgain")
+
+        pipe.bus.add_watch do |bus, message|
+            case message.type
+#                 when Gst::Message::Type::ELEMENT
+#                     p message
+                when Gst::Message::Type::TAG
+                    tpeak = message.structure['replaygain-track-peak'] if message.structure['replaygain-track-peak']
+                    tgain = message.structure['replaygain-track-gain'] if message.structure['replaygain-track-gain']
+                    rpeak = message.structure['replaygain-album-peak'] if message.structure['replaygain-album-peak']
+                    rgain = message.structure['replaygain-album-gain'] if message.structure['replaygain-album-gain']
+#                     p message.structure
+                when Gst::Message::Type::EOS
+#                     p message
+                    done = true
+                when Gst::Message::Type::ERROR
+                    p message
+                    done = true
+                    error = true
+            end
+            true
+        end
+
+        convertor = Gst::ElementFactory.make("audioconvert")
+        resample = Gst::ElementFactory.make("audioresample")
+        rgana = Gst::ElementFactory.make("rganalysis")
+        sink = Gst::ElementFactory.make("fakesink")
+
+        decoder = Gst::ElementFactory.make("decodebin")
+        decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
+            pad.link(convertor.get_pad("sink"))
+            convertor >> resample >> rgana >> sink
+        }
+
+        source = Gst::ElementFactory.make("filesrc")
+
+        rgana.num_tracks = tracks.size
+
+        tracks.each do |trackui|
+            done = false
+
+            pipe.clear
+            pipe.add(source, decoder, convertor, resample, rgana, sink)
+
+            source >> decoder
+
+            # audio file may be empty because of the status cache of the track browser!!!
+            trackui.setup_audio_file if trackui.audio_file.empty?
+
+            source.location = trackui.audio_file
+            begin
+                pipe.play
+                while !done
+                    Gtk.main_iteration while Gtk.events_pending?
+                    sleep(0.01)
+                end
+            rescue Interrupt
+            ensure
+                rgana.set_locked_state(true)
+                pipe.stop
+            end
+            unless error
+                trackui.track.fpeak = tpeak
+                trackui.track.fgain = tgain
+                trackui.track.sql_update
+            end
+            puts("track gain=#{tgain}, peak=#{tpeak}".cyan)
+            puts("rec gain=#{rgain}, peak=#{rpeak}".brown)
+        end
+        rgana.set_state(Gst::STATE_NULL)
+
+        unless error
+            tracks.first.record.fpeak = rpeak
+            tracks.first.record.fgain = rgain
+            tracks.first.record.sql_update
+        end
+    end
+
+    def self.replay_gain_for_genre
+        CDSDB.execute("SELECT * FROM records WHERE rgenre=11").each do |rec| # 11=disco
+            tracks = []
+            CDSDB.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
+                tracks << AudioLink.new.set_record_ref(rec[0]).set_track_ref(track[0])
+                tracks.last.setup_audio_file
+            end
+            self.compute_replay_gain(tracks)
+        end
+    end
 end

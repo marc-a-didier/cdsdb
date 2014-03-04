@@ -122,6 +122,7 @@ class TrackUI < UILink
             str += "tagged as "
             UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
         end
+        str += " G: %8.4f P: %8.4f" % [trk.fgain, trk.fpeak]
         return str
     end
 end
@@ -240,7 +241,7 @@ class DBEditor
     RECORD_PAGE  = 1
     SEGMENT_PAGE = 2
     TRACK_PAGE   = 3
-    
+
     def initialize(mc, dblink, default_page)
         @glade = GTBld::load(DLG_DB_EDITOR)
 
@@ -257,11 +258,11 @@ class DBEditor
         @editors[1] = RecordEditor.new(@glade, @dblink.record.dbs)   if @dblink.valid_record_ref?
         @editors[2] = SegmentEditor.new(@glade, @dblink.segment.dbs) if @dblink.valid_segment_ref?
         @editors[3] = TrackEditor.new(@glade, @dblink.track.dbs)     if @dblink.valid_track_ref?
-        
+
         # Set data to fields or remove page if no data. Do it backward so it doesn't screw with page
         # number since pages are in the tables hierarchy order
         3.downto(0) { |i|  @editors[i] ? @editors[i].to_widgets : @glade[DBED_NBOOK].remove_page(i) }
-                              
+
         @glade[DBED_NBOOK].page = default_page # default page is in theory always visible
     end
 
