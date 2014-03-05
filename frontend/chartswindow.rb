@@ -140,7 +140,7 @@ class ChartsWindow < TopWindow
             links << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
+            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }
         end
         return links
     end

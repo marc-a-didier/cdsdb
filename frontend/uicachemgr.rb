@@ -230,6 +230,7 @@ class UILink < AudioLink
     end
 
     def reset
+        @use_record_gain = false
         @pix_key = ""
         return super
     end
@@ -239,6 +240,13 @@ class UILink < AudioLink
         return super
     end
 
+    def set_use_of_record_gain
+        @use_record_gain = true
+    end
+
+    def use_record_gain?
+        return @use_record_gain
+    end
 
     def cover_file_name
         @pix_key.empty? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :

@@ -133,8 +133,13 @@ TRACE.debug("Player audio file was empty!".red)
         # Can't use replay gain if track has been dropped.
         # Replay gain should work if tags are set in the audio file
         if player_data.uilink.tags.nil?
-            @rgain.fallback_gain = player_data.uilink.track.fgain
-TRACE.debug("Gain set to #{player_data.uilink.track.fgain}".brown)
+            if player_data.uilink.use_record_gain?
+                @rgain.fallback_gain = player_data.uilink.record.fgain
+TRACE.debug("Gain set from RECORD to #{player_data.uilink.record.fgain}".brown)
+            else
+                @rgain.fallback_gain = player_data.uilink.track.fgain
+TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
+            end
         end
 
 #         @source = Gst::ElementFactory.make("filesrc")

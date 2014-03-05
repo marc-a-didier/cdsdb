@@ -147,7 +147,10 @@ class PQueueWindow < TopWindow
                 else
                     if type == "message"
 # TRACE.debug("message received, calling back #{call_back}")
-                        param ? enqueue(@mc.send(call_back, param.to_i)) : enqueue(@mc.send(call_back))
+                        tracks = param ? @mc.send(call_back, param.to_i) : @mc.send(call_back)
+                        tracks.each { |uilink| uilink.set_use_of_record_gain } if sender == "records"
+                        enqueue(tracks)
+#                         param ? enqueue(@mc.send(call_back, param.to_i)) : enqueue(@mc.send(call_back))
                     end
                 end
 

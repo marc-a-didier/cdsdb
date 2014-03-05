@@ -86,7 +86,7 @@ class HistoryDialog
             links << @tv.selection.selected[COL_DATA].clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
-            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]) }
+            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }
         end
         return links
     end
