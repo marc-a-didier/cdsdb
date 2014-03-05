@@ -71,6 +71,7 @@ class RecordUI < DBCacheLink
         str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
         str += ", "+DBCACHE.collection(rec.rcollection).sname if rec.rcollection != 0
         str += ", "+rec.iplaytime.to_ms_length
+        str += " [%8.4f | %8.4f]" % [rec.fgain, rec.fpeak]
     end
 
     def build_seg_infos_string
@@ -122,7 +123,7 @@ class TrackUI < UILink
             str += "tagged as "
             UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
         end
-        str += " G: %8.4f P: %8.4f" % [trk.fgain, trk.fpeak]
+        str += " [%8.4f | %8.4f]" % [trk.fgain, trk.fpeak]
         return str
     end
 end
