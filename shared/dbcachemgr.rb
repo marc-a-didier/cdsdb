@@ -271,7 +271,12 @@ class DBCacheLink
     end
 
     def flush_main_tables
-        [DBCACHE.track(@rtrack), DBCACHE.record(@rrecord),
-         DBCACHE.segment(@rsegment), DBCACHE.artist(@rartist)].each { |dbclass| dbclass.sql_update }
+        DBCACHE.artist(@rartist).sql_update if valid_artist_ref?
+        DBCACHE.record(@rrecord).sql_update if valid_record_ref?
+        DBCACHE.segment(@rsegment).sql_update if valid_segment_ref?
+        DBCACHE.track(@rtrack).sql_update if valid_track_ref?
+
+#         [DBCACHE.track(@rtrack), DBCACHE.record(@rrecord),
+#          DBCACHE.segment(@rsegment), DBCACHE.artist(@rartist)].each { |dbclass| dbclass.sql_update }
     end
 end
