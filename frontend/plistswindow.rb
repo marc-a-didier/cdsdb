@@ -297,13 +297,24 @@ p new_iorder
         end
     end
 
-    def notify_played(player_data, is_last_track, skip_to_next)
-        if is_last_track
+    def notify_played(player_data, message) #is_last_track, skip_to_next)
+        if message != :next # msg is :stop or :finish
             @curr_track = -1
             @playing_pl = 0
             plist_infos
+        else # :next message
+            @curr_track += 1
+            iter = @pts.get_iter(@curr_track.to_s)
+            @tvpt.set_cursor(iter.path, nil, false)
+            update_remaining_time(iter)
         end
-        plist_infos unless skip_to_next
+#         plist_infos unless skip_to_next
+#         if is_last_track
+#             @curr_track = -1
+#             @playing_pl = 0
+#             plist_infos
+#         end
+#         plist_infos unless skip_to_next
     end
 
     def dwl_file_name_notification(uilink, file_name)

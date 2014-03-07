@@ -232,8 +232,8 @@ class PQueueWindow < TopWindow
         # Don't care...
     end
 
-    def notify_played(player_data, is_last_track, skip_to_next)
-        if skip_to_next
+    def notify_played(player_data, message) #is_last_track, skip_to_next)
+        if message != :stop # message is :next or :finish #skip_to_next
             curr_trk = nil
             @plq.each { |model, path, iter| if iter[4].internal_ref == player_data.internal_ref then curr_trk = iter; break; end }
             if curr_trk
@@ -242,8 +242,11 @@ class PQueueWindow < TopWindow
                 @tvpq.columns_autosize
                 update_status
             end
+#         else # :stop message
+#             timer_notification(-1)
         end
-        timer_notification(-1) if is_last_track
+        timer_notification(-1) unless message == :next # msg is :finish or :stop
+#         timer_notification(-1) if is_last_track
     end
 
     def reset_player_track

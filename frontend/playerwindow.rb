@@ -99,9 +99,11 @@ class PlayerWindow < TopWindow
     def on_btn_stop
         return unless playing? || paused?
         stop
-        @queue[0].owner.notify_played(@queue[0], LAST_TRACK, DONT_SKIP)
+#         @queue[0].owner.notify_played(@queue[0], LAST_TRACK, DONT_SKIP)
+        @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
+        @file_preread = false
     end
 
     def on_btn_next
@@ -163,7 +165,7 @@ TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
         @tip_pix = nil
         setup_hscale
 
-        player_data.owner.started_playing(player_data)
+#         player_data.owner.started_playing(player_data)
 
         @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = player_data.uilink.html_track_title_no_track_num(false, " ")
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
@@ -190,14 +192,15 @@ TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
 #             play_track(@queue[1])
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
             TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-            @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, SKIP_TO_NEXT)
+#             @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, SKIP_TO_NEXT)
+            @queue[0].owner.notify_played(@queue[0], @queue[1].nil? ? :finish : :next)
             @mc.notify_played(@queue[0].uilink)
             @queue.shift # Remove first entry, no more needed
         else
             case msg
                 when :next
                     # We know it's not the last track because :next is not sent if no more track
-                    @queue[0].owner.notify_played(@queue[0], NOT_LAST_TRACK, SKIP_TO_NEXT)
+                    @queue[0].owner.notify_played(@queue[0], :next)
                     @queue.shift
                 when :prev
                     @queue.clear

@@ -762,17 +762,16 @@ TRACE.debug("Started gain evaluation...".green)
                 rgana.set_locked_state(true)
                 pipe.stop
             end
-            unless error
-                trackui.track.fpeak = tpeak
-                trackui.track.fgain = tgain
-                trackui.track.sql_update
-            end
+            trackui.track.fpeak = tpeak
+            trackui.track.fgain = tgain
+
             puts("track gain=#{tgain}, peak=#{tpeak}".cyan)
             puts("rec gain=#{rgain}, peak=#{rpeak}".brown)
         end
         rgana.set_state(Gst::STATE_NULL)
 
         unless error
+            tracks.each { |trackui| trackui.track.sql_update }
             tracks.first.record.fpeak = rpeak
             tracks.first.record.fgain = rgain
             tracks.first.record.sql_update
