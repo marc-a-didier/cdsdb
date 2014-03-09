@@ -682,7 +682,7 @@ print "Checking #{file}\n"
 
     # tracks is an array of all tracks of a record.
     # replay gain is set for each track and for the record
-    def self.compute_replay_gain(tracks)
+    def self.compute_replay_gain(tracks, use_thread = true)
         if tracks[0].record.fpeak != 0.0 || tracks[0].record.fgain != 0.0
             LOG.info("Already gained: skipped #{tracks[0].record.stitle}")
 TRACE.debug("Already gained: skipped #{tracks[0].record.stitle}".red)
@@ -697,7 +697,7 @@ TRACE.debug("Already gained: skipped #{trackui.record.stitle}".red)
             end
         end
 
-TRACE.debug("Started gain evaluation...".green)
+TRACE.debug("Started gain evaluation for #{tracks.first.record.stitle}".green)
         tpeak = tgain = rpeak = rgain = 0.0
         done = error = false
 
@@ -771,21 +771,30 @@ TRACE.debug("Started gain evaluation...".green)
         rgana.set_state(Gst::STATE_NULL)
 
         unless error
-            tracks.each { |trackui| trackui.track.sql_update }
             tracks.first.record.fpeak = rpeak
             tracks.first.record.fgain = rgain
-            tracks.first.record.sql_update
+            if use_thread
+                Thread.new {
+                    tracks.each { |trackui| trackui.track.sql_update }
+                    tracks.first.record.sql_update
+                }
+            else
+                tracks.each { |trackui| trackui.track.sql_update }
+                tracks.first.record.sql_update
+            end
         end
     end
 
     def self.replay_gain_for_genre
-        CDSDB.execute("SELECT * FROM records WHERE rgenre=11").each do |rec| # 11=disco
+TRACE.debug("Start gaining".bold)
+        CDSDB.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=28 LIMIT 20").each do |rec|
             tracks = []
             CDSDB.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
                 tracks << AudioLink.new.set_record_ref(rec[0]).set_track_ref(track[0])
                 tracks.last.setup_audio_file
             end
-            self.compute_replay_gain(tracks)
+            self.compute_replay_gain(tracks, false)
         end
+TRACE.debug("Finished gaining".bold)
     end
 end
