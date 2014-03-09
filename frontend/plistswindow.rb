@@ -1,6 +1,8 @@
 
 class PListsWindow < TopWindow
 
+    include PlayerIntf
+
 private
     TT_REF    = 0
     TT_ORDER  = 1
@@ -121,7 +123,7 @@ public
 
         set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
 
-        reset_player_track
+        reset_player_data_state
     end
 
     def show_popup(widget, event, is_play_list)
@@ -244,6 +246,12 @@ p new_iorder
     # Player related methods
     #
 
+    def reset_player_data_state
+        @curr_track = -1
+        @playing_pl = 0
+        plist_infos
+    end
+
     def update_tracks_time_infos
         @tracks = @ttime = 0
         @pts.each { |model, path, iter|
@@ -269,12 +277,6 @@ p new_iorder
         @mc.glade[UIConsts::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime("%a %d, %H:%M")
     end
 
-    def timer_notification(ms_time)
-        if @current_pl.rplist == @playing_pl
-            ms_time == -1 ? plist_infos : update_ptime_label(@remaining_time-ms_time)
-        end
-    end
-
     def update_remaining_time(iter)
         @remaining_time = 0
         local_iter = iter.clone
@@ -287,36 +289,6 @@ p new_iorder
         update_ptime_label(@remaining_time)
     end
 
-    def started_playing(player_data)
-        @curr_track = player_data.internal_ref
-        iter = @pts.get_iter(@curr_track.to_s)
-        if iter
-            @tvpt.set_cursor(iter.path, nil, false)
-            @playing_pl = @current_pl.rplist
-            update_remaining_time(iter)
-        end
-    end
-
-    def notify_played(player_data, message) #is_last_track, skip_to_next)
-        if message != :next # msg is :stop or :finish
-            @curr_track = -1
-            @playing_pl = 0
-            plist_infos
-        else # :next message
-            @curr_track += 1
-            iter = @pts.get_iter(@curr_track.to_s)
-            @tvpt.set_cursor(iter.path, nil, false)
-            update_remaining_time(iter)
-        end
-#         plist_infos unless skip_to_next
-#         if is_last_track
-#             @curr_track = -1
-#             @playing_pl = 0
-#             plist_infos
-#         end
-#         plist_infos unless skip_to_next
-    end
-
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
         @mc.track_list_changed(self)
@@ -326,7 +298,7 @@ p new_iorder
         while true
             iter = @pts.get_iter(@curr_track.to_s)
             if iter.nil?
-                reset_player_track
+                reset_player_data_state
                 return nil
             end
 
@@ -343,19 +315,36 @@ p new_iorder
             sleep(0.1)
         end
 
-#         @remaining_time = 0
-#         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
-#         update_tracks_label
-#         update_ptime_label(@remaining_time)
         update_remaining_time(iter)
         return PlayerData.new(self, @curr_track, iter[TT_DATA])
+    end
+
+
+    #
+    # PlayerIntf implementation
+    #
+
+    def timer_notification(ms_time)
+        if @current_pl.rplist == @playing_pl
+            ms_time == -1 ? plist_infos : update_ptime_label(@remaining_time-ms_time)
+        end
+    end
+
+    def notify_played(player_data, message)
+        if message == :next
+            @curr_track += 1
+            iter = @pts.get_iter(@curr_track.to_s)
+            @tvpt.set_cursor(iter.path, nil, false)
+            update_remaining_time(iter)
+        else # msg is :stop or :finish
+            reset_player_data_state
+        end
     end
 
     # Return an array of PlayerData that's max_entries in size and contain the next
     # tracks to play.
     # player_data is the current top of stack track of the player
     def prefetch_tracks(queue, max_entries)
-#         queue = []
         while queue.size < max_entries+1 # queue has at least the [0] element -> +1
             iter = @pts.get_iter((@curr_track+queue.size).to_s)
             break if iter.nil? # Reached the end of the play list
@@ -373,13 +362,6 @@ p new_iorder
                 end
             end
         end
-#         return queue
-    end
-
-    def reset_player_track
-        @curr_track = -1
-        @playing_pl = 0
-        plist_infos
     end
 
     def get_next_track
@@ -397,8 +379,8 @@ p new_iorder
         return get_audio_file
     end
 
-    def has_more_tracks(is_next)
-        return is_next ? !@pts.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
+    def has_track(direction)
+        return direction == :next ? !@pts.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
     end
 
     #
@@ -419,7 +401,7 @@ p new_iorder
 
     def on_pl_change
         return if @tvpl.selection.selected.nil?
-        reset_player_track
+        reset_player_data_state
         @current_pl.ref_load(@tvpl.selection.selected[0])
         update_tvpt
         @mc.track_list_changed(self)
@@ -603,7 +585,7 @@ p new_iorder
     end
 
     def update_tvpt
-        #reset_player_track
+        #reset_player_data_state
         @pts.clear
         return if @tvpl.cursor[0].nil?
 

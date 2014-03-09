@@ -1,6 +1,8 @@
 
 class PQueueWindow < TopWindow
 
+    include PlayerIntf
+
     PQData = Struct.new(:internal_ref, :uilink)
 
     def initialize(mc)
@@ -218,6 +220,10 @@ class PQueueWindow < TopWindow
         @mc.glade[UIConsts::PQ_LBL_ETA].text = @ntracks == 0 ? "" : Time.at(Time.now.to_i+ptime/1000).strftime("%a %d, %H:%M")
     end
 
+    #
+    # PlayerIntf implementation
+    #
+
     def timer_notification(ms_time)
         if ms_time == -1
             update_status
@@ -228,12 +234,8 @@ class PQueueWindow < TopWindow
         end
     end
 
-    def started_playing(player_data)
-        # Don't care...
-    end
-
-    def notify_played(player_data, message) #is_last_track, skip_to_next)
-        if message != :stop # message is :next or :finish #skip_to_next
+    def notify_played(player_data, message)
+        if message != :stop # message is :next or :finish 
             curr_trk = nil
             @plq.each { |model, path, iter| if iter[4].internal_ref == player_data.internal_ref then curr_trk = iter; break; end }
             if curr_trk
@@ -242,16 +244,8 @@ class PQueueWindow < TopWindow
                 @tvpq.columns_autosize
                 update_status
             end
-#         else # :stop message
-#             timer_notification(-1)
         end
         timer_notification(-1) unless message == :next # msg is :finish or :stop
-#         timer_notification(-1) if is_last_track
-    end
-
-    def reset_player_track
-        # Nothing to do... but have to respond to the message
-#         @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
     end
 
     def get_next_track
@@ -268,22 +262,20 @@ class PQueueWindow < TopWindow
     # tracks to play.
     # player_data is the current top of stack track of the player
     def prefetch_tracks(queue, max_entries)
-#         queue = []
         @plq.each { |model, path, iter|
-#             next if queue[0].internal_ref == iter[4].internal_ref
+            # Must check for every track if it's already in the queue. It may have been moved or something else.
             in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
             if !in_queue && iter[4].uilink.audio_status != AudioLink::ON_SERVER
                 queue << PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
                 break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
         }
-#         return queue
     end
 
     # Check if there's an entry after current entry which is not removed yet.
     # Backward is not supported in play queue so return false.
-    def has_more_tracks(is_next)
-        return is_next ? !@plq.get_iter("1").nil? : false
+    def has_track(direction)
+        return direction == :next ? !@plq.get_iter("1").nil? : false
     end
 
 end

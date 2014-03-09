@@ -255,8 +255,8 @@ class MasterController
         return @mw.trk_browser
     end
 
-    def get_next_track(is_next)
-        track_provider.send(is_next ? :get_next_track : :get_prev_track)
+    def get_next_track(direction)
+        track_provider.send(direction == :next ? :get_next_track : :get_prev_track)
     end
 
     def track_list_changed(sender)

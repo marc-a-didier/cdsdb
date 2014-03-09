@@ -45,6 +45,7 @@ require './extendedtreeview'
 require './uicachemgr'
 require './uiutils'
 
+require './playerintf'
 require './topwindow'
 require './dbselectordialog'
 require './plistswindow'

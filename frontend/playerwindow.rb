@@ -17,13 +17,6 @@ class PlayerWindow < TopWindow
     PREFETCH_SIZE = 2
 
 
-    SKIP_TO_NEXT = true
-    DONT_SKIP    = false
-
-    LAST_TRACK     = true
-    NOT_LAST_TRACK = false
-
-
     def initialize(mc)
         super(mc, UIConsts::PLAYER_WINDOW)
 
@@ -99,7 +92,6 @@ class PlayerWindow < TopWindow
     def on_btn_stop
         return unless playing? || paused?
         stop
-#         @queue[0].owner.notify_played(@queue[0], LAST_TRACK, DONT_SKIP)
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
@@ -113,7 +105,7 @@ class PlayerWindow < TopWindow
     end
 
     def on_btn_prev
-        return if !playing? || paused? || !@queue[0].owner.has_more_tracks(false)
+        return if !playing? || paused? || !@queue[0].owner.has_track(:prev)
         stop
         new_track(:prev)
     end
@@ -137,10 +129,10 @@ TRACE.debug("Player audio file was empty!".red)
         if player_data.uilink.tags.nil?
             if player_data.uilink.use_record_gain?
                 @rgain.fallback_gain = player_data.uilink.record.fgain
-TRACE.debug("Gain set from RECORD to #{player_data.uilink.record.fgain}".brown)
+TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
             else
                 @rgain.fallback_gain = player_data.uilink.track.fgain
-TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
+TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             end
         end
 
@@ -189,10 +181,8 @@ TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
 #         play_track
         # Test to lessen gap between tracks
         if msg == :stream_ended
-#             play_track(@queue[1])
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
-            TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-#             @queue[0].owner.notify_played(@queue[0], @queue[1].nil?, SKIP_TO_NEXT)
+TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             @queue[0].owner.notify_played(@queue[0], @queue[1].nil? ? :finish : :next)
             @mc.notify_played(@queue[0].uilink)
             @queue.shift # Remove first entry, no more needed
@@ -204,9 +194,9 @@ TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
                     @queue.shift
                 when :prev
                     @queue.clear
-                    @queue[0] = @mc.get_next_track(false)
+                    @queue[0] = @mc.get_next_track(:prev)
                 when :start
-                    @queue[0] = @mc.get_next_track(true)
+                    @queue[0] = @mc.get_next_track(:next)
             end
 
             # queue[0] may be nil only if play button is pressed while there's nothing to play
@@ -215,13 +205,10 @@ TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
 
         @queue.compact! # Remove nil entries
         if @queue[0]
-#             @queue[0].owner.prefetch_tracks(@queue[0], PREFETCH_SIZE-@queue.size, PREFTECH_SIZE).each { |pdata| @queue << pdata }
             @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
 
         @file_preread = false
-
-#         TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     # Called by mc if any change made in the provider track list
@@ -229,7 +216,6 @@ TRACE.debug("Gain set from TRACK to #{player_data.uilink.track.fgain}".brown)
         if @queue[0] && track_provider == @queue[0].owner
 TRACE.debug("Player refetched".green)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
-#             track_provider.prefetch_tracks(@queue[0], PREFETCH_SIZE).each { |pdata| @queue << pdata }
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
     end
@@ -358,7 +344,7 @@ TRACE.debug("Player unfetched".brown)
 #             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
 #         end
 
-        @queue[0].owner.timer_notification(itime) if @queue[0].owner.respond_to?(:timer_notification)
+        @queue[0].owner.timer_notification(itime)
 
         # If there's a next playable track in queue, read 512k of it in an attempt to make
         # it cached by the system and lose less time when skipping to it

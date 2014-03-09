@@ -40,7 +40,7 @@ class TracksBrowser < Gtk::TreeView
         @mc = mc
         @mc.glade[UIConsts::TRACKS_TVC].add(self)
         self.visible = true
-        
+
         renderer = Gtk::CellRendererText.new
         if CFG.admin?
             renderer.editable = true
@@ -409,8 +409,8 @@ TRACE.debug("executing: #{sql}")
 
         file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
         unless file.empty?
-            trackui.set_artist_ref(@mc.segment.rartist)        
-            trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) } 
+            trackui.set_artist_ref(@mc.segment.rartist)
+            trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) }
         end
     end
 
@@ -554,12 +554,13 @@ TRACE.debug("executing: #{sql}")
         return get_audio_file
     end
 
-    def has_more_tracks(is_next)
-        if is_next
-            return !model.get_iter((@curr_track+1).to_s).nil?
-        else
-            return @curr_track-1 >= 0
-        end
+    def has_track(direction)
+        return direction == :next ? !model.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
+#         if is_next
+#             return !model.get_iter((@curr_track+1).to_s).nil?
+#         else
+#             return @curr_track-1 >= 0
+#         end
     end
 
 end
