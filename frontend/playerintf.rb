@@ -8,6 +8,11 @@ module PlayerIntf
         return self
     end
 
+    # Called when a track has started playing
+    def started_playing(player_data)
+        return self
+    end
+
     # Called when a track is finished.
     # message is the type of termination. may be :stop, :finish or :next
     def notify_played(player_data, message)
@@ -22,8 +27,14 @@ module PlayerIntf
     # Should return true if provider has more tracks to play
     # direction is either :next or :prev
     # Should return true or false if it has or not a track in the wanted direction
-    def has_track(direction)
+    def has_track(player_data, direction)
         return false
+    end
+
+    # Called via master conntroller to get the first track to play
+    # prefetching is done later
+    def get_start_track
+        return nil
     end
 
     # Called via the master controller when it needs the first track to play

@@ -330,48 +330,80 @@ p new_iorder
         end
     end
 
+    def started_playing(player_data)
+        return if @curr_track == -1 # if @curr_track is -1, the play list has changed, so leave
+        iter = @pts.get_iter(player_data.internal_ref.to_s)
+        @tvpt.set_cursor(iter.path, nil, false)
+        update_remaining_time(iter)
+    end
+
     def notify_played(player_data, message)
-        if message == :next
-            @curr_track += 1
-            iter = @pts.get_iter(@curr_track.to_s)
-            @tvpt.set_cursor(iter.path, nil, false)
-            update_remaining_time(iter)
-        else # msg is :stop or :finish
-            reset_player_data_state
-        end
+        reset_player_data_state unless message == :next
+#         if message == :next
+#             @curr_track += 1
+#             iter = @pts.get_iter(@curr_track.to_s)
+#             @tvpt.set_cursor(iter.path, nil, false)
+#             update_remaining_time(iter)
+#         else # msg is :stop or :finish
+#             reset_player_data_state
+#         end
     end
 
     # Return an array of PlayerData that's max_entries in size and contain the next
     # tracks to play.
     # player_data is the current top of stack track of the player
     def prefetch_tracks(queue, max_entries)
+        offs = 0
         while queue.size < max_entries+1 # queue has at least the [0] element -> +1
-            iter = @pts.get_iter((@curr_track+queue.size).to_s)
+            iter = @pts.get_iter((@curr_track+queue.size+offs).to_s)
             break if iter.nil? # Reached the end of the play list
 
             iter[TT_DATA].setup_audio_file
             if iter[TT_DATA].playable? # OK or MISPLACED
-                queue << PlayerData.new(self, @curr_track+queue.size, iter[TT_DATA])
+                queue << PlayerData.new(self, @curr_track+queue.size+offs, iter[TT_DATA])
             else
                 # If track available on server, start downloading it.
                 # If not finished before the end of the current playing track,
                 # player will stop.
                 if iter[TT_DATA].available_on_server?
                     iter[TT_DATA].get_remote_audio_file(self, @mc.tasks)
-                    break
+                else
+                    offs += 1
                 end
             end
         end
     end
 
-    def get_next_track
-        if @curr_track == -1
-            @curr_track = @tvpt.cursor.nil? ? 0 : @tvpt.cursor[0].to_s.to_i
-            @playing_pl = @current_pl.rplist
-        else
-            @curr_track += 1
-        end
+    def get_start_track
+        @curr_track = @tvpt.selection.count_selected_rows == 0 ? 0 : @tvpt.selection.selected_rows[0].to_s.to_i
         return get_audio_file
+    end
+
+#     def get_next_track
+#         if @curr_track == -1
+#             @curr_track = @tvpt.cursor.nil? ? 0 : @tvpt.cursor[0].to_s.to_i
+#             @playing_pl = @current_pl.rplist
+#         else
+#             @curr_track += 1
+#         end
+#         return get_audio_file
+#     end
+
+    def get_track(player_data, direction)
+        if direction == :start
+            iter = @tvpt.selection.count_selected_rows == 0 ? 0 : @tvpt.selection.selected_rows[0].to_s.to_i
+            return get_audio_file
+        else
+            offset = direction == :next ? +1 : -1
+            index = 0
+            loop do
+                index += offset
+                iter = @pts.get_iter((player_data.internal_ref+index).to_s)
+                return nil if iter.nil?
+                return iter[TT_DATA] if iter[TT_DATA].playable?
+                index += offset
+            end
+        end
     end
 
     def get_prev_track
@@ -379,8 +411,18 @@ p new_iorder
         return get_audio_file
     end
 
-    def has_track(direction)
-        return direction == :next ? !@pts.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
+    def has_track(player_data, direction)
+        return !get_track(player_data, direction).nil?
+#         offset = direction == :next ? +1 : -1
+#         index = 0
+#         loop do
+#             index += offset
+#             iter = @pts.get_iter((player_data.internal_ref+index).to_s)
+#             return false if iter.nil?
+#             return true if iter[TT_DATA].playable?
+#             index += offset
+#         end
+#         return direction == :next ? !@pts.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
     end
 
     #

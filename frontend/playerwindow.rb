@@ -157,7 +157,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         @tip_pix = nil
         setup_hscale
 
-#         player_data.owner.started_playing(player_data)
+        player_data.owner.started_playing(player_data)
 
         @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = player_data.uilink.html_track_title_no_track_num(false, " ")
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
@@ -194,9 +194,10 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
                     @queue.shift
                 when :prev
                     @queue.clear
-                    @queue[0] = @mc.get_next_track(:prev)
+                    @queue[0].owner.get_prev_track
+#                     @queue[0] = @mc.get_next_track(:prev)
                 when :start
-                    @queue[0] = @mc.get_next_track(:next)
+                    @queue[0] = @mc.get_start_track #@mc.get_next_track(:next)
             end
 
             # queue[0] may be nil only if play button is pressed while there's nothing to play
