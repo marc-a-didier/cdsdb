@@ -131,6 +131,15 @@ TRACE.debug("task thread stopped".brown)
         end
     end
 
+    def track_in_download?(dblink)
+        @tv.model.each { |model, path, iter|
+            return true if iter[COL_REF].kind_of?(AudioLink) &&
+                           iter[COL_REF].track.rtrack == dblink.track.rtrack &&
+                           (iter[COL_STATUS] == STATUS[STAT_WAITING] || iter[COL_STATUS] == STATUS[STAT_DOWNLOAD])
+        }
+        return false
+    end
+
     def new_task(type, emitter, title, user_ref, file_info)
         iter = @tv.model.append
         iter[COL_OP]       = OPERATIONS[type]

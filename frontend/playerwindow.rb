@@ -207,6 +207,8 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         if @queue[0]
             @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
+puts("Queue:")
+(0..3).each { |i| puts("  "+@queue[i].uilink.track.stitle) if @queue[i] }
 
         @file_preread = false
     end

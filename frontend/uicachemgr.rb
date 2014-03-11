@@ -310,8 +310,10 @@ class UILink < AudioLink
 
     def get_remote_audio_file(emitter, tasks)
         if CFG.remote? && CFG.local_store?
-            tasks.new_track_download(emitter, self)
-            set_audio_status(AudioLink::ON_SERVER)
+            unless tasks.track_in_download?(self)
+                tasks.new_track_download(emitter, self)
+                set_audio_status(AudioLink::ON_SERVER)
+            end
         else
             set_audio_status(AudioLink::NOT_FOUND)
         end

@@ -2,6 +2,7 @@
 class PListsWindow < TopWindow
 
     include PlayerIntf
+    include BrowserPlayerIntf
 
 private
     TT_REF    = 0
@@ -277,14 +278,13 @@ p new_iorder
         @mc.glade[UIConsts::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime("%a %d, %H:%M")
     end
 
-    def update_remaining_time(iter)
+    def update_remaining_time
         @remaining_time = 0
-        local_iter = iter.clone
-        while local_iter
-            @remaining_time += local_iter[TT_DATA].track.iplaytime
-            break unless local_iter.next!
+        iter = @pts.get_iter(@track_ref.to_s)
+        while iter
+            @remaining_time += iter[TT_DATA].track.iplaytime
+            break unless iter.next!
         end
-#         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @track_ref <= path.to_s.to_i }
         update_tracks_label
         update_ptime_label(@remaining_time)
     end
@@ -294,34 +294,9 @@ p new_iorder
         @mc.track_list_changed(self)
     end
 
-    def get_audio_file
-        while true
-            iter = @pts.get_iter(@track_ref.to_s)
-            if iter.nil?
-                reset_player_data_state
-                return nil
-            end
-
-            @tvpt.set_cursor(iter.path, nil, false)
-            if iter[TT_DATA].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
-                @track_ref += 1
-            else
-                break
-            end
-        end
-
-        while iter[TT_DATA].audio_status == AudioLink::ON_SERVER
-            Gtk.main_iteration while Gtk.events_pending?
-            sleep(0.1)
-        end
-
-        update_remaining_time(iter)
-        return PlayerData.new(self, @track_ref, iter[TT_DATA])
-    end
-
 
     #
-    # PlayerIntf implementation
+    # PlayerIntf & BrowserPlayerIntf implementation
     #
 
     def timer_notification(ms_time)
@@ -331,63 +306,18 @@ p new_iorder
     end
 
     def started_playing(player_data)
-        return if @track_ref == -1 # if @track_ref is -1, the play list has changed, so leave
-        @track_ref = player_data.internal_ref
-        iter = @pts.get_iter(player_data.internal_ref.to_s)
-        @tvpt.set_cursor(iter.path, nil, false)
-        update_remaining_time(iter)
+        do_started_playing(@tvpt, player_data)
+        update_remaining_time
     end
 
-    def notify_played(player_data, message)
-        reset_player_data_state unless message == :next || message == :prev
-    end
-
-    # Return an array of PlayerData that's max_entries in size and contain the next
-    # tracks to play.
-    # player_data is the current top of stack track of the player
     def prefetch_tracks(queue, max_entries)
-        offs = 0
-        while queue.size < max_entries+1 # queue has at least the [0] element -> +1
-            iter = @pts.get_iter((queue[0].internal_ref+queue.size+offs).to_s)
-            break if iter.nil? # Reached the end of the play list
-
-            iter[TT_DATA].setup_audio_file
-            if iter[TT_DATA].playable? # OK or MISPLACED
-                queue << PlayerData.new(self, queue[0].internal_ref+queue.size+offs, iter[TT_DATA])
-            else
-                # If track available on server, start downloading it.
-                # If not finished before the end of the current playing track,
-                # player will stop.
-                if iter[TT_DATA].available_on_server?
-                    iter[TT_DATA].get_remote_audio_file(self, @mc.tasks)
-                else
-                    offs += 1
-                end
-            end
-        end
+        return do_prefetch_tracks(@pts, TT_DATA, queue, max_entries)
     end
 
     def get_track(player_data, direction)
-        if direction == :start
-            @track_ref = @tvpt.cursor.nil? ? 0 : @tvpt.cursor[0].to_s.to_i
-            @playing_pl = @current_pl.rplist
-            return get_audio_file
-        else
-            offset = direction == :next ? +1 : -1
-            index = 0
-            loop do
-                index += offset
-                return nil if player_data.internal_ref+index < 0
-                iter = @pts.get_iter((player_data.internal_ref+index).to_s)
-                return nil if iter.nil?
-                iter[TT_DATA].setup_audio_file if iter[TT_DATA].audio_status == AudioLink::UNKNOWN
-                return PlayerData.new(self, iter.path.to_s.to_i, iter[TT_DATA]) if iter[TT_DATA].playable?
-            end
-        end
-    end
-
-    def has_track(player_data, direction)
-        return !get_track(player_data, direction).nil?
+        pdata = do_get_track(@tvpt, TT_DATA, player_data, direction)
+        @playing_pl = @current_pl.rplist if direction == :start
+        return pdata
     end
 
     #

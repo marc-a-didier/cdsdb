@@ -3,6 +3,7 @@
 class TracksBrowser < Gtk::TreeView
 
     include PlayerIntf
+    include BrowserPlayerIntf
 
     TTV_REF         = 0
     TTV_PIX         = 1
@@ -401,7 +402,10 @@ TRACE.debug("executing: #{sql}")
     def on_del_from_fs
         msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
         if UIUtils::get_response(msg) == Gtk::Dialog::RESPONSE_OK
-            selection.selected_each { |model, path, iter| Utils::remove_file(iter[TTV_REF]) }
+            selection.selected_each { |model, path, iter|
+                Utils::remove_file(iter[TTV_REF])
+                iter[TTV_DATA].set_audio_status(AudioLink::UNKNOWN)
+            }
             load_entries_select_first
         end
     end
@@ -514,136 +518,25 @@ TRACE.debug("executing: #{sql}")
         }
     end
 
-    #
-    # Messages sent by the player when track treeview is the track provider
-    #
+
     def reset_player_data_state
         @track_ref = -1
     end
 
-    def get_audio_file
-        while true
-            iter = model.get_iter(@track_ref.to_s)
-            if iter.nil?
-                reset_player_data_state
-                return nil
-            end
-
-            if iter[TTV_DATA].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
-                @track_ref += 1
-            else
-                break
-            end
-        end
-        set_cursor(iter.path, nil, false)
-
-        while iter[TTV_DATA].audio_status == AudioLink::ON_SERVER
-            Gtk.main_iteration while Gtk.events_pending?
-            sleep(0.1)
-        end
-
-        return PlayerData.new(self, @track_ref, iter[TTV_DATA])
-    end
-
-
     #
-    # PlayerIntf implementation
+    # PlayerIntf & BrowserPlayerIntf implementation
     #
 
     def started_playing(player_data)
-        return if @track_ref == -1 # if @track_ref is -1, the track list has changed, so leave
-        @track_ref = player_data.internal_ref
-        iter = model.get_iter(player_data.internal_ref.to_s)
-        set_cursor(iter.path, nil, false)
-    end
-
-    def notify_played(player_data, message)
-        reset_player_data_state unless message == :next || message == :prev
-#         if message == :next
-#             @track_ref += 1
-#             iter = model.get_iter(@track_ref.to_s)
-#             set_cursor(iter.path, nil, false)
-#         else
-#             reset_player_data_state
-#         end
+        do_started_playing(self, player_data)
     end
 
     def prefetch_tracks(queue, max_entries)
-        offs = 0
-        while queue.size < max_entries+1 # queue has at least the [0] element -> +1
-            iter = model.get_iter((queue[0].internal_ref+queue.size+offs).to_s)
-            break if iter.nil? # Reached the end of the tracks
-
-            iter[TTV_DATA].setup_audio_file
-            if iter[TTV_DATA].playable? # OK or MISPLACED
-                queue << PlayerData.new(self, queue[0].internal_ref+queue.size+offs, iter[TTV_DATA])
-            else
-                # If track available on server, start downloading it.
-                # If not finished before the end of the current playing track,
-                # player will stop.
-                if iter[TTV_DATA].available_on_server?
-                    iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
-                else
-                    offs += 1
-                end
-            end
-        end
+        return do_prefetch_tracks(self.model, TTV_DATA, queue, max_entries)
     end
 
     def get_track(player_data, direction)
-        if direction == :start
-#             @track_ref = selection.count_selected_rows == 0 ? 0 : selection.selected_rows[0].to_s.to_i
-            @track_ref = cursor.nil? ? 0 : cursor[0].to_s.to_i
-            return get_audio_file
-        else
-            offset = direction == :next ? +1 : -1
-            index = 0
-            loop do
-                index += offset
-                return nil if player_data.internal_ref+index < 0
-                iter = model.get_iter((player_data.internal_ref+index).to_s)
-                return nil if iter.nil?
-                return PlayerData.new(self, iter.path.to_s.to_i, iter[TTV_DATA]) if iter[TTV_DATA].playable?
-                index += offset
-            end
-        end
+        return do_get_track(self, TTV_DATA, player_data, direction)
     end
-
-    def has_track(player_data, direction)
-        return !get_track(player_data, direction).nil?
-    end
-
-#     def get_start_track
-#         @track_ref = selection.count_selected_rows == 0 ? 0 : selection.selected_rows[0].to_s.to_i
-#         return get_audio_file
-#     end
-
-#     def get_next_track
-#         if @track_ref == -1
-#             @track_ref = selection.count_selected_rows == 0 ? 0 : selection.selected_rows[0].to_s.to_i
-#         else
-#             @track_ref += 1
-#         end
-#         return get_audio_file
-#     end
-
-#     def get_prev_track
-#         @track_ref -= 1
-#         return get_audio_file
-#     end
-
-#     def has_track(player_data, direction)
-#         return !get_track(player_data, direction).nil?
-#         offset = direction == :next ? +1 : -1
-#         index = 0
-#         loop do
-#             index += offset
-#             iter = model.get_iter((player_data.internal_ref+index).to_s)
-#             return false if iter.nil?
-#             return true if iter[TTV_DATA].playable?
-#             index += offset
-#         end
-#         return direction == :next ? !model.get_iter((@track_ref+1).to_s).nil? : @track_ref-1 >= 0
-#     end
 
 end
