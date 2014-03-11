@@ -255,12 +255,8 @@ class MasterController
         return @mw.trk_browser
     end
 
-    def get_start_track
-        return track_provider.get_start_track
-    end
-
-    def get_next_track(direction)
-        track_provider.send(direction == :next ? :get_next_track : :get_prev_track)
+    def get_track(player_data, direction)
+        return track_provider.get_track(player_data, direction)
     end
 
     def track_list_changed(sender)

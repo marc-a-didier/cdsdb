@@ -24,30 +24,19 @@ module PlayerIntf
         return self
     end
 
+    # Called via master conntroller to get a track to play
+    # direction may be :start, :next or :prev
+    # :start is used to get the first track when the play button is pressed
+    # :next is never used as the player has a prefetch queue
+    # :prev is used to get the previous track
+    def get_track(player_data, direction)
+        return nil
+    end
+
     # Should return true if provider has more tracks to play
     # direction is either :next or :prev
     # Should return true or false if it has or not a track in the wanted direction
     def has_track(player_data, direction)
         return false
-    end
-
-    # Called via master conntroller to get the first track to play
-    # prefetching is done later
-    def get_start_track
-        return nil
-    end
-
-    # Called via the master controller when it needs the first track to play
-    # Master controller is called from the player when starting play or
-    # when getting the previous as it invalidates the prefetch queue.
-    # Should return a PlayerData class
-    def get_next_track
-        return nil
-    end
-
-    # Received when previous track is to be played
-    # Should return a PlayerData class
-    def get_prev_track
-        return nil
     end
 end

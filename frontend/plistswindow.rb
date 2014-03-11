@@ -247,7 +247,7 @@ p new_iorder
     #
 
     def reset_player_data_state
-        @curr_track = -1
+        @track_ref = -1
         @playing_pl = 0
         plist_infos
     end
@@ -269,7 +269,7 @@ p new_iorder
     end
 
     def update_tracks_label
-        @mc.glade[UIConsts::PL_LBL_TRACKS].text = "Track #{@curr_track+1} of #{@tracks}"
+        @mc.glade[UIConsts::PL_LBL_TRACKS].text = "Track #{@track_ref+1} of #{@tracks}"
     end
 
     def update_ptime_label(rmg_time)
@@ -284,7 +284,7 @@ p new_iorder
             @remaining_time += local_iter[TT_DATA].track.iplaytime
             break unless local_iter.next!
         end
-#         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @curr_track <= path.to_s.to_i }
+#         @pts.each { |model, path, iter| @remaining_time += iter[TT_DATA].track.iplaytime if @track_ref <= path.to_s.to_i }
         update_tracks_label
         update_ptime_label(@remaining_time)
     end
@@ -296,7 +296,7 @@ p new_iorder
 
     def get_audio_file
         while true
-            iter = @pts.get_iter(@curr_track.to_s)
+            iter = @pts.get_iter(@track_ref.to_s)
             if iter.nil?
                 reset_player_data_state
                 return nil
@@ -304,7 +304,7 @@ p new_iorder
 
             @tvpt.set_cursor(iter.path, nil, false)
             if iter[TT_DATA].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
-                @curr_track += 1
+                @track_ref += 1
             else
                 break
             end
@@ -316,7 +316,7 @@ p new_iorder
         end
 
         update_remaining_time(iter)
-        return PlayerData.new(self, @curr_track, iter[TT_DATA])
+        return PlayerData.new(self, @track_ref, iter[TT_DATA])
     end
 
 
@@ -331,22 +331,15 @@ p new_iorder
     end
 
     def started_playing(player_data)
-        return if @curr_track == -1 # if @curr_track is -1, the play list has changed, so leave
+        return if @track_ref == -1 # if @track_ref is -1, the play list has changed, so leave
+        @track_ref = player_data.internal_ref
         iter = @pts.get_iter(player_data.internal_ref.to_s)
         @tvpt.set_cursor(iter.path, nil, false)
         update_remaining_time(iter)
     end
 
     def notify_played(player_data, message)
-        reset_player_data_state unless message == :next
-#         if message == :next
-#             @curr_track += 1
-#             iter = @pts.get_iter(@curr_track.to_s)
-#             @tvpt.set_cursor(iter.path, nil, false)
-#             update_remaining_time(iter)
-#         else # msg is :stop or :finish
-#             reset_player_data_state
-#         end
+        reset_player_data_state unless message == :next || message == :prev
     end
 
     # Return an array of PlayerData that's max_entries in size and contain the next
@@ -355,12 +348,12 @@ p new_iorder
     def prefetch_tracks(queue, max_entries)
         offs = 0
         while queue.size < max_entries+1 # queue has at least the [0] element -> +1
-            iter = @pts.get_iter((@curr_track+queue.size+offs).to_s)
+            iter = @pts.get_iter((queue[0].internal_ref+queue.size+offs).to_s)
             break if iter.nil? # Reached the end of the play list
 
             iter[TT_DATA].setup_audio_file
             if iter[TT_DATA].playable? # OK or MISPLACED
-                queue << PlayerData.new(self, @curr_track+queue.size+offs, iter[TT_DATA])
+                queue << PlayerData.new(self, queue[0].internal_ref+queue.size+offs, iter[TT_DATA])
             else
                 # If track available on server, start downloading it.
                 # If not finished before the end of the current playing track,
@@ -374,55 +367,27 @@ p new_iorder
         end
     end
 
-    def get_start_track
-        @curr_track = @tvpt.selection.count_selected_rows == 0 ? 0 : @tvpt.selection.selected_rows[0].to_s.to_i
-        return get_audio_file
-    end
-
-#     def get_next_track
-#         if @curr_track == -1
-#             @curr_track = @tvpt.cursor.nil? ? 0 : @tvpt.cursor[0].to_s.to_i
-#             @playing_pl = @current_pl.rplist
-#         else
-#             @curr_track += 1
-#         end
-#         return get_audio_file
-#     end
-
     def get_track(player_data, direction)
         if direction == :start
-            iter = @tvpt.selection.count_selected_rows == 0 ? 0 : @tvpt.selection.selected_rows[0].to_s.to_i
+            @track_ref = @tvpt.cursor.nil? ? 0 : @tvpt.cursor[0].to_s.to_i
+            @playing_pl = @current_pl.rplist
             return get_audio_file
         else
             offset = direction == :next ? +1 : -1
             index = 0
             loop do
                 index += offset
+                return nil if player_data.internal_ref+index < 0
                 iter = @pts.get_iter((player_data.internal_ref+index).to_s)
                 return nil if iter.nil?
-                return iter[TT_DATA] if iter[TT_DATA].playable?
-                index += offset
+                iter[TT_DATA].setup_audio_file if iter[TT_DATA].audio_status == AudioLink::UNKNOWN
+                return PlayerData.new(self, iter.path.to_s.to_i, iter[TT_DATA]) if iter[TT_DATA].playable?
             end
         end
     end
 
-    def get_prev_track
-        @curr_track -= 1
-        return get_audio_file
-    end
-
     def has_track(player_data, direction)
         return !get_track(player_data, direction).nil?
-#         offset = direction == :next ? +1 : -1
-#         index = 0
-#         loop do
-#             index += offset
-#             iter = @pts.get_iter((player_data.internal_ref+index).to_s)
-#             return false if iter.nil?
-#             return true if iter[TT_DATA].playable?
-#             index += offset
-#         end
-#         return direction == :next ? !@pts.get_iter((@curr_track+1).to_s).nil? : @curr_track-1 >= 0
     end
 
     #
@@ -471,11 +436,11 @@ p new_iorder
             sql[-1] = ")"
             exec_sql(sql)
             iters.each { |iter|
-                if @curr_track != 1
-                    if iter.path.to_s.to_i > @curr_track
+                if @track_ref != 1
+                    if iter.path.to_s.to_i > @track_ref
                         @remaining_time -= iter[TT_DATA].track.iplaytime
                     else
-                        @curr_track -= 1
+                        @track_ref -= 1
                     end
                 end
                 @pts.remove(iter)
@@ -503,7 +468,7 @@ p new_iorder
         # ce putain de truc marche plus depuis qu'on peut trier les colonnes...!!!
         # Apres consultation de diverses doc, c'est impossible de remettre le sort a nil
         # une fois qu'on a selectionne une colonne... donc impossible!
-        @curr_track = -1
+        @track_ref = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
         @pts.reorder(new_order) # It's magic!
         @mc.track_list_changed(self)

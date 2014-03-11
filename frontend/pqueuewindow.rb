@@ -234,15 +234,6 @@ class PQueueWindow < TopWindow
         end
     end
 
-    def get_first_track
-        @plq.each { |model, path, iter|
-            unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
-                return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
-            end
-        }
-        return nil
-    end
-
     def notify_played(player_data, message)
         if message != :stop # message is :next or :finish
             curr_trk = nil
@@ -257,15 +248,6 @@ class PQueueWindow < TopWindow
         timer_notification(-1) unless message == :next # msg is :finish or :stop
     end
 
-#     def get_next_track
-#         @plq.each { |model, path, iter|
-#             unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
-#                 return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
-#             end
-#         }
-# #         @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
-#         return nil
-#     end
 
     # Return an array of PlayerData that's max_entries in size and contain the next
     # tracks to play.
@@ -281,12 +263,21 @@ class PQueueWindow < TopWindow
         }
     end
 
-    # Check if there's an entry after current entry which is not removed yet.
+    def get_track(player_data, direction)
+        if direction == :start
+            @plq.each { |model, path, iter|
+                unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
+                    return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
+                end
+            }
+        end
+        return nil
+    end
+
     # Backward is not supported in play queue so return false.
     # Since the player is prefetched, has_track is never called with the :next direction.
     def has_track(player_data, direction)
         return false
-#         return direction == :next ? !@plq.get_iter("1").nil? : false
     end
 
 end

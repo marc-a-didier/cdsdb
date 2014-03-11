@@ -105,7 +105,7 @@ class PlayerWindow < TopWindow
     end
 
     def on_btn_prev
-        return if !playing? || paused? || !@queue[0].owner.has_track(:prev)
+        return if !playing? || paused? || !@queue[0].owner.has_track(@queue[0], :prev)
         stop
         new_track(:prev)
     end
@@ -193,11 +193,10 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
                     @queue[0].owner.notify_played(@queue[0], :next)
                     @queue.shift
                 when :prev
-                    @queue.clear
-                    @queue[0].owner.get_prev_track
-#                     @queue[0] = @mc.get_next_track(:prev)
+                    @queue[0] = @queue[0].owner.get_track(@queue[0], :prev)
+                    @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
                 when :start
-                    @queue[0] = @mc.get_start_track #@mc.get_next_track(:next)
+                    @queue[0] = @mc.get_track(nil, :start)
             end
 
             # queue[0] may be nil only if play button is pressed while there's nothing to play

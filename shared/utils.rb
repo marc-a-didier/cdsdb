@@ -787,7 +787,7 @@ TRACE.debug("Started gain evaluation for #{tracks.first.record.stitle}".green)
 
     def self.replay_gain_for_genre
 TRACE.debug("Start gaining".bold)
-        CDSDB.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=28 LIMIT 20").each do |rec|
+        CDSDB.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=2 LIMIT 50").each do |rec|
             tracks = []
             CDSDB.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
                 tracks << AudioLink.new.set_record_ref(rec[0]).set_track_ref(track[0])
