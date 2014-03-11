@@ -58,6 +58,15 @@ public
         return sql[0..-2]+");" # Remove last ,
     end
 
+    def generate_update
+        old = self.clone.sql_load
+        sql = "UPDATE #{@tbl_name} SET "
+        @dbs.each_with_index { |value, i| sql += @dbs.members[i].to_s+"="+value.to_sql+"," if value != old.dbs[i] }
+        return sql[-1] == " " ? "" : sql[0..-2]+" "+generate_where_on_pk+";"
+#         sql = sql[0..-2]+" "+generate_where_on_pk+";" if sql[-1] != " " # Remove last ,
+#         return sql
+    end
+
     # Set class attributes from a full sqlite3 row
     def load_from_row(row)
         row.each_with_index { |val, i| @dbs[i] = val } # @dbs[i].kind_of?(Numeric) ? val.to_i : val }
@@ -71,11 +80,8 @@ public
     end
 
     def sql_update
-        old = self.clone.sql_load
-        sql = "UPDATE #{@tbl_name} SET "
-        @dbs.each_with_index { |value, i| sql += @dbs.members[i].to_s+"="+value.to_sql+"," if value != old.dbs[i] }
-        if sql[-1] != " "
-            sql = sql[0..-2]+" "+generate_where_on_pk+";" # Remove last ,
+        sql = generate_update
+        unless sql.empty?
             DBUtils.client_sql(sql)
 TRACE.debug("DB update : #{sql}".red)
         end
