@@ -170,6 +170,11 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         end
     end
 
+    def debug_queue
+        puts("Queue: #{@queue.size} entries:")
+        @queue.each { |entry| puts("  "+entry.uilink.track.stitle) }
+    end
+
     def new_track(msg)
         start = Time.now.to_f
 #         @player_data.owner.notify_played(@player_data) if @player_data
@@ -207,8 +212,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         if @queue[0]
             @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
         end
-puts("Queue:")
-(0..3).each { |i| puts("  "+@queue[i].uilink.track.stitle) if @queue[i] }
+debug_queue
 
         @file_preread = false
     end
@@ -219,6 +223,7 @@ puts("Queue:")
 TRACE.debug("Player refetched".green)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
+debug_queue
         end
     end
 
@@ -226,6 +231,7 @@ TRACE.debug("Player refetched".green)
     def unfetch(track_provider)
 TRACE.debug("Player unfetched".brown)
         @queue.slice!(1, PREFETCH_SIZE) if @queue[0] && track_provider == @queue[0].owner
+debug_queue
     end
 
     def init_player
