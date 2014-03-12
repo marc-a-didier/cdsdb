@@ -58,6 +58,15 @@ class PlayerWindow < TopWindow
         update_hscale
     end
 
+    def set_window_title
+        msg = case @playbin.get_state[1]
+            when Gst::STATE_PLAYING then "Playing"
+            when Gst::STATE_PAUSED  then "Paused"
+            else "Stopped"
+        end
+        window.title = "Player - [#{msg}]"
+    end
+
     def reset_player(notify)
         @tip_pix = nil
 
@@ -70,7 +79,7 @@ class PlayerWindow < TopWindow
 
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
         @seeking = false
-        window.title = "Player - [Stopped]"
+        set_window_title
         @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = true
         @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = false
         @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = false
@@ -86,7 +95,7 @@ class PlayerWindow < TopWindow
         else
             new_track(:start)
         end
-        window.title = playing? ? "Player - [Playing]" : "Player - [Paused]"
+        set_window_title
     end
 
     def on_btn_stop
@@ -135,8 +144,6 @@ TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
 TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             end
         end
-
-#         @source = Gst::ElementFactory.make("filesrc")
 
         @playbin.clear
         @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
