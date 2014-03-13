@@ -54,7 +54,6 @@
     <child>
       <object class="GtkImageMenuItem" id="apm_edit">
         <property name="label">gtk-edit</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -65,7 +64,6 @@
     <child>
       <object class="GtkImageMenuItem" id="apm_add">
         <property name="label">gtk-add</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -76,7 +74,6 @@
     <child>
       <object class="GtkImageMenuItem" id="apm_del">
         <property name="label">gtk-delete</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -93,7 +90,6 @@
     <child>
       <object class="GtkImageMenuItem" id="apm_infos">
         <property name="label">gtk-info</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -102,7 +98,6 @@
     </child>
     <child>
       <object class="GtkSeparatorMenuItem" id="apm_sepitem2">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
       </object>
@@ -110,7 +105,6 @@
     <child>
       <object class="GtkImageMenuItem" id="apm_refresh">
         <property name="label">gtk-refresh</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -123,7 +117,6 @@
     <property name="can_focus">False</property>
     <child>
       <object class="GtkMenuItem" id="charts_pm_enqueue">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue</property>
@@ -132,7 +125,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="charts_pm_enqueuefrom">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue from here</property>
@@ -141,7 +133,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="charts_pm_playhistory">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Show play history</property>
@@ -150,7 +141,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="charts_pm_genpl">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Generate play list</property>
@@ -159,7 +149,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="charts_pm_showindb">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Show in browser</property>
@@ -180,7 +169,6 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="charts_mb_charts">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Charts</property>
@@ -191,7 +179,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkMenuItem" id="charts_mm_tracks">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Tracks</property>
@@ -200,7 +187,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="charts_mm_records">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Records</property>
@@ -209,7 +195,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="charts_mm_artists">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Artists</property>
@@ -218,7 +203,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="charts_mm_countries">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By Countrie_s</property>
@@ -227,7 +211,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="charts_mm_mtypes">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By Music _Genres</property>
@@ -236,7 +219,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="charts_mm_labels">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Labels</property>
@@ -251,7 +233,6 @@
                     </child>
                     <child>
                       <object class="GtkRadioMenuItem" id="charts_mm_played">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By play cou_nt</property>
@@ -263,7 +244,6 @@
                     </child>
                     <child>
                       <object class="GtkRadioMenuItem" id="charts_mm_time">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By play ti_me</property>
@@ -281,7 +261,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="charts_mm_close">
                         <property name="label">gtk-close</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -644,7 +623,6 @@
                                     <child>
                                       <object class="GtkCheckButton" id="flt_cb_matchall">
                                         <property name="label" translatable="yes">Match all</property>
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">False</property>
@@ -922,7 +900,6 @@
                                         <child>
                                           <object class="GtkButton" id="flt_btn_fromdate">
                                             <property name="label" translatable="yes">...</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="width_request">30</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
@@ -957,7 +934,6 @@
                                         <child>
                                           <object class="GtkButton" id="flt_btn_todate">
                                             <property name="label" translatable="yes">...</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="width_request">30</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
@@ -1434,7 +1410,6 @@
                                         </child>
                                         <child>
                                           <object class="GtkCheckButton" id="flt_chk_musicfile">
-                                            <property name="use_action_appearance">False</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
@@ -1461,7 +1436,6 @@
                                         <child>
                                           <object class="GtkButton" id="flt_btn_plgen">
                                             <property name="label" translatable="yes">Generate Play List</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -1475,7 +1449,6 @@
                                         <child>
                                           <object class="GtkButton" id="flt_btn_pqgen">
                                             <property name="label" translatable="yes">Generate Play Queue</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -1545,7 +1518,6 @@
                 <child>
                   <object class="GtkButton" id="flt_btn_save">
                     <property name="label">gtk-save</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -1572,7 +1544,6 @@
                 <child>
                   <object class="GtkButton" id="flt_btn_clear">
                     <property name="label">gtk-clear</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -1587,7 +1558,6 @@
                 <child>
                   <object class="GtkButton" id="flt_btn_apply">
                     <property name="label">gtk-apply</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -1628,7 +1598,6 @@
     <child>
       <object class="GtkImageMenuItem" id="flt_popitm_new">
         <property name="label">gtk-new</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -1638,7 +1607,6 @@
     <child>
       <object class="GtkImageMenuItem" id="flt_popitm_delete">
         <property name="label">gtk-delete</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -1741,7 +1709,6 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="file_menuitem">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_File</property>
@@ -1752,7 +1719,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkMenuItem" id="mm_file_checkcd">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Check CD</property>
@@ -1761,7 +1727,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_file_importsql">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Import SQL file</property>
@@ -1770,7 +1735,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_file_importaudio">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Import _audio file...</property>
@@ -1804,7 +1768,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="mm_file_quit">
                         <property name="label">gtk-quit</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -1818,7 +1781,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="edit_menuitem">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Edit</property>
@@ -1829,7 +1791,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkMenuItem" id="mm_edit_search">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Search...</property>
@@ -1838,7 +1799,6 @@
                     </child>
                     <child>
                       <object class="GtkSeparatorMenuItem" id="mm_edit_sep1">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                       </object>
@@ -1862,7 +1822,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="mm_edit_prefs">
                         <property name="label">gtk-preferences</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -1876,7 +1835,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="view_menuitem">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_View</property>
@@ -1887,7 +1845,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_autocheck">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Audio auto-c_heck</property>
@@ -1896,7 +1853,6 @@
                     </child>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_trackindex">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Shows or hide track index in segment</property>
@@ -1906,7 +1862,6 @@
                     </child>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_segtitle">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Segment title</property>
@@ -1915,7 +1870,6 @@
                     </child>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_byrating">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">S_ort tracks by rating</property>
@@ -1930,7 +1884,6 @@
                     </child>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_compile">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Group in _Compilations</property>
@@ -1939,7 +1892,6 @@
                     </child>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_updatenp">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Update Never Played</property>
@@ -1948,14 +1900,12 @@
                     </child>
                     <child>
                       <object class="GtkSeparatorMenuItem" id="mm_view_sep2">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkCheckMenuItem" id="mm_view_dbrefs">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Show DB references</property>
@@ -1968,7 +1918,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="win_menuitem">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Windows</property>
@@ -2055,7 +2004,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_win_recent">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Recently added records</property>
@@ -2064,7 +2012,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_win_ripped">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Rece_ntly ripped records</property>
@@ -2073,7 +2020,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_win_played">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Recently pla_yed tracks</property>
@@ -2082,7 +2028,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_win_dates">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Played tracks by _dates</property>
@@ -2095,7 +2040,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="mm_item_tools">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Tools</property>
@@ -2106,7 +2050,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_tag_genre">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Tag dir to genre...</property>
@@ -2115,7 +2058,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_search_orphans">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Search orphans files...</property>
@@ -2124,7 +2066,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_scanaudio">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Scan for _audio files...</property>
@@ -2133,7 +2074,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_checklog">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Check log integrity</property>
@@ -2148,7 +2088,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_syncsrc">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
@@ -2158,7 +2097,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_syncdb">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Synchronize Database</property>
@@ -2167,7 +2105,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_syncres">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Synchronize Resources</property>
@@ -2176,7 +2113,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_exportdb">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Export DB to XML</property>
@@ -2185,7 +2121,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_genreorder">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Generate reordering SQL</property>
@@ -2194,7 +2129,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_cacheinfo">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Cache info to console</property>
@@ -2209,7 +2143,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="mm_tools_stats">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Statistics</property>
@@ -2222,7 +2155,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="help_menuitem">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Help</property>
@@ -2234,7 +2166,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="about_imagemenuitem">
                         <property name="label">gtk-about</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -2793,7 +2724,6 @@
                 <property name="show_arrow">False</property>
                 <child>
                   <object class="GtkToolButton" id="player_btn_start">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="stock_id">gtk-media-play</property>
@@ -2805,7 +2735,6 @@
                 </child>
                 <child>
                   <object class="GtkToolButton" id="player_btn_stop">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="stock_id">gtk-media-stop</property>
@@ -2817,7 +2746,6 @@
                 </child>
                 <child>
                   <object class="GtkToolButton" id="player_btn_prev">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="stock_id">gtk-media-previous</property>
@@ -2829,7 +2757,6 @@
                 </child>
                 <child>
                   <object class="GtkToolButton" id="player_btn_next">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="stock_id">gtk-media-next</property>
@@ -2847,31 +2774,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vbox27">
+              <object class="GtkImage" id="img_meter">
+                <property name="width_request">500</property>
+                <property name="height_request">60</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <child>
-                  <object class="GtkProgressBar" id="player_pb_left">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkProgressBar" id="player_pb_right">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
+                <property name="stock">gtk-missing-image</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -2961,7 +2869,6 @@
             </child>
             <child>
               <object class="GtkButton" id="player_btn_switch">
-                <property name="use_action_appearance">False</property>
                 <property name="width_request">20</property>
                 <property name="height_request">16</property>
                 <property name="visible">True</property>
@@ -3010,7 +2917,6 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="pl_mb_playlist">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Play list</property>
@@ -3022,7 +2928,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="pl_mb_new">
                         <property name="label">gtk-new</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -3033,7 +2938,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="pl_mb_delete">
                         <property name="label">gtk-delete</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -3044,7 +2948,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="pl_mb_infos">
                         <property name="label">gtk-info</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -3060,7 +2963,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_export_xspf">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Export to _xspf</property>
@@ -3069,7 +2971,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_export_m3u">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Export to _m3u</property>
@@ -3078,7 +2979,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_export_pls">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Export to _pls</property>
@@ -3093,7 +2993,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_export_device">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Export files from the play list to a device</property>
@@ -3110,7 +3009,6 @@
                     <child>
                       <object class="GtkImageMenuItem" id="pl_mb_close">
                         <property name="label">gtk-close</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
@@ -3124,7 +3022,6 @@
             </child>
             <child>
               <object class="GtkMenuItem" id="pl_mb_arrange">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Arrange</property>
@@ -3135,7 +3032,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_shuffle">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Shu_ffle</property>
@@ -3150,7 +3046,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_renumber">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">_Renumber</property>
@@ -3165,7 +3060,6 @@
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="pl_mb_chkorphan">
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Check orphans</property>
@@ -3346,7 +3240,6 @@
     <child>
       <object class="GtkImageMenuItem" id="pm_pl_add">
         <property name="label">gtk-add</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3357,7 +3250,6 @@
     <child>
       <object class="GtkImageMenuItem" id="pm_pl_delete">
         <property name="label">gtk-delete</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3368,7 +3260,6 @@
     <child>
       <object class="GtkImageMenuItem" id="pm_pl_infos">
         <property name="label">gtk-info</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3384,7 +3275,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_shuffle">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Shuffle</property>
@@ -3393,7 +3283,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_enqueue">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue</property>
@@ -3408,7 +3297,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_showinbrowser">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Show in browser</property>
@@ -3423,7 +3311,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_export_xspf">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Export to xspf</property>
@@ -3432,7 +3319,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_export_m3u">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Export to m3u</property>
@@ -3442,7 +3328,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_export_pls">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Export to pls</property>
@@ -3457,7 +3342,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pl_export_device">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Export to device...</property>
@@ -3471,7 +3355,6 @@
     <child>
       <object class="GtkImageMenuItem" id="pm_pq_remove">
         <property name="label">gtk-remove</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3481,7 +3364,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pq_rmfromhere">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Remove from here</property>
@@ -3491,7 +3373,6 @@
     <child>
       <object class="GtkImageMenuItem" id="pm_pq_clear">
         <property name="label">gtk-clear</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3507,7 +3388,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pq_shuffle">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Shuffle</property>
@@ -3522,7 +3402,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="pm_pq_showinbrowser">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Show in browser</property>
@@ -3532,7 +3411,6 @@
     <child>
       <object class="GtkImageMenuItem" id="pm_pq_infos">
         <property name="label" translatable="yes">Show infos</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="image">image3</property>
@@ -3668,7 +3546,6 @@
     <child>
       <object class="GtkImageMenuItem" id="rpm_edit">
         <property name="label">gtk-edit</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3678,7 +3555,6 @@
     <child>
       <object class="GtkImageMenuItem" id="rpm_add">
         <property name="label">gtk-add</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3689,7 +3565,6 @@
     <child>
       <object class="GtkImageMenuItem" id="rpm_del">
         <property name="label">gtk-delete</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3705,7 +3580,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_seg_add">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Add segment</property>
@@ -3714,7 +3588,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_cp_title">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Title to Segments</property>
@@ -3723,7 +3596,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_set_seg_order">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Assign segment order</property>
@@ -3738,7 +3610,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_tag_dir">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Tag dir</property>
@@ -3753,7 +3624,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_phistory">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Play history</property>
@@ -3762,7 +3632,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_rating">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Rating</property>
@@ -3771,7 +3640,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_tags">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Tags</property>
@@ -3780,7 +3648,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_getrpgain">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Compute replay gain</property>
@@ -3789,7 +3656,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="rpm_enqueue">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue</property>
@@ -3799,7 +3665,6 @@
     <child>
       <object class="GtkImageMenuItem" id="rpm_download">
         <property name="label" translatable="yes">Download from server</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="image">image2</property>
@@ -3813,7 +3678,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tkpm_clear">
         <property name="label">gtk-clear</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3824,7 +3688,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tkpm_cancel">
         <property name="label" translatable="yes">Cancel downloads</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="image">image4</property>
@@ -3840,7 +3703,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tkpm_close">
         <property name="label">gtk-close</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3887,7 +3749,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tpm_edit">
         <property name="label">gtk-edit</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -3897,7 +3758,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tpm_add">
         <property name="label">gtk-add</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Add a track to the DB</property>
@@ -3909,7 +3769,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tpm_del">
         <property name="label">gtk-delete</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Delete track from DB</property>
@@ -3926,7 +3785,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_del_from_fs">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Delete file from file system</property>
@@ -3937,7 +3795,6 @@
     <child>
       <object class="GtkImageMenuItem" id="tpm_download">
         <property name="label" translatable="yes">Download from server</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="image">image1</property>
@@ -3952,7 +3809,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_tag_file">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Tag, rename and move file to appropriate location</property>
@@ -3962,7 +3818,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_upd_ptime">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Set play time from audio file</property>
@@ -3971,7 +3826,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_seg_ass">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Assign to segment</property>
@@ -3986,7 +3840,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_audioinfo">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Audio file infos</property>
@@ -3995,7 +3848,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_playhist">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Play history</property>
@@ -4004,7 +3856,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_contpl">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Containing play lists</property>
@@ -4013,14 +3864,12 @@
     </child>
     <child>
       <object class="GtkSeparatorMenuItem" id="tpm_sep4">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
       </object>
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_add_to_pl">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Add to play list</property>
@@ -4029,7 +3878,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_rating">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Rating</property>
@@ -4038,7 +3886,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_tags">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Tags</property>
@@ -4047,7 +3894,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_enqueue">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue</property>
@@ -4056,7 +3902,6 @@
     </child>
     <child>
       <object class="GtkMenuItem" id="tpm_enqueue_from">
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Enqueue from here</property>
@@ -4070,7 +3915,6 @@
     <child>
       <object class="GtkImageMenuItem" id="ttpm_item_play">
         <property name="label">gtk-media-play</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -4081,7 +3925,6 @@
     <child>
       <object class="GtkImageMenuItem" id="ttpm_item_pause">
         <property name="label">gtk-media-pause</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="sensitive">False</property>
         <property name="can_focus">False</property>
@@ -4093,7 +3936,6 @@
     <child>
       <object class="GtkImageMenuItem" id="ttpm_item_stop">
         <property name="label">gtk-media-stop</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="sensitive">False</property>
         <property name="can_focus">False</property>
@@ -4111,7 +3953,6 @@
     <child>
       <object class="GtkImageMenuItem" id="ttpm_item_prev">
         <property name="label">gtk-media-previous</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -4122,7 +3963,6 @@
     <child>
       <object class="GtkImageMenuItem" id="ttpm_item_next">
         <property name="label">gtk-media-next</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
@@ -4139,7 +3979,6 @@
     <child>
       <object class="GtkImageMenuItem" id="ttpm_item_quit">
         <property name="label">gtk-quit</property>
-        <property name="use_action_appearance">False</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>

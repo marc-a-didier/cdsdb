@@ -41,6 +41,8 @@ class MasterController
         @memos    = MemosWindow.new(self)
 
         @mw = MainWindow.new(self)
+
+        @player.setup
     end
 
     #

@@ -16,6 +16,9 @@ class PlayerWindow < TopWindow
 
     PREFETCH_SIZE = 2
 
+    LYOFFSET = 16
+    RYOFFSET = 28
+
 
     def initialize(mc)
         super(mc, UIConsts::PLAYER_WINDOW)
@@ -41,8 +44,8 @@ class PlayerWindow < TopWindow
         @file_preread = false
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
-        @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
-        @rmeter = @mc.glade[UIConsts::PLAYER_PB_RIGHT]
+#         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
+#         @rmeter = @mc.glade[UIConsts::PLAYER_PB_RIGHT]
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -51,6 +54,30 @@ class PlayerWindow < TopWindow
         @tip_pix = nil
 
         init_player
+    end
+
+    def setup
+        @mpix = Gdk::Pixmap.new(window.parent_window, 469, 52, 24) # 16*2+8*2+1*4
+
+        scale = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
+        p scale.width, scale.height
+        @dark = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
+        p @dark.width, @dark.height
+        @bright = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH1.png")
+
+        # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
+        @mpix.draw_pixbuf(nil, scale, 0, 4, 0, 0, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
+
+        # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+
+        @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 24, 469, 4, Gdk::RGB::DITHER_NONE, 0, 0)
+
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 28, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+
+        @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 36, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
+
+        @mc.glade["img_meter"].set(@mpix, nil)
     end
 
     def on_change_time_view
@@ -250,22 +277,68 @@ debug_queue
             case message.type
                 when Gst::Message::Type::ELEMENT
                     if message.source.name == LEVEL_ELEMENT_NAME
+                        lval = message.structure["rms"][0]
+                        rval = message.structure["rms"][1]
+
                         lpeak = message.structure["peak"][0]
                         rpeak = message.structure["peak"][1]
+# p message.structure["decay"][0]
 
-                        if lpeak < 0.0
-                            lpeak = lpeak > -60.0 ? (90.0 * lpeak / 60.0) + 90.0 : 0.0
-                        else
-                            lpeak = 90.0+lpeak*10.0
-                        end
-                        @lmeter.fraction = lpeak/100.0
+                        lval = lval > -60.0 ? ((469.0 * lval / 60.0) + 469.0).to_i : 0
+                        lval = 469 if lval > 469
+# puts("lval=#{lval}".cyan)
+                        rval = rval > -60.0 ? ((469.0 * rval / 60.0) + 469.0).to_i : 0
+                        rval = 469 if rval > 469
 
-                        if rpeak < 0.0
-                            rpeak = rpeak > -60.0 ? (90.0 * rpeak / 60.0) + 90.0 : 0.0
-                        else
-                            rpeak = 90.0+rpeak*10.0
-                        end
-                        @rmeter.fraction = rpeak/100.0
+                        lpeak = lpeak > -60.0 ? ((469.0 * lpeak / 60.0) + 469.0).to_i : 0
+                        lpeak = 469 if lpeak > 469
+# puts("lval=#{lval}".cyan)
+                        rpeak = rpeak > -60.0 ? ((469.0 * rpeak / 60.0) + 469.0).to_i : 0
+                        rpeak = 469 if rpeak > 469
+
+                        @mpix.draw_pixbuf(nil, @bright,
+                                          0,     0,
+                                          0,     LYOFFSET,
+                                          lval, 8,
+                                          Gdk::RGB::DITHER_NONE, 0, 0)
+                        @mpix.draw_pixbuf(nil, @dark,
+                                          lval,     0,
+                                          lval,     LYOFFSET,
+                                          469-lval, 8,
+                                          Gdk::RGB::DITHER_NONE, 0, 0)
+
+                        @mpix.draw_pixbuf(nil, @bright,
+                                          0,            0,
+                                          0,     RYOFFSET,
+                                          rval,        8,
+                                          Gdk::RGB::DITHER_NONE, 0, 0)
+                        @mpix.draw_pixbuf(nil, @dark,
+                                          rval,     0,
+                                          rval,     RYOFFSET,
+                                          469-rval, 8,
+                                          Gdk::RGB::DITHER_NONE, 0, 0)
+
+#                         @mpix.draw_rectangle(window.parent_window, false, lpeak-1, LYOFFSET, 2, 8)
+#                         @mpix.draw_rectangle(window.parent_window, false, rpeak-1, RYOFFSET, 2, 8)
+
+                        @mc.glade["img_meter"].set(@mpix, nil)
+
+#                         lpeak = message.structure["peak"][0]
+#                         rpeak = message.structure["peak"][1]
+#
+#                         if lpeak < 0.0
+#                             lpeak = lpeak > -60.0 ? (90.0 * lpeak / 60.0) + 90.0 : 0.0
+#                         else
+#                             lpeak = 90.0+lpeak*10.0
+#                         end
+#                         @lmeter.fraction = lpeak/100.0
+#
+#                         if rpeak < 0.0
+#                             rpeak = rpeak > -60.0 ? (90.0 * rpeak / 60.0) + 90.0 : 0.0
+#                         else
+#                             rpeak = 90.0+rpeak*10.0
+#                         end
+#                         @rmeter.fraction = rpeak/100.0
                     end
                 when Gst::Message::EOS
                     stop
