@@ -4,9 +4,9 @@ PlayerData = Struct.new(:owner, :internal_ref, :uilink)
 class PlayerWindow < TopWindow
 
     LEVEL_ELEMENT_NAME = "my_level_meter"
-    MINIMUM_LEVEL = -60.0  # The scale range will be from this value to 0 dB, has to be negative
-    POS_MIN_LEVEL = -1 * MINIMUM_LEVEL
-    METER_WIDTH = 100 #70
+    MIN_LEVEL = -80.0  # The scale range will be from this value to 0 dB, has to be negative
+    POS_MIN_LEVEL = -1 * MIN_LEVEL
+    METER_WIDTH = 469.0 # Offset start 10 pixels idem end
     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
 
     ELAPSED   = 0
@@ -39,7 +39,7 @@ class PlayerWindow < TopWindow
 #         @player_data = nil
 
         # Intended to be a PlayerData array to pre-fetch tracks to play
-        @queue = [nil]
+        @queue = []
 
         @file_preread = false
 
@@ -57,7 +57,20 @@ class PlayerWindow < TopWindow
     end
 
     def setup
-        @mpix = Gdk::Pixmap.new(window.parent_window, 469, 52, 24) # 16*2+8*2+1*4
+        window.realize
+
+#         @gc = @mc.glade["img_meter"].window
+
+        @mpix = Gdk::Pixmap.new(window.window, 469, 52, -1) # 52 = 16*2+8*2+1*4
+#         @mpix.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
+
+        @gc = Gdk::GC.new(@mc.glade["img_meter"].window)
+        @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
+#         @gc.set_fg(0xffff, 0xffff, 0xffff)
+# p @gc.foreground
+
+#         window.@mpix.style.white_gc #set_fg(0xffff, 0xffff, 0xffff)
+#         @gc.foreground = @mc.glade["img_meter"].style.white_gc
 
         scale = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
         @dark = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
@@ -161,10 +174,10 @@ TRACE.debug("Player audio file was empty!".red)
         # Can't use replay gain if track has been dropped.
         # Replay gain should work if tags are set in the audio file
         if player_data.uilink.tags.nil?
-            if player_data.uilink.use_record_gain?
+            if player_data.uilink.use_record_gain? && @mc.glade[UIConsts::MM_PLAYER_USERECRG].active?
                 @rgain.fallback_gain = player_data.uilink.record.fgain
 TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
-            else
+            elsif @mc.glade[UIConsts::MM_PLAYER_USETRKRG].active?
                 @rgain.fallback_gain = player_data.uilink.track.fgain
 TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             end
@@ -275,49 +288,52 @@ debug_queue
             case message.type
                 when Gst::Message::Type::ELEMENT
                     if message.source.name == LEVEL_ELEMENT_NAME
-                        lval = message.structure["rms"][0]
-                        rval = message.structure["rms"][1]
+                        lrms = message.structure["rms"][0]
+                        rrms = message.structure["rms"][1]
 
-                        lpeak = message.structure["peak"][0]
-                        rpeak = message.structure["peak"][1]
+#                         lpeak = message.structure["peak"][0] #- message["peak-falloff"][0]
+#                         rpeak = message.structure["peak"][1] #- message["peak-falloff"][1]
+                        lpeak = message.structure["decay"][0]
+                        rpeak = message.structure["decay"][1]
+
 # p message.structure["decay"][0]
 
-                        lval = lval > -60.0 ? ((469.0 * lval / 60.0) + 469.0).to_i : 0
-                        lval = 469 if lval > 469
-# puts("lval=#{lval}".cyan)
-                        rval = rval > -60.0 ? ((469.0 * rval / 60.0) + 469.0).to_i : 0
-                        rval = 469 if rval > 469
+                        lrms = lrms > MIN_LEVEL ? (METER_WIDTH*lrms / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        lrms = METER_WIDTH if lrms > METER_WIDTH
 
-                        lpeak = lpeak > -60.0 ? ((469.0 * lpeak / 60.0) + 469.0).to_i : 0
-                        lpeak = 469 if lpeak > 469
-# puts("lval=#{lval}".cyan)
-                        rpeak = rpeak > -60.0 ? ((469.0 * rpeak / 60.0) + 469.0).to_i : 0
-                        rpeak = 469 if rpeak > 469
+                        rrms = rrms > MIN_LEVEL ? (METER_WIDTH*rrms / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        rrms = METER_WIDTH if rrms > METER_WIDTH
+
+                        lpeak = lpeak > MIN_LEVEL ? (METER_WIDTH*lpeak / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        lpeak = METER_WIDTH-1 if lpeak >= METER_WIDTH
+
+                        rpeak = rpeak > MIN_LEVEL ? (METER_WIDTH*rpeak / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        rpeak = METER_WIDTH-1 if rpeak >= METER_WIDTH
 
                         @mpix.draw_pixbuf(nil, @bright,
                                           0,    0,
                                           0,    LYOFFSET,
-                                          lval, 8,
+                                          lrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
-                                          lval,     0,
-                                          lval,     LYOFFSET,
-                                          469-lval, 8,
+                                          lrms,             0,
+                                          lrms,             LYOFFSET,
+                                          METER_WIDTH-lrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
                         @mpix.draw_pixbuf(nil, @bright,
                                           0,    0,
                                           0,    RYOFFSET,
-                                          rval, 8,
+                                          rrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
-                                          rval,     0,
-                                          rval,     RYOFFSET,
-                                          469-rval, 8,
+                                          rrms,             0,
+                                          rrms,             RYOFFSET,
+                                          METER_WIDTH-rrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
-#                         @mpix.draw_rectangle(window.parent_window, false, lpeak-1, LYOFFSET, 2, 8)
-#                         @mpix.draw_rectangle(window.parent_window, false, rpeak-1, RYOFFSET, 2, 8)
+                        @mpix.draw_rectangle(@gc, true, lpeak-1, LYOFFSET, 2, 8)
+                        @mpix.draw_rectangle(@gc, true, rpeak-1, RYOFFSET, 2, 8)
 
                         @mc.glade["img_meter"].set(@mpix, nil)
 

@@ -119,7 +119,7 @@ class MainWindow < TopWindow
 
         # Reload windows state from the last session BEFORE connecting signals
 #         PREFS.load_menu_state(@mc, @glade[MM_WIN_MENU])
-        [MM_WIN_MENU, MM_EDIT_MENU].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
+        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
 
 
         #

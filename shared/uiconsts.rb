@@ -146,6 +146,11 @@ module UIConsts
     MM_WIN_PLAYED               = "mm_win_played"
     MM_WIN_DATES                = "mm_win_dates"
 
+    # Player menu
+    MM_PLAYER_MENU              = "mm_player_menu"
+    MM_PLAYER_USETRKRG          = "mm_player_usetrkrg"
+    MM_PLAYER_USERECRG          = "mm_player_userecrg"
+
     # Tools menu
     MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
     MM_TOOLS_SEARCH_ORPHANS  = "mm_tools_search_orphans"
