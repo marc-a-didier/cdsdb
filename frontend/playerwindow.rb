@@ -60,9 +60,7 @@ class PlayerWindow < TopWindow
         @mpix = Gdk::Pixmap.new(window.parent_window, 469, 52, 24) # 16*2+8*2+1*4
 
         scale = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
-        p scale.width, scale.height
         @dark = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
-        p @dark.width, @dark.height
         @bright = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH1.png")
 
         # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
@@ -297,8 +295,8 @@ debug_queue
                         rpeak = 469 if rpeak > 469
 
                         @mpix.draw_pixbuf(nil, @bright,
-                                          0,     0,
-                                          0,     LYOFFSET,
+                                          0,    0,
+                                          0,    LYOFFSET,
                                           lval, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
@@ -308,9 +306,9 @@ debug_queue
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
                         @mpix.draw_pixbuf(nil, @bright,
-                                          0,            0,
-                                          0,     RYOFFSET,
-                                          rval,        8,
+                                          0,    0,
+                                          0,    RYOFFSET,
+                                          rval, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
                                           rval,     0,
