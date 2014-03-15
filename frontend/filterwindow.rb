@@ -10,10 +10,10 @@ class FilterWindow < TopWindow
     #     rating:  Rating weight in %
     #     title:   Not used, only for debug.
     TrackData = Struct.new(:weight, :played, :rating, :rtrack, :title)
-    
+
     DEST_PLIST  = 0
     DEST_PQUEUE = 1
-    
+
     TITLES = { "genres" => "Genre", "origins" => "Country", "medias" => "Medium" } # "labels" => "Label"
     COND_FIELDS = ["records.rgenre", "artists.rorigin", "records.rmedia"] # Fields to sort on
     EXP_FILEDS = [FLT_EXP_GENRES, FLT_EXP_ORIGINS, FLT_EXP_MEDIAS]
@@ -245,7 +245,7 @@ class FilterWindow < TopWindow
             end
 
             max_played = dblink.track.iplayed if dblink.track.iplayed > max_played
-            
+
             tracks << TrackData.new(0.0, dblink.track.iplayed.to_f, dblink.track.irating.to_f/6.0*100.0, row[0], dblink.track.stitle)
             f << row[0] << " - " << dblink.track.iplayed << " - " << dblink.track.irating << " - " << dblink.track.stitle << "\n"
         end
@@ -281,8 +281,8 @@ class FilterWindow < TopWindow
             # tracks.shuffle!(random: Utils.value_from_rnd_str(Utils.str_from_rnd_file(8), f))
         else
             tracks.each { |track|
-                track.played = track.played/max_played*100.0 if max_played > 0          
-                track.weight = track.played*pcweight+track.rating*rtweight        
+                track.played = track.played/max_played*100.0 if max_played > 0
+                track.weight = track.played*pcweight+track.rating*rtweight
                 f << track.rtrack << " - pcp: " << track.played << " - rtp: " << track.rating \
                   << " - Weight: " << track.weight << " for " << track.title << "\n"
             }
@@ -335,16 +335,16 @@ class FilterWindow < TopWindow
 
         f.puts; f.puts
 
-        links = []                                                                         
-        if destination == DEST_PLIST                                                                          
+        links = []
+        if destination == DEST_PLIST
             rplist = DBUtils::get_last_id("plist")+1
             CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, #{Time.now.to_i}, #{Time.now.to_i});")
             rpltrack = DBUtils::get_last_id("pltrack")+1
         end
-                                                                                 
+
         tracks.each_with_index { |track, i|
             f << "i="<< i << "  Weight: " << track.weight << " for " << track.title << "\n"
-            if destination == DEST_PLIST                   
+            if destination == DEST_PLIST
                 CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{(i+1)*1024});")
             else
                 links << UILink.new.set_track_ref(track.rtrack)

@@ -153,7 +153,7 @@ module UIConsts
 
     # Tools menu
     MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
-    MM_TOOLS_SEARCH_ORPHANS  = "mm_tools_search_orphans"
+    MM_TOOLS_BATCHRG         = "mm_tools_batchrg"
     MM_TOOLS_SCANAUDIO       = "mm_tools_scanaudio"
     MM_TOOLS_CHECKLOG        = "mm_tools_checklog"
     MM_TOOLS_SYNCSRC         = "mm_tools_syncsrc"
@@ -203,12 +203,12 @@ module UIConsts
     PLAYER_BTN_NEXT         = "player_btn_next"
     PLAYER_BTN_PREV         = "player_btn_prev"
     PLAYER_HSCALE           = "player_hscale"
-    PLAYER_PB_LEFT          = "player_pb_left"
-    PLAYER_PB_RIGHT         = "player_pb_right"
     PLAYER_LABEL_TITLE      = "player_label_title"
     PLAYER_LABEL_DURATION   = "player_label_duration"
     PLAYER_LABEL_POS        = "player_label_pos"
     PLAYER_BTN_SWITCH       = "player_btn_switch"
+    PLAYER_IMG_METER        = "player_img_meter"
+
 
     #
     # Export dialog controls

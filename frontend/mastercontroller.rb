@@ -42,7 +42,7 @@ class MasterController
 
         @mw = MainWindow.new(self)
 
-        @player.setup
+#         @player.setup
     end
 
     #

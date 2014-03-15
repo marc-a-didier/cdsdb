@@ -145,7 +145,7 @@ class MainWindow < TopWindow
         @glade[MM_WIN_PLAYED].signal_connect(:activate) { handle_history(RECENT_PLAYED) }
         @glade[MM_WIN_DATES].signal_connect(:activate)  { handle_history(VIEW_BY_DATES) }
 
-        @glade[MM_TOOLS_SEARCH_ORPHANS].signal_connect(:activate) { Utils.replay_gain_for_genre }
+        @glade[MM_TOOLS_BATCHRG].signal_connect(:activate) { Utils.replay_gain_for_genre }
 #             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
 #                 Gtk.main_iteration while Gtk.events_pending?
 #             } )

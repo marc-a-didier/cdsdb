@@ -6,8 +6,10 @@ class PlayerWindow < TopWindow
     LEVEL_ELEMENT_NAME = "my_level_meter"
     MIN_LEVEL = -80.0  # The scale range will be from this value to 0 dB, has to be negative
     POS_MIN_LEVEL = -1 * MIN_LEVEL
-    METER_WIDTH = 469.0 # Offset start 10 pixels idem end
     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
+
+    METER_WIDTH = 449.0 # Offset start 10 pixels idem end
+    IMAGE_WIDTH = 469.0
 
     ELAPSED   = 0
     REMAINING = 1
@@ -29,6 +31,9 @@ class PlayerWindow < TopWindow
             true
         end
 
+        @meter = @mc.glade[UIConsts::PLAYER_IMG_METER]
+        @meter.signal_connect(:realize) { |widget| setup }
+
         @mc.glade[UIConsts::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
         @mc.glade[UIConsts::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
         @mc.glade[UIConsts::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
@@ -36,16 +41,12 @@ class PlayerWindow < TopWindow
 
         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
-#         @player_data = nil
-
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
 
         @file_preread = false
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
-#         @lmeter = @mc.glade[UIConsts::PLAYER_PB_LEFT]
-#         @rmeter = @mc.glade[UIConsts::PLAYER_PB_RIGHT]
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -56,24 +57,18 @@ class PlayerWindow < TopWindow
         init_player
     end
 
+    # Build the backgroud image of the level meter when the GTK image is realized
     def setup
-        window.realize
+        @prev_lpeak = 0.0
+        @prev_rpeak = 0.0
 
-#         @gc = @mc.glade["img_meter"].window
+        @mpix = Gdk::Pixmap.new(@meter.window, IMAGE_WIDTH, 52, -1) # 52 = 16*2+8*2+1*4
 
-        @mpix = Gdk::Pixmap.new(window.window, 469, 52, -1) # 52 = 16*2+8*2+1*4
-#         @mpix.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
-
-        @gc = Gdk::GC.new(@mc.glade["img_meter"].window)
+        @gc = Gdk::GC.new(@meter.window)
         @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
-#         @gc.set_fg(0xffff, 0xffff, 0xffff)
-# p @gc.foreground
 
-#         window.@mpix.style.white_gc #set_fg(0xffff, 0xffff, 0xffff)
-#         @gc.foreground = @mc.glade["img_meter"].style.white_gc
-
-        scale = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
-        @dark = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
+        scale   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
+        @dark   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
         @bright = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH1.png")
 
         # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
@@ -88,7 +83,7 @@ class PlayerWindow < TopWindow
 
         @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 36, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
 
-        @mc.glade["img_meter"].set(@mpix, nil)
+        @meter.set(@mpix, nil)
     end
 
     def on_change_time_view
@@ -296,46 +291,60 @@ debug_queue
                         lpeak = message.structure["decay"][0]
                         rpeak = message.structure["decay"][1]
 
+#                         ldiff = (@prev_lpeak+500.0)-(lrms+500.0)
+#                         rdiff = (@prev_rpeak+500.0)-(rrms+500.0)
+
+#                         lpeak -= (ldiff/2.0) if lpeak < @prev_lpeak
+#                         rpeak -= (rdiff/2.0) if rpeak < @prev_rpeak
+
+#                         @prev_lpeak = lpeak #message.structure["decay"][0]
+#                         @prev_rpeak = rpeak #message.structure["decay"][1]
+
 # p message.structure["decay"][0]
 
-                        lrms = lrms > MIN_LEVEL ? (METER_WIDTH*lrms / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        lrms = lrms > MIN_LEVEL ? (METER_WIDTH*lrms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         lrms = METER_WIDTH if lrms > METER_WIDTH
 
-                        rrms = rrms > MIN_LEVEL ? (METER_WIDTH*rrms / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        rrms = rrms > MIN_LEVEL ? (METER_WIDTH*rrms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         rrms = METER_WIDTH if rrms > METER_WIDTH
 
-                        lpeak = lpeak > MIN_LEVEL ? (METER_WIDTH*lpeak / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        lpeak = lpeak > MIN_LEVEL ? (METER_WIDTH*lpeak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         lpeak = METER_WIDTH-1 if lpeak >= METER_WIDTH
 
-                        rpeak = rpeak > MIN_LEVEL ? (METER_WIDTH*rpeak / POS_MIN_LEVEL)+METER_WIDTH : 0.0
+                        rpeak = rpeak > MIN_LEVEL ? (METER_WIDTH*rpeak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         rpeak = METER_WIDTH-1 if rpeak >= METER_WIDTH
 
+# draw_pixbuf(gc, copied pixbuf,
+#             copied pixbuf src_x, copied pixbuf src_y,
+#             dest (self) dest_x, dest (self) dest_y,
+#             width, height, dither, x_dither, y_dither)
+
                         @mpix.draw_pixbuf(nil, @bright,
-                                          0,    0,
-                                          0,    LYOFFSET,
+                                          10,    0,
+                                          10,    LYOFFSET,
                                           lrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
-                                          lrms,             0,
-                                          lrms,             LYOFFSET,
-                                          METER_WIDTH-lrms, 8,
+                                          lrms+11,             0,
+                                          lrms+11,             LYOFFSET,
+                                          METER_WIDTH-lrms+1, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
                         @mpix.draw_pixbuf(nil, @bright,
-                                          0,    0,
-                                          0,    RYOFFSET,
+                                          10,    0,
+                                          10,    RYOFFSET,
                                           rrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
-                                          rrms,             0,
-                                          rrms,             RYOFFSET,
-                                          METER_WIDTH-rrms, 8,
+                                          rrms+11,             0,
+                                          rrms+11,             RYOFFSET,
+                                          METER_WIDTH-rrms+1, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
-                        @mpix.draw_rectangle(@gc, true, lpeak-1, LYOFFSET, 2, 8)
-                        @mpix.draw_rectangle(@gc, true, rpeak-1, RYOFFSET, 2, 8)
+                        @mpix.draw_rectangle(@gc, true, lpeak+9, LYOFFSET, 2, 8) if lpeak > 9.0
+                        @mpix.draw_rectangle(@gc, true, rpeak+9, RYOFFSET, 2, 8) if rpeak > 9.0
 
-                        @mc.glade["img_meter"].set(@mpix, nil)
+                        @meter.set(@mpix, nil)
 
 #                         lpeak = message.structure["peak"][0]
 #                         rpeak = message.structure["peak"][1]
@@ -387,6 +396,8 @@ debug_queue
         @level = Gst::ElementFactory.make("level", LEVEL_ELEMENT_NAME)
         @level.interval = INTERVAL
         @level.message = true
+        @level.peak_falloff = 40
+        @level.peak_ttl = 200000000
 
         @rgain = Gst::ElementFactory.make("rgvolume")
 

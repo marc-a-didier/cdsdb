@@ -3,26 +3,6 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
-  <object class="GtkAdjustment" id="adjustment16">
-    <property name="upper">100</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-    <property name="page_size">10</property>
-  </object>
-  <object class="GtkToggleAction" id="mw_charts_action"/>
-  <object class="GtkToggleAction" id="mw_filter_action"/>
-  <object class="GtkAction" id="mw_memo_save_action"/>
-  <object class="GtkToggleAction" id="mw_memos_action"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_server_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
-  <object class="GtkAdjustment" id="adjustment10">
-    <property name="upper">1000</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkAdjustment" id="adjustment11">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -45,6 +25,26 @@
   </object>
   <object class="GtkAdjustment" id="adjustment15">
     <property name="upper">59</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adjustment16">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">10</property>
+  </object>
+  <object class="GtkToggleAction" id="mw_charts_action"/>
+  <object class="GtkToggleAction" id="mw_filter_action"/>
+  <object class="GtkAction" id="mw_memo_save_action"/>
+  <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_server_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
+  <object class="GtkAdjustment" id="adjustment10">
+    <property name="upper">1000</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
@@ -2089,11 +2089,10 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="mm_tools_search_orphans">
+                      <object class="GtkMenuItem" id="mm_tools_batchrg">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">_Search orphans files...</property>
-                        <property name="use_underline">True</property>
+                        <property name="label" translatable="yes">Batch replay gain</property>
                       </object>
                     </child>
                     <child>
@@ -2820,11 +2819,13 @@
                 <property name="label_xalign">0</property>
                 <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkImage" id="img_meter">
-                    <property name="width_request">471</property>
-                    <property name="height_request">54</property>
+                  <object class="GtkImage" id="player_img_meter">
+                    <property name="width_request">469</property>
+                    <property name="height_request">52</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="xalign">0</property>
+                    <property name="yalign">0</property>
                     <property name="stock">gtk-missing-image</property>
                   </object>
                 </child>
