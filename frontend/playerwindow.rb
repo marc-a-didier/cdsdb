@@ -74,7 +74,6 @@ class PlayerWindow < TopWindow
         # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
         @mpix.draw_pixbuf(nil, scale, 0, 4, 0, 0, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
 
-        # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
         @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
 
         @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 24, 469, 4, Gdk::RGB::DITHER_NONE, 0, 0)
@@ -286,21 +285,11 @@ debug_queue
                         lrms = message.structure["rms"][0]
                         rrms = message.structure["rms"][1]
 
-#                         lpeak = message.structure["peak"][0] #- message["peak-falloff"][0]
-#                         rpeak = message.structure["peak"][1] #- message["peak-falloff"][1]
                         lpeak = message.structure["decay"][0]
                         rpeak = message.structure["decay"][1]
 
-#                         ldiff = (@prev_lpeak+500.0)-(lrms+500.0)
-#                         rdiff = (@prev_rpeak+500.0)-(rrms+500.0)
-
-#                         lpeak -= (ldiff/2.0) if lpeak < @prev_lpeak
-#                         rpeak -= (rdiff/2.0) if rpeak < @prev_rpeak
-
-#                         @prev_lpeak = lpeak #message.structure["decay"][0]
-#                         @prev_rpeak = rpeak #message.structure["decay"][1]
-
-# p message.structure["decay"][0]
+                        lpeak *= 0.90 if lpeak > 0.0
+                        rpeak *= 0.90 if rpeak > 0.0
 
                         lrms = lrms > MIN_LEVEL ? (METER_WIDTH*lrms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         lrms = METER_WIDTH if lrms > METER_WIDTH
@@ -314,10 +303,11 @@ debug_queue
                         rpeak = rpeak > MIN_LEVEL ? (METER_WIDTH*rpeak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         rpeak = METER_WIDTH-1 if rpeak >= METER_WIDTH
 
-# draw_pixbuf(gc, copied pixbuf,
-#             copied pixbuf src_x, copied pixbuf src_y,
-#             dest (self) dest_x, dest (self) dest_y,
-#             width, height, dither, x_dither, y_dither)
+#
+#                       draw_pixbuf(gc, copied pixbuf,
+#                                   copied pixbuf src_x, copied pixbuf src_y,
+#                                   dest (self) dest_x, dest (self) dest_y,
+#                                   width, height, dither, x_dither, y_dither)
 
                         @mpix.draw_pixbuf(nil, @bright,
                                           10,    0,

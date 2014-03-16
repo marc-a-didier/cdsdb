@@ -17,9 +17,6 @@ class MainWindow < TopWindow
 
     include UIConsts
 
-#     attr_reader   :glade, :plists, :pqueue, :tasks, :filter, :main_filter
-#     attr_accessor :filter_receiver
-
     attr_reader :art_browser, :rec_browser, :trk_browser
     attr_reader :history, :search_dlg
 
@@ -32,8 +29,6 @@ class MainWindow < TopWindow
     def initialize(mc)
         super(mc, MAIN_WINDOW)
 
-#         @glade = GTBld.main
-#         @mc = mc
         @glade = mc.glade
 
 
@@ -94,8 +89,6 @@ class MainWindow < TopWindow
         @glade[MW_SERVER_ACTION].signal_connect(:activate) {
             CFG.set_remote(@glade[MW_SERVER_ACTION].active?)
             @mc.tasks.check_config
-#             DBCACHE.dump_infos
-#             IMG_CACHE.dump_infos
         }
 
         # Action called from the memos window, equivalent to File/Save of the main window
@@ -118,7 +111,6 @@ class MainWindow < TopWindow
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
-#         PREFS.load_menu_state(@mc, @glade[MM_WIN_MENU])
         [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
 
 
@@ -167,7 +159,6 @@ class MainWindow < TopWindow
 
         @glade[MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
         @glade[MAIN_WINDOW].signal_connect(:delete_event) { @mc.clean_up; false }
-#         @glade[MAIN_WINDOW].signal_connect(:show)         { PREFS.load_main(@glade, MAIN_WINDOW) }
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         @glade[MAIN_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE) # It took me ages to research this
@@ -223,11 +214,8 @@ class MainWindow < TopWindow
         #
         # Setup the treeviews
         #
-#         @art_browser = ArtistsBrowser.new(@mc).setup
         @art_browser = ArtistsBrowser.new.setup(@mc)
-#         @rec_browser = RecordsBrowser.new(@mc).setup
         @rec_browser = RecordsBrowser.new.setup(@mc)
-#         @trk_browser = TracksBrowser.new(@mc).setup
         @trk_browser = TracksBrowser.new.setup(@mc)
 
         # Load artists entries
@@ -240,7 +228,6 @@ class MainWindow < TopWindow
 
     def on_urls_received(widget, context, x, y, data, info, time)
         is_ok = false
-#         is_ok = Utils::set_cover(data.uris[0], artist.rartist, record.rartist, record.rrecord, track.rtrack) if info == 105
         is_ok = @trk_browser.set_cover(data.uris[0]) if info == 105 #DragType::URI_LIST
         Gtk::Drag.finish(context, is_ok, false, Time.now.to_i)
         return true
