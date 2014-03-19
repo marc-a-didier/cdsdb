@@ -242,6 +242,7 @@ class UILink < AudioLink
 
     def set_use_of_record_gain
         @use_record_gain = true
+        return self
     end
 
     def use_record_gain?
