@@ -6,7 +6,8 @@ class PlayerWindow < TopWindow
     LEVEL_ELEMENT_NAME = "my_level_meter"
     MIN_LEVEL = -80.0  # The scale range will be from this value to 0 dB, has to be negative
     POS_MIN_LEVEL = -1 * MIN_LEVEL
-    INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
+#     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
+    INTERVAL = 40000000    # How often update the meter? (in nanoseconds) - 25 times/sec in this case
 
     METER_WIDTH = 449.0 # Offset start 10 pixels idem end
     IMAGE_WIDTH = 469.0
@@ -47,6 +48,9 @@ class PlayerWindow < TopWindow
         @file_preread = false
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
+        @last_rms   = 0.0
+        @last_lpeak = 0.0
+        @last_rpeak = 0.0
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -59,8 +63,8 @@ class PlayerWindow < TopWindow
 
     # Build the backgroud image of the level meter when the GTK image is realized
     def setup
-        @prev_lpeak = 0.0
-        @prev_rpeak = 0.0
+#         @prev_lpeak = 0.0
+#         @prev_rpeak = 0.0
 
         @mpix = Gdk::Pixmap.new(@meter.window, IMAGE_WIDTH, 52, -1) # 52 = 16*2+8*2+1*4
 
@@ -284,12 +288,17 @@ debug_queue
                     if message.source.name == LEVEL_ELEMENT_NAME
                         lrms = message.structure["rms"][0]
                         rrms = message.structure["rms"][1]
+#                         @last_rms  = lrms
 
                         lpeak = message.structure["decay"][0]
                         rpeak = message.structure["decay"][1]
 
                         lpeak *= 0.90 if lpeak > 0.0
                         rpeak *= 0.90 if rpeak > 0.0
+
+#                         lpeak = lrms+1.0 if lpeak < @last_lpeak
+#                         rpeak = rrms+1.0 if rpeak < @last_rpeak
+
 
                         lrms = lrms > MIN_LEVEL ? (METER_WIDTH*lrms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         lrms = METER_WIDTH if lrms > METER_WIDTH
@@ -303,6 +312,8 @@ debug_queue
                         rpeak = rpeak > MIN_LEVEL ? (METER_WIDTH*rpeak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
                         rpeak = METER_WIDTH-1 if rpeak >= METER_WIDTH
 
+#                         @last_lpeak = lpeak
+#                         @last_rpeak = rpeak
 #
 #                       draw_pixbuf(gc, copied pixbuf,
 #                                   copied pixbuf src_x, copied pixbuf src_y,
@@ -388,6 +399,8 @@ debug_queue
         @level.message = true
         @level.peak_falloff = 40
         @level.peak_ttl = 200000000
+#         @level.peak_falloff = 40
+#         @level.peak_ttl = 500000000
 
         @rgain = Gst::ElementFactory.make("rgvolume")
 
