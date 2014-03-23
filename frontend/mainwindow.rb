@@ -89,6 +89,7 @@ class MainWindow < TopWindow
         @glade[MW_SERVER_ACTION].signal_connect(:activate) {
             CFG.set_remote(@glade[MW_SERVER_ACTION].active?)
             @mc.tasks.check_config
+            trk_browser.load_entries_select_first if trk_browser && trk_browser.trklnk.valid?
         }
 
         # Action called from the memos window, equivalent to File/Save of the main window
