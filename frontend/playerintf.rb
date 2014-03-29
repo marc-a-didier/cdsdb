@@ -69,15 +69,12 @@ module BrowserPlayerIntf
         downloads_count = 0
         entry = queue.last.internal_ref+1
         max_downloads = max_entries+1 - queue.size
-#         while queue.size < max_entries+1 # queue has at least the [0] element -> +1
         while queue.size < max_entries+1 # queue has at least the [0] element -> +1
-#             iter = model.get_iter((queue[0].internal_ref+queue.size+offs).to_s)
             iter = model.get_iter(entry.to_s)
             break if iter.nil? # Reached the end of the tracks
 
             iter[link_index].setup_audio_file
             if iter[link_index].playable? # OK or MISPLACED
-#                 queue << PlayerData.new(self, queue[0].internal_ref+queue.size+offs, iter[link_index])
                 queue << PlayerData.new(self, entry, iter[link_index])
             else
                 # Track not available, check to see if not already in download tasks
@@ -90,9 +87,6 @@ module BrowserPlayerIntf
                         downloads_count += 1
                     end
                 end
-                # Skip to next track to see if any already playable track is available
-                # queue is NOT filled with downloading tracks
-#                 offs += 1
             end
             entry += 1
         end

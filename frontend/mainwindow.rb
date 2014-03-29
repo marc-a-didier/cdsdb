@@ -225,6 +225,8 @@ class MainWindow < TopWindow
         # At last, we're ready to go!
         @glade[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
         @glade[MAIN_WINDOW].show
+
+        set_dbrefs_visibility
     end
 
     def on_urls_received(widget, context, x, y, data, info, time)

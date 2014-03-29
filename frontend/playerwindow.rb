@@ -178,6 +178,8 @@ TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
             elsif @mc.glade[UIConsts::MM_PLAYER_USETRKRG].active?
                 @rgain.fallback_gain = player_data.uilink.track.fgain
 TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
+            else
+                @rgain.fallback_gain = 0.0
             end
         end
 
@@ -321,29 +323,29 @@ debug_queue
 #                                   width, height, dither, x_dither, y_dither)
 
                         @mpix.draw_pixbuf(nil, @bright,
-                                          10,    0,
-                                          10,    LYOFFSET,
+                                          10,   0,
+                                          10,   LYOFFSET,
                                           lrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
-                                          lrms+11,             0,
-                                          lrms+11,             LYOFFSET,
+                                          lrms+11,            0,
+                                          lrms+11,            LYOFFSET,
                                           METER_WIDTH-lrms+1, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
                         @mpix.draw_pixbuf(nil, @bright,
-                                          10,    0,
-                                          10,    RYOFFSET,
+                                          10,   0,
+                                          10,   RYOFFSET,
                                           rrms, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
                         @mpix.draw_pixbuf(nil, @dark,
-                                          rrms+11,             0,
-                                          rrms+11,             RYOFFSET,
+                                          rrms+11,            0,
+                                          rrms+11,            RYOFFSET,
                                           METER_WIDTH-rrms+1, 8,
                                           Gdk::RGB::DITHER_NONE, 0, 0)
 
-                        @mpix.draw_rectangle(@gc, true, lpeak+9, LYOFFSET, 2, 8) if lpeak > 9.0
-                        @mpix.draw_rectangle(@gc, true, rpeak+9, RYOFFSET, 2, 8) if rpeak > 9.0
+                        @mpix.draw_rectangle(@gc, true, lpeak+9, LYOFFSET, 2, 8) if lpeak > 9
+                        @mpix.draw_rectangle(@gc, true, rpeak+9, RYOFFSET, 2, 8) if rpeak > 9
 
                         @meter.set(@mpix, nil)
 

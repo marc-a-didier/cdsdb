@@ -61,7 +61,7 @@ class FilterWindow < TopWindow
         @ftv.columns[1].clickable = true
         @ftv.columns[2].visible = false
 
-        set_ref_column_visibility(@mc.glade[MM_VIEW_DBREFS].active?)
+#         set_ref_column_visibility(@mc.glade[MM_VIEW_DBREFS].active?)
         @ftv.selection.signal_connect(:changed)  { |widget| on_filter_changed(widget) }
         @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, FLT_POP_ACTIONS) }
         load_ftv

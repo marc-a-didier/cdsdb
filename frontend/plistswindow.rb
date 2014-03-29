@@ -122,7 +122,7 @@ public
         # Threading problems...
         @audio_file = ""
 
-        set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
+#         set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
 
         reset_player_data_state
     end
@@ -220,6 +220,7 @@ p new_iorder
     end
 
     def get_selection
+#         return Array[@tvpt.selection.selected_each { |model, path, iter| iter[TT_DATA].clone }]
         links = []
         @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA].clone }
         return links

@@ -64,7 +64,7 @@ class TasksWindow < TopWindow
         @tv.append_column(progress_column)
         @tv.append_column(status_column)
 
-        @tv.model = Gtk::ListStore.new(Integer, String, Integer, Integer, Class) #, Class, String)
+        @tv.model = Gtk::ListStore.new(Integer, String, Integer, Integer, Class)
 
         @tv.signal_connect(:button_press_event) { |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
