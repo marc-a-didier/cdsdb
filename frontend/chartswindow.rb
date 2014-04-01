@@ -152,11 +152,18 @@ class ChartsWindow < TopWindow
     def enqueue_multiple_tracks
         return if @tvc.selection.selected.nil?
 
+        # Changed the behavior because call to pqueue.enqueue now notifies
+        # the mc that the pq has changed which in turn tells the player that
+        # it needs to be refetched.
+        # By calling enqueue only once with all links it reduce all the
+        # nessaging system to only one call.
+        links = []
         selection = @tvc.selection.selected[COL_ENTRY]-1
         @entries.each { |entry|
-            @mc.pqueue.enqueue([entry.uilink]) if entry.entry >= selection
+            links << entry.uilink if entry.entry >= selection
             break if entry.entry >= CFG.max_items
         }
+        @mc.pqueue.enqueue(links)
     end
 
     def live_update(uilink)

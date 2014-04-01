@@ -355,7 +355,6 @@ p new_iorder
     def do_add
         exec_sql(%{INSERT INTO plists VALUES (#{DBUtils::get_last_id('plist')+1}, 'New Play List', 0, #{Time.now.to_i}, 0);})
         update_tvpl
-        @mc.track_list_changed(self)
     end
 
     def do_del(widget)
@@ -385,7 +384,6 @@ p new_iorder
                 exec_sql("DELETE FROM plists WHERE rplist=#{@current_pl.rplist};")
                 update_tvpl
                 update_tvpt
-                @mc.track_list_changed(self)
             end
         end
     end
@@ -412,8 +410,11 @@ p new_iorder
     end
 
     def enqueue_track
-        @tvpt.selection.selected_each { |model, path, iter| @mc.pqueue.enqueue([iter[TT_DATA]]) }
-        @mc.track_list_changed(self)
+        # Changed the oneliner to optimize messaging system by filling the queue
+        # with all entries at once.
+        links = []
+        @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA] }
+        @mc.pqueue.enqueue(links)
     end
 
     def show_infos(is_popup)
@@ -509,7 +510,6 @@ p new_iorder
         if sel_iter = @tvpl.find_ref(rplist)
             @tvpl.set_cursor(sel_iter.path, nil, false)
             @tvpt.set_cursor(sel_iter.path, nil, false) if sel_iter = @tvpt.find_ref(rpltrack)
-            @mc.track_list_changed(self)
         end
     end
 

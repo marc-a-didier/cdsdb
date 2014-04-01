@@ -150,6 +150,9 @@ class PQueueWindow < TopWindow
                     if type == "message"
 # TRACE.debug("message received, calling back #{call_back}")
                         tracks = param ? @mc.send(call_back, param.to_i) : @mc.send(call_back)
+                        # When a full record or segment is dropped, set the use of record gain
+                        # rather than track gain. But if the use of record gain is not enabled in the
+                        # player menu, the player will use the track gain or no gain at all.
                         tracks.each { |uilink| uilink.set_use_of_record_gain } if sender == "records"
                         enqueue(tracks)
 #                         param ? enqueue(@mc.send(call_back, param.to_i)) : enqueue(@mc.send(call_back))
@@ -168,10 +171,11 @@ class PQueueWindow < TopWindow
                     iter[3] = (data.uilink.tags.length/1000).to_sec_length
                     iter[4] = data
                 }
+                @mc.track_list_changed(self)
         end
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
         update_status
-        @mc.track_list_changed(self)
+#         @mc.track_list_changed(self)
         return true
     end
 
@@ -187,10 +191,14 @@ class PQueueWindow < TopWindow
                 iter[2] = uilink.html_track_title(@mc.show_segment_title?)
                 iter[3] = (uilink.track.iplaytime/1000).to_sec_length
                 iter[4] = PQData.new(@internal_ref, uilink)
+
+                # When in slow client mode, pqueue was not refreshed while it didn't have
+                # all responses when tracks are on server.
+                Gtk.main_iteration while Gtk.events_pending?
             end
         }
-
         update_status
+        @mc.track_list_changed(self)
     end
 
     def dwl_file_name_notification(uilink, file_name)

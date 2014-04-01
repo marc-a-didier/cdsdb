@@ -11,7 +11,7 @@ class TrkPListsDialog
 
         tv = glade[UIConsts::TRK_PLISTS_TV]
 
-		glade[UIConsts::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) {
+        glade[UIConsts::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) {
             if tv.selection.selected
                 mc.glade[UIConsts::MM_WIN_PLAYLISTS].send(:activate) unless mc.plists.window.visible?
                 mc.plists.position_browser(tv.selection.selected[COL_REF])
@@ -27,13 +27,13 @@ class TrkPListsDialog
         tv.append_column(Gtk::TreeViewColumn.new("Entry", srenderer, :text => COL_ENTRY))
 
         sql = %Q{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack, plists.rplist FROM pltracks
-				 INNER JOIN plists ON plists.rplist = pltracks.rplist
-				 WHERE pltracks.rtrack=#{rtrack};}
+                 INNER JOIN plists ON plists.rplist = pltracks.rplist
+                 WHERE pltracks.rtrack=#{rtrack};}
         CDSDB.execute(sql) { |row|
             iter = tv.model.append
             row[1] = CDSDB.get_first_value("SELECT COUNT(rpltrack)+1 FROM pltracks WHERE rplist=#{row[3]} AND iorder<#{row[1]};")
             row.each_with_index { |val, i| iter[i] = val if i < 3 }
-		}
+        }
     end
 
     def run
