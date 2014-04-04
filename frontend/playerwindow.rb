@@ -39,28 +39,35 @@ class PlayerWindow < TopWindow
             @bright = bright
             @rms  = 0
             @peak = 0
-            @last_peak  = 0
-            @peak_loops = 0
+#             @last_peak  = 0
+#             @peak_loops = 0
         end
 
         def set_level(msg_struct)
             @rms  = msg_struct["rms"][@channel]
-            @peak = msg_struct["peak"][@channel]
+#             @peak = msg_struct["peak"][@channel]
+            @peak = msg_struct["decay"][@channel]
 
-            @peak *= 0.90 if @peak > 0.0
+#             @peak *= 0.90 if @peak > 0.0
 
             @rms = @rms > MIN_LEVEL ? (METER_WIDTH*@rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-            @rms = METER_WIDTH if @rms > METER_WIDTH
+#             @rms = METER_WIDTH if @rms > METER_WIDTH
 
             @peak = @peak > MIN_LEVEL ? (METER_WIDTH*@peak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-            @peak = METER_WIDTH-1 if @peak >= METER_WIDTH
-
-            if @last_peak < @peak || @peak_loops > PEAK_REFRESH_LOOPS
-                @last_peak = @peak
-                @peak_loops = 0
+            if @peak >= METER_WIDTH
+                @peak = METER_WIDTH-1
+                @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0x0000, 0x0000))
             else
-                @peak_loops += 1
+                @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
             end
+
+#             if @last_peak < @peak || @peak_loops > PEAK_REFRESH_LOOPS
+#                 @last_peak = @peak
+#                 @peak_loops = 0
+#             else
+#                 @peak_loops += 1
+#             end
+            return self
         end
 
         def draw_level
@@ -75,7 +82,10 @@ class PlayerWindow < TopWindow
                               METER_WIDTH-@rms+1, 8,
                               Gdk::RGB::DITHER_NONE, 0, 0)
 
-            @mpix.draw_rectangle(@gc, true, @last_peak+9, Y_OFFSETS[@channel], 2, 8) if @last_peak > 9
+#             @mpix.draw_rectangle(@gc, true, @last_peak+9, Y_OFFSETS[@channel], 2, 8) if @last_peak > 9
+            @mpix.draw_rectangle(@gc, true, @peak+9, Y_OFFSETS[@channel], 2, 8) if @peak > 9
+
+            return self
         end
     end
 
@@ -126,30 +136,33 @@ class PlayerWindow < TopWindow
 
         # Get the image graphic context and set the foreground color to white
         @gc = Gdk::GC.new(@meter.window)
-        @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
+
+        @std_peak_color = Gdk::Color.new(0xffff, 0xffff, 0xffff)
+        @ovr_peak_color = Gdk::Color.new(0xffff, 0x0000, 0x0000)
+#         @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
 
         # Get the meter image, unlit and lit images from their files
-        scale  = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
-        dark   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
-        bright = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH1.png")
+        scale   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
+        @dark   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
+        @bright = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH1.png")
 
         # Start splitting the meter image to build the definitive bitmap as the scale image
         # is not the final image onto which we draw
         # draw_pixbuf(gc, pixbuf, src_x, src_y, dest_x, dest_y, width, height, dither, x_dither, y_dither)
         @mpix.draw_pixbuf(nil, scale, 0, 4, 0, 0, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
 
-        @mpix.draw_pixbuf(nil, dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
 
         @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 24, 469, 4, Gdk::RGB::DITHER_NONE, 0, 0)
 
-        @mpix.draw_pixbuf(nil, dark, 0, 0, 0, 28, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 28, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
 
         @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 36, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
         # At this point, @mpix contains the definitive bitmap
 
         # Initalize a meter renderer for each channel
-        @lmeter = MeterHandler.new(LEFT_CHANNEL,  @mpix, @gc, dark, bright)
-        @rmeter = MeterHandler.new(RIGHT_CHANNEL, @mpix, @gc, dark, bright)
+#         @lmeter = MeterHandler.new(LEFT_CHANNEL,  @mpix, @gc, dark, bright)
+#         @rmeter = MeterHandler.new(RIGHT_CHANNEL, @mpix, @gc, dark, bright)
 
         # Draw the bitmap on screen
         @meter.set(@mpix, nil)
@@ -345,6 +358,35 @@ TRACE.debug("Player unfetched".brown)
 debug_queue
     end
 
+    def draw_level(msg_struct, channel)
+        rms  = msg_struct["rms"][channel]
+        peak = msg_struct["decay"][channel]
+
+
+        rms = rms > MIN_LEVEL ? (METER_WIDTH*rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
+
+        peak = peak > MIN_LEVEL ? (METER_WIDTH*peak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
+        if peak >= METER_WIDTH
+            peak = METER_WIDTH-1
+            @gc.set_rgb_fg_color(@ovr_peak_color)
+        else
+            @gc.set_rgb_fg_color(@std_peak_color)
+        end
+
+        @mpix.draw_pixbuf(nil, @bright,
+                            10,  0,
+                            10,  Y_OFFSETS[channel],
+                            rms, 8,
+                            Gdk::RGB::DITHER_NONE, 0, 0)
+        @mpix.draw_pixbuf(nil, @dark,
+                            rms+11,             0,
+                            rms+11,             Y_OFFSETS[channel],
+                            METER_WIDTH-rms+1, 8,
+                            Gdk::RGB::DITHER_NONE, 0, 0)
+
+        @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
+    end
+
     def init_player
         @seeking = false
 
@@ -354,11 +396,13 @@ debug_queue
             case message.type
                 when Gst::Message::Type::ELEMENT
                     if message.source.name == LEVEL_ELEMENT_NAME
-                        @lmeter.set_level(message.structure)
-                        @rmeter.set_level(message.structure)
+                        draw_level(message.structure, LEFT_CHANNEL)
+                        draw_level(message.structure, RIGHT_CHANNEL)
+#                         @lmeter.set_level(message.structure).draw_level
+#                         @rmeter.set_level(message.structure).draw_level
 
-                        @lmeter.draw_level
-                        @rmeter.draw_level
+#                         @lmeter.draw_level
+#                         @rmeter.draw_level
 
                         @meter.set(@mpix, nil)
 =begin
@@ -491,7 +535,7 @@ debug_queue
         @level = Gst::ElementFactory.make("level", LEVEL_ELEMENT_NAME)
         @level.interval = INTERVAL
         @level.message = true
-        @level.peak_falloff = 40
+        @level.peak_falloff = 100
         @level.peak_ttl = 200000000
 #         @level.peak_falloff = 40
 #         @level.peak_ttl = 500000000
@@ -503,7 +547,12 @@ debug_queue
         @decoder = Gst::ElementFactory.make("decodebin")
         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
             pad.link(@convertor.get_pad("sink"))
-            @convertor >> @level >> @rgain >> @sink
+puts("in new_decoded_pad".brown)
+            if @mc.glade[UIConsts::MM_PLAYER_LEVELBEFORERG].active?
+                @convertor >> @level >> @rgain >> @sink
+            else
+                @convertor >> @rgain >> @level >> @sink
+            end
         }
 
         @source = Gst::ElementFactory.make("filesrc")

@@ -150,6 +150,7 @@ module UIConsts
     MM_PLAYER_MENU              = "mm_player_menu"
     MM_PLAYER_USETRKRG          = "mm_player_usetrkrg"
     MM_PLAYER_USERECRG          = "mm_player_userecrg"
+    MM_PLAYER_LEVELBEFORERG     = "mm_player_level_before_rg"
 
     # Tools menu
     MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
