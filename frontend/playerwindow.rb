@@ -19,75 +19,11 @@ class PlayerWindow < TopWindow
 
     PREFETCH_SIZE = 2
 
-#     LYOFFSET = 16
-#     RYOFFSET = 28
-
     Y_OFFSETS = [16, 28]
-
-    PEAK_REFRESH_LOOPS = 4
 
     LEFT_CHANNEL  = 0
     RIGHT_CHANNEL = 1
 
-    class MeterHandler
-
-        def initialize(channel, mpix, gc, dark, bright)
-            @channel = channel
-            @mpix = mpix
-            @gc = gc
-            @dark = dark
-            @bright = bright
-            @rms  = 0
-            @peak = 0
-#             @last_peak  = 0
-#             @peak_loops = 0
-        end
-
-        def set_level(msg_struct)
-            @rms  = msg_struct["rms"][@channel]
-#             @peak = msg_struct["peak"][@channel]
-            @peak = msg_struct["decay"][@channel]
-
-#             @peak *= 0.90 if @peak > 0.0
-
-            @rms = @rms > MIN_LEVEL ? (METER_WIDTH*@rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-#             @rms = METER_WIDTH if @rms > METER_WIDTH
-
-            @peak = @peak > MIN_LEVEL ? (METER_WIDTH*@peak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-            if @peak >= METER_WIDTH
-                @peak = METER_WIDTH-1
-                @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0x0000, 0x0000))
-            else
-                @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
-            end
-
-#             if @last_peak < @peak || @peak_loops > PEAK_REFRESH_LOOPS
-#                 @last_peak = @peak
-#                 @peak_loops = 0
-#             else
-#                 @peak_loops += 1
-#             end
-            return self
-        end
-
-        def draw_level
-            @mpix.draw_pixbuf(nil, @bright,
-                              10,   0,
-                              10,   Y_OFFSETS[@channel],
-                              @rms, 8,
-                              Gdk::RGB::DITHER_NONE, 0, 0)
-            @mpix.draw_pixbuf(nil, @dark,
-                              @rms+11,            0,
-                              @rms+11,            Y_OFFSETS[@channel],
-                              METER_WIDTH-@rms+1, 8,
-                              Gdk::RGB::DITHER_NONE, 0, 0)
-
-#             @mpix.draw_rectangle(@gc, true, @last_peak+9, Y_OFFSETS[@channel], 2, 8) if @last_peak > 9
-            @mpix.draw_rectangle(@gc, true, @peak+9, Y_OFFSETS[@channel], 2, 8) if @peak > 9
-
-            return self
-        end
-    end
 
     def initialize(mc)
         super(mc, UIConsts::PLAYER_WINDOW)
@@ -114,11 +50,6 @@ class PlayerWindow < TopWindow
         @file_preread = false
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
-#         @last_rms   = 0.0
-#         @last_lpeak = 0
-#         @last_rpeak = 0
-#         @lpeak_loops = 0
-#         @rpeak_loops = 0
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -139,7 +70,6 @@ class PlayerWindow < TopWindow
 
         @std_peak_color = Gdk::Color.new(0xffff, 0xffff, 0xffff)
         @ovr_peak_color = Gdk::Color.new(0xffff, 0x0000, 0x0000)
-#         @gc.set_rgb_fg_color(Gdk::Color.new(0xffff, 0xffff, 0xffff))
 
         # Get the meter image, unlit and lit images from their files
         scale   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
@@ -159,10 +89,6 @@ class PlayerWindow < TopWindow
 
         @mpix.draw_pixbuf(nil, scale, 0, 0, 0, 36, 469, 16, Gdk::RGB::DITHER_NONE, 0, 0)
         # At this point, @mpix contains the definitive bitmap
-
-        # Initalize a meter renderer for each channel
-#         @lmeter = MeterHandler.new(LEFT_CHANNEL,  @mpix, @gc, dark, bright)
-#         @rmeter = MeterHandler.new(RIGHT_CHANNEL, @mpix, @gc, dark, bright)
 
         # Draw the bitmap on screen
         @meter.set(@mpix, nil)
@@ -373,16 +299,24 @@ debug_queue
             @gc.set_rgb_fg_color(@std_peak_color)
         end
 
+        # draw_pixbuf Proto:
+        #       draw_pixbuf(gc, copied pixbuf,
+        #                   copied pixbuf src_x, copied pixbuf src_y,
+        #                   dest (self) dest_x, dest (self) dest_y,
+        #                   width, height, dither, x_dither, y_dither)
+
+        # Draws the lit part from zero upto the rms level
         @mpix.draw_pixbuf(nil, @bright,
-                            10,  0,
-                            10,  Y_OFFSETS[channel],
-                            rms, 8,
-                            Gdk::RGB::DITHER_NONE, 0, 0)
+                          10,  0,
+                          10,  Y_OFFSETS[channel],
+                          rms, 8,
+                          Gdk::RGB::DITHER_NONE, 0, 0)
+        # Draws the unlit part from rms level to the end
         @mpix.draw_pixbuf(nil, @dark,
-                            rms+11,             0,
-                            rms+11,             Y_OFFSETS[channel],
-                            METER_WIDTH-rms+1, 8,
-                            Gdk::RGB::DITHER_NONE, 0, 0)
+                          rms+11,            0,
+                          rms+11,            Y_OFFSETS[channel],
+                          METER_WIDTH-rms+1, 8,
+                          Gdk::RGB::DITHER_NONE, 0, 0)
 
         @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
     end
@@ -398,109 +332,8 @@ debug_queue
                     if message.source.name == LEVEL_ELEMENT_NAME
                         draw_level(message.structure, LEFT_CHANNEL)
                         draw_level(message.structure, RIGHT_CHANNEL)
-#                         @lmeter.set_level(message.structure).draw_level
-#                         @rmeter.set_level(message.structure).draw_level
-
-#                         @lmeter.draw_level
-#                         @rmeter.draw_level
 
                         @meter.set(@mpix, nil)
-=begin
-                        lrms = message.structure["rms"][0]
-                        rrms = message.structure["rms"][1]
-#                         @last_rms  = lrms
-
-#                         lpeak = message.structure["decay"][0]
-#                         rpeak = message.structure["decay"][1]
-                        lpeak = message.structure["peak"][0]
-                        rpeak = message.structure["peak"][1]
-
-                        lpeak *= 0.90 if lpeak > 0.0
-                        rpeak *= 0.90 if rpeak > 0.0
-
-#                         lpeak = lrms+1.0 if lpeak < @last_lpeak
-#                         rpeak = rrms+1.0 if rpeak < @last_rpeak
-
-
-                        lrms = lrms > MIN_LEVEL ? (METER_WIDTH*lrms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-                        lrms = METER_WIDTH if lrms > METER_WIDTH
-
-                        rrms = rrms > MIN_LEVEL ? (METER_WIDTH*rrms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-                        rrms = METER_WIDTH if rrms > METER_WIDTH
-
-                        lpeak = lpeak > MIN_LEVEL ? (METER_WIDTH*lpeak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-                        lpeak = METER_WIDTH-1 if lpeak >= METER_WIDTH
-
-                        rpeak = rpeak > MIN_LEVEL ? (METER_WIDTH*rpeak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-                        rpeak = METER_WIDTH-1 if rpeak >= METER_WIDTH
-
-#                         @last_lpeak = @last_lpeak < lpeak ? lpeak : lrms+1
-#                         @last_rpeak = @last_rpeak < rpeak ? rpeak : rrms+1
-                        if @last_lpeak < lpeak || @lpeak_loops > PEAK_REFRESH_LOOPS
-                            @last_lpeak = lpeak
-                            @lpeak_loops = 0
-                        else
-                            @lpeak_loops += 1
-                        end
-                        if @last_rpeak < lpeak || @rpeak_loops > PEAK_REFRESH_LOOPS
-                            @last_rpeak = rpeak
-                            @rpeak_loops = 0
-                        else
-                            @rpeak_loops += 1
-                        end
-#
-#                       draw_pixbuf(gc, copied pixbuf,
-#                                   copied pixbuf src_x, copied pixbuf src_y,
-#                                   dest (self) dest_x, dest (self) dest_y,
-#                                   width, height, dither, x_dither, y_dither)
-
-                        @mpix.draw_pixbuf(nil, @bright,
-                                          10,   0,
-                                          10,   LYOFFSET,
-                                          lrms, 8,
-                                          Gdk::RGB::DITHER_NONE, 0, 0)
-                        @mpix.draw_pixbuf(nil, @dark,
-                                          lrms+11,            0,
-                                          lrms+11,            LYOFFSET,
-                                          METER_WIDTH-lrms+1, 8,
-                                          Gdk::RGB::DITHER_NONE, 0, 0)
-
-                        @mpix.draw_pixbuf(nil, @bright,
-                                          10,   0,
-                                          10,   RYOFFSET,
-                                          rrms, 8,
-                                          Gdk::RGB::DITHER_NONE, 0, 0)
-                        @mpix.draw_pixbuf(nil, @dark,
-                                          rrms+11,            0,
-                                          rrms+11,            RYOFFSET,
-                                          METER_WIDTH-rrms+1, 8,
-                                          Gdk::RGB::DITHER_NONE, 0, 0)
-
-#                         @mpix.draw_rectangle(@gc, true, lpeak+9, LYOFFSET, 2, 8) if lpeak > 9
-#                         @mpix.draw_rectangle(@gc, true, rpeak+9, RYOFFSET, 2, 8) if rpeak > 9
-
-                        @mpix.draw_rectangle(@gc, true, @last_lpeak+9, LYOFFSET, 2, 8) if @last_lpeak > 9
-                        @mpix.draw_rectangle(@gc, true, @last_rpeak+9, RYOFFSET, 2, 8) if @last_rpeak > 9
-
-                        @meter.set(@mpix, nil)
-
-#                         lpeak = message.structure["peak"][0]
-#                         rpeak = message.structure["peak"][1]
-#
-#                         if lpeak < 0.0
-#                             lpeak = lpeak > -60.0 ? (90.0 * lpeak / 60.0) + 90.0 : 0.0
-#                         else
-#                             lpeak = 90.0+lpeak*10.0
-#                         end
-#                         @lmeter.fraction = lpeak/100.0
-#
-#                         if rpeak < 0.0
-#                             rpeak = rpeak > -60.0 ? (90.0 * rpeak / 60.0) + 90.0 : 0.0
-#                         else
-#                             rpeak = 90.0+rpeak*10.0
-#                         end
-#                         @rmeter.fraction = rpeak/100.0
-=end
                     end
                 when Gst::Message::EOS
                     stop
@@ -547,7 +380,6 @@ debug_queue
         @decoder = Gst::ElementFactory.make("decodebin")
         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
             pad.link(@convertor.get_pad("sink"))
-puts("in new_decoded_pad".brown)
             if @mc.glade[UIConsts::MM_PLAYER_LEVELBEFORERG].active?
                 @convertor >> @level >> @rgain >> @sink
             else
