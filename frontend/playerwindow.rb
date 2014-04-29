@@ -370,8 +370,6 @@ debug_queue
         @level.message = true
         @level.peak_falloff = 100
         @level.peak_ttl = 200000000
-#         @level.peak_falloff = 40
-#         @level.peak_ttl = 500000000
 
         @rgain = Gst::ElementFactory.make("rgvolume")
 
@@ -418,9 +416,8 @@ debug_queue
     end
 
     def update_hscale
-        #return if !playing? || @seeking
         return if @seeking || (!playing? && !paused?)
-#puts "Updating."
+
         @playbin.query(@track_pos)
 
         itime = (@track_pos.parse[1].to_f/Gst::MSECOND).to_i
@@ -429,18 +426,13 @@ debug_queue
         #@slider.signal_handler_unblock(@seek_handler)
 
         show_time(itime)
-#         if @time_view_mode == ELAPSED
-#             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = format_time(itime)
-#         else
-#             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
-#         end
 
         @queue[0].owner.timer_notification(itime)
 
-        # If there's a next playable track in queue, read 512k of it in an attempt to make
+        # If there's a next playable track in queue, read the whole file in an attempt to make
         # it cached by the system and lose less time when skipping to it
         if @queue[1] && !@file_preread && @total_time-itime < 10000 && @queue[1].uilink.audio_status == AudioLink::OK
-            File.open(@queue[1].uilink.audio_file) { |f| f.read(512*1024) }
+            IO.read(@queue[1].uilink.audio_file)
             @file_preread = true
 TRACE.debug("File pre-read for #{@queue[1].uilink.audio_file}".green)
         end
@@ -459,8 +451,6 @@ TRACE.debug("File pre-read for #{@queue[1].uilink.audio_file}".green)
     end
 
     def seek
-#puts "seeking"
-#        @mc.glade[UIConsts::PLAYER_LABEL_POS].label = format_time(@slider.value)
         show_time(@slider.value)
     end
 
