@@ -145,6 +145,8 @@ class PQueueWindow < TopWindow
                         end
                         @plq.n_columns.times { |i| iter[i] = itr[i] }
                         @plq.remove(itr)
+                        
+                        @mc.track_list_changed(self)
                     end
                 else
                     if type == "message"
@@ -194,7 +196,9 @@ class PQueueWindow < TopWindow
 
                 # When in slow client mode, pqueue was not refreshed while it didn't have
                 # all responses when tracks are on server.
-                Gtk.main_iteration while Gtk.events_pending?
+                if uilink.audio_status == AudioLink::ON_SERVER
+                    Gtk.main_iteration while Gtk.events_pending?
+                end
             end
         }
         update_status
