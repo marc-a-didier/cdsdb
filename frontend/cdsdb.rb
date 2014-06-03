@@ -3,6 +3,9 @@
 #require 'musicbrainz' !! A explorer!!
 
 require 'gtk2'
+require 'gst'
+require 'sqlite3'
+require 'taglib2'
 
 begin
     require 'ruby-prof'
@@ -17,15 +20,10 @@ require 'find'
 require 'socket'
 require 'date'
 
-require 'sqlite3'
-#require 'arrayfields'
 require 'logger'
-require 'taglib2'
-#require 'TagLib'
 require 'yaml'
 #require 'xml'
 require 'rexml/document'
-require 'gst'
 require 'uri'
 require 'cgi'
 
@@ -53,14 +51,11 @@ require './stats'
 require './sqlgenerator'
 
 require './prefs'
-# require './filterprefs' # To remove ASAP
 require './filterwindow'
 require './playerwindow'
 require './pqueuewindow'
 require './cdeditorwindow'
 require './memoswindow'
-# require './mcdbdialog'
-# require './filtergeneratordialog'
 require './prefsdialog'
 require './audiodialog'
 require './playhistorydialog'
@@ -81,7 +76,6 @@ require './dbuiclass'
 
 require './dbreorderer'
 
-# require './genericbrowser'
 require './artistsbrowser'
 require './recordsbrowser'
 require './tracksbrowser'
