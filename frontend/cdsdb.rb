@@ -240,6 +240,8 @@ require './my_rr_lib'
 # TODO: prefetch: lire les n premiers bytes du prochain morceau pour mettre en cache.
 #       voir si on peut jouer un morceau precharger en memoire
 
+# TODO: Ajouter un menu dans le player menu pour selectionner la source du player?
+#       Avec un mode 'automatique' qui fonctionne comme actuellement.
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)

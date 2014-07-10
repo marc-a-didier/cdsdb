@@ -390,7 +390,7 @@ TRACE.debug("new db version=#{srv_db_version}")
             if srv_db_version == CFG.db_version
                 FileUtils.mv(file, file+".back")
             else
-                PREFS.save_db_version(srv_db_version)
+                CFG.set_db_version(srv_db_version)
             end
             FileUtils.mv(file_name, DBIntf::build_db_name)
             DBCACHE.clear

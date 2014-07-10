@@ -54,7 +54,7 @@ class MasterController
 #         [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
         PREFS.save_windows([@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos])
         #system("rm -f ../mfiles/*")
-        PREFS.save
+        CFG.save
     end
 
     #

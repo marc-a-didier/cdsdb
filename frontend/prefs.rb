@@ -3,19 +3,6 @@ class Prefs
 
     include Singleton
 
-    def initialize
-        if File.exists?(CFG.prefs_file)
-            @yml = YAML.load_file(CFG.prefs_file)
-        else
-            @yml = { "dbversion" => "6.0", "windows" => {}, "menus" => {} }
-        end
-    end
-
-    def save
-        File.open(CFG.prefs_file, "w") { |file| file.puts(@yml.to_yaml) }
-    end
-
-
     #
     # Fills the array 'object_list' of objects of 'object_types' type by recursively scanning the
     # object 'object'
@@ -33,15 +20,15 @@ class Prefs
 
     # Called by windows or dialogs that are not TopWindow descendants.
     def load_main(glade, name)
-        return if @yml["windows"][name].nil?
-        @yml["windows"][name].each do |obj, msg|
+        return if CFG.windows[name].nil?
+        CFG.windows[name].each do |obj, msg|
             msg.each { |method, params| glade[obj].send(method.to_sym, *params) }
         end
     end
 
     def load_window(top_window)
-        return if @yml["windows"][top_window.window.builder_name].nil?
-        @yml["windows"][top_window.window.builder_name].each do |obj, msg|
+        return if CFG.windows[top_window.window.builder_name].nil?
+        CFG.windows[top_window.window.builder_name].each do |obj, msg|
             msg.each { |method, params| top_window.mc.glade[obj].send(method.to_sym, *params) }
         end
     end
@@ -49,26 +36,70 @@ class Prefs
     def save_window(top_window)
         window = top_window.kind_of?(TopWindow) ? top_window.window : top_window
 
-        @yml["windows"][window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
+        CFG.windows[window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
 
         objs = []
         child_controls(window, [Gtk::HPaned, Gtk::VPaned], objs).each { |obj|
-            @yml["windows"][window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
+            CFG.windows[window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
         }
 
         unless top_window.class == FilterWindow
             objs = []
             child_controls(window, [Gtk::Expander], objs).each { |obj|
-                @yml["windows"][window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
+                CFG.windows[window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
             }
         end
-
-#         save
     end
 
     def save_windows(win_list)
         win_list.each { |window| save_window(window) if window.window.visible? }
     end
+
+    #
+    # Windows content related funcs
+    #
+
+    def save_window_objects(window)
+        CFG.windows[window.builder_name] = {}
+
+        object_list = []
+        child_controls(window, [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton], object_list).each do |obj|
+            CFG.windows[window.builder_name][obj.builder_name] = { "active=" => [obj.active?] } if [Gtk::RadioButton, Gtk::CheckButton].include?(obj.class)
+            CFG.windows[window.builder_name][obj.builder_name] = { "text=" => [obj.text] }  if obj.class == Gtk::Entry
+            CFG.windows[window.builder_name][obj.builder_name] = { "current_folder=" => [obj.current_folder] } if obj.class == Gtk::FileChooserButton
+        end
+    end
+
+    def restore_window_content(glade, window)
+        return if CFG.windows[window.builder_name].nil?
+        CFG.windows[window.builder_name].each do |obj, msg|
+            msg.each { |method, params| glade[obj].send(method.to_sym, *params) }
+        end
+    end
+
+
+    #
+    # Menu config (waiting to find how to discover menus when looping through a window's children
+    #
+
+    def save_menu_state(mw, menu)
+        CFG.menus[menu.builder_name] = {}
+        menu.each { |child|
+            CFG.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.class == Gtk::CheckMenuItem
+        }
+    end
+
+    def load_menu_state(mw, menu)
+        return if CFG.menus[menu.builder_name].nil?
+        CFG.menus[menu.builder_name].each do |obj, msg|
+            msg.each { |method, params| mw.glade[obj].send(method.to_sym, *params) }
+        end
+    end
+
+
+    #
+    # Window content save/restore to/from yaml (only used by the filter window)
+    #
 
     def yaml_from_content(gtk_object)
         yml = { "filter" => {} }
@@ -97,7 +128,6 @@ class Prefs
 
     def content_from_yaml(glade, yaml_str)
         yml = YAML.load(yaml_str)
-# puts yml.to_yaml
         yml["filter"].each do |obj, msg|
             msg.each do |method, params|
                 if method == "items"
@@ -109,58 +139,6 @@ class Prefs
         end
         return
     end
-
-    #
-    # Windows content related funcs
-    #
-
-    def save_window_objects(window)
-        @yml["windows"][window.builder_name] = {}
-
-        object_list = []
-        child_controls(window, [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton], object_list).each do |obj|
-            @yml["windows"][window.builder_name][obj.builder_name] = { "active=" => [obj.active?] } if [Gtk::RadioButton, Gtk::CheckButton].include?(obj.class)
-            @yml["windows"][window.builder_name][obj.builder_name] = { "text=" => [obj.text] }  if obj.class == Gtk::Entry
-            @yml["windows"][window.builder_name][obj.builder_name] = { "current_folder=" => [obj.current_folder] } if obj.class == Gtk::FileChooserButton
-        end
-
-#         save
-    end
-
-    def restore_window_content(glade, window)
-        return if @yml["windows"][window.builder_name].nil?
-        @yml["windows"][window.builder_name].each do |obj, msg|
-            msg.each { |method, params| glade[obj].send(method.to_sym, *params) }
-        end
-    end
-
-
-    #
-    # Menu config (waiting to find how to discover menus when looping through a window's children
-    #
-
-    def save_menu_state(mw, menu)
-        @yml["menus"][menu.builder_name] = {}
-        menu.each { |child|
-            @yml["menus"][menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.class == Gtk::CheckMenuItem
-        }
-#         save
-    end
-
-    def load_menu_state(mw, menu)
-        return if @yml["menus"][menu.builder_name].nil?
-        @yml["menus"][menu.builder_name].each do |obj, msg|
-            msg.each { |method, params| mw.glade[obj].send(method.to_sym, *params) }
-        end
-    end
-
-
-    def save_db_version(version)
-        CFG.db_version = version
-        @yml["dbversion"] = version
-#         save
-    end
-
 end
 
 PREFS = Prefs.instance
