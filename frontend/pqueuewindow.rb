@@ -80,6 +80,7 @@ class PQueueWindow < TopWindow
             @plq.remove(@plq.get_iter(item))
             @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
         end
+        @tvpq.columns_autosize
         update_status
         @mc.track_list_changed(self)
     end
@@ -145,7 +146,7 @@ class PQueueWindow < TopWindow
                         end
                         @plq.n_columns.times { |i| iter[i] = itr[i] }
                         @plq.remove(itr)
-                        
+
                         @mc.track_list_changed(self)
                     end
                 else
