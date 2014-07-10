@@ -4,20 +4,27 @@ class Prefs
     include Singleton
 
     def initialize
-        @file_name = CFG.prefs_file
-        File.exists?(@file_name) ? File.open(@file_name) { |file| @xdoc = REXML::Document.new(file) } : @xdoc = REXML::Document.new
-        if @xdoc.root.nil?
-            @xdoc << REXML::XMLDecl.new("1.0", "UTF-8", "no")
-            @xdoc.add_element("cdsdb", {"version" => 1})
-            @xdoc.root.add_element("database", {"version" => CFG.db_version})
-            @xdoc.root << REXML::Element.new("windows")
-            @xdoc.root << REXML::Element.new("menus")
+#         @file_name = CFG.prefs_file
+#         File.exists?(@file_name) ? File.open(@file_name) { |file| @xdoc = REXML::Document.new(file) } : @xdoc = REXML::Document.new
+#         if @xdoc.root.nil?
+#             @xdoc << REXML::XMLDecl.new("1.0", "UTF-8", "no")
+#             @xdoc.add_element("cdsdb", {"version" => 1})
+#             @xdoc.root.add_element("database", {"version" => CFG.db_version})
+#             @xdoc.root << REXML::Element.new("windows")
+#             @xdoc.root << REXML::Element.new("menus")
+#         end
+
+        if File.exists?(CFG.prefs_file)
+            @yml = YAML.load_file(CFG.prefs_file)
+        else
+            @yml = { "dbversion" => "6.0", "windows" => {}, "menus" => {} }
         end
         #puts @xdoc
     end
 
     def save
-        File.open(@file_name, "w") { |file| MyFormatter.new.write(@xdoc, file) }
+#         File.open(@file_name, "w") { |file| MyFormatter.new.write(@xdoc, file) }
+        File.open("./prefs.yml", "w") { |file| file.puts(@yml.to_yaml) }
     end
 
 
@@ -30,35 +37,30 @@ class Prefs
         object.children.each { |child| get_child_controls(child, object_types, object_list) } if object.respond_to?(:children)
     end
 
+    def child_controls(object, object_types, object_list)
+        object_list << object if object_types.include?(object.class)
+        object.children.each { |child| get_child_controls(child, object_types, object_list) } if object.respond_to?(:children)
+        return object_list
+    end
+
     #
     # Windows size & positionning related funcs
     #
     #
 
-    def load_main(glade, name)
-        return if REXML::XPath.first(@xdoc.root, "windows/"+name).nil?
-        REXML::XPath.first(@xdoc.root, "windows/"+name).each_element { |elm|
-            cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']}, #{elm.attributes['params']})"
-            eval(cmd)
-        }
-    end
+#     def load_main(glade, name)
+#         return if REXML::XPath.first(@xdoc.root, "windows/"+name).nil?
+#         REXML::XPath.first(@xdoc.root, "windows/"+name).each_element { |elm|
+#             cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']}, #{elm.attributes['params']})"
+#             eval(cmd)
+#         }
+#     end
 
     def load_window(top_window)
-        return if REXML::XPath.first(@xdoc.root, "windows/"+top_window.window.builder_name).nil?
-        REXML::XPath.first(@xdoc.root, "windows/"+top_window.window.builder_name).each_element { |elm|
-            next if top_window.mc.glade[elm.name].nil?
-            if elm.attributes['item']
-                top_window.mc.glade[elm.name].model.get_iter(elm.attributes['item'])[0] = true
-            else
-                cmd = "top_window.mc.glade['#{elm.name}'].send(:#{elm.attributes['method']}, "
-                if elm.attributes['method'] == "text="
-                    cmd += "'"+elm.attributes['params']+"')"
-                else
-                    cmd += elm.attributes['params']+")"
-                end
-                eval(cmd)
-            end
-        }
+        return if @yml["windows"][top_window.window.builder_name].nil?
+        @yml["windows"][top_window.window.builder_name].each do |obj, msg|
+            msg.each { |method, params| top_window.mc.glade[obj].send(method.to_sym, *params) }
+        end
     end
 
     def load_windows(glade, win_list)
@@ -68,38 +70,18 @@ class Prefs
     def save_window(top_window)
         window = top_window.kind_of?(TopWindow) ? top_window.window : top_window
 
-        @xdoc.root.delete_element("windows/"+window.builder_name)
-        REXML::XPath.first(@xdoc.root, "windows") << win = REXML::Element.new(window.builder_name)
-        win.add_element(window.builder_name, {"method" => "move", "params" => window.position[0].to_s+","+window.position[1].to_s})
-        win.add_element(window.builder_name, {"method" => "resize", "params" => window.size[0].to_s+","+window.size[1].to_s})
+        @yml["windows"][window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
 
         objs = []
-        get_child_controls(window, [Gtk::HPaned, Gtk::VPaned], objs)
-        objs.each { |obj| win.add_element(obj.builder_name, {"method" => "position=", "params" => obj.position.to_s}) }
+        child_controls(window, [Gtk::HPaned, Gtk::VPaned], objs).each { |obj|
+            @yml["windows"][window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
+        }
 
         unless top_window.class == FilterWindow
             objs = []
             get_child_controls(window, [Gtk::Expander], objs)
-            objs.each { |obj| win.add_element(obj.builder_name, {"method" => "expanded=", "params" => obj.expanded?.to_s}) }
+            objs.each { |obj| @yml["windows"][window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] } }
         end
-
-=begin
-        if top_window.class == FilterWindow
-            object_list = []
-            get_child_controls(window, [Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView], object_list)
-
-            object_list.each { |object|
-                if (object.class == Gtk::TreeView)
-                    object.model.each { |model, path, iter| win.add_element(object.builder_name, { "item" => path }) if iter[0] }
-                    next
-                end
-                win.add_element(object.builder_name, {"method" => "active=", "params" => object.active?.to_s}) if object.class == Gtk::CheckButton
-                win.add_element(object.builder_name, {"method" => "active=", "params" => object.active.to_s}) if object.class == Gtk::ComboBox
-                win.add_element(object.builder_name, {"method" => "text=", "params" => object.text}) if object.class == Gtk::Entry
-                win.add_element(object.builder_name, {"method" => "value=", "params" => object.value.to_s}) if object.class == Gtk::SpinButton
-            }
-        end
-=end
 
         save
     end
@@ -109,47 +91,43 @@ class Prefs
     end
 
     def xdoc_from_content(gtk_object)
-        xdoc = REXML::Document.new
-#         xdoc << REXML::XMLDecl.new("1.0", "UTF-8", "no")
-        xdoc.add_element("filter")
+        yml = { "filter" => {} }
 
         objs = []
-        get_child_controls(gtk_object, [Gtk::Expander], objs)
-        objs.each { |obj| xdoc.root.add_element(obj.builder_name, {"method" => "expanded=", "params" => obj.expanded?.to_s}) }
-
-        object_list = []
-        get_child_controls(gtk_object, [Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView], object_list)
-
-        object_list.each { |object|
-            if (object.class == Gtk::TreeView)
-                items = ""
-                object.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
-                xdoc.root.add_element(object.builder_name, { "items" => items })
-                next
-            end
-            xdoc.root.add_element(object.builder_name, {"method" => "active=", "params" => object.active?.to_s}) if object.class == Gtk::CheckButton
-            xdoc.root.add_element(object.builder_name, {"method" => "active=", "params" => object.active.to_s}) if object.class == Gtk::ComboBox
-            xdoc.root.add_element(object.builder_name, {"method" => "text=", "params" => object.text}) if object.class == Gtk::Entry
-            xdoc.root.add_element(object.builder_name, {"method" => "value=", "params" => object.value.to_s}) if object.class == Gtk::SpinButton
+        child_controls(gtk_object, [Gtk::Expander], objs).each { |obj|
+            yml["filter"][obj.builder_name] = { "expanded=" => [obj.expanded?] }
         }
 
-        return xdoc
+        objs = []
+        child_controls(gtk_object, [Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView], objs).each do |obj|
+            if (obj.class == Gtk::TreeView)
+                items = ""
+                obj.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
+                yml["filter"][obj.builder_name] = { "items" => [items] }
+                next
+            end
+            yml["filter"][obj.builder_name] = { "active=" => [obj.active?] } if obj.class == Gtk::CheckButton
+            yml["filter"][obj.builder_name] = { "active=" => [obj.active] } if obj.class == Gtk::ComboBox
+            yml["filter"][obj.builder_name] = { "text=" => [obj.text] } if obj.class == Gtk::Entry
+            yml["filter"][obj.builder_name] = { "value=" => [obj.value] } if obj.class == Gtk::SpinButton
+        end
+
+        return yml.to_yaml.gsub(/\n/, '\n')
     end
 
     def content_from_xdoc(glade, xdoc)
-        xdoc.root.each_element { |elm|
-            if elm.attributes['items']
-                elm.attributes['items'].bytes.each_with_index { |byte, i| glade[elm.name].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
-            else
-                cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']}, "
-                if elm.attributes['method'] == "text="
-                    cmd += "'"+elm.attributes['params']+"')"
+        yml = YAML.load(xdoc)
+# puts yml.to_yaml
+        yml["filter"].each do |obj, msg|
+            msg.each do |method, params|
+                if method == "items"
+                    params[0].bytes.each_with_index { |byte, i| glade[obj].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
                 else
-                    cmd += elm.attributes['params']+")"
+                    glade[obj].send(method.to_sym, *params)
                 end
-                eval(cmd)
             end
-        }
+        end
+        return
     end
 
     #
@@ -157,32 +135,23 @@ class Prefs
     #
 
     def save_window_objects(window)
+        @yml["windows"][window.builder_name] = {}
+
         object_list = []
-        get_child_controls(window, [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton], object_list)
-
-        @xdoc.root.delete_element("windows/"+window.builder_name)
-        REXML::XPath.first(@xdoc.root, "windows") << win = REXML::Element.new(window.builder_name)
-
-        object_list.each { |object|
-            win.add_element(object.builder_name, {"method" => "active=", "params" => object.active?.to_s}) if [Gtk::RadioButton, Gtk::CheckButton].include?(object.class)
-            win.add_element(object.builder_name, {"method" => "text=", "params" => object.text}) if object.class == Gtk::Entry
-            win.add_element(object.builder_name, {"method" => "current_folder=", "params" => object.current_folder}) if object.class == Gtk::FileChooserButton
-        }
+        child_controls(window, [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton], object_list).each do |obj|
+            @yml["windows"][window.builder_name][obj.builder_name] = { "active=" => [obj.active?] } if [Gtk::RadioButton, Gtk::CheckButton].include?(obj.class)
+            @yml["windows"][window.builder_name][obj.builder_name] = { "text=" => [obj.text] }  if obj.class == Gtk::Entry
+            @yml["windows"][window.builder_name][obj.builder_name] = { "current_folder=" => [obj.current_folder] } if obj.class == Gtk::FileChooserButton
+        end
 
         save
     end
 
     def restore_window_content(glade, window)
-        return if REXML::XPath.first(@xdoc.root, "windows/"+window.builder_name).nil?
-        REXML::XPath.first(@xdoc.root, "windows/"+window.builder_name).each_element { |elm|
-            next if glade[elm.name].nil?
-            if elm.attributes['method'] == "text=" || elm.attributes['method'] == "current_folder="
-                cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']},'#{elm.attributes['params']}')"
-            else
-                cmd = "glade['#{elm.name}'].send(:#{elm.attributes['method']},#{elm.attributes['params']})"
-            end
-            eval(cmd)
-        }
+        return if @yml["windows"][window.builder_name].nil?
+        @yml["windows"][window.builder_name].each do |obj, msg|
+            msg.each { |method, params| glade[obj].send(method.to_sym, *params) }
+        end
     end
 
 
@@ -191,25 +160,25 @@ class Prefs
     #
 
     def save_menu_state(mw, menu)
-        @xdoc.root.delete_element("menus/"+menu.builder_name)
-        REXML::XPath.first(@xdoc.root, "menus") << mnu = REXML::Element.new(menu.builder_name)
+        @yml["menus"][menu.builder_name] = {}
         menu.each { |child|
-            mnu.add_element(child.builder_name, {"method" => "active=", "params" => child.active?.to_s}) if child.class == Gtk::CheckMenuItem
+            @yml["menus"][menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.class == Gtk::CheckMenuItem
         }
         save
     end
 
     def load_menu_state(mw, menu)
-        return if REXML::XPath.first(@xdoc.root, "menus/"+menu.builder_name).nil?
-        REXML::XPath.first(@xdoc.root, "menus/"+menu.builder_name).each_element { |elm|
-            mw.glade[elm.name].send(elm.attributes['method'].to_sym, elm.attributes['params'] == 'true') if mw.glade[elm.name]
-        }
+        return if @yml["menus"][menu.builder_name].nil?
+        @yml["menus"][menu.builder_name].each do |obj, msg|
+            msg.each { |method, params| mw.glade[obj].send(method.to_sym, *params) }
+        end
     end
 
 
     def save_db_version(version)
         CFG.db_version = version
-        @xdoc.root.elements["database"].attributes["version"] = "#{version}"
+#         @xdoc.root.elements["database"].attributes["version"] = "#{version}"
+        @yml["dbversion"] = version
         save
     end
 

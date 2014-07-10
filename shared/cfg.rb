@@ -16,7 +16,7 @@ class Cfg
     DIR_NAMES       = ["covers", "icons", "flags", "src", "db"]
     SERVER_RSRC_DIR = "../../"
 #     PREFS_DIR       = ENV["HOME"]+"/.cdsdb/"
-    PREFS_FILE      = "prefs.xml"
+    PREFS_FILE      = "prefs.yml"
     LOG_FILE        = "cdsdb.log"
 
     attr_reader   :server, :port, :tx_block_size, :music_dir, :rsrc_dir, :dirs, :max_items, :cd_device
@@ -51,6 +51,27 @@ class Cfg
     end
 
     def load
+        yml = YAML.load_file(prefs_file)
+        prefs = yml["windows"]["prefs_dialog"]
+
+        @server = prefs[UIConsts::PREFS_ENTRY_SERVER]
+        @port = prefs[UIConsts::PREFS_ENTRY_PORT]
+        @tx_block_size = prefs[UIConsts::PREFS_ENTRY_BLKSIZE]
+        @music_dir = prefs[UIConsts::PREFS_FC_MUSICDIR]
+        @rsrc_dir = prefs[UIConsts::PREFS_FC_RSRCDIR]
+        @local_store = prefs[UIConsts::PREFS_CHKBTN_LOCALSTORE]
+        @notifications = prefs[UIConsts::PREFS_CB_SHOWNOTIFICATIONS]
+        @notif_duration = prefs[UIConsts::PREFS_ENTRY_NOTIFDURATION]
+        @live_charts_update = prefs[UIConsts::PREFS_CB_LIVEUPDATE]
+        @log_played_tracks = prefs[UIConsts::PREFS_CB_LOGTRACKFILE]
+        @max_items = prefs[UIConsts::PREFS_ENTRY_MAXITEMS]
+        @cd_device = prefs[UIConsts::PREFS_CD_DEVICE]
+
+        set_dirs
+        @db_version = yml["dbversion"]
+
+        return self
+        
         xdoc = nil
         File::open(prefs_file, "r") { |file| xdoc = REXML::Document.new(file) } if File::exists?(prefs_file)
         if xdoc.nil? || REXML::XPath.first(xdoc.root, "windows/prefs_dialog").nil?

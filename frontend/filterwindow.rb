@@ -109,7 +109,7 @@ class FilterWindow < TopWindow
         @ftv.model.clear
         CDSDB.execute("SELECT * FROM filters") { |row|
             iter = @ftv.model.append
-            row.each_index { |column| iter[column] = row[column] }
+            row.each_index { |column| iter[column] = column == 2 ? row[column].gsub(/\\n/, "\n") : row[column] }
         }
     end
 
@@ -119,7 +119,8 @@ class FilterWindow < TopWindow
 
     def on_filter_changed(widget)
         # @ftv.selection.selected may be nil when a new filter is created
-        PREFS.content_from_xdoc(@mc.glade, REXML::Document.new(@ftv.selection.selected[2])) if @ftv.selection.selected
+#         PREFS.content_from_xdoc(@mc.glade, REXML::Document.new(@ftv.selection.selected[2])) if @ftv.selection.selected
+        PREFS.content_from_xdoc(@mc.glade, @ftv.selection.selected[2]) if @ftv.selection.selected
     end
 
     def new_filter
@@ -135,10 +136,12 @@ class FilterWindow < TopWindow
     end
 
     def save_filter
-        xml_data = ""
-        REXML::Formatters::Default.new.write(PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS]), xml_data)
-        DBUtils.client_sql("UPDATE filters SET sxmldata=#{xml_data.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
-        @ftv.selection.selected[2] = xml_data
+        yml_data = PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS]).to_sql
+puts yml_data
+# return
+#         REXML::Formatters::Default.new.write(PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS]), xml_data)
+        DBUtils.client_sql("UPDATE filters SET sxmldata=#{yml_data} WHERE rfilter=#{@ftv.selection.selected[0]}")
+        @ftv.selection.selected[2] = yml_data
     end
 
     def ftv_name_edited(widget, path, new_text)
