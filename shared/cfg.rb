@@ -15,9 +15,29 @@ class Cfg
 
     DIR_NAMES       = ["covers", "icons", "flags", "src", "db"]
     SERVER_RSRC_DIR = "../../"
-#     PREFS_DIR       = ENV["HOME"]+"/.cdsdb/"
     PREFS_FILE      = "prefs.yml"
     LOG_FILE        = "cdsdb.log"
+
+
+    CONFIG = { "dbversion" => "6.0",
+               "windows" => {
+                    "prefs_dialog" => {
+                        "prefs_cb_shownotifications" => { "active=" => [true] },
+                        "prefs_entry_notifduration"  => { "text=" => ["4"] },
+                        "prefs_fc_musicdir"          => { "current_folder=" => [ENV[HOME]+"/Music/"] },
+                        "prefs_fc_rsrcdir"           => { "current_folder=" => "./../../"] },
+                        "prefs_entry_cddevice"       => { "text=" => ["/dev/cdrom"] },
+                        "prefs_entry_server"         => { "text=" => ["madd510"] },
+                        "prefs_entry_port"           => { "text=" => ["32666"] },
+                        "prefs_entry_blksize"        => { "text=" => ["256000"] },
+                        "prefs_chkbtn_localstore"    => { "active=" => [true] },
+                        "prefs_cb_liveupdate"        => { "active=" => [true] },
+                        "prefs_cb_logtrackfile"      => { "active=" => [false] },
+                        "prefs_entry_maxitems"       => { "text=" => ["100"] }
+                    }
+               },
+               "menus" => {}
+             }
 
     attr_reader   :server, :port, :tx_block_size, :music_dir, :rsrc_dir, :dirs, :max_items, :cd_device
     attr_accessor :db_version
@@ -40,8 +60,8 @@ class Cfg
         @log_played_tracks = false
         @tx_block_size = TX_BLOCK_SIZE
         @dirs = {}
-        @max_items = 100;
-        @db_version = "5.8"
+        @max_items = 100
+        @db_version = "6.0"
         @cd_device = "/dev/cdrom"
     end
 
@@ -51,27 +71,35 @@ class Cfg
     end
 
     def load
-        yml = YAML.load_file(prefs_file)
-        prefs = yml["windows"]["prefs_dialog"]
+        @cfg = nil
+        if File.exists?(prefs_file)
+            @cfg = YAML.load_file(prefs_file)
+            load_default_config if @cfg["windows"]["prefs_dialog"].nil?
+            @cfg = yml["windows"]["prefs_dialog"]
+        else
+            load_default_config
+        end
 
-        @server = prefs[UIConsts::PREFS_ENTRY_SERVER]
-        @port = prefs[UIConsts::PREFS_ENTRY_PORT]
-        @tx_block_size = prefs[UIConsts::PREFS_ENTRY_BLKSIZE]
-        @music_dir = prefs[UIConsts::PREFS_FC_MUSICDIR]
-        @rsrc_dir = prefs[UIConsts::PREFS_FC_RSRCDIR]
-        @local_store = prefs[UIConsts::PREFS_CHKBTN_LOCALSTORE]
-        @notifications = prefs[UIConsts::PREFS_CB_SHOWNOTIFICATIONS]
-        @notif_duration = prefs[UIConsts::PREFS_ENTRY_NOTIFDURATION]
-        @live_charts_update = prefs[UIConsts::PREFS_CB_LIVEUPDATE]
-        @log_played_tracks = prefs[UIConsts::PREFS_CB_LOGTRACKFILE]
-        @max_items = prefs[UIConsts::PREFS_ENTRY_MAXITEMS]
-        @cd_device = prefs[UIConsts::PREFS_CD_DEVICE]
+        @cfg = @cfg["windows"]["prefs_dialog"]
+
+        @server = @cfg[UIConsts::PREFS_ENTRY_SERVER]["text="][0]
+        @port = @cfg[UIConsts::PREFS_ENTRY_PORT]["text="][0].to_i
+        @tx_block_size = @cfg[UIConsts::PREFS_ENTRY_BLKSIZE]["text="][0].to_i
+        @music_dir = @cfg[UIConsts::PREFS_FC_MUSICDIR]["current_folder="][0]+"/"
+        @rsrc_dir = @cfg[UIConsts::PREFS_FC_RSRCDIR]["current_folder="][0]+"/"
+        @local_store = @cfg[UIConsts::PREFS_CHKBTN_LOCALSTORE]["active="][0]
+        @notifications = @cfg[UIConsts::PREFS_CB_SHOWNOTIFICATIONS]["active="][0]
+        @notif_duration = @cfg[UIConsts::PREFS_ENTRY_NOTIFDURATION]["text="][0].to_i
+        @live_charts_update = @cfg[UIConsts::PREFS_CB_LIVEUPDATE]["active="][0]
+        @log_played_tracks = @cfg[UIConsts::PREFS_CB_LOGTRACKFILE]["active="][0]
+        @max_items = @cfg[UIConsts::PREFS_ENTRY_MAXITEMS]["text="][0].to_i
+        @cd_device = @cfg[UIConsts::PREFS_CD_DEVICE]["text="][0]
 
         set_dirs
         @db_version = yml["dbversion"]
 
         return self
-        
+
         xdoc = nil
         File::open(prefs_file, "r") { |file| xdoc = REXML::Document.new(file) } if File::exists?(prefs_file)
         if xdoc.nil? || REXML::XPath.first(xdoc.root, "windows/prefs_dialog").nil?

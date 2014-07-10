@@ -51,8 +51,10 @@ class MasterController
     def clean_up
         @player.stop if @player.playing? || @player.paused?
         [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU].each { |menu| PREFS.save_menu_state(self, @glade[menu]) }
-        [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
+#         [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
+        PREFS.save_windows([@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos])
         #system("rm -f ../mfiles/*")
+        PREFS.save
     end
 
     #

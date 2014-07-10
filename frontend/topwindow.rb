@@ -12,7 +12,7 @@ class TopWindow
         @mc = mc
         @window_id = window_id
 
-        window.signal_connect(:show)         { PREFS.load_window(self) }
+        window.signal_connect(:show) { PREFS.load_window(self) }
         if window_id != UIConsts::MAIN_WINDOW
             window.signal_connect(:delete_event) { @mc.notify_closed(self); @mc.reset_filter_receiver; true }
         end

@@ -119,14 +119,13 @@ class FilterWindow < TopWindow
 
     def on_filter_changed(widget)
         # @ftv.selection.selected may be nil when a new filter is created
-#         PREFS.content_from_xdoc(@mc.glade, REXML::Document.new(@ftv.selection.selected[2])) if @ftv.selection.selected
-        PREFS.content_from_xdoc(@mc.glade, @ftv.selection.selected[2]) if @ftv.selection.selected
+        PREFS.content_from_yaml(@mc.glade, @ftv.selection.selected[2]) if @ftv.selection.selected
     end
 
     def new_filter
         max_id = 0
         @ftv.model.each { |model, path, iter| max_id = iter[0] if iter[0] > max_id }
-        DBUtils.client_sql("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '<filter />')")
+        DBUtils.client_sql("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '---\nfilter: {}\n')")
         load_ftv
     end
 
@@ -136,10 +135,7 @@ class FilterWindow < TopWindow
     end
 
     def save_filter
-        yml_data = PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS]).to_sql
-puts yml_data
-# return
-#         REXML::Formatters::Default.new.write(PREFS.xdoc_from_content(@mc.glade[FLT_VBOX_EXPANDERS]), xml_data)
+        yml_data = PREFS.yaml_from_content(@mc.glade[FLT_VBOX_EXPANDERS]).to_sql
         DBUtils.client_sql("UPDATE filters SET sxmldata=#{yml_data} WHERE rfilter=#{@ftv.selection.selected[0]}")
         @ftv.selection.selected[2] = yml_data
     end
