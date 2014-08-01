@@ -280,7 +280,7 @@ class UILink < AudioLink
 
     def available_on_server?
         if audio_status == AudioLink::NOT_FOUND && CFG.remote?
-            if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0] != AudioLink::NOT_FOUND
+            if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0].to_i != AudioLink::NOT_FOUND
                 set_audio_status(AudioLink::ON_SERVER)
             end
         end
