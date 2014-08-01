@@ -26,6 +26,7 @@ class Prefs
         end
     end
 
+    # Called by TopWindow descendants to restore their attributes
     def load_window(top_window)
         return if CFG.windows[top_window.window.builder_name].nil?
         CFG.windows[top_window.window.builder_name].each do |obj, msg|
@@ -33,8 +34,8 @@ class Prefs
         end
     end
 
-    def save_window(top_window)
-        window = top_window.kind_of?(TopWindow) ? top_window.window : top_window
+    def save_window(any_window)
+        window = any_window.kind_of?(TopWindow) ? any_window.window : any_window
 
         CFG.windows[window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
 
@@ -43,7 +44,7 @@ class Prefs
             CFG.windows[window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
         }
 
-        unless top_window.class == FilterWindow
+        unless any_window.class == FilterWindow
             objs = []
             child_controls(window, [Gtk::Expander], objs).each { |obj|
                 CFG.windows[window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
@@ -55,8 +56,9 @@ class Prefs
         win_list.each { |window| save_window(window) if window.window.visible? }
     end
 
+
     #
-    # Windows content related funcs
+    # Windows content related funcs (only used by the preferences dialog, as far as i remember...)
     #
 
     def save_window_objects(window)
@@ -101,12 +103,14 @@ class Prefs
     # Window content save/restore to/from yaml (only used by the filter window)
     #
 
+    FILTER = "filter"
+
     def yaml_from_content(gtk_object)
-        yml = { "filter" => {} }
+        yml = { FILTER => {} }
 
         objs = []
         child_controls(gtk_object, [Gtk::Expander], objs).each { |obj|
-            yml["filter"][obj.builder_name] = { "expanded=" => [obj.expanded?] }
+            yml[FILTER][obj.builder_name] = { "expanded=" => [obj.expanded?] }
         }
 
         objs = []
@@ -114,13 +118,13 @@ class Prefs
             if (obj.class == Gtk::TreeView)
                 items = ""
                 obj.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
-                yml["filter"][obj.builder_name] = { "items" => [items] }
+                yml[FILTER][obj.builder_name] = { "items" => [items] }
                 next
             end
-            yml["filter"][obj.builder_name] = { "active=" => [obj.active?] } if obj.class == Gtk::CheckButton
-            yml["filter"][obj.builder_name] = { "active=" => [obj.active] } if obj.class == Gtk::ComboBox
-            yml["filter"][obj.builder_name] = { "text=" => [obj.text] } if obj.class == Gtk::Entry
-            yml["filter"][obj.builder_name] = { "value=" => [obj.value] } if obj.class == Gtk::SpinButton
+            yml[FILTER][obj.builder_name] = { "active=" => [obj.active?] } if obj.class == Gtk::CheckButton
+            yml[FILTER][obj.builder_name] = { "active=" => [obj.active] } if obj.class == Gtk::ComboBox
+            yml[FILTER][obj.builder_name] = { "text=" => [obj.text] } if obj.class == Gtk::Entry
+            yml[FILTER][obj.builder_name] = { "value=" => [obj.value] } if obj.class == Gtk::SpinButton
         end
 
         return yml.to_yaml.gsub(/\n/, '\n')
@@ -128,7 +132,7 @@ class Prefs
 
     def content_from_yaml(glade, yaml_str)
         yml = YAML.load(yaml_str)
-        yml["filter"].each do |obj, msg|
+        yml[FILTER].each do |obj, msg|
             msg.each do |method, params|
                 if method == "items"
                     params[0].bytes.each_with_index { |byte, i| glade[obj].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
@@ -137,7 +141,6 @@ class Prefs
                 end
             end
         end
-        return
     end
 end
 
