@@ -24,7 +24,7 @@ TRACE.debug("get db version")
         db_version = ""
         socket.puts("get db version")
         if socket.gets.chomp == "OK"
-            TRACE.debug("DB version OK".green)
+            TRACE.debug("<--> DB version OK".green)
             db_version = socket.gets.chomp
         end
         socket.close
@@ -35,7 +35,7 @@ TRACE.debug("get db version")
         return [] unless socket = get_connection
         socket.puts("check multiple audio")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Check audio OK".green)
+            TRACE.debug("<--> Check audio OK".green)
             socket.puts(tracks)
             rs = socket.gets.chomp.split(" ")
         end
@@ -47,7 +47,7 @@ TRACE.debug("get db version")
         return unless socket = get_connection
         socket.puts("update stats")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Update stats OK".green)
+            TRACE.debug("<--> Update stats OK".green)
             socket.puts(rtrack.to_s)
         end
         socket.close
@@ -57,7 +57,7 @@ TRACE.debug("get db version")
         return unless socket = get_connection
         socket.puts("exec sql")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Exec SQL OK".green)
+            TRACE.debug("<--> Exec SQL OK".green)
             socket.puts(sql)
         end
         socket.close
@@ -67,7 +67,7 @@ TRACE.debug("get db version")
         return unless socket = get_connection
         socket.puts("exec batch")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Exec batch OK".green)
+            TRACE.debug("<--> Exec batch OK".green)
             socket.puts(sql.gsub(/\n/, '\n'))
         end
         socket.close
@@ -77,7 +77,7 @@ TRACE.debug("get db version")
         return unless socket = get_connection
         socket.puts("renumber play list")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Renumber play list OK".green)
+            TRACE.debug("<--> Renumber play list OK".green)
             socket.puts(rplist.to_s)
         end
         socket.close
@@ -88,7 +88,7 @@ TRACE.debug("get db version")
         resources = []
         socket.puts("synchronize resources")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Sync resources OK".green)
+            TRACE.debug("<--> Sync resources OK".green)
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
                 resources << str unless Utils::has_matching_file?(str) #File.exists?(str)
@@ -96,7 +96,7 @@ TRACE.debug("get db version")
             end
         end
         socket.close
-        TRACE.debug("Resources list received.".green)
+        TRACE.debug("<--> Resources list received.".green)
 p resources
         return resources
     end
@@ -106,7 +106,7 @@ p resources
         files = []
         socket.puts("synchronize sources")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Sync sources OK".green)
+            TRACE.debug("<--> Sync sources OK".green)
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
                 files << str unless Utils::has_matching_file?(str)
@@ -114,7 +114,7 @@ p resources
             end
         end
         socket.close
-        TRACE.debug("Sources list received.".green)
+        TRACE.debug("<--> Sources list received.".green)
         return files
     end
 
@@ -123,7 +123,7 @@ p resources
 TRACE.debug("rename audio")
         socket.puts("rename audio")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Rename audio OK".green)
+            TRACE.debug("<--> Rename audio OK".green)
             socket.puts(rtrack.to_s)
             socket.puts(new_title)
         end
@@ -136,8 +136,8 @@ TRACE.debug("rename audio")
         socket.puts("send audio")
         file = ""
         if socket.gets.chomp == "OK"
-            TRACE.debug("Send audio OK".green)
-            TRACE.debug("Negociated block size is #{CFG.tx_block_size.to_s} bytes".brown)
+            TRACE.debug("<--> Send audio OK".green)
+            TRACE.debug("<--> Negociated block size is #{CFG.tx_block_size.to_s} bytes".brown)
             socket.puts(CFG.tx_block_size.to_s)
             if socket.gets.chomp.to_i == CFG.tx_block_size
                 socket.puts(rtrack.to_s)
@@ -164,10 +164,10 @@ TRACE.debug("rename audio")
         TRACE.debug("send file")
         socket.puts("send file")
         if socket.gets.chomp == "OK"
-            TRACE.debug("Send file OK".green)
+            TRACE.debug("<--> Send file OK".green)
             socket.puts(CFG.tx_block_size.to_s)
             if socket.gets.chomp.to_i == CFG.tx_block_size
-                TRACE.debug("Negociated block size is #{CFG.tx_block_size.to_s} bytes".brown)
+                TRACE.debug("<--> Negociated block size is #{CFG.tx_block_size.to_s} bytes".brown)
                 socket.puts(file_name)
                 size = socket.gets.chomp.to_i
                 download_file(tasks, task_id, Utils::replace_dir_name(file_name), size, socket) unless size == 0
