@@ -23,7 +23,7 @@ class DBCache
         @origins     = {}
 
         # Keep tracks of audio file status for a track, avoiding to
-        # repeatetly ask to the server if the track exists in client mode.
+        # repeatedly ask to the server if the track exists in client mode.
         # Closely related to the track cache.
         @audio_status = {}
     end
