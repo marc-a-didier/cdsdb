@@ -79,7 +79,7 @@ class AudioLink < DBCacheLink
 
     def setup_audio_file
         # Must reset @audio_file to empty if status is unknown because then
-        # audio status cache may have been reset when toggling conneted/local mode.
+        # audio status cache may have been reset when toggling connected/local mode.
         @audio_file.clear if audio_status == UNKNOWN
 
         return audio_status unless @audio_file.empty?
@@ -100,7 +100,7 @@ class AudioLink < DBCacheLink
     end
 
     def playable?
-        return audio_status == OK || audio_status == MISPLACED
+        return (audio_status == OK || audio_status == MISPLACED) && !@audio_file.empty?
     end
 
     # Search the Music directory for a file matching the theoretical file name.
