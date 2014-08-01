@@ -54,7 +54,7 @@ class FilterWindow < TopWindow
 
         @ftv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new(), :text => 0))
         @ftv.append_column(Gtk::TreeViewColumn.new("Filter name", edrenderer, :text => 1))
-        @ftv.append_column(Gtk::TreeViewColumn.new("XML", Gtk::CellRendererText.new(), :text => 2))
+        @ftv.append_column(Gtk::TreeViewColumn.new("YAML", Gtk::CellRendererText.new(), :text => 2))
 #         @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 1) }
         @ftv.model.set_sort_column_id(1, Gtk::SORT_ASCENDING)
         @ftv.columns[1].sort_indicator = Gtk::SORT_ASCENDING
@@ -266,18 +266,8 @@ class FilterWindow < TopWindow
 
         # The array is ready. If random selection, shuffle it else compute and sort by weight
         if @mc.glade[FLT_CMB_SELECTBY].active == 0 # Random selection
-#             Utils::init_random_generator
-# puts "start get rnd"
-#             rvalues = Utils::get_randoms(tracks.size, max_tracks)
-            # tracks.shuffle! # Added to add randomness!!!
             rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
-# p rvalues
-#             f << "\nRandom values: " << rvalues.to_s << "\n"
-            tmp = []
-            rvalues.each { |rnd| tmp << tracks[rnd] }
-            tracks = tmp
-            # Looks like same bullshit as before...
-            # tracks.shuffle!(random: Utils.value_from_rnd_str(Utils.str_from_rnd_file(8), f))
+            tracks = Array.new(rvalues.size).fill { |i| tracks[rvalues[i]] }.uniq
         else
             tracks.each { |track|
                 track.played = track.played/max_played*100.0 if max_played > 0
@@ -325,7 +315,7 @@ class FilterWindow < TopWindow
                 }
 
                 f << "\n" << stracks.size << " tracks selected until weight " << curr_weight << "\n"
-                stracks.each { |track| f << track.weight << "\n" }
+                stracks.each { |track| f << track.weight << " " << track.title << "\n" }
                 tracks = stracks
             end
         end
