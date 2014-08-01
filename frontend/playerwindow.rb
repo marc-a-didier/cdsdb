@@ -47,7 +47,7 @@ class PlayerWindow < TopWindow
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
 
-        @file_preread = false
+        @file_prefetched = false
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
 
@@ -145,7 +145,7 @@ class PlayerWindow < TopWindow
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
-        @file_preread = false
+        @file_prefetched = false
     end
 
     def on_btn_next
@@ -226,15 +226,8 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
     end
 
     def new_track(msg)
-        start = Time.now.to_f
-#         @player_data.owner.notify_played(@player_data) if @player_data
+start = Time.now.to_f
 
-#         @mc.notify_played(@player_data.uilink) if has_ended
-#
-#         @player_data = @mc.get_next_track(true)
-#
-#         play_track
-        # Test to lessen gap between tracks
         if msg == :stream_ended
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
 TRACE.debug("Elapsed: #{Time.now.to_f-start}")
@@ -259,29 +252,22 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         end
 
         @queue.compact! # Remove nil entries
-        if @queue[0]
-            @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
-        end
-debug_queue
+        @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE) if @queue[0]
 
-        @file_preread = false
+        @file_prefetched = false
     end
 
     # Called by mc if any change made in the provider track list
     def refetch(track_provider)
         if @queue[0] && track_provider == @queue[0].owner
-TRACE.debug("Player refetched".green)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-debug_queue
         end
     end
 
     # Provider has been closed so remove all its remaining entries
     def unfetch(track_provider)
-TRACE.debug("Player unfetched".brown)
         @queue.slice!(1, PREFETCH_SIZE) if @queue[0] && track_provider == @queue[0].owner
-debug_queue
     end
 
     def draw_level(msg_struct, channel)
@@ -431,10 +417,10 @@ debug_queue
 
         # If there's a next playable track in queue, read the whole file in an attempt to make
         # it cached by the system and lose less time when skipping to it
-        if @queue[1] && !@file_preread && @total_time-itime < 10000 && @queue[1].uilink.audio_status == AudioLink::OK
+        if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.audio_status == AudioLink::OK
             IO.read(@queue[1].uilink.audio_file)
-            @file_preread = true
-TRACE.debug("File pre-read for #{@queue[1].uilink.audio_file}".green)
+            @file_prefetched = true
+            TRACE.debug("Prefetch of #{@queue[1].uilink.audio_file}".brown)
         end
     end
 
