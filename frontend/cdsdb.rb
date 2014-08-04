@@ -191,6 +191,9 @@ require './my_rr_lib'
 
 # DONE: Save filter: creer une table filters avec un nom et la clause where dans un champ
 # DONE: Filtres: supprimer les boutons add/new et remplacer par drop down Actions (avec en plus delete)
+# DONE: prefetch: lire les n premiers bytes du prochain morceau pour mettre en cache.
+#       voir si on peut jouer un morceau precharger en memoire
+
 
 
 #
@@ -202,8 +205,6 @@ require './my_rr_lib'
 #       N.B. For this to work, must add a disc number in the cd editor window since it's not yet in the db...
 
 # TODO: ajouter un tag 'a checker' quand un disque est mal rippe (ex: MM Vol.13)
-
-# TODO: ajouter un index sur rtrack dans logtracks pour voir si ca accelere les requetes pour les charts
 
 # TODO: piger comment on envoie un delete event a une fenetre!!!
 
@@ -237,11 +238,10 @@ require './my_rr_lib'
 #       Refaire les browser qui descendent de generic browser et virer les tv & model,
 #       c'est debile. Utiliser model a la place et virer le treeview.
 
-# TODO: prefetch: lire les n premiers bytes du prochain morceau pour mettre en cache.
-#       voir si on peut jouer un morceau precharger en memoire
-
 # TODO: Ajouter un menu dans le player menu pour selectionner la source du player?
 #       Avec un mode 'automatique' qui fonctionne comme actuellement.
+
+# TODO: ajouter un tooltip avec des infos sur le morceau dans la playq & playlist, voir charts?
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)

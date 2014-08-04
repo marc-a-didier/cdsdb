@@ -40,7 +40,7 @@ class PQueueWindow < TopWindow
         @tvpq.append_column(Gtk::TreeViewColumn.new("Play time", srenderer, :text => 3))
         @tvpq.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
         # Seems that drag_end is only called when reordering.
-        @tvpq.signal_connect(:drag_end) { |widget, context| TRACE.debug("drag_end called"); @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 } }
+        @tvpq.signal_connect(:drag_end) { |widget, context| @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 } }
 
         @tvpq.columns[2].resizable = true
 
@@ -184,10 +184,9 @@ class PQueueWindow < TopWindow
 
     def enqueue(uilinks)
         uilinks.each { |uilink|
-TRACE.debug("enq before: audiostatus=#{uilink.audio_status}")
-#             uilink.get_audio_file(self, @mc.tasks) #unless uilink.audio_status == AudioLink::OK
+# TRACE.debug("enq before: audiostatus=#{uilink.audio_status}")
             uilink.get_audio_file(self, @mc.tasks) unless uilink.playable?
-TRACE.debug("enq after : audiostatus=#{uilink.audio_status}")
+# TRACE.debug("enq after : audiostatus=#{uilink.audio_status}")
             unless uilink.audio_status == AudioLink::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
