@@ -417,7 +417,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 
         # If there's a next playable track in queue, read the whole file in an attempt to make
         # it cached by the system and lose less time when skipping to it
-        if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.audio_status == AudioLink::OK
+        if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.playable?
             IO.read(@queue[1].uilink.audio_file)
             @file_prefetched = true
             TRACE.debug("Prefetch of #{@queue[1].uilink.audio_file}".brown)
