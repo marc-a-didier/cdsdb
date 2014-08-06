@@ -60,6 +60,28 @@ class PQueueWindow < TopWindow
             selection_data.set(Gdk::Selection::TYPE_STRING, "pqueue:message:get_pqueue_selection")
         }
 
+        @tvpq.set_has_tooltip(true)
+        @tvpq.signal_connect(:query_tooltip) { |widget, x, y, is_kbd, tool_tip|
+            path = @tvpq.get_path_at_pos(x, y)
+            if path
+                iter = @plq.get_iter(path[0])
+                text = "<b>Genre:</b> #{iter[4].uilink.genre.sname}\n"
+                text += "<b>Played:</b> #{iter[4].uilink.track.iplayed}"
+                text += iter[4].uilink.track.ilastplayed == 0 ? "\n" : " (Last: #{iter[4].uilink.track.ilastplayed.to_std_date})\n"
+                text += "<b>Rating:</b> #{UIConsts::RATINGS[iter[4].uilink.track.irating]}\n"
+                text += "<b>Tags:</b> "
+                if iter[4].uilink.track.itags == 0
+                    text += "No tags"
+                else
+                    UIConsts::TAGS.each_with_index { |tag, i| text += tag+" " if (iter[4].uilink.track.itags & (1 << i)) != 0 }
+                end
+                tool_tip.set_markup(text)
+                true
+            else
+                false
+            end
+        }
+
         @play_time = 0
         @ntracks = 0
         @internal_ref = 0
