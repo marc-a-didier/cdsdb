@@ -5,11 +5,13 @@
   <object class="GtkDialog" id="search_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
+    <property name="title" translatable="yes">DB Text Search</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
+    <property name="has_separator">True</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox30">
         <property name="visible">True</property>
@@ -23,7 +25,6 @@
             <child>
               <object class="GtkButton" id="srch_dlg_btn_search">
                 <property name="label" translatable="yes">_Search</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="can_default">True</property>
@@ -40,7 +41,6 @@
             <child>
               <object class="GtkButton" id="srch_dlg_btn_show">
                 <property name="label" translatable="yes">Show in _browser</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -55,7 +55,6 @@
             <child>
               <object class="GtkButton" id="srch_dlg_btn_close">
                 <property name="label">gtk-close</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -98,7 +97,6 @@
                         <child>
                           <object class="GtkRadioButton" id="srch_dlg_rb_rec">
                             <property name="label" translatable="yes">Record</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -114,7 +112,6 @@
                         <child>
                           <object class="GtkRadioButton" id="srch_dlg_rb_seg">
                             <property name="label" translatable="yes">Segment</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -130,7 +127,6 @@
                         <child>
                           <object class="GtkRadioButton" id="srch_dlg_rb_track">
                             <property name="label" translatable="yes">Track</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -146,7 +142,6 @@
                         <child>
                           <object class="GtkRadioButton" id="srch_dlg_rb_lyrics">
                             <property name="label" translatable="yes">Lyrics (Tracks notes)</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -239,8 +234,6 @@
                         <property name="shadow_type">in</property>
                         <child>
                           <object class="GtkTreeView" id="srch_dlg_tv">
-                            <property name="width_request">700</property>
-                            <property name="height_request">350</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="rules_hint">True</property>

@@ -18,9 +18,6 @@ class SearchDialog
         @glade[UIConsts::SRCH_DLG_BTN_SEARCH].signal_connect(:clicked) { do_search }
         @glade[UIConsts::SRCH_DLG_BTN_SHOW].signal_connect(:clicked)   { do_show }
 
-        # Last column is the table reference (not shown)
-        @ls = Gtk::ListStore.new(Integer, String, Class)
-
         title_renderer = Gtk::CellRendererText.new
         title_col = Gtk::TreeViewColumn.new("Found in", title_renderer)
         title_col.set_cell_data_func(title_renderer) { |col, renderer, model, iter| renderer.markup = iter[1] }
@@ -28,7 +25,8 @@ class SearchDialog
         @tv = @glade[UIConsts::SRCH_DLG_TV]
         @tv.append_column(Gtk::TreeViewColumn.new("Match", Gtk::CellRendererText.new, :text => 0))
         @tv.append_column(title_col)
-        @tv.model = @ls
+        # Last column is the table reference (not shown)
+        @tv.model = Gtk::ListStore.new(Integer, String, Class)
         @tv.selection.mode = Gtk::SELECTION_MULTIPLE
 
         # May drag tracks to play list or queue
@@ -38,6 +36,17 @@ class SearchDialog
             # Drag/drop is only enabled when viewing track search result set (name or lyrics)
             if @glade[UIConsts::SRCH_DLG_RB_TRACK].active? || @glade[UIConsts::SRCH_DLG_RB_LYRICS].active?
                 selection_data.set(Gdk::Selection::TYPE_STRING, "search:message:get_search_selection")
+            end
+        }
+
+        @tv.set_has_tooltip(true)
+        @tv.signal_connect(:query_tooltip) { |widget, x, y, is_kbd, tool_tip|
+            path = @tv.get_dest_row(x, y)
+            if path && search_track?
+                tool_tip.set_markup(@tv.model.get_iter(path[0])[2].markup_tooltip)
+                true
+            else
+                false
             end
         }
     end
@@ -61,7 +70,7 @@ class SearchDialog
     end
 
     def do_search
-        @ls.clear
+        @tv.model.clear
         txt = ("%"+@glade[UIConsts::SRCH_ENTRY_TEXT].text+"%").to_sql
         if search_record?
             sql = "SELECT records.stitle, artists.sname, records.rrecord, records.rrecord FROM records
@@ -92,7 +101,7 @@ class SearchDialog
         i = 0
         CDSDB.execute(sql) do |row|
             i += 1
-            iter = @ls.append
+            iter = @tv.model.append
             iter[0] = i
             if @glade[UIConsts::SRCH_DLG_RB_REC].active?
                 iter[1] = row[0].to_html_bold+" by "+row[1].to_html_italic
@@ -107,7 +116,7 @@ class SearchDialog
 
     def do_show
         return unless @tv.selection.count_selected_rows > 0
-        uilink = @ls.get_iter(@tv.selection.selected_rows[0])[2]
+        uilink = @tv.model.get_iter(@tv.selection.selected_rows[0])[2]
         @mc.select_segment(uilink) if search_segment?
         @mc.select_record(uilink) if search_record?
         @mc.select_track(uilink) if search_track?
