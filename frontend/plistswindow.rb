@@ -111,6 +111,17 @@ public
         @tvpt.model = @pts
         @tvpt.selection.mode = Gtk::SELECTION_MULTIPLE
 
+        @tvpt.set_has_tooltip(true)
+        @tvpt.signal_connect(:query_tooltip) { |widget, x, y, is_kbd, tool_tip|
+            path = @tvpt.get_dest_row(x, y)
+            if path
+                tool_tip.set_markup(@pts.get_iter(path[0])[TT_DATA].markup_tooltip)
+                true
+            else
+                false
+            end
+        }
+
         # Status bar infos related vars
         @tracks = 0
         @ttime = 0
