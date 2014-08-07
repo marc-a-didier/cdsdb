@@ -8,8 +8,12 @@ class SearchDialog
 
         @dlg = @glade[UIConsts::SEARCH_DIALOG]
 
-        @dlg.signal_connect(:delete_event)   { @dlg.destroy; false }
-        @glade[UIConsts::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked) { @dlg.destroy }
+        @dlg.signal_connect(:show)           { PREFS.load_main(@glade, UIConsts::SEARCH_DIALOG) }
+        @dlg.signal_connect(:delete_event)   { PREFS.save_window(@dlg)
+                                               @dlg.destroy
+                                               false
+                                             }
+        @glade[UIConsts::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked)  { PREFS.save_window(@dlg); @dlg.destroy }
 
         @glade[UIConsts::SRCH_DLG_BTN_SEARCH].signal_connect(:clicked) { do_search }
         @glade[UIConsts::SRCH_DLG_BTN_SHOW].signal_connect(:clicked)   { do_show }
