@@ -19,6 +19,7 @@ require 'fileutils'
 require 'find'
 require 'socket'
 require 'date'
+require 'thread' # For mutex in tasks window
 
 require 'logger'
 require 'yaml'

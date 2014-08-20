@@ -95,6 +95,8 @@ class DBCache
     end
 
     def audio_status(rtrack)
+        track(rtrack) unless @audio_status[rtrack]
+        @audio_status[rtrack] = 4 unless @audio_status[rtrack] # Unknown status if not in cache
         return @audio_status[rtrack]
     end
 

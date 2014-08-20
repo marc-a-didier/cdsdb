@@ -74,17 +74,17 @@ class TasksWindow < TopWindow
 
         @mc.glade[UIConsts::TKPM_CLOSE].signal_connect(:activate) { @mc.glade[UIConsts::MM_WIN_TASKS].signal_emit(:activate) }
         @mc.glade[UIConsts::TKPM_CLEAR].signal_connect(:activate) {
-            @check_suspended = true
-            index = 0
-            while iter = @tv.model.get_iter(index.to_s)
-                if iter[COL_STATUS] == STAT_DONE || iter[COL_STATUS] == STAT_CANCELLED
-                    @tv.model.remove(iter)
-                else
-                    index += 1
+            @mutex.synchronize {
+                index = 0
+                while iter = @tv.model.get_iter(index.to_s)
+                    if iter[COL_STATUS] == STAT_DONE || iter[COL_STATUS] == STAT_CANCELLED
+                        @tv.model.remove(iter)
+                    else
+                        index += 1
+                    end
                 end
-            end
-            @tv.columns_autosize
-            @check_suspended = false
+                @tv.columns_autosize
+            }
         }
 
         # Check if there is at least one download in progress before setting the cancel flag
@@ -97,26 +97,26 @@ class TasksWindow < TopWindow
 
         @chk_thread = nil
         @has_cancelled = false
-        @check_suspended = false
+        @mutex = Mutex.new
 
         check_config
     end
 
     def check_waiting_tasks
-        return if @check_suspended
+        @mutex.synchronize {
+            @tv.model.each { |model, path, iter|
+                break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD
 
-        @tv.model.each { |model, path, iter|
-            break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD
-
-            if (iter[COL_TASK] == TASK_FILE_DL || iter[COL_TASK] == TASK_AUDIO_DL) && iter[COL_STATUS] == STAT_WAITING
-                @tv.set_cursor(iter.path, nil, false)
-                iter[COL_STATUS] = STAT_DOWNLOAD
-                if iter[COL_TASK] == TASK_FILE_DL
-                    MusicClient.new.get_file(iter[COL_REF].file_info, self, iter)
-                else
-                    MusicClient.new.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
+                if (iter[COL_TASK] == TASK_FILE_DL || iter[COL_TASK] == TASK_AUDIO_DL) && iter[COL_STATUS] == STAT_WAITING
+                    @tv.set_cursor(iter.path, nil, false)
+                    iter[COL_STATUS] = STAT_DOWNLOAD
+                    if iter[COL_TASK] == TASK_FILE_DL
+                        MusicClient.new.get_file(iter[COL_REF].file_info, self, iter)
+                    else
+                        MusicClient.new.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
+                    end
                 end
-            end
+            }
         }
     end
 
@@ -134,9 +134,9 @@ TRACE.debug("task thread started...".green)
                 }
             end
         elsif !@chk_thread.nil?
+            DBCACHE.set_audio_status_from_to(AudioLink::ON_SERVER, AudioLink::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
-            DBCACHE.set_audio_status_from_to(AudioLink::ON_SERVER, AudioLink::NOT_FOUND)
             @mc.glade[UIConsts::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
 TRACE.debug("task thread stopped".brown)
         end
@@ -180,9 +180,9 @@ TRACE.debug("task thread stopped".brown)
 
     def end_file_op(iter, file_name, status)
         if status == Cfg::STAT_CANCELLED && @has_cancelled
-            @check_suspended = true
-            @tv.model.each { |model, path, iter| iter[COL_STATUS] = STAT_CANCELLED if in_downloads?(iter) }
-            @check_suspended = false
+            @mutex.synchronize {
+                @tv.model.each { |model, path, iter| iter[COL_STATUS] = STAT_CANCELLED if in_downloads?(iter) }
+            }
             @has_cancelled = false
         else
             iter[COL_PROGRESS] = 100
