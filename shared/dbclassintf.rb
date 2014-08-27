@@ -5,43 +5,42 @@
 # require 'dbutils'
 # require 'utils'
 
-class DBClassIntf
+module DBClassIntf
 
-    attr_accessor :dbs
-
-private
-    def initialize_copy(orig)
-        @dbs = orig.dbs.clone
-    end
-
-
-public
+#     attr_accessor :dbs
+#
+# private
+#     def initialize_copy(orig)
+#         @dbs = orig.dbs.clone
+#     end
+#
+#
+# public
     # Creates a new orm mapper from the given struct
     # Generates getters and setters from struct members which may be referenced as
     # @dbs.member or self.member in subclasses.
-    def initialize(dbs)
-        @dbs = dbs
-        @tbl_name = @dbs.members[0][1..-1]+"s"
-        @dbs.members.each { |member| self.class.class_eval("def #{member}; return @dbs.#{member}; end") }
-        @dbs.members.each { |member| self.class.class_eval("def #{member}=(val); @dbs.#{member}=val; end") }
+    def initialize #(dbs)
+#         @dbs = dbs
+        @tbl_name = self.members[0][1..-1]+"s"
+#         @dbs.members.each { |member| self.class.class_eval("def #{member}; return @dbs.#{member}; end") }
+#         @dbs.members.each { |member| self.class.class_eval("def #{member}=(val); @dbs.#{member}=val; end") }
         reset
     end
 
     # Initialize struct members from their names: if it begins with r or i, initialize as an int
     # and as a string if it begins with s or m.
     def reset
-        @dbs.members.each_with_index { |member, i|
+        self.members.each_with_index { |member, i|
             # i == 0 means first field, that is the primary key which is set to -1 to tell that the entry is not valid
             if i == 0
-                @dbs[i] = -1
+                self[i] = -1
             else
                 case member.to_s[0]
-                    when "r", "i" then @dbs[i] = 0  # r or i
-                    when "s", "m" then @dbs[i] = "" # s or m
-                    when "f"      then @dbs[i] = 0.0
+                    when "r", "i" then self[i] = 0  # r or i
+                    when "s", "m" then self[i] = "" # s or m
+                    when "f"      then self[i] = 0.0
                     else
-                        puts "Unknow data type"
-                        raise
+                        raise "Unknow data type"
                 end
             end
         }
@@ -49,19 +48,19 @@ public
     end
 
     def generate_where_on_pk
-        return "WHERE #{@dbs.members[0].to_s}=#{@dbs[0]}"
+        return "WHERE #{self.members[0].to_s}=#{self[0]}"
     end
 
     def generate_insert
         sql = "INSERT INTO #{@tbl_name} VALUES ("
-        @dbs.each { |value| sql += value.to_sql+"," }
+        self.each { |value| sql += value.to_sql+"," }
         return sql[0..-2]+");" # Remove last ,
     end
 
     def generate_update
         old = self.clone.sql_load
         sql = "UPDATE #{@tbl_name} SET "
-        @dbs.each_with_index { |value, i| sql += @dbs.members[i].to_s+"="+value.to_sql+"," if value != old.dbs[i] }
+        self.each_with_index { |value, i| sql += self.members[i].to_s+"="+value.to_sql+"," if value != old[i] }
         return sql[-1] == " " ? "" : sql[0..-2]+" "+generate_where_on_pk+";"
 #         sql = sql[0..-2]+" "+generate_where_on_pk+";" if sql[-1] != " " # Remove last ,
 #         return sql
@@ -69,7 +68,7 @@ public
 
     # Set class attributes from a full sqlite3 row
     def load_from_row(row)
-        row.each_with_index { |val, i| @dbs[i] = val } # @dbs[i].kind_of?(Numeric) ? val.to_i : val }
+        row.each_with_index { |val, i| self[i] = val } # @dbs[i].kind_of?(Numeric) ? val.to_i : val }
         return self
     end
 
@@ -99,44 +98,40 @@ TRACE.debug("DB update : #{sql}".red)
     end
 
     def ref_load(ref_val)
-        @dbs[0] = ref_val
+        self[0] = ref_val
         return sql_load
     end
 
     def get_last_id
-        id = CDSDB.get_first_value("SELECT MAX(#{@dbs.members[0].to_s}) FROM #{@tbl_name};")
+        id = CDSDB.get_first_value("SELECT MAX(#{self.members[0].to_s}) FROM #{@tbl_name};")
         return id.nil? ? 0 : id.to_i
     end
 
     def valid?
-        return @dbs[0] != -1
+        return self[0] != -1
     end
 
-    def ==(object)
-        return @dbs == object.dbs
-    end
+#     def ==(object)
+#         return self == object #???? .dbs
+#     end
+#
+#     def [](index)
+#         return self[index]
+#     end
 
-    def [](index)
-        return @dbs[index]
-    end
-
-    def clone_dbs(object)
-        @dbs = object.dbs.clone
-        return self
-    end
+#     def clone_dbs(object)
+#         @dbs = object.dbs.clone
+#         return self
+#     end
 
     def disp_value(val)
         valid? ? val : nil
     end
 end
 
-ArtistDBS = Struct.new(:rartist, :sname, :swebsite, :rorigin, :mnotes)
+ArtistDBClass = Struct.new(:rartist, :sname, :swebsite, :rorigin, :mnotes) do
 
-class ArtistDBClass < DBClassIntf
-
-    def initialize
-        super(ArtistDBS.new)
-    end
+    include DBClassIntf
 
     def add_new
         reset
@@ -150,54 +145,45 @@ class ArtistDBClass < DBClassIntf
     end
 end
 
-RecordDBS = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
-                       :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
-                       :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink,
-                       :fpeak, :fgain)
+RecordDBClass = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
+                           :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
+                           :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink,
+                           :fpeak, :fgain) do
 
-class RecordDBClass < DBClassIntf
-
-    def initialize
-        super(RecordDBS.new)
-    end
+    include DBClassIntf
 
     def add_new(rartist)
         reset
-        @dbs.rrecord = get_last_id+1
-        @dbs.rartist = rartist
-        @dbs.stitle = "New record"
-        @dbs.idateadded = Time.now.to_i
-        @dbs.fpeak = 0.0
-        @dbs.fgain = 0.0
+        self.rrecord = get_last_id+1
+        self.rartist = rartist
+        self.stitle = "New record"
+        self.idateadded = Time.now.to_i
+        self.fpeak = 0.0
+        self.fgain = 0.0
         return sql_add
     end
 
     def segmented?
-        return @dbs.iissegmented == 1
+        return self.iissegmented == 1
     end
 
     def compile?
-        return @dbs.rartist == 0
+        return self.rartist == 0
     end
 end
 
-SegmentDBS = Struct.new(:rsegment, :rrecord, :rartist, :iorder, :stitle, :iplaytime, :mnotes)
+SegmentDBClass = Struct.new(:rsegment, :rrecord, :rartist, :iorder, :stitle, :iplaytime, :mnotes) do
 
-class SegmentDBClass < DBClassIntf
-
-
-    def initialize
-        super(SegmentDBS.new)
-    end
+    include DBClassIntf
 
     def add_new(rartist, rrecord)
         reset
-        @dbs.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
-        @dbs.iorder = @dbs.iorder.nil? ? 1 : @dbs.iorder.to_i
-        @dbs.rsegment = get_last_id+1
-        @dbs.rrecord = rrecord
-        @dbs.rartist = rartist
-        @dbs.stitle = "New segment"
+        self.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
+        self.iorder = @dbs.iorder.nil? ? 1 : self.iorder.to_i
+        self.rsegment = get_last_id+1
+        self.rrecord = rrecord
+        self.rartist = rartist
+        self.stitle = "New segment"
         return sql_add
     end
 
@@ -207,25 +193,21 @@ class SegmentDBClass < DBClassIntf
     end
 end
 
-TrackDBS = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
-                      :iplayed, :irating, :itags, :ilastplayed, :fpeak, :fgain)
+TrackDBClass = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
+                          :iplayed, :irating, :itags, :ilastplayed, :fpeak, :fgain) do
 
-class TrackDBClass < DBClassIntf
-
-    def initialize
-        super(TrackDBS.new)
-    end
+    include DBClassIntf
 
     def add_new(rrecord, rsegment)
         reset
-        @dbs.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
-        @dbs.iorder = @dbs.iorder.nil? ? 1 : @dbs.iorder.to_i
-        @dbs.rtrack = get_last_id+1
-        @dbs.rrecord = rrecord
-        @dbs.rsegment = rsegment
-        @dbs.stitle = "New track"
-        @dbs.fpeak = 0.0
-        @dbs.fgain = 0.0
+        self.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
+        self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
+        self.rtrack = get_last_id+1
+        self.rrecord = rrecord
+        self.rsegment = rsegment
+        self.stitle = "New track"
+        self.fpeak = 0.0
+        self.fgain = 0.0
         return sql_add
     end
 
@@ -235,64 +217,16 @@ class TrackDBClass < DBClassIntf
 end
 
 
-PListDBS = Struct.new(:rplist, :sname, :iislocal, :idatecreated, :idatemodified)
+PListDBClass = Struct.new(:rplist, :sname, :iislocal, :idatecreated, :idatemodified) { include DBClassIntf }
 
-class PListDBClass < DBClassIntf
-    def initialize
-        super(PListDBS.new)
-    end
-end
+GenreDBClass = Struct.new(:rgenre, :sname) { include DBClassIntf }
 
+LabelDBClass = Struct.new(:rlabel, :sname) { include DBClassIntf }
 
-GenreDBS = Struct.new(:rgenre, :sname)
+MediaDBClass = Struct.new(:rmedia, :sname) { include DBClassIntf }
 
-class GenreDBClass < DBClassIntf
-    def initialize
-        super(GenreDBS.new)
-    end
-end
+CollectionDBClass = Struct.new(:rcollection, :sname) { include DBClassIntf }
 
+OriginDBClass = Struct.new(:rorigin, :sname) { include DBClassIntf }
 
-LabelDBS = Struct.new(:rlabel, :sname)
-
-class LabelDBClass < DBClassIntf
-    def initialize
-        super(LabelDBS.new)
-    end
-end
-
-
-MediaDBS = Struct.new(:rmedia, :sname)
-
-class MediaDBClass < DBClassIntf
-    def initialize
-        super(MediaDBS.new)
-    end
-end
-
-
-CollectionDBS = Struct.new(:rcollection, :sname)
-
-class CollectionDBClass < DBClassIntf
-    def initialize
-        super(CollectionDBS.new)
-    end
-end
-
-
-OriginDBS = Struct.new(:rorigin, :sname)
-
-class OriginDBClass < DBClassIntf
-    def initialize
-        super(OriginDBS.new)
-    end
-end
-
-
-FilterDBS = Struct.new(:rfilter, :sname, :sxmldata)
-
-class FilterDBClass < DBClassIntf
-    def initialize
-        super(FilterDBS.new)
-    end
-end
+FilterDBClass = Struct.new(:rfilter, :sname, :sxmldata) { include DBClassIntf }
