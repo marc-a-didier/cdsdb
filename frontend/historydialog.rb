@@ -84,7 +84,7 @@ class HistoryDialog
     def get_selection
         links = []
         if @view_type == VIEW_PLAYED || @view_type == VIEW_DATES
-            links << @tv.selection.selected[COL_DATA].clone
+            links << @tv.selection.selected[COL_DATA] #.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
             CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }

@@ -200,12 +200,12 @@ class RecordsBrowser < Gtk::TreeView
     # Returns true if we should check if we can remove the artist from the never played sub tree.
     # WARNING: The only case where we're sure that it should not be removed is when there are still tracks,
     #          in this case when row is not nil.
-    def update_never_played(rrecord, rsegment)
+    def update_never_played(uilink)
         return true unless @mc.is_on_never_played?
-        iter = find_ref(rrecord)
+        iter = find_ref(uilink.record.rrecord)
         return true if iter.nil?
 
-        row = CDSDB.get_first_row(generate_rec_sql(rrecord))
+        row = CDSDB.get_first_row(generate_rec_sql(uilink.record.rrecord))
 p row
         if row
             map_rec_row_to_entry(row, iter)
@@ -215,6 +215,22 @@ p row
         @mc.record_changed
         return row.nil?
     end
+
+#     def update_never_played(rrecord, rsegment)
+#         return true unless @mc.is_on_never_played?
+#         iter = find_ref(rrecord)
+#         return true if iter.nil?
+#
+#         row = CDSDB.get_first_row(generate_rec_sql(rrecord))
+# p row
+#         if row
+#             map_rec_row_to_entry(row, iter)
+#         else
+#             model.remove(iter)
+#         end
+#         @mc.record_changed
+#         return row.nil?
+#     end
 
     def invalidate
         model.clear
@@ -296,7 +312,7 @@ p row
     end
 
     def on_tag_dir
-        uilink = @mc.get_track_uilink(0).clone
+        uilink = @mc.get_track_uilink(0) #.clone
         return if !uilink || uilink.audio_status == AudioLink::UNKNOWN
 
 # p uilink.full_dir

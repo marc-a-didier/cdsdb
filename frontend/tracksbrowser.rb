@@ -248,14 +248,14 @@ class TracksBrowser < Gtk::TreeView
 
     def get_selection
         links = []
-        selection.selected_each { |model, path, iter| links << iter[TTV_DATA].clone }
+        selection.selected_each { |model, path, iter| links << iter[TTV_DATA] } #.clone }
         return links
     end
 
     # Returns a list of the the currently visible tracks
     def get_tracks_list
         links = []
-        model.each { |model, path, iter| links << iter[TTV_DATA].clone }
+        model.each { |model, path, iter| links << iter[TTV_DATA] } #.clone }
         return links
     end
 

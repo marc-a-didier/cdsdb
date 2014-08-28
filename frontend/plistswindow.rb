@@ -233,7 +233,7 @@ p new_iorder
     def get_selection
 #         return Array[@tvpt.selection.selected_each { |model, path, iter| iter[TT_DATA].clone }]
         links = []
-        @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA].clone }
+        @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA] } #.clone }
         return links
     end
 
