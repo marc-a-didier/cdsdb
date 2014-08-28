@@ -7,23 +7,8 @@
 
 module DBClassIntf
 
-#     attr_accessor :dbs
-#
-# private
-#     def initialize_copy(orig)
-#         @dbs = orig.dbs.clone
-#     end
-#
-#
-# public
-    # Creates a new orm mapper from the given struct
-    # Generates getters and setters from struct members which may be referenced as
-    # @dbs.member or self.member in subclasses.
-    def initialize #(dbs)
-#         @dbs = dbs
+    def initialize 
         @tbl_name = self.members[0][1..-1]+"s"
-#         @dbs.members.each { |member| self.class.class_eval("def #{member}; return @dbs.#{member}; end") }
-#         @dbs.members.each { |member| self.class.class_eval("def #{member}=(val); @dbs.#{member}=val; end") }
         reset
     end
 
@@ -110,19 +95,6 @@ TRACE.debug("DB update : #{sql}".red)
     def valid?
         return self[0] != -1
     end
-
-#     def ==(object)
-#         return self == object #???? .dbs
-#     end
-#
-#     def [](index)
-#         return self[index]
-#     end
-
-#     def clone_dbs(object)
-#         @dbs = object.dbs.clone
-#         return self
-#     end
 
     def disp_value(val)
         valid? ? val : nil

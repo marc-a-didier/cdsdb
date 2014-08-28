@@ -255,10 +255,6 @@ class DBEditor
 
         # Add editor only if there are data for it
         @editors = [nil, nil, nil, nil]
-#         @editors[0] = ArtistEditor.new(@glade, @dblink.artist.dbs)   if @dblink.valid_artist_ref?
-#         @editors[1] = RecordEditor.new(@glade, @dblink.record.dbs)   if @dblink.valid_record_ref?
-#         @editors[2] = SegmentEditor.new(@glade, @dblink.segment.dbs) if @dblink.valid_segment_ref?
-#         @editors[3] = TrackEditor.new(@glade, @dblink.track.dbs)     if @dblink.valid_track_ref?
         @editors[0] = ArtistEditor.new(@glade, @dblink.artist)   if @dblink.valid_artist_ref?
         @editors[1] = RecordEditor.new(@glade, @dblink.record)   if @dblink.valid_record_ref?
         @editors[2] = SegmentEditor.new(@glade, @dblink.segment) if @dblink.valid_segment_ref?
@@ -293,6 +289,7 @@ class PListDialog < PListDBClass
         super()
 
         @glade = GTBld::load(DLG_PLIST_INFOS)
+        @dbs = self
         init_baseui("pldlg_")
 
         ref_load(rplist)
