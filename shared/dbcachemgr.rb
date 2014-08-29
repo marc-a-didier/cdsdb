@@ -115,6 +115,7 @@ TRACE.debug("ALL CACHES cleared")
     end
 
     def dump_infos
+        TRACE.debug("--- Cache infos ---")
         TRACE.debug("Artist cache size=#{@artists.size}")
         TRACE.debug("Record cache size=#{@records.size}")
         TRACE.debug("Segment cache size=#{@segments.size}")

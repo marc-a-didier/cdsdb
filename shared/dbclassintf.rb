@@ -7,8 +7,7 @@
 
 module DBClassIntf
 
-    def initialize 
-        @tbl_name = self.members[0][1..-1]+"s"
+    def initialize
         reset
     end
 
@@ -32,23 +31,25 @@ module DBClassIntf
         return self
     end
 
+    def tbl_name
+        return self.members[0][1..-1]+"s"
+    end
+
     def generate_where_on_pk
         return "WHERE #{self.members[0].to_s}=#{self[0]}"
     end
 
     def generate_insert
-        sql = "INSERT INTO #{@tbl_name} VALUES ("
+        sql = "INSERT INTO #{tbl_name} VALUES ("
         self.each { |value| sql += value.to_sql+"," }
         return sql[0..-2]+");" # Remove last ,
     end
 
     def generate_update
         old = self.clone.sql_load
-        sql = "UPDATE #{@tbl_name} SET "
+        sql = "UPDATE #{tbl_name} SET "
         self.each_with_index { |value, i| sql += self.members[i].to_s+"="+value.to_sql+"," if value != old[i] }
         return sql[-1] == " " ? "" : sql[0..-2]+" "+generate_where_on_pk+";"
-#         sql = sql[0..-2]+" "+generate_where_on_pk+";" if sql[-1] != " " # Remove last ,
-#         return sql
     end
 
     # Set class attributes from a full sqlite3 row
@@ -59,7 +60,7 @@ module DBClassIntf
 
     # Load a full sqlite3 row from the pk field
     def sql_load
-        row = CDSDB.get_first_row("SELECT * FROM #{@tbl_name} #{generate_where_on_pk};")
+        row = CDSDB.get_first_row("SELECT * FROM #{tbl_name} #{generate_where_on_pk};")
         return row.nil? ? reset : load_from_row(row)
     end
 
@@ -78,7 +79,7 @@ TRACE.debug("DB update : #{sql}".red)
     end
 
     def sql_del
-        DBUtils.client_sql("DELETE FROM #{@tbl_name} #{generate_where_on_pk};")
+        DBUtils.client_sql("DELETE FROM #{tbl_name} #{generate_where_on_pk};")
         return self
     end
 
@@ -88,7 +89,7 @@ TRACE.debug("DB update : #{sql}".red)
     end
 
     def get_last_id
-        id = CDSDB.get_first_value("SELECT MAX(#{self.members[0].to_s}) FROM #{@tbl_name};")
+        id = CDSDB.get_first_value("SELECT MAX(#{self.members[0].to_s}) FROM #{tbl_name};")
         return id.nil? ? 0 : id.to_i
     end
 
@@ -151,7 +152,7 @@ SegmentDBClass = Struct.new(:rsegment, :rrecord, :rartist, :iorder, :stitle, :ip
     def add_new(rartist, rrecord)
         reset
         self.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
-        self.iorder = @dbs.iorder.nil? ? 1 : self.iorder.to_i
+        self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
         self.rsegment = get_last_id+1
         self.rrecord = rrecord
         self.rartist = rartist
