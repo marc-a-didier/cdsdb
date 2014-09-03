@@ -9,7 +9,7 @@ class PrefsDialog
     def run
         if @glade[UIConsts::PREFS_DIALOG].run == Gtk::Dialog::RESPONSE_OK
             PREFS.save_window_objects(@glade[UIConsts::PREFS_DIALOG])
-            CFG.load
+            CFG.save
         end
         @glade[UIConsts::PREFS_DIALOG].destroy
     end
