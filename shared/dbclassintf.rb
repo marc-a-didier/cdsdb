@@ -19,10 +19,10 @@ module DBClassIntf
             if i == 0
                 self[i] = -1
             else
-                case member.to_s[0]
-                    when "r", "i" then self[i] = 0  # r or i
-                    when "s", "m" then self[i] = "" # s or m
-                    when "f"      then self[i] = 0.0
+                self[i] = case member.to_s[0]
+                    when "r", "i" then 0  # r or i
+                    when "s", "m" then "" # s or m
+                    when "f"      then 0.0
                     else
                         raise "Unknow data type"
                 end

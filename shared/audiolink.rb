@@ -110,7 +110,7 @@ class AudioLink < DBCacheLink
     def search_audio_file
 # TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
         Utils::AUDIO_EXTS.each { |ext|
-            if File::exists?(@audio_file+ext)
+            if File.exists?(@audio_file+ext)
                 @audio_file += ext
                 return OK
             end
@@ -119,9 +119,9 @@ class AudioLink < DBCacheLink
         # Remove the root dir & genre dir to get the appropriate sub dir
         file = track_dir
         Dir[CFG.music_dir+"*"].each { |entry|
-            next if !FileTest::directory?(entry)
+            next unless File.directory?(entry)
             Utils::AUDIO_EXTS.each { |ext|
-                if File::exists?(entry+file+ext)
+                if File.exists?(entry+file+ext)
                     @audio_file = entry+file+ext
                     return MISPLACED
                 end
