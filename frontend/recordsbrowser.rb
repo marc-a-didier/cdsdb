@@ -323,7 +323,7 @@ p row
             expected, found = uilink.tag_and_move_dir(dir) { |param| @mc.audio_link_ok(param) }
             if expected != found
                 UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
-            elsif dir.match(CFG.rip_dir)
+            elsif dir.match(CFG.rip_dir[0..-2]) # Remove last / if files are not in rip sub dir
                 # Set the ripped date only if processing files from the rip directory.
                 @reclnk.record.idateripped = Time::now.to_i
                 @reclnk.record.sql_update
