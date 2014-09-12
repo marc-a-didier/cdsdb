@@ -131,7 +131,7 @@ public
         @playing_pl = 0
 
         # Threading problems...
-        @audio_file = ""
+#         @audio_file = ""
 
 #         set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
 

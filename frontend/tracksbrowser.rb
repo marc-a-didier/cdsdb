@@ -332,9 +332,9 @@ TRACE.debug("executing: #{sql}")
         uilink.setup_audio_file if uilink.audio_file.empty?
         if iter = find_ref(uilink.track.rtrack)
             iter[TTV_PIX] = render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
-            iter[TTV_DATA].audio_file = uilink.audio_file
-p iter[TTV_DATA]
-p uilink
+#             iter[TTV_DATA].audio_file = uilink.audio_file
+# p iter[TTV_DATA]
+# p uilink
         end
     end
 

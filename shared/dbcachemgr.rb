@@ -7,6 +7,10 @@
 # It automatically load rows from DB when the refered row is not already in cache.
 #
 
+EMPTY_STR = ""
+
+AudioInfos = Struct.new(:status, :file)
+
 class DBCache
 
     include Singleton
@@ -25,7 +29,8 @@ class DBCache
         # Keep tracks of audio file status for a track, avoiding to
         # repeatedly ask to the server if the track exists in client mode.
         # Closely related to the track cache.
-        @audio_status = {}
+#         @audio_status = {}
+        @audio = {}
     end
 
     def artist(rartist)
@@ -59,7 +64,8 @@ class DBCache
 #         @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack) if @tracks[rtrack].nil?
         if @tracks[rtrack].nil?
             @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
-            @audio_status[rtrack] = 4 # AudioLink::UNKNOWN default value
+#             @audio_status[rtrack] = 4 # AudioLink::UNKNOWN default value
+            @audio[rtrack] = AudioInfos.new(4, EMPTY_STR)
 # TRACE.debug("Track cache loaded key #{rtrack}, size=#{@tracks.size}")
         end
         return @tracks[rtrack]
@@ -90,19 +96,32 @@ class DBCache
         return @origins[rorigin]
     end
 
+    def audio(rtrack)
+        return @audio[rtrack]
+    end
+
+    def set_audio_file(rtrack, file_name)
+        @audio[rtrack].file = file_name
+    end
+
     def set_audio_status(rtrack, status)
-        @audio_status[rtrack] = status
+#         @audio_status[rtrack] = status
+        @audio[rtrack].status = status
     end
 
     def audio_status(rtrack)
-        track(rtrack) unless @audio_status[rtrack]
-        @audio_status[rtrack] = 4 unless @audio_status[rtrack] # Unknown status if not in cache
-        return @audio_status[rtrack]
+#         track(rtrack) unless @audio_status[rtrack]
+        track(rtrack) unless @audio[rtrack]
+        @audio[rtrack].status = 4 unless @audio[rtrack] # Unknown status if not in cache
+#         @audio_status[rtrack] = 4 unless @audio_status[rtrack] # Unknown status if not in cache
+        return @audio[rtrack].status
+#         return @audio_status[rtrack]
     end
 
     def clear
 #         instance_variables.each { |cache| cache.clear } # Marche pas!!!???
-        [@artists, @records, @segments, @tracks, @audio_status,
+#         [@artists, @records, @segments, @tracks, @audio_status,
+        [@artists, @records, @segments, @tracks, @audio,
          @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
 TRACE.debug("ALL CACHES cleared")
     end
@@ -111,7 +130,8 @@ TRACE.debug("ALL CACHES cleared")
     # Primary use is when switching from local mode to client mode (not found -> unknown)
     # and from client to local mode (on server -> not found)
     def set_audio_status_from_to(from_value, to_value)
-        @audio_status.each { |key, value| @audio_status[key] = to_value if value == from_value }
+#         @audio_status.each { |key, value| @audio_status[key] = to_value if value == from_value }
+        @audio.each { |key, value| @audio[key].status = to_value if value.status == from_value }
     end
 
     def dump_infos
@@ -125,7 +145,8 @@ TRACE.debug("ALL CACHES cleared")
         TRACE.debug("Media cache size=#{@medias.size}")
         TRACE.debug("Collection cache size=#{@collections.size}")
         TRACE.debug("Origin cache size=#{@origins.size}")
-        TRACE.debug("Audio status cache size=#{@audio_status.size}")
+#         TRACE.debug("Audio status cache size=#{@audio_status.size}")
+        TRACE.debug("Audio infos cache size=#{@audio.size}")
     end
 end
 
@@ -191,6 +212,11 @@ class DBCacheLink
         return DBCACHE.genre(@rgenre)
     end
 
+    def set_audio_file(file_name)
+        DBCACHE.set_audio_file(@rtrack, file_name)
+        return self
+    end
+
     def set_audio_status(status)
         DBCACHE.set_audio_status(@rtrack, status)
         return self
@@ -198,6 +224,14 @@ class DBCacheLink
 
     def audio_status
         return DBCACHE.audio_status(@rtrack)
+    end
+
+    def audio_file
+        return DBCACHE.audio(@rtrack).file
+    end
+
+    def audio
+        return DBCACHE.audio(@rtrack)
     end
 
 

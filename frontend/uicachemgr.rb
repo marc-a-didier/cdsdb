@@ -289,7 +289,8 @@ class UILink < AudioLink
 
     def get_audio_file(emitter, tasks)
         # Try to find a local file if status is unknown
-        setup_audio_file if audio_status == AudioLink::UNKNOWN || @audio_file.empty?
+#         setup_audio_file if audio_status == AudioLink::UNKNOWN || @audio_file.empty?
+        setup_audio_file if audio_status == AudioLink::UNKNOWN || audio.file.empty?
 #         if audio_status == AudioLink::UNKNOWN || @audio_file.empty?
 #             setup_audio_file
 #             TRACE.debug("Setup audio called for track #{@rtrack.to_s.brown}")
