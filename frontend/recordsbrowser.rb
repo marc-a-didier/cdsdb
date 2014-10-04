@@ -334,6 +334,7 @@ p row
     def get_replay_gain
         tracks = @mc.get_tracks_list
         tracks.each do |trackui|
+            trackui.setup_audio_file if trackui.audio_file.empty?
             unless trackui.playable?
                 UIUtils.show_message("All tracks must be available on disk.",  Gtk::MessageDialog::ERROR)
                 return
@@ -343,4 +344,5 @@ p row
         Utils.compute_replay_gain(tracks)
     end
 
-end
+end #179-063
+
