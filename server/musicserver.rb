@@ -9,6 +9,7 @@ require 'logger'
 
 require 'sqlite3'
 require 'taglib2'
+require 'yaml'
 require 'rexml/document'
 
 require '../shared/uiconsts'
