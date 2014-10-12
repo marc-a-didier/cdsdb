@@ -151,6 +151,13 @@ module UIConsts
     MM_PLAYER_USETRKRG          = "mm_player_usetrkrg"
     MM_PLAYER_USERECRG          = "mm_player_userecrg"
     MM_PLAYER_LEVELBEFORERG     = "mm_player_level_before_rg"
+    MM_PLAYER_SOURCE            = "mm_player_source"
+    MM_PLAYER_SRC               = "mm_player_src"
+    MM_PLAYER_SRC_AUTO          = "mm_player_src_auto"
+    MM_PLAYER_SRC_PQ            = "mm_player_src_pq"
+    MM_PLAYER_SRC_PLIST         = "mm_player_src_plist"
+    MM_PLAYER_SRC_BROWSER       = "mm_player_src_browser"
+
 
     # Tools menu
     MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
@@ -209,6 +216,7 @@ module UIConsts
     PLAYER_LABEL_POS        = "player_label_pos"
     PLAYER_BTN_SWITCH       = "player_btn_switch"
     PLAYER_IMG_METER        = "player_img_meter"
+    PLAYER_IMG_COUNTER      = "player_img_counter"
 
 
     #

@@ -24,6 +24,9 @@ class PlayerWindow < TopWindow
     LEFT_CHANNEL  = 0
     RIGHT_CHANNEL = 1
 
+    DIGIT_HEIGHT = 20
+    DIGIT_WIDTH  = 12
+
 
     def initialize(mc)
         super(mc, UIConsts::PLAYER_WINDOW)
@@ -35,14 +38,32 @@ class PlayerWindow < TopWindow
         end
 
         @meter = @mc.glade[UIConsts::PLAYER_IMG_METER]
-        @meter.signal_connect(:realize) { |widget| setup }
+        @meter.signal_connect(:realize) { |widget| meter_setup }
+
+        @counter = @mc.glade[UIConsts::PLAYER_IMG_COUNTER]
+        @counter.signal_connect(:realize) { |widget| counter_setup }
 
         @mc.glade[UIConsts::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
         @mc.glade[UIConsts::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
         @mc.glade[UIConsts::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
         @mc.glade[UIConsts::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
 
-        @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
+#         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
+
+#         pstr = '<span font="Pixel LCD7" background="#000000" foreground="#00FF00" size="12288"/>' #12:34-56:78</span>'
+#         pfd = Pango::FontDescription.new# ("[FAMILY-LIST]Digital-7 Mono[SIZE]16")
+#         pfd.set_family("Digital-7 Mono").set_size(16384)
+#         pfd.set_family("Pixel LCD7").set_size(12*1024)
+#         pfd.set_family("TPF Display").set_size(14336)
+# p pfd
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_font(pfd).queue_resize
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].set_text("12:34-56:78")
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_bg(Gtk::STATE_NORMAL, Gdk::Color.new(0, 0, 0))
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_text(Gtk::STATE_NORMAL, Gdk::Color.new(0, 255, 0))
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_text(Gtk::STATE_NORMAL, Gdk::Color.new(0, 255, 0))
+#         @mc.glade[UIConsts::PLAYER_LABEL_DURATION].modify_font(pfd).set_text("00:00").queue_resize # markup = '<span font="Digital-7 Mono" size="16384">00:00</span>'
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].set_markup("12:34-56:78").set_attributes(Pango.parse_markup(pstr)[0]).queue_resize
+        @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
 
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
@@ -61,7 +82,7 @@ class PlayerWindow < TopWindow
     end
 
     # Build the backgroud image of the level meter when the GTK image is realized
-    def setup
+    def meter_setup
         # Get the pixmap from the gtk image on the meter window
         @mpix = Gdk::Pixmap.new(@meter.window, IMAGE_WIDTH, 52, -1) # 52 = 16*2+8*2+1*4
 
@@ -94,6 +115,49 @@ class PlayerWindow < TopWindow
         @meter.set(@mpix, nil)
     end
 
+    def reset_counter
+        11.times do |i|
+            if i == 2 || i == 8
+                @dpix.draw_pixbuf(nil, @digits[11], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            elsif i == 5
+                @dpix.draw_pixbuf(nil, @digits[12], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            else
+                @dpix.draw_pixbuf(nil, @digits[10], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            end
+        end
+        @counter.set(@dpix, nil)
+    end
+
+    def time_to_digits(stime)
+        i = 0
+        stime.each_byte do |ch|
+            if i == 2 || i == 8
+                @dpix.draw_pixbuf(nil, @digits[11], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            elsif i == 5
+                @dpix.draw_pixbuf(nil, @digits[12], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            elsif (i == 0 || i == 6 || i == 7) && ch == 48
+                @dpix.draw_pixbuf(nil, @digits[10], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            else
+                @dpix.draw_pixbuf(nil, @digits[ch-48], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            end
+            i += 1
+        end
+        @counter.set(@dpix, nil)
+    end
+
+    def counter_setup
+        @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
+
+        @digits = []
+        10.times { |i| @digits[i] = Gdk::Pixbuf.new(CFG.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
+        @digits[10] = Gdk::Pixbuf.new(CFG.icons_dir+"unlitdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[11] = Gdk::Pixbuf.new(CFG.icons_dir+"colondigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[12] = Gdk::Pixbuf.new(CFG.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+
+        reset_counter
+        @counter.set(@dpix, nil)
+    end
+
     def on_change_time_view
         @time_view_mode = @time_view_mode == ELAPSED ? REMAINING : ELAPSED
         update_hscale
@@ -118,12 +182,26 @@ class PlayerWindow < TopWindow
             end
         end
 
+        # Reset button states
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
         @seeking = false
         set_window_title
         @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = true
         @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = false
         @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = false
+
+        # Clear level meter
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 28, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+        @meter.set(@mpix, nil)
+
+        # Clear title, time and slider
+        reset_counter
+        @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].set_text("00:00-00:00")
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_bg(Gtk::STATE_NORMAL, Gdk::Color.new(0, 0, 0))
+#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_text(Gtk::STATE_NORMAL, Gdk::Color.new(0, 255, 0))
+        @slider.value = 0.0
     end
 
     def on_btn_play
@@ -382,7 +460,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         @total_time = track_len.parse[1].to_f/Gst::MSECOND
         @slider.set_range(0.0, @total_time)
         @total_time = @total_time.to_i
-        @mc.glade[UIConsts::PLAYER_LABEL_DURATION].label = format_time(@total_time)
+#         @mc.glade[UIConsts::PLAYER_LABEL_DURATION].label = format_time(@total_time)
 
         @playbin.query(@track_pos)
         #@mc.glade[UIConsts::PLAYER_HSCALE].set_range(0.0, track_len.parse[1].to_f/Gst::MSECOND)
@@ -442,7 +520,11 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 
     def show_time(itime)
         if @time_view_mode == ELAPSED
-            @mc.glade[UIConsts::PLAYER_LABEL_POS].label = format_time(itime)
+            time_to_digits(format_time(@total_time)+"-"+format_time(itime))
+#             @mc.glade[UIConsts::PLAYER_LABEL_POS].set_text(format_time(@total_time)+"-"+format_time(itime))
+#             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = format_time(itime)
+#             @mc.glade[UIConsts::PLAYER_LABEL_POS].markup = '<span font="Digital-7 Mono" size="16384">00:00</span>'.sub(/00:00/, format_time(itime))
+
         else
             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
         end

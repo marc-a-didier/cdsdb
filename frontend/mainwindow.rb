@@ -92,6 +92,12 @@ class MainWindow < TopWindow
             trk_browser.check_for_audio_file if trk_browser
         }
 
+        @player_src = nil
+        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)  { @player_src = nil  }
+        @glade[MM_PLAYER_SRC_PQ].signal_connect(:activate)    { @player_src = @mc.pqueue  }
+        @glade[MM_PLAYER_SRC_PLIST].signal_connect(:activate) { @player_src = @mc.plists  }
+        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)  { @player_src = trk_browser }
+
         # Action called from the memos window, equivalent to File/Save of the main window
         @glade[MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
 
@@ -112,11 +118,11 @@ class MainWindow < TopWindow
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
-        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
+        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
 
 
         #
-        # Toute la plomberie incombant au master controller...
+        # Toute la plomberie...
         #
         @glade[MM_FILE_CHECKCD].signal_connect(:activate)     { CDEditorWindow.new.edit_record }
         @glade[MM_FILE_IMPORTSQL].signal_connect(:activate)   { import_sql_file }
