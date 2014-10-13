@@ -131,14 +131,12 @@ class PlayerWindow < TopWindow
     def time_to_digits(stime)
         i = 0
         stime.each_byte do |ch|
-            if i == 2 || i == 8
-                @dpix.draw_pixbuf(nil, @digits[11], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
-            elsif i == 5
-                @dpix.draw_pixbuf(nil, @digits[12], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
-            elsif (i == 0 || i == 6 || i == 7) && ch == 48
-                @dpix.draw_pixbuf(nil, @digits[10], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
-            else
-                @dpix.draw_pixbuf(nil, @digits[ch-48], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+            if ch != 45 && ch != 58 # Skip always lit chars (- & :)
+                if (i == 0 || i == 6) && ch == 48
+                    @dpix.draw_pixbuf(nil, @digits[10], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+                else
+                    @dpix.draw_pixbuf(nil, @digits[ch-48], 0, 0, i*DIGIT_WIDTH, 0, DIGIT_WIDTH, DIGIT_HEIGHT, Gdk::RGB::DITHER_NONE, 0, 0)
+                end
             end
             i += 1
         end
@@ -155,7 +153,7 @@ class PlayerWindow < TopWindow
         @digits[12] = Gdk::Pixbuf.new(CFG.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
 
         reset_counter
-        @counter.set(@dpix, nil)
+#         @counter.set(@dpix, nil)
     end
 
     def on_change_time_view
