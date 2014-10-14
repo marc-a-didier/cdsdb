@@ -41,6 +41,7 @@ class PlayerWindow < TopWindow
         @meter.signal_connect(:realize) { |widget| meter_setup }
 
         @counter = @mc.glade[UIConsts::PLAYER_IMG_COUNTER]
+#         @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
         @counter.signal_connect(:realize) { |widget| counter_setup }
 
         @mc.glade[UIConsts::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
@@ -144,6 +145,8 @@ class PlayerWindow < TopWindow
     end
 
     def counter_setup
+#         @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
+
         @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
 
         @digits = []
@@ -153,7 +156,6 @@ class PlayerWindow < TopWindow
         @digits[12] = Gdk::Pixbuf.new(CFG.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
 
         reset_counter
-#         @counter.set(@dpix, nil)
     end
 
     def on_change_time_view
@@ -280,6 +282,9 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         TRACE.debug((info+", #{player_data.uilink.audio_file}]").cyan)
 
         # UI operations may be delayed
+#         @total_time = player_data.uilink.tags.nil? ? player_data.uilink.track.iplaytime : player_data.uilink.tags.length*1000
+#         show_time(0)
+
         @tip_pix = nil
         setup_hscale
 
@@ -461,6 +466,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 #         @mc.glade[UIConsts::PLAYER_LABEL_DURATION].label = format_time(@total_time)
 
         @playbin.query(@track_pos)
+        update_hscale
         #@mc.glade[UIConsts::PLAYER_HSCALE].set_range(0.0, track_len.parse[1].to_f/Gst::MSECOND)
         #@slider.update_policy = Gtk::UPDATE_DISCONTINUOUS
 #        duration = track_len.parse[1].to_f/Gst::MSECOND
@@ -540,7 +546,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     def show_tooltip(si, tool_tip)
         @tip_pix = @queue[0].uilink.large_track_cover if @tip_pix.nil?
         tool_tip.set_icon(@tip_pix)
-        text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+@mc.glade[UIConsts::PLAYER_LABEL_DURATION].label
+        text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
         tool_tip.set_markup(text)
     end
 
