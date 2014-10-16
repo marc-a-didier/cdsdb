@@ -346,9 +346,12 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         end
     end
 
-    # Provider has been closed so remove all its remaining entries
-    def unfetch(track_provider)
-        @queue.slice!(1, PREFETCH_SIZE) if @queue[0] && track_provider == @queue[0].owner
+    # A new provider has been selected. If it has changed, remove all its remaining entries
+    def provider_may_have_changed(new_provider)
+        if @queue[0] && new_provider != @queue[0].owner
+            @queue.slice!(1, PREFETCH_SIZE)
+            new_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
+        end
     end
 
     def draw_level(msg_struct, channel)

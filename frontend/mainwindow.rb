@@ -89,14 +89,13 @@ class MainWindow < TopWindow
         @glade[MW_SERVER_ACTION].signal_connect(:activate) {
             CFG.set_remote(@glade[MW_SERVER_ACTION].active?)
             @mc.tasks.check_config
-            trk_browser.check_for_audio_file if trk_browser
+            @trk_browser.check_for_audio_file if @trk_browser
         }
 
-        @player_src = nil
-        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)  { @player_src = nil  }
-        @glade[MM_PLAYER_SRC_PQ].signal_connect(:activate)    { @player_src = @mc.pqueue  }
-        @glade[MM_PLAYER_SRC_PLIST].signal_connect(:activate) { @player_src = @mc.plists  }
-        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)  { @player_src = trk_browser }
+        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)  { @mc.set_player_source(nil)          }
+        @glade[MM_PLAYER_SRC_PQ].signal_connect(:activate)    { @mc.set_player_source(@mc.pqueue)   }
+        @glade[MM_PLAYER_SRC_PLIST].signal_connect(:activate) { @mc.set_player_source(@mc.plists)   }
+        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)  { @mc.set_player_source(@trk_browser) }
 
         # Action called from the memos window, equivalent to File/Save of the main window
         @glade[MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
@@ -258,7 +257,6 @@ class MainWindow < TopWindow
     end
 
     def history_closed(sender)
-#         @history.each { |dialog| dialog = nil if dialog == sender }
         (RECENT_ADDED..VIEW_BY_DATES).each { |i| @history[i] = nil if @history[i] == sender }
     end
 
@@ -318,7 +316,7 @@ class MainWindow < TopWindow
     #
     def set_filter(where_clause, must_join_logtracks)
         if (where_clause != @mc.main_filter)
-            uilink = trk_browser.trklnk
+            uilink = @trk_browser.trklnk
             @mc.main_filter = where_clause
             art_browser.reload
             @mc.select_track(uilink) if uilink && uilink.valid_track_ref?

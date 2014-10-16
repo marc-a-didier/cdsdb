@@ -42,7 +42,7 @@ class MasterController
 
         @mw = MainWindow.new(self)
 
-#         @player.setup
+        @player_src = nil
     end
 
     #
@@ -69,7 +69,7 @@ class MasterController
         @glade[MM_WIN_TASKS].active = false if window == @tasks
         @glade[MM_WIN_MEMOS].active = false if window == @memos
 
-        @player.unfetch(window) if window == @pqueue || window == @plists
+        @player.provider_may_have_changed(window) if window == @pqueue || window == @plists
     end
 
     def reset_filter_receiver
@@ -254,9 +254,15 @@ class MasterController
     # Messages sent by the player to get a track provider
     #
     def track_provider
+        return @player_src if @player_src
         return @pqueue if @pqueue.window.visible?
         return @plists if @plists.window.visible?
         return @mw.trk_browser
+    end
+
+    def set_player_source(src_window)
+        @player_src = src_window
+        @player.provider_may_have_changed(track_provider)
     end
 
     def get_track(player_data, direction)
@@ -266,5 +272,4 @@ class MasterController
     def track_list_changed(sender)
         @player.refetch(sender)
     end
-
 end
