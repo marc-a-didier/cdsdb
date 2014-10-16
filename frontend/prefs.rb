@@ -87,7 +87,7 @@ class Prefs
     def save_menu_state(mw, menu)
         CFG.menus[menu.builder_name] = {}
         menu.each { |child|
-            CFG.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.class == Gtk::CheckMenuItem
+            CFG.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.is_a?(Gtk::CheckMenuItem) || child.is_a?(Gtk::RadioMenuItem)
         }
     end
 
