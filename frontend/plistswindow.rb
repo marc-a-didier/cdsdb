@@ -178,7 +178,7 @@ public
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
-            @mc.track_list_changed(self)
+            @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
         end
     end
 
@@ -226,7 +226,7 @@ p new_iorder
         end
 
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
-        @mc.track_list_changed(self)
+        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
         return true
     end
 
@@ -252,7 +252,7 @@ p new_iorder
 
         @tvpt.columns[col_id].sort_indicator = order
         @pts.set_sort_column_id(col_id, order)
-        @mc.track_list_changed(self)
+        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
     end
 
     #
@@ -303,7 +303,7 @@ p new_iorder
 
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
-        @mc.track_list_changed(self)
+        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
     end
 
 
@@ -323,6 +323,14 @@ p new_iorder
     end
 
     def prefetch_tracks(queue, max_entries)
+        if queue[0] && queue[0].owner != self
+            pdata = get_track(nil, :start)
+            if pdata
+                queue << pdata
+            else
+                return nil
+            end
+        end
         return do_prefetch_tracks(@pts, TT_DATA, queue, max_entries)
     end
 
@@ -350,10 +358,10 @@ p new_iorder
 
     def on_pl_change
         return if @tvpl.selection.selected.nil?
+        @mc.unfetch(self)
         reset_player_data_state
         @current_pl.ref_load(@tvpl.selection.selected[0])
         update_tvpt
-        @mc.track_list_changed(self)
     end
 
     def on_tv_edited(widget, path, new_text)
@@ -388,7 +396,7 @@ p new_iorder
             }
             renumber_tracks_list_store
             update_tracks_time_infos
-            @mc.track_list_changed(self)
+            @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
         else
             if UIUtils::get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
                 exec_sql("DELETE FROM pltracks WHERE rplist=#{@current_pl.rplist};")
@@ -411,7 +419,7 @@ p new_iorder
         @track_ref = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
         @pts.reorder(new_order) # It's magic!
-        @mc.track_list_changed(self)
+        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
     end
 
     def do_renumber

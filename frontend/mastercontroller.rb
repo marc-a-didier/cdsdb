@@ -272,4 +272,8 @@ class MasterController
     def track_list_changed(sender)
         @player.refetch(sender)
     end
+
+    def unfetch(sender)
+        @player.unfetch(sender)
+    end
 end

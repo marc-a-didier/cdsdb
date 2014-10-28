@@ -312,7 +312,7 @@ start = Time.now.to_f
         if msg == :stream_ended
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
 TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-            @queue[0].owner.notify_played(@queue[0], @queue[1].nil? ? :finish : :next)
+            @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
             @mc.notify_played(@queue[0].uilink)
             @queue.shift # Remove first entry, no more needed
         else
@@ -343,6 +343,13 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         if @queue[0] && track_provider == @queue[0].owner
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
+        end
+    end
+
+    # Called by mc if we have to remove any pending tracks from the queue
+    def unfetch(track_provider)
+        if @queue[0] && track_provider == @queue[0].owner
+            @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
         end
     end
 

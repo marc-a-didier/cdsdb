@@ -524,6 +524,7 @@ TRACE.debug("executing: #{sql}")
 
     def reset_player_data_state
         @track_ref = -1
+        @mc.unfetch(self)
     end
 
     #
@@ -535,6 +536,14 @@ TRACE.debug("executing: #{sql}")
     end
 
     def prefetch_tracks(queue, max_entries)
+        if queue[0] && queue[0].owner != self
+            pdata = get_track(nil, :start)
+            if pdata
+                queue << pdata
+            else
+                return nil
+            end
+        end
         return do_prefetch_tracks(self.model, TTV_DATA, queue, max_entries)
     end
 
