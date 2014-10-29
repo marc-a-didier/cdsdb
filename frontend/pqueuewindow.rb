@@ -61,15 +61,35 @@ class PQueueWindow < TopWindow
         }
 
         @tvpq.set_has_tooltip(true)
-        @tvpq.signal_connect(:query_tooltip) { |widget, x, y, is_kbd, tool_tip|
+        @tvpq.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             path = @tvpq.get_dest_row(x, y)
             if path
-                tool_tip.set_markup(@plq.get_iter(path[0])[4].uilink.markup_tooltip)
-                true
+                iter = @plq.get_iter(path[0])
+                if iter
+                    pdata = iter[4]
+                    if pdata
+                        link = pdata.uilink
+                        if link
+                            tool_tip.set_markup(link.markup_tooltip)
+                            true
+                        else
+                            TRACE.warn("Tool tip PQ link is nil!".red.bold)
+                            false
+                        end
+                    else
+                        TRACE.warn("Tool tip PQ PlayerData is nil!".red.bold)
+                        false
+                    end
+                else
+                    TRACE.warn("Tool tip PQ iter is nil!".red.bold)
+                    false
+                end
+#                 tool_tip.set_markup(@plq.get_iter(path[0])[4].uilink.markup_tooltip)
+#                 true
             else
                 false
             end
-        }
+        end
 
         @play_time = 0
         @ntracks = 0

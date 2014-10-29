@@ -112,15 +112,29 @@ public
         @tvpt.selection.mode = Gtk::SELECTION_MULTIPLE
 
         @tvpt.set_has_tooltip(true)
-        @tvpt.signal_connect(:query_tooltip) { |widget, x, y, is_kbd, tool_tip|
+        @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             path = @tvpt.get_dest_row(x, y)
             if path
-                tool_tip.set_markup(@pts.get_iter(path[0])[TT_DATA].markup_tooltip)
-                true
+                iter = @pts.get_iter(path[0])
+                if iter
+                    link = iter[TT_DATA]
+                    if link
+                        tool_tip.set_markup(link.markup_tooltip)
+                        true
+                    else
+                        TRACE.warn("Tool tip PL link is nil!".red.bold)
+                        false
+                    end
+                else
+                    TRACE.warn("Tool tip PL link is nil!".red.bold)
+                    false
+                end
+#                 tool_tip.set_markup(@pts.get_iter(path[0])[TT_DATA].markup_tooltip)
+#                 true
             else
                 false
             end
-        }
+        end
 
         # Status bar infos related vars
         @tracks = 0
