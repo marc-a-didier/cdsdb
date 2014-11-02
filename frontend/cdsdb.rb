@@ -2,6 +2,8 @@
 
 #require 'musicbrainz' !! A explorer!!
 
+gem 'gstreamer', '1.2.6'
+
 require 'gtk2'
 require 'gst'
 require 'sqlite3'
@@ -243,6 +245,8 @@ require './my_rr_lib'
 #       Avec un mode 'automatique' qui fonctionne comme actuellement.
 
 # TODO: ajouter un tooltip avec des infos sur le morceau dans la playq & playlist, voir charts?
+
+# TODO: ajouter qqch dans le filtre pour specifier les morceaux les plus anciennement joues (cool, p.ex.)
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)
