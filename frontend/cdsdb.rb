@@ -197,6 +197,7 @@ require './my_rr_lib'
 # DONE: prefetch: lire les n premiers bytes du prochain morceau pour mettre en cache.
 #       voir si on peut jouer un morceau precharger en memoire
 
+# DONE: ajouter qqch dans le filtre pour specifier les morceaux les plus anciennement joues (cool, p.ex.)
 
 
 #
@@ -246,7 +247,6 @@ require './my_rr_lib'
 
 # TODO: ajouter un tooltip avec des infos sur le morceau dans la playq & playlist, voir charts?
 
-# TODO: ajouter qqch dans le filtre pour specifier les morceaux les plus anciennement joues (cool, p.ex.)
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)

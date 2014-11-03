@@ -226,7 +226,17 @@ class FilterWindow < TopWindow
     #
     def generate_play_list(destination)
         wc = generate_filter
-        wc = " WHERE "+wc[5..-1] unless wc.empty?
+
+        if wc.empty?
+            UIUtils.show_message("Can't generate a play list from the current criteria", Gtk::MessageDialog::ERROR)
+            return
+        end
+
+        # This option is only available for play list/queue generation
+        # so its not coded in the generate_filter method
+        wc += " ORDER BY tracks.ilastplayed" if @mc.glade[FLT_CMB_SELECTBY].active == 3 # Oldest played tracks
+
+        wc = " WHERE "+wc[5..-1]
         sql = "SELECT tracks.rtrack FROM tracks " \
               "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
 
@@ -268,7 +278,7 @@ class FilterWindow < TopWindow
         if @mc.glade[FLT_CMB_SELECTBY].active == 0 # Random selection
             rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
             tracks = Array.new(rvalues.size).fill { |i| tracks[rvalues[i]] }.uniq
-        else
+        elsif @mc.glade[FLT_CMB_SELECTBY].active != 3 # Do nothing if oldest played first
             tracks.each { |track|
                 track.played = track.played/max_played*100.0 if max_played > 0
                 track.weight = track.played*pcweight+track.rating*rtweight
