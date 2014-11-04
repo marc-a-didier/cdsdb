@@ -274,6 +274,8 @@ module UIConsts
     CDED_ENTRY_TITLE    = "cded_entry_title"
     CDED_ENTRY_GENRE    = "cded_entry_genre"
     CDED_ENTRY_YEAR     = "cded_entry_year"
+    CDED_ENTRY_LABEL    = "cded_entry_label"
+    CDED_ENTRY_CATALOG  = "cded_entry_catalog"
 
     #
     # Search dialog

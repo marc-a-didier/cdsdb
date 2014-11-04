@@ -53,7 +53,6 @@
                 <child>
                   <object class="GtkButton" id="cded_btn_cp_artist">
                     <property name="label" translatable="yes">To All Artists</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">120</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -111,7 +110,6 @@
                 <child>
                   <object class="GtkButton" id="cded_btn_cp_title">
                     <property name="label" translatable="yes">To All Segments</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">120</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -206,6 +204,81 @@
               </packing>
             </child>
             <child>
+              <object class="GtkHBox" id="hbox3">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkLabel" id="cded_lbl_label">
+                    <property name="width_request">60</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">0</property>
+                    <property name="xpad">5</property>
+                    <property name="label" translatable="yes">Label</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="cded_entry_label">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="invisible_char_set">True</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="cded_lbl_catalog">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">0</property>
+                    <property name="xpad">5</property>
+                    <property name="label" translatable="yes">Catalog</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="cded_entry_catalog">
+                    <property name="width_request">30</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="invisible_char_set">True</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkHBox" id="hbox2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -213,7 +286,6 @@
                 <child>
                   <object class="GtkCheckButton" id="cded_chk_flac">
                     <property name="label" translatable="yes">Rip to FLAC</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -228,7 +300,6 @@
                 <child>
                   <object class="GtkCheckButton" id="cded_chk_ogg">
                     <property name="label" translatable="yes">Rip to OGG</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -244,7 +315,7 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">3</property>
+                <property name="position">4</property>
               </packing>
             </child>
           </object>
@@ -286,7 +357,6 @@
             <child>
               <object class="GtkButton" id="cded_btn_swap">
                 <property name="label" translatable="yes">Swap A/T</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -300,7 +370,6 @@
             <child>
               <object class="GtkButton" id="cded_btn_close">
                 <property name="label">gtk-close</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -315,7 +384,6 @@
             <child>
               <object class="GtkButton" id="cded_btn_gensql">
                 <property name="label" translatable="yes">Generate SQL</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -329,7 +397,6 @@
             <child>
               <object class="GtkButton" id="cded_btn_rip">
                 <property name="label" translatable="yes">Rip!</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

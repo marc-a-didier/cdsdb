@@ -73,6 +73,7 @@ class SQLGenerator
         @main_rartist = 0
         @recordid = 0
         @rgenre = 1
+        @rlabel = 0 # Unknown by default
 
         return self
     end
@@ -98,6 +99,18 @@ class SQLGenerator
         end
     end
 
+    def check_label
+        return if @disc.label.empty?
+
+        row = CDSDB.get_first_row("SELECT * FROM labels WHERE LOWER(sname)=LOWER(#{@disc.label.to_sql});")
+        if row.nil?
+            @rlabel = DBUtils::get_last_id("label")+1
+            @sqlf << "INSERT INTO labels VALUES (#{@rlabel}, #{@disc.label.to_sql});\n"
+        else
+            @rlabel = row[0]
+        end
+    end
+
     def insert_artists
         rartist = DBUtils.get_last_id("artist")
         @hartists.each_key do |key|
@@ -118,10 +131,12 @@ class SQLGenerator
         if row.nil?
             issegd = @is_segmented ? 1 : 0
             @recordid = DBUtils::get_last_id("record")+1
-            @sqlf << "INSERT INTO records (rrecord, icddbid, rartist, stitle, iyear, rgenre, rmedia, iplaytime, mnotes, idateadded, iissegmented) " \
+            @sqlf << "INSERT INTO records (rrecord, icddbid, rartist, stitle, iyear, rgenre, rmedia, iplaytime, rlabel, scatalog, mnotes, idateadded, iissegmented) " \
                         "VALUES (#{@recordid}, #{@disc.cddbid}, #{@main_rartist}, " \
                                 "#{@disc.title.to_sql}, #{@disc.year}, #{@rgenre}, " \
-                                "#{@disc.medium}, #{@disc.length}, #{@comments.to_sql}, #{Time.now.to_i}, #{issegd});\n"
+                                "#{@disc.medium}, #{@disc.length}, " \
+                                "#{@rlabel}, #{@disc.catalog.to_sql}" \
+                                "#{@comments.to_sql}, #{Time.now.to_i}, #{issegd});\n"
         else
             @recordid = row[0]
         end
@@ -167,6 +182,7 @@ class SQLGenerator
     def generate_inserts
         @sqlf = File.new(RESULT_SQL_FILE, "w")
         check_genre
+        check_label
         insert_artists
         insert_record
         insert_segments

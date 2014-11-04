@@ -2,7 +2,7 @@
 
 TrackData = Struct.new(:track, :title, :segment, :artist, :length)
 
-DiscInfo = Struct.new(:title, :artist, :genre, :year, :length, :medium, :cddbid, :tracks)
+DiscInfo = Struct.new(:title, :artist, :genre, :year, :length, :label, :catalog, :medium, :cddbid, :tracks)
 
 class CDEditorWindow
 
@@ -84,6 +84,8 @@ class CDEditorWindow
         @disc.artist = @glade[UIConsts::CDED_ENTRY_ARTIST].text
         @disc.genre = @glade[UIConsts::CDED_ENTRY_GENRE].text
         @disc.year = @glade[UIConsts::CDED_ENTRY_YEAR].text.to_i
+        @disc.label = @glade[UIConsts::CDED_ENTRY_LABEL].text
+        @disc.catalog = @glade[UIConsts::CDED_ENTRY_CATALOG].text
 
         @disc.tracks.each_with_index { |track, i|
             iter = @tv.model.get_iter(i.to_s)
