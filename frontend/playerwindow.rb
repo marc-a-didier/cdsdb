@@ -358,6 +358,8 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         if @queue[0] && new_provider != @queue[0].owner
             @queue.slice!(1, PREFETCH_SIZE)
             new_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
+            # Force to refetch if change was made after a previous fetch from another source
+            @file_prefetched = false
         end
     end
 
