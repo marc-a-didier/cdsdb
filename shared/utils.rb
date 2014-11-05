@@ -683,11 +683,11 @@ print "Checking #{file}\n"
     # tracks is an array of all tracks of a record.
     # replay gain is set for each track and for the record
     def self.compute_replay_gain(tracks, use_thread = true)
-        if tracks[0].record.fpeak != 0.0 || tracks[0].record.fgain != 0.0
-            LOG.info("Already gained: skipped #{tracks[0].record.stitle}")
-TRACE.debug("Already gained: skipped #{tracks[0].record.stitle}".red)
-            return
-        end
+#         if tracks[0].record.fpeak != 0.0 || tracks[0].record.fgain != 0.0
+#             LOG.info("Already gained: skipped #{tracks[0].record.stitle}")
+# TRACE.debug("Already gained: skipped #{tracks[0].record.stitle}".red)
+#             return
+#         end
 
         tracks.each do |trackui|
             unless trackui.playable?

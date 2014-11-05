@@ -11,8 +11,9 @@ class DBUtils
     end
 
     def self.log_exec(sql, host = "localhost")
-        CDSDB.execute(sql)
+        TRACE.debug(sql)
         LOG.info(sql+" [#{host}]")
+        CDSDB.execute(sql)
     end
 
     #
@@ -31,8 +32,8 @@ class DBUtils
 
     def self.exec_local_batch(sql, host)
         CDSDB.transaction { |db|
-            db.execute_batch(sql)
             LOG.info(sql+" [#{host}]")
+            db.execute_batch(sql)
         }
     end
 

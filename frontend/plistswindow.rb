@@ -113,9 +113,9 @@ public
 
         @tvpt.set_has_tooltip(true)
         @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
-            path = @tvpt.get_dest_row(x, y)
-            if path
-                iter = @pts.get_iter(path[0])
+            row = @tvpt.get_dest_row(x, y) # Returns: [path, position] or nil
+            if row
+                iter = @pts.get_iter(row[0]) # row[0] -> path (may use string in place of path class: path.to_s)
                 if iter
                     link = iter[TT_DATA]
                     if link

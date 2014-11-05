@@ -62,9 +62,9 @@ class PQueueWindow < TopWindow
 
         @tvpq.set_has_tooltip(true)
         @tvpq.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
-            path = @tvpq.get_dest_row(x, y)
-            if path
-                iter = @plq.get_iter(path[0])
+            row = @tvpq.get_dest_row(x, y) # Returns: [path, position] or nil
+            if row
+                iter = @plq.get_iter(row[0]) # row[0] -> path (may use string in place of path class: path.to_s)
                 if iter
                     pdata = iter[4]
                     if pdata
