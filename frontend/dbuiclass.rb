@@ -179,6 +179,7 @@ class RecordEditor
     def update_ptime
         return if rmedia != DBIntf::MEDIA_AUDIO_FILE
         DBUtils::update_record_playtime(@dbs.rrecord)
+        @dbs.sql_load
         self.field_to_widget("iplaytime")
     end
 
@@ -205,6 +206,7 @@ class SegmentEditor
 
     def update_ptime
         DBUtils::update_segment_playtime(@dbs.rsegment)
+        @dbs.sql_load
         #DBUtils::update_record_playtime(self.rrecord)
         self.field_to_widget("iplaytime")
     end
