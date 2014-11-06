@@ -197,6 +197,7 @@ require './my_rr_lib'
 # DONE: prefetch: lire les n premiers bytes du prochain morceau pour mettre en cache.
 #       voir si on peut jouer un morceau precharger en memoire
 
+# DONE: ajouter un tooltip avec des infos sur le morceau dans la playq & playlist, voir charts?
 # DONE: ajouter qqch dans le filtre pour specifier les morceaux les plus anciennement joues (cool, p.ex.)
 
 
@@ -245,7 +246,7 @@ require './my_rr_lib'
 # TODO: Ajouter un menu dans le player menu pour selectionner la source du player?
 #       Avec un mode 'automatique' qui fonctionne comme actuellement.
 
-# TODO: ajouter un tooltip avec des infos sur le morceau dans la playq & playlist, voir charts?
+# TODO: Check track existence by just finding the number of the track rather than the full name???
 
 
 # Peu realistes:

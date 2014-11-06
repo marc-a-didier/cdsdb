@@ -440,14 +440,15 @@ class TracksBrowser < Gtk::TreeView
     def on_trk_name_edited(widget, path, new_text)
         trackui = selected_track
         if trackui.track.stitle != new_text
-            trackui.setup_audio_file unless File.exists?(trackui.audio_file)
-#             file = trackui.audio_file
-            # Must rename on server BEFORE the sql update is done!!!
+            # WARNING It may happen that the file name has no extension
+            #         under exceptional and unclear circumstances
+
+            # Must rename on server BEFORE the sql update is done because it needs the old name to find the track!!
             MusicClient.new.rename_audio(trackui.track.rtrack, new_text) if CFG.remote?
+
             trackui.track.stitle = new_text
             trackui.track.sql_update
-# p file # file has no extension!!!
-#             trackui.tag_and_move_file(file) unless file.empty? # May be only on server
+
             trackui.tag_and_move_file(trackui.audio_file) if trackui.playable?
         end
     end

@@ -131,7 +131,7 @@ TRACE.debug("ALL CACHES cleared")
     # and from client to local mode (on server -> not found)
     def set_audio_status_from_to(from_value, to_value)
 #         @audio_status.each { |key, value| @audio_status[key] = to_value if value == from_value }
-        @audio.each { |key, value| @audio[key].status = to_value if value.status == from_value }
+        @audio.each { |key, value| value.status = to_value if value.status == from_value }
     end
 
     def dump_infos
