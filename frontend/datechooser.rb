@@ -27,15 +27,19 @@ class DateChooser
     def run
         @dlg.run { |response|
             if response == Gtk::Dialog::RESPONSE_OK
-                @dates = []
-                @dates << @glade[DTDLG_ENTRY_FROMDATE].text.to_date
-                @dates << @glade[DTDLG_ENTRY_TODATE].text.to_date
-                if @dates[0] == 0 && @dates[1] != 0
-                    @dates[0] = @dates[1]
-                    @dates[1] = 0
+                @dates = [@glade[DTDLG_ENTRY_FROMDATE].text.to_date, @glade[DTDLG_ENTRY_TODATE].text.to_date]
+
+                # Switch dates if only until date is filled
+                (@dates[0], @dates[1] = @dates[1], @dates[0]) if @dates[0] == 0
+
+                # Do nothing if no date given or no from date
+                if @dates[0] != 0
+                    # If no until date, set it to the same day
+                    @dates[1] = @dates[0] if @dates[1] == 0
+                    # Set until date to next day at 0:00
+                    @dates[1] += 60*60*24
                 end
-                @dates[1] = @dates[0]+60*60*24 if @dates[0] != 0 # Set for whole day
-                @dates = nil if @dates[0] == 0 && @dates[1] == 0
+                @dates = nil if @dates[0] == 0 # && @dates[1] == 0
             end
         }
         return self
