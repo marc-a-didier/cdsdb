@@ -77,6 +77,8 @@ public
         @tvpl.columns[1].sort_indicator = Gtk::SORT_ASCENDING
         @tvpl.columns[1].clickable = true
 
+        @tvpl.selection.mode = Gtk::SELECTION_BROWSE
+
         @tvpl.model = @pls
 
         @tvpl.signal_connect(:cursor_changed) { on_pl_change }
@@ -172,6 +174,16 @@ public
         [@tvpl, @tvpt].each { |tv| tv.columns[0].visible = is_visible }
     end
 
+    # Returns true if play list is the current track provider for the player
+    def track_provider?
+        return @playing_pl == @current_pl.rplist
+    end
+
+    # Notify the player to refetch next tracks if play list is the current track provider
+    def notify_player_if_provider
+        @mc.track_list_changed(self) if track_provider?
+    end
+
     def local?
         return @current_pl.iislocal == 1
     end
@@ -192,7 +204,7 @@ public
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
-            @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
+            notify_player_if_provider
         end
     end
 
@@ -240,7 +252,7 @@ p new_iorder
         end
 
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
-        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
+        notify_player_if_provider
         return true
     end
 
@@ -266,7 +278,7 @@ p new_iorder
 
         @tvpt.columns[col_id].sort_indicator = order
         @pts.set_sort_column_id(col_id, order)
-        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
+        notify_player_if_provider
     end
 
     #
@@ -285,7 +297,7 @@ p new_iorder
             @tracks += 1
             @ttime += iter[TT_DATA].track.iplaytime
         }
-        @current_pl.rplist == @playing_pl ? update_tracks_label : plist_infos
+        track_provider? ? update_tracks_label : plist_infos
     end
 
     # Displayed infos when plists window is not the current player provider
@@ -317,7 +329,7 @@ p new_iorder
 
     def dwl_file_name_notification(uilink, file_name)
         @mc.audio_link_ok(uilink)
-        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
+        notify_player_if_provider
     end
 
 
@@ -326,7 +338,7 @@ p new_iorder
     #
 
     def timer_notification(ms_time)
-        if @current_pl.rplist == @playing_pl
+        if track_provider?
             ms_time == -1 ? plist_infos : update_ptime_label(@remaining_time-ms_time)
         end
     end
@@ -372,7 +384,7 @@ p new_iorder
 
     def on_pl_change
         return if @tvpl.selection.selected.nil?
-        @mc.unfetch(self)
+        @mc.unfetch_player(self) # if track_provider?
         reset_player_data_state
         @current_pl.ref_load(@tvpl.selection.selected[0])
         update_tvpt
@@ -410,7 +422,7 @@ p new_iorder
             }
             renumber_tracks_list_store
             update_tracks_time_infos
-            @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
+            notify_player_if_provider
         else
             if UIUtils::get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
                 exec_sql("DELETE FROM pltracks WHERE rplist=#{@current_pl.rplist};")
@@ -433,7 +445,7 @@ p new_iorder
         @track_ref = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
         @pts.reorder(new_order) # It's magic!
-        @mc.track_list_changed(self) if @playing_pl == @current_pl.rplist
+        notify_player_if_provider
     end
 
     def do_renumber

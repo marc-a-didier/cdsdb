@@ -527,7 +527,7 @@ class TracksBrowser < Gtk::TreeView
 
     def reset_player_data_state
         @track_ref = -1
-        @mc.unfetch(self)
+        @mc.unfetch_player(self)
     end
 
     #

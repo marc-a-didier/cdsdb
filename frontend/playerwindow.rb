@@ -1,5 +1,5 @@
 
-PlayerData = Struct.new(:owner, :internal_ref, :uilink)
+PlayerData = Struct.new(:owner, :internal_ref, :uilink, :rplist)
 
 class PlayerWindow < TopWindow
 
@@ -319,7 +319,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             case msg
                 when :next
                     # We know it's not the last track because :next is not sent if no more track
-                    @queue[0].owner.notify_played(@queue[0], :next)
+                    @queue[0].owner.notify_played(@queue[0],  @queue[1].owner != @queue[0].owner ? :finish : :next)
                     @queue.shift
                 when :prev
                     @queue[0] = @queue[0].owner.get_track(@queue[0], :prev)
@@ -339,26 +339,53 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     # Called by mc if any change made in the provider track list
+    # or a change made in the NEXT provider if source has been switched
     def refetch(track_provider)
-        if @queue[0] && track_provider == @queue[0].owner
+#         if @queue[0] && track_provider == @queue[0].owner
+#         if (@queue[0] && track_provider == @queue[0].owner) || (@queue[1] && track_provider == @queue[1].owner)
+#         if @queue[0] #&& @queue[1] && track_provider == @queue[1].owner
+#         if is_next_provider(track_provider)
+        if @queue[0] && @queue[1] && @queue[1].owner == track_provider
+TRACE.debug("player refetched".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
+debug_queue
+            # Force to refetch if change occured after a previous fetch
+            @file_prefetched = false
         end
     end
 
     # Called by mc if we have to remove any pending tracks from the queue
+#     def unfetch(track_provider)
+# #         if @queue[0] && track_provider == @queue[0].owner
+#         if is_next_provider(track_provider)
+#             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
+#         end
+#     end
+
     def unfetch(track_provider)
-        if @queue[0] && track_provider == @queue[0].owner
+        if @queue[0] && @queue[1] && @queue[1] == track_provider
+TRACE.debug("player refetched".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
+debug_queue
         end
     end
 
+#     def is_current_provider(track_provider)
+#         return @queue[0] && @queue[0].owner == track_provider
+#     end
+
+#     def is_next_provider(track_provider)
+#         return @queue[0] && @queue[1] && @queue[1].owner == track_provider
+#     end
+
     # A new provider has been selected. If it has changed, remove all its remaining entries
     def provider_may_have_changed(new_provider)
-        if @queue[0] && new_provider != @queue[0].owner
+#         if @queue[0] && new_provider != @queue[0].owner
+        if @queue[0] && (@queue[1].nil? || @queue[1].owner != new_provider)
             @queue.slice!(1, PREFETCH_SIZE)
             new_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-            # Force to refetch if change was made after a previous fetch from another source
+            # Force to refetch if change occured after a previous fetch
             @file_prefetched = false
         end
     end

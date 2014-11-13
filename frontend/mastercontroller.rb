@@ -29,6 +29,8 @@ class MasterController
         # if view is filtered
         @main_filter = ""
 
+        @player_src = nil
+
         #
         # Create never destroyed windows
         #
@@ -41,8 +43,6 @@ class MasterController
         @memos    = MemosWindow.new(self)
 
         @mw = MainWindow.new(self)
-
-        @player_src = nil
     end
 
     #
@@ -262,18 +262,33 @@ class MasterController
 
     def set_player_source(src_window)
         @player_src = src_window
+#         @player.refetch(track_provider)
+#         track_list_changed(track_provider)
         @player.provider_may_have_changed(track_provider)
     end
 
+    # Called by the player to get the first track to from the provider
     def get_track(player_data, direction)
         return track_provider.get_track(player_data, direction)
     end
 
+    # Called by providers when something may have changed in the play order
     def track_list_changed(sender)
         @player.refetch(sender)
     end
 
-    def unfetch(sender)
+    # Called by the play list/browser when it's the provider and user moved to another play list/record
+    # In this case, erase the next tracks without providing any new one
+    def unfetch_player(sender)
         @player.unfetch(sender)
     end
+
+    # Play list specific call to handle the mess of changing the play list while playing
+#     def is_current_provider(track_provider)
+#         return @player.is_current_provider(track_provider)
+#     end
+#
+#     def is_next_provider(track_provider)
+#         return @player.is_next_provider(track_provider)
+#     end
 end
