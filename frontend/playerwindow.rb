@@ -345,8 +345,9 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 #         if (@queue[0] && track_provider == @queue[0].owner) || (@queue[1] && track_provider == @queue[1].owner)
 #         if @queue[0] #&& @queue[1] && track_provider == @queue[1].owner
 #         if is_next_provider(track_provider)
-        if @queue[0] && @queue[1] && @queue[1].owner == track_provider
-TRACE.debug("player refetched".red)
+#         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
+        if @queue[0] && @mc.track_provider == track_provider
+TRACE.debug("player refetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
 debug_queue
@@ -364,8 +365,8 @@ debug_queue
 #     end
 
     def unfetch(track_provider)
-        if @queue[0] && @queue[1] && @queue[1] == track_provider
-TRACE.debug("player refetched".red)
+        if @queue[0] && @queue[1] && @queue[1].owner == track_provider
+TRACE.debug("player unfetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
 debug_queue
         end
@@ -380,15 +381,15 @@ debug_queue
 #     end
 
     # A new provider has been selected. If it has changed, remove all its remaining entries
-    def provider_may_have_changed(new_provider)
-#         if @queue[0] && new_provider != @queue[0].owner
-        if @queue[0] && (@queue[1].nil? || @queue[1].owner != new_provider)
-            @queue.slice!(1, PREFETCH_SIZE)
-            new_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-            # Force to refetch if change occured after a previous fetch
-            @file_prefetched = false
-        end
-    end
+#     def provider_may_have_changed(new_provider)
+# #         if @queue[0] && new_provider != @queue[0].owner
+#         if @queue[0] && (@queue[1].nil? || @queue[1].owner != new_provider)
+#             @queue.slice!(1, PREFETCH_SIZE)
+#             new_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
+#             # Force to refetch if change occured after a previous fetch
+#             @file_prefetched = false
+#         end
+#     end
 
     def draw_level(msg_struct, channel)
         rms  = msg_struct["rms"][channel]

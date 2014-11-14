@@ -261,10 +261,11 @@ class MasterController
     end
 
     def set_player_source(src_window)
+puts("set player source called") #, active = #{widget.active?}")
         @player_src = src_window
-#         @player.refetch(track_provider)
+        @player.refetch(track_provider)
 #         track_list_changed(track_provider)
-        @player.provider_may_have_changed(track_provider)
+#         @player.provider_may_have_changed(track_provider)
     end
 
     # Called by the player to get the first track to from the provider

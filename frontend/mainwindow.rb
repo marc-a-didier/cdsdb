@@ -92,10 +92,10 @@ class MainWindow < TopWindow
             @trk_browser.check_for_audio_file if @trk_browser
         }
 
-        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)    { @mc.set_player_source(nil)          }
-        @glade[MM_PLAYER_SRC_PQ].signal_connect(:activate)      { @mc.set_player_source(@mc.pqueue)   }
-        @glade[MM_PLAYER_SRC_PLIST].signal_connect(:activate)   { @mc.set_player_source(@mc.plists)   }
-        @glade[MM_PLAYER_SRC_BROWSER].signal_connect(:activate) { @mc.set_player_source(@trk_browser) }
+        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)    { |widget| @mc.set_player_source(nil) if widget.active?         }
+        @glade[MM_PLAYER_SRC_PQ].signal_connect(:activate)      { |widget| @mc.set_player_source(@mc.pqueue) if widget.active?  }
+        @glade[MM_PLAYER_SRC_PLIST].signal_connect(:activate)   { |widget| @mc.set_player_source(@mc.plists) if widget.active?  }
+        @glade[MM_PLAYER_SRC_BROWSER].signal_connect(:activate) { |widget| @mc.set_player_source(@trk_browser)if widget.active? }
 
         # Action called from the memos window, equivalent to File/Save of the main window
         @glade[MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
