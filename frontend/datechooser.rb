@@ -32,14 +32,14 @@ class DateChooser
                 # Switch dates if only until date is filled
                 (@dates[0], @dates[1] = @dates[1], @dates[0]) if @dates[0] == 0
 
-                # Do nothing if no date given or no from date
+                # Do nothing if no dates given or no from date
                 if @dates[0] != 0
                     # If no until date, set it to the same day
                     @dates[1] = @dates[0] if @dates[1] == 0
                     # Set until date to next day at 0:00
                     @dates[1] += 60*60*24
                 end
-                @dates = nil if @dates[0] == 0 # && @dates[1] == 0
+                @dates = nil if @dates[0] == 0
             end
         }
         return self
