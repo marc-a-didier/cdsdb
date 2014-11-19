@@ -51,19 +51,6 @@ class PlayerWindow < TopWindow
 
 #         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
-#         pstr = '<span font="Pixel LCD7" background="#000000" foreground="#00FF00" size="12288"/>' #12:34-56:78</span>'
-#         pfd = Pango::FontDescription.new# ("[FAMILY-LIST]Digital-7 Mono[SIZE]16")
-#         pfd.set_family("Digital-7 Mono").set_size(16384)
-#         pfd.set_family("Pixel LCD7").set_size(12*1024)
-#         pfd.set_family("TPF Display").set_size(14336)
-# p pfd
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_font(pfd).queue_resize
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].set_text("12:34-56:78")
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_bg(Gtk::STATE_NORMAL, Gdk::Color.new(0, 0, 0))
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_text(Gtk::STATE_NORMAL, Gdk::Color.new(0, 255, 0))
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_text(Gtk::STATE_NORMAL, Gdk::Color.new(0, 255, 0))
-#         @mc.glade[UIConsts::PLAYER_LABEL_DURATION].modify_font(pfd).set_text("00:00").queue_resize # markup = '<span font="Digital-7 Mono" size="16384">00:00</span>'
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].set_markup("12:34-56:78").set_attributes(Pango.parse_markup(pstr)[0]).queue_resize
         @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
 
         # Intended to be a PlayerData array to pre-fetch tracks to play
@@ -198,9 +185,6 @@ class PlayerWindow < TopWindow
         # Clear title, time and slider
         reset_counter
         @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].set_text("00:00-00:00")
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_bg(Gtk::STATE_NORMAL, Gdk::Color.new(0, 0, 0))
-#         @mc.glade[UIConsts::PLAYER_LABEL_POS].modify_text(Gtk::STATE_NORMAL, Gdk::Color.new(0, 255, 0))
         @slider.value = 0.0
     end
 
@@ -281,10 +265,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
         TRACE.debug((info+", #{player_data.uilink.audio_file}]").cyan)
 
-        # UI operations may be delayed
-#         @total_time = player_data.uilink.tags.nil? ? player_data.uilink.track.iplaytime : player_data.uilink.tags.length*1000
-#         show_time(0)
-
+        # Delayed UI operations start now
         @tip_pix = nil
         setup_hscale
 
@@ -312,6 +293,7 @@ start = Time.now.to_f
         if msg == :stream_ended
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
 TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+            # If next provider is different from current, notify current provider it has finished
             @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
             @mc.notify_played(@queue[0].uilink)
             @queue.shift # Remove first entry, no more needed
@@ -339,13 +321,10 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     # Called by mc if any change made in the provider track list
-    # or a change made in the NEXT provider if source has been switched
+    # or if player source has been switched
+    # Second part of test makes sure that we don't refetch from a provider that is
+    # not the current provider as selected in the source menu
     def refetch(track_provider)
-#         if @queue[0] && track_provider == @queue[0].owner
-#         if (@queue[0] && track_provider == @queue[0].owner) || (@queue[1] && track_provider == @queue[1].owner)
-#         if @queue[0] #&& @queue[1] && track_provider == @queue[1].owner
-#         if is_next_provider(track_provider)
-#         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
         if @queue[0] && @mc.track_provider == track_provider
 TRACE.debug("player refetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
@@ -357,13 +336,7 @@ debug_queue
     end
 
     # Called by mc if we have to remove any pending tracks from the queue
-#     def unfetch(track_provider)
-# #         if @queue[0] && track_provider == @queue[0].owner
-#         if is_next_provider(track_provider)
-#             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
-#         end
-#     end
-
+    # Only play list uses it, when the current playing list is deselected (another one is selected)
     def unfetch(track_provider)
         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
 TRACE.debug("player unfetched by #{track_provider.class.name}".red)
@@ -371,25 +344,6 @@ TRACE.debug("player unfetched by #{track_provider.class.name}".red)
 debug_queue
         end
     end
-
-#     def is_current_provider(track_provider)
-#         return @queue[0] && @queue[0].owner == track_provider
-#     end
-
-#     def is_next_provider(track_provider)
-#         return @queue[0] && @queue[1] && @queue[1].owner == track_provider
-#     end
-
-    # A new provider has been selected. If it has changed, remove all its remaining entries
-#     def provider_may_have_changed(new_provider)
-# #         if @queue[0] && new_provider != @queue[0].owner
-#         if @queue[0] && (@queue[1].nil? || @queue[1].owner != new_provider)
-#             @queue.slice!(1, PREFETCH_SIZE)
-#             new_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-#             # Force to refetch if change occured after a previous fetch
-#             @file_prefetched = false
-#         end
-#     end
 
     def draw_level(msg_struct, channel)
         rms  = msg_struct["rms"][channel]
@@ -503,22 +457,9 @@ debug_queue
         @total_time = track_len.parse[1].to_f/Gst::MSECOND
         @slider.set_range(0.0, @total_time)
         @total_time = @total_time.to_i
-#         @mc.glade[UIConsts::PLAYER_LABEL_DURATION].label = format_time(@total_time)
 
         @playbin.query(@track_pos)
         update_hscale
-        #@mc.glade[UIConsts::PLAYER_HSCALE].set_range(0.0, track_len.parse[1].to_f/Gst::MSECOND)
-        #@slider.update_policy = Gtk::UPDATE_DISCONTINUOUS
-#        duration = track_len.parse[1].to_f/Gst::MSECOND
-#         @mc.glade[UIConsts::PLAYER_HSCALE].adjustment = Gtk::Adjustment.new(0.0,
-#                                                                             0.0, duration,
-#                                                                             duration/100.0,
-#                                                                             duration/10.0, duration/1000.0)
-#         @mc.glade[UIConsts::PLAYER_HSCALE].adjustment = Gtk::Adjustment.new(0.0,
-#                                                                             0.0, duration,
-#                                                                             0.0, # step inc duration/100.0,
-#                                                                             duration/10.0, # page inc
-#                                                                             0.0) # page size
 
         @timer = Gtk::timeout_add(500) { update_hscale; true }
     end
@@ -565,10 +506,6 @@ debug_queue
     def show_time(itime)
         if @time_view_mode == ELAPSED
             time_to_digits(format_time(@total_time)+"-"+format_time(itime))
-#             @mc.glade[UIConsts::PLAYER_LABEL_POS].set_text(format_time(@total_time)+"-"+format_time(itime))
-#             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = format_time(itime)
-#             @mc.glade[UIConsts::PLAYER_LABEL_POS].markup = '<span font="Digital-7 Mono" size="16384">00:00</span>'.sub(/00:00/, format_time(itime))
-
         else
             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
         end
