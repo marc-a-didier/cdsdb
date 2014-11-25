@@ -336,7 +336,8 @@ debug_queue
     end
 
     # Called by mc if we have to remove any pending tracks from the queue
-    # Only play list uses it, when the current playing list is deselected (another one is selected)
+    # Play list uses it, when the current playing list is deselected (another one is selected)
+    # Also called by mc when source changed to remove the tracks from previous provider
     def unfetch(track_provider)
         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
 TRACE.debug("player unfetched by #{track_provider.class.name}".red)
@@ -506,6 +507,8 @@ debug_queue
     def show_time(itime)
         if @time_view_mode == ELAPSED
             time_to_digits(format_time(@total_time)+"-"+format_time(itime))
+            # To show decreasing time use uncomment this
+            # time_to_digits(format_time(@total_time-itime)+"-"+format_time(itime))
         else
             @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
         end

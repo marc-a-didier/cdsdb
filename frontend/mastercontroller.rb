@@ -261,11 +261,15 @@ class MasterController
     end
 
     def set_player_source(src_window)
-puts("set player source called") #, active = #{widget.active?}")
-        @player_src = src_window
-        @player.refetch(track_provider)
-#         track_list_changed(track_provider)
-#         @player.provider_may_have_changed(track_provider)
+        # Check if provider REALLY changed. It may have changed from Automatic to Play queue
+        # and in this case, there's nothing to do.
+        if src_window != track_provider
+            # Remove tracks from the queue of previous provider
+            @player.unfetch(track_provider)
+            # Set new provider and refetch player from it
+            @player_src = src_window
+            @player.refetch(track_provider)
+        end
     end
 
     # Called by the player to get the first track to from the provider
@@ -283,13 +287,4 @@ puts("set player source called") #, active = #{widget.active?}")
     def unfetch_player(sender)
         @player.unfetch(sender)
     end
-
-    # Play list specific call to handle the mess of changing the play list while playing
-#     def is_current_provider(track_provider)
-#         return @player.is_current_provider(track_provider)
-#     end
-#
-#     def is_next_provider(track_provider)
-#         return @player.is_next_provider(track_provider)
-#     end
 end
