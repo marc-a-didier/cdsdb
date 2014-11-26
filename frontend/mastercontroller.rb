@@ -193,7 +193,7 @@ class MasterController
 
     def notify_played(uilink, host = "")
         # If rtrack is -1 the track has been dropped into the pq from the file system
-        return if uilink.track.rtrack == -1 || uilink.track.banned?
+        return if uilink.track.rtrack == -1 # || uilink.track.banned?
 
         host = Socket.gethostname if host.empty?
 
@@ -205,6 +205,8 @@ class MasterController
         @mw.trk_browser.update_infos
 
         Thread.new {
+            @mw.set_window_title
+
             @charts.live_update(uilink) if CFG.live_charts_update? && @charts.window.visible?
 
             MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?

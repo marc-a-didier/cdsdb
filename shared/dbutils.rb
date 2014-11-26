@@ -50,6 +50,10 @@ class DBUtils
         return id.nil? ? 0 : id
     end
 
+    def self.get_total_played
+        return CDSDB.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
+    end
+
 #     def self.update_track_stats(dblink, hostname)
 #         return if dblink.track.rtrack <= 0 # Possible when files are dropped into the play queue
 #

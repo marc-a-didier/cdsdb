@@ -228,10 +228,16 @@ class MainWindow < TopWindow
         @art_browser.load_entries
 
         # At last, we're ready to go!
+        set_window_title
+
         @glade[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
         @glade[MAIN_WINDOW].show
 
         set_dbrefs_visibility
+    end
+
+    def set_window_title
+        @glade[MAIN_WINDOW].title = "CDsDB -- [#{DBUtils.get_total_played}]"
     end
 
     def on_urls_received(widget, context, x, y, data, info, time)
@@ -400,6 +406,7 @@ TRACE.debug("new db version=#{srv_db_version}")
             DBCACHE.clear
             DBIntf.connect
             @mc.reload_plists.reload_filters
+            set_window_title
         end
     end
 
