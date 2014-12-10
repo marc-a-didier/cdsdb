@@ -284,7 +284,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
 
     def debug_queue
         puts("Queue: #{@queue.size} entries:")
-        @queue.each { |entry| puts("  "+entry.uilink.track.stitle) }
+        @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
     end
 
     def new_track(msg)

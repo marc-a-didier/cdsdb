@@ -257,7 +257,7 @@ p new_iorder
     end
 
     def get_selection
-#         return Array[@tvpt.selection.selected_each { |model, path, iter| iter[TT_DATA].clone }]
+#         return Array.new(@tvpt.selection.count_selected_rows).fill { @tvpt.selection.selected_each { |model, path, iter| iter[TT_DATA] } } #.clone } }
         links = []
         @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA] } #.clone }
         return links
@@ -271,7 +271,7 @@ p new_iorder
 
         order = @pts.sort_column_id[1]
         if col_id == @pts.sort_column_id[0]
-            order == Gtk::SORT_ASCENDING ? order = Gtk::SORT_DESCENDING : order = Gtk::SORT_ASCENDING
+            order = order == Gtk::SORT_ASCENDING ? Gtk::SORT_DESCENDING : Gtk::SORT_ASCENDING
         else
             @tvpt.columns[@pts.sort_column_id[0]].sort_indicator = nil
         end
