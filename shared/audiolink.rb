@@ -196,7 +196,7 @@ class AudioLink < DBCacheLink
 
     def tag_and_move_dir(dir, &call_back)
         # Get track count
-        trk_count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
+        trk_count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
 
         # Get recursivelly all music files from the selected dir
         files = []
@@ -223,7 +223,7 @@ class AudioLink < DBCacheLink
 
         # Loops through each track
         i = 0
-        CDSDB.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
+        DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
             set_track_ref(row[0])
             set_segment_ref(track.rsegment)
             set_artist_ref(segment.rartist)

@@ -285,7 +285,7 @@ class Cdsdb
     def initialize
         CFG.set_admin_mode(has_arg("--admin"))
 
-        CDSDB.execute("PRAGMA synchronous=OFF;")
+        DBIntf.execute("PRAGMA synchronous=OFF;")
 
         Thread.abort_on_exception = true
 

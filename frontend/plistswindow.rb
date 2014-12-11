@@ -190,17 +190,17 @@ public
 
     def exec_sql(sql, log_sql = true)
         if local?
-            log_sql == true ? DBUtils::log_exec(sql) : CDSDB.execute(sql)
+            log_sql == true ? DBUtils::log_exec(sql) : DBIntf.execute(sql)
         else
             DBUtils::client_sql(sql)
         end
     end
 
     def add_to_plist(rplist, rtrack)
-        count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM pltracks WHERE rplist=#{rplist} AND rtrack=#{rtrack};")
+        count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM pltracks WHERE rplist=#{rplist} AND rtrack=#{rtrack};")
         count = 0 if count > 0 && UIUtils::get_response("This track is already in this play list. Add anyway?") == Gtk::Dialog::RESPONSE_OK
         if count == 0
-            seq = CDSDB.get_first_value("SELECT MAX(iorder) FROM pltracks WHERE rplist=#{rplist}").to_i+1
+            seq = DBIntf.get_first_value("SELECT MAX(iorder) FROM pltracks WHERE rplist=#{rplist}").to_i+1
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
@@ -372,7 +372,7 @@ p new_iorder
 
     def do_check_orphans
         @pts.each do |model, path, iter|
-            row = CDSDB.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_DATA].track.rtrack};")
+            row = DBIntf.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{iter[TT_DATA].track.rtrack};")
             p iter if row.nil?
         end
     end
@@ -551,7 +551,7 @@ p new_iorder
     end
 
     def position_browser(rpltrack)
-        rplist = CDSDB.get_first_value("SELECT rplist FROM pltracks WHERE rpltrack=#{rpltrack};")
+        rplist = DBIntf.get_first_value("SELECT rplist FROM pltracks WHERE rpltrack=#{rpltrack};")
         if sel_iter = @tvpl.find_ref(rplist)
             @tvpl.set_cursor(sel_iter.path, nil, false)
             @tvpt.set_cursor(sel_iter.path, nil, false) if sel_iter = @tvpt.find_ref(rpltrack)
@@ -560,7 +560,7 @@ p new_iorder
 
     def update_tvpl
         @pls.clear
-        CDSDB.execute( "SELECT rplist, sname FROM plists" ) do |row|
+        DBIntf.execute( "SELECT rplist, sname FROM plists" ) do |row|
             iter = @pls.append
             iter[0] = row[0]
             iter[1] = row[1]
@@ -574,7 +574,7 @@ p new_iorder
 
         # The cache mechanism slows the things a bit down when a play list
         # is loaded for the first time
-        CDSDB.execute(
+        DBIntf.execute(
             "SELECT * FROM pltracks WHERE rplist=#{@current_pl.rplist} ORDER BY iorder;") do |row|
                 iter = @pts.append
                 iter[TT_REF]   = row[TDB_RPLTRACK]

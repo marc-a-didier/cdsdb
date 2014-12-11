@@ -81,9 +81,9 @@ class Navigator
     end
 
     def home_page
-        artists = CDSDB.get_first_value("SELECT COUNT(rartist) FROM artists")
-        records, play_time = CDSDB.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records")
-        tracks = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks")
+        artists = DBIntf.get_first_value("SELECT COUNT(rartist) FROM artists")
+        records, play_time = DBIntf.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records")
+        tracks = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks")
 
 
         page = set_styles([:main_title_style])
@@ -93,7 +93,7 @@ class Navigator
                   </div>}
         page += "<h1>Genres</h1><br><br><ul>"
         sql = "SELECT * FROM genres WHERE rgenre<>0 ORDER BY LOWER(sname)"
-        CDSDB.execute(sql) { |row|
+        DBIntf.execute(sql) { |row|
             page += %{<a href="/muse?genre=#{row[0]}">#{CGI::escapeHTML(row[1])}</a><br/>}
         }
         page += "</ul>"
@@ -110,7 +110,7 @@ class Navigator
                     INNER JOIN segments ON segments.rartist = artists.rartist
                     INNER JOIN records ON records.rrecord = segments.rrecord
                     WHERE records.rgenre=#{rgenre} ORDER BY LOWER(artists.sname)}
-        CDSDB.execute(sql) { |row|
+        DBIntf.execute(sql) { |row|
             page += %{<a href="/muse?artist=#{row[0]}">#{CGI::escapeHTML(row[1])}</a><br>}
         }
         page += "</ul>"
@@ -128,7 +128,7 @@ class Navigator
         page += %Q{<h1>Records</h1><br><h2>#{path}</h2><br><table border="1">}
         sql = %Q{SELECT DISTINCT(rrecord) FROM segments WHERE rartist=#{rartist};}
         record = RecordDBClass.new
-        CDSDB.execute(sql) { |segment|
+        DBIntf.execute(sql) { |segment|
             record.ref_load(segment[0])
             image_file = Utils::get_cover_file_name(record.rrecord, 0, record.irecsymlink)
             image_file = CFG.covers_dir+"default.png" if image_file.empty?
@@ -161,7 +161,7 @@ class Navigator
                  WHERE segments.rrecord=#{rrecord} AND segments.rartist=#{@artist.rartist}
                  ORDER BY tracks.iorder}
         track_infos = TrackInfos.new
-        CDSDB.execute(sql) { |row|
+        DBIntf.execute(sql) { |row|
             @track.ref_load(row[0])
             file_name = Utils::audio_file_exists(track_infos.get_track_infos(@track.rtrack)).file_name
             page += "<tr>"

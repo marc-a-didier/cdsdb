@@ -60,7 +60,7 @@ module DBClassIntf
 
     # Load a full sqlite3 row from the pk field
     def sql_load
-        row = CDSDB.get_first_row("SELECT * FROM #{tbl_name} #{generate_where_on_pk};")
+        row = DBIntf.get_first_row("SELECT * FROM #{tbl_name} #{generate_where_on_pk};")
         return row.nil? ? reset : load_from_row(row)
     end
 
@@ -89,7 +89,7 @@ TRACE.debug("DB update : #{sql}".red)
     end
 
     def get_last_id
-        id = CDSDB.get_first_value("SELECT MAX(#{self.members[0].to_s}) FROM #{tbl_name};")
+        id = DBIntf.get_first_value("SELECT MAX(#{self.members[0].to_s}) FROM #{tbl_name};")
         return id.nil? ? 0 : id.to_i
     end
 
@@ -151,7 +151,7 @@ SegmentDBClass = Struct.new(:rsegment, :rrecord, :rartist, :iorder, :stitle, :ip
 
     def add_new(rartist, rrecord)
         reset
-        self.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
+        self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
         self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
         self.rsegment = get_last_id+1
         self.rrecord = rrecord
@@ -162,7 +162,7 @@ SegmentDBClass = Struct.new(:rsegment, :rrecord, :rartist, :iorder, :stitle, :ip
 
     # Loads values from the first segment of a given record
     def first_segment(rrecord)
-        return load_from_row(CDSDB.get_first_row("SELECT * FROM segments WHERE rrecord=#{rrecord};"))
+        return load_from_row(DBIntf.get_first_row("SELECT * FROM segments WHERE rrecord=#{rrecord};"))
     end
 end
 
@@ -173,7 +173,7 @@ TrackDBClass = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :st
 
     def add_new(rrecord, rsegment)
         reset
-        self.iorder = CDSDB.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
+        self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
         self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
         self.rtrack = get_last_id+1
         self.rrecord = rrecord

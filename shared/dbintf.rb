@@ -3,7 +3,7 @@
 # Interface to access the database
 #
 
-class DBIntf
+module DBIntf
 
     TBL_GENRES      = "genre"
     TBL_COLLECTIONS = "collection"
@@ -27,39 +27,23 @@ class DBIntf
 
     SQL_NUM_TYPES = ["INTEGER", "SMALLINT"]
 
+    class << self
+        def connection
+            @db ||= SQLite3::Database.new(self.build_db_name)
+        end
 
-    @@db = nil
+        def method_missing(method, *args, &block)
+            self.connection.send(method, *args, &block)
+        end
 
-    # Returns the current SQLite3 database instance (instantiate a new one if needed)
-    #
-    # Putain de bordel de merde: les nouvelles version de la lib ont deprecie type_translation
-    #                            et maintenant tout est retourne en fonction du type dans la base.
-    # Resultat: tout le code a passer en revue...
-    #
+        def disconnect
+            self.connection.close
+            @db = nil
+        end
 
-    def self.connection
-        return @@db.nil? ? connect  : @@db
+        # Build the database name from the config resource(client)/database(server) dir and the db version
+        def build_db_name(db_version = CFG.db_version)
+            return CFG.database_dir+"cds"+db_version+".db"
+        end
     end
-
-    def self.connect
-        Object.instance_eval { remove_const(:CDSDB) } if defined?(::CDSDB)
-        @@db = SQLite3::Database.new(self.build_db_name)
-        Object.instance_eval("::CDSDB = DBIntf.connection")
-#         return @@db
-    end
-
-    # Close and release the database connection
-    def self.disconnect
-        return unless @@db
-        @@db.close
-        @@db = nil
-    end
-
-    # Build the database name from the config resource(client)/database(server) dir and the db version
-    def self.build_db_name(db_version = CFG.db_version)
-        return CFG.database_dir+"cds"+db_version+".db"
-    end
-
 end
-
-CDSDB = DBIntf.connection

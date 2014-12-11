@@ -303,7 +303,7 @@ class RippedRowProp < GenRowProp
                      WHERE records.idateripped <> 0
                      ORDER BY records.idateripped DESC LIMIT 100;}
             count = 0
-            CDSDB.execute(sql) { |row|
+            DBIntf.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
                 child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+
@@ -410,7 +410,7 @@ class RecordsRowProp < GenRowProp
             sql = %Q{SELECT records.stitle, artists.rartist, artists.sname, records.rrecord FROM records
                      INNER JOIN artists ON records.rartist = artists.rartist;}
 #                      ORDER BY LOWER(records.stitle);}
-            CDSDB.execute(sql) { |row|
+            DBIntf.execute(sql) { |row|
                 child = model.append(iter)
                 child[0] = row[1]
 #                 child[1] = '<span color="green">'+CGI::escapeHTML(row[0])+"</span>\n<i>"+CGI::escapeHTML(row[2])+"</i>"
@@ -464,9 +464,9 @@ class ArtistsBrowser < Gtk::TreeView
         self.visible = true
         self.enable_search = true
         self.search_column = 3
-        
+
         selection.mode = Gtk::SELECTION_SINGLE
-        
+
         name_renderer = Gtk::CellRendererText.new
 #         if CFG.admin?
 #             name_renderer.editable = true
@@ -614,7 +614,7 @@ class ArtistsBrowser < Gtk::TreeView
 
         sql = iter[2].select_for_level(model.iter_depth(iter), iter, @mc, model)
 
-        CDSDB.execute(sql) { |row| map_sub_row_to_entry(row, iter) } unless sql.empty?
+        DBIntf.execute(sql) { |row| map_sub_row_to_entry(row, iter) } unless sql.empty?
 
         # Perform any post selection required action. By default, removes the first fake child
         iter[2].post_select(model, iter, @mc)
@@ -726,16 +726,16 @@ class ArtistsBrowser < Gtk::TreeView
         sql += " AND tracks.iplayed=0;"
 
 p sql
-        remove_artist(rartist) if CDSDB.get_first_value(sql) == 0
+        remove_artist(rartist) if DBIntf.get_first_value(sql) == 0
     end
 
     def show_artists_infos
         # TODO: the select on distinct playtime is or may be wrong if two rec/seg have the same length...
-        recs_infos = CDSDB.get_first_row(
+        recs_infos = DBIntf.get_first_row(
             %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(records.iplaytime)), COUNT(tracks.rtrack) FROM records
                INNER JOIN tracks ON tracks.rrecord=records.rrecord
                WHERE rartist=#{@tvs[0]};})
-        comp_infos = CDSDB.get_first_row(
+        comp_infos = DBIntf.get_first_row(
             %Q{SELECT COUNT(DISTINCT(records.rrecord)), SUM(DISTINCT(segments.iplaytime)), COUNT(tracks.rtrack) FROM records
                INNER JOIN segments ON segments.rrecord=records.rrecord
                INNER JOIN tracks ON tracks.rsegment=segments.rsegment

@@ -32,12 +32,12 @@ end
 
 # A bit of treeview extension...
 # class Gtk::TreeView
-# 
+#
 #     def find_ref(ref, column = 0)
 #         model.each { |model, path, iter| return iter if iter[column] == ref }
 #         return nil
 #     end
-# 
+#
 # end
 
 
@@ -169,9 +169,9 @@ class UIUtils
 
     def UIUtils::delete_artist(rartist)
         msg = ""
-        count = CDSDB.get_first_value("SELECT COUNT(rartist) FROM records WHERE rartist=#{rartist};")
+        count = DBIntf.get_first_value("SELECT COUNT(rartist) FROM records WHERE rartist=#{rartist};")
         msg = "Error: #{count} reference(s) still in records table." if count > 0
-        count = CDSDB.get_first_value("SELECT COUNT(rartist) FROM segments WHERE rartist=#{rartist};")
+        count = DBIntf.get_first_value("SELECT COUNT(rartist) FROM segments WHERE rartist=#{rartist};")
         if count > 0
             msg += "\n" if msg.length > 0
             msg += "Error: #{count} reference(s) still in segments table."
@@ -186,7 +186,7 @@ class UIUtils
     end
 
     def UIUtils::delete_segment(rsegment)
-        count = CDSDB.get_first_value("SELECT COUNT(rsegment) FROM tracks WHERE rsegment=#{rsegment};")
+        count = DBIntf.get_first_value("SELECT COUNT(rsegment) FROM tracks WHERE rsegment=#{rsegment};")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in tracks table.", Gtk::MessageDialog::ERROR)
         else
@@ -196,7 +196,7 @@ class UIUtils
     end
 
     def UIUtils::delete_record(rrecord)
-        count = CDSDB.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rrecord=#{rrecord};")
+        count = DBIntf.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rrecord=#{rrecord};")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in segments table.", Gtk::MessageDialog::ERROR)
         else
@@ -206,14 +206,14 @@ class UIUtils
     end
 
     def UIUtils::delete_track(rtrack)
-        count = CDSDB.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{rtrack};")
+        count = DBIntf.get_first_value("SELECT COUNT(rpltrack) FROM pltracks WHERE rtrack=#{rtrack};")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in play lists.", Gtk::MessageDialog::ERROR)
         else
-            row = CDSDB.execute("SELECT rsegment, rrecord FROM tracks WHERE rtrack=#{rtrack}")
-            count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{row[0][0]}")
+            row = DBIntf.execute("SELECT rsegment, rrecord FROM tracks WHERE rtrack=#{rtrack}")
+            count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{row[0][0]}")
             del_seg = count == 1 && UIUtils::get_response("This is the last track of its segment. Remove it along?") == Gtk::Dialog::RESPONSE_OK
-            count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{row[0][1]}")
+            count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{row[0][1]}")
             del_rec = count == 1 && UIUtils::get_response("This is the last track of its record. Remove it along?") == Gtk::Dialog::RESPONSE_OK
 
             DBUtils::client_sql("DELETE FROM logtracks WHERE rtrack=#{rtrack};")

@@ -10,7 +10,7 @@ class PlayHistoryDialog
 
     def show_ranking(sql, ref)
         n = prev = rank = pos = 0
-        CDSDB.execute(sql) { |row|
+        DBIntf.execute(sql) { |row|
             n += 1
             rank = n if prev != row[0]
             if row[1] == ref
@@ -32,7 +32,7 @@ class PlayHistoryDialog
 
         @tv.model = Gtk::ListStore.new(Integer, String, String)
         count = 0
-        CDSDB.execute(
+        DBIntf.execute(
             %Q{SELECT logtracks.idateplayed, hostnames.sname FROM logtracks
                INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
                WHERE rtrack=#{rtrack} ORDER BY idateplayed DESC;}) do |row|
@@ -62,7 +62,7 @@ class PlayHistoryDialog
         @tv.model = Gtk::ListStore.new(Integer, String, String, String, String)
 
         count = 0
-        CDSDB.execute(
+        DBIntf.execute(
             %Q{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hostnames.sname FROM tracks
                INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
                INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname

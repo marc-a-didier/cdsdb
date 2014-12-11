@@ -108,7 +108,7 @@ class RecordsBrowser < Gtk::TreeView
     def load_entries
         model.clear
 
-        CDSDB.execute(generate_rec_sql) do |row|
+        DBIntf.execute(generate_rec_sql) do |row|
             iter = model.append(nil)
 
             dblink = RecordUI.new.set_record_ref(row[2]).set_segment_ref(row[0])
@@ -205,7 +205,7 @@ class RecordsBrowser < Gtk::TreeView
         iter = find_ref(uilink.record.rrecord)
         return true if iter.nil?
 
-        row = CDSDB.get_first_row(generate_rec_sql(uilink.record.rrecord))
+        row = DBIntf.get_first_row(generate_rec_sql(uilink.record.rrecord))
 p row
         if row
             map_rec_row_to_entry(row, iter)
@@ -221,7 +221,7 @@ p row
 #         iter = find_ref(rrecord)
 #         return true if iter.nil?
 #
-#         row = CDSDB.get_first_row(generate_rec_sql(rrecord))
+#         row = DBIntf.get_first_row(generate_rec_sql(rrecord))
 # p row
 #         if row
 #             map_rec_row_to_entry(row, iter)
@@ -247,7 +247,7 @@ p row
         # Exit if row has already been loaded, children are already there
         return if iter.first_child && iter.first_child[RTV_REF] != -1
 
-        CDSDB.execute(generate_seg_sql(iter[RTV_REF])) { |row|
+        DBIntf.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             child = model.append(iter)
 
             dblink = RecordUI.new.set_segment_ref(row[0])

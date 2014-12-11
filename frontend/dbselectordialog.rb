@@ -54,7 +54,7 @@ class DBSelectorDialog
     def do_op_delete()
         iter = @tv.selection().selected()
         return if iter.nil?
-        count = CDSDB.get_first_value("SELECT COUNT(rrecord) FROM records WHERE #{@tbl_ref}=#{iter[0]}")
+        count = DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE #{@tbl_ref}=#{iter[0]}")
         if count > 0
             UIUtils::show_message("Error: #{count} reference(s) still in records table", Gtk::MessageDialog::ERROR)
         else
@@ -67,8 +67,8 @@ class DBSelectorDialog
     def run(tbl_id)
         @tbl_name = tbl_id+"s"
         @tbl_ref  = "r"+tbl_id
-        #CDSDB.execute( "SELECT * FROM #{@tbl_name} WHERE #{@tbl_ref} > 1;" ) do |row|
-        CDSDB.execute( "SELECT * FROM #{@tbl_name};" ) do |row|
+        #DBIntf.execute( "SELECT * FROM #{@tbl_name} WHERE #{@tbl_ref} > 1;" ) do |row|
+        DBIntf.execute( "SELECT * FROM #{@tbl_name};" ) do |row|
             iter = @tv.model.append()
             iter[0] = row[0]
             iter[1] = row[1]

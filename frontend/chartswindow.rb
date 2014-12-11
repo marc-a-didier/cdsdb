@@ -140,7 +140,7 @@ class ChartsWindow < TopWindow
             links << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink #.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            CDSDB.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }
+            DBIntf.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }
         end
         return links
     end
@@ -202,11 +202,11 @@ class ChartsWindow < TopWindow
     #
     def generate_play_list
         rplist = DBUtils::get_last_id("plist")+1
-        CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
+        DBIntf.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
         rpltrack = DBUtils::get_last_id("pltrack")
         count = 1
         @lsc.each { |model, path, iter|
-            CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count*1024});")
+            DBIntf.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count*1024});")
             count += 1
         }
     end
@@ -283,7 +283,7 @@ class ChartsWindow < TopWindow
         @entries.clear
         i = rank = 0
         last_played = -1
-        CDSDB.execute(generate_sql) do |row|
+        DBIntf.execute(generate_sql) do |row|
             entry = ChartEntry.new
             entry.entry = i
             entry.played = row[0].to_i

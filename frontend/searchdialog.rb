@@ -99,7 +99,7 @@ class SearchDialog
         end
 
         i = 0
-        CDSDB.execute(sql) do |row|
+        DBIntf.execute(sql) do |row|
             i += 1
             iter = @tv.model.append
             iter[0] = i

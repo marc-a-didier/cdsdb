@@ -125,7 +125,7 @@ class TracksBrowser < Gtk::TreeView
                 smtpm = Gtk::Menu.new
                 items = []
                 if @mc.record.segmented?
-                    CDSDB.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") { |row|
+                    DBIntf.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") { |row|
                         items << Gtk::MenuItem.new(row[0], false)
                         items.last.signal_connect(:activate) { |widget| on_trk_segment_assign(widget) }
                         smtpm.append(items.last)
@@ -143,10 +143,10 @@ class TracksBrowser < Gtk::TreeView
             sub_menu = @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].submenu
             @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].remove_submenu
             sub_menu.destroy if sub_menu
-            if CDSDB.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
+            if DBIntf.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
                 pltpm = Gtk::Menu.new
                 items = []
-                CDSDB.execute("SELECT sname FROM plists ORDER BY sname;") { |row|
+                DBIntf.execute("SELECT sname FROM plists ORDER BY sname;") { |row|
                     items << Gtk::MenuItem.new(row[0], false)
                     items.last.signal_connect(:activate) { |widget| on_trk_add_to_pl(widget) }
                     pltpm.append(items.last)
@@ -220,7 +220,7 @@ class TracksBrowser < Gtk::TreeView
         #@mc.artist.compile? ? @tv.columns[TTV_ART_OR_SEG].title = "Artist" : @tv.columns[TTV_ART_OR_SEG].title = "Segment"
         columns[TTV_ART_OR_SEG].title = @mc.artist.compile? ? "Artist" : "Segment"
 
-        CDSDB.execute(generate_sql) { |row| map_row_to_entry(row, model.append) }
+        DBIntf.execute(generate_sql) { |row| map_row_to_entry(row, model.append) }
 
         # Sets the icons matching the file status for each entry
         if @mc.glade[UIConsts::MM_VIEW_AUTOCHECK].active?
@@ -242,7 +242,7 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def update_entry
-        map_row_to_entry(CDSDB.get_first_row(generate_sql(@trklnk.track.rtrack)), position_to(@trklnk.track.rtrack))
+        map_row_to_entry(DBIntf.get_first_row(generate_sql(@trklnk.track.rtrack)), position_to(@trklnk.track.rtrack))
     end
 
     def get_selection
@@ -455,7 +455,7 @@ class TracksBrowser < Gtk::TreeView
 
     def on_trk_segment_assign(widget)
         selection.selected_each { |model, path, iter|
-            rsegment = CDSDB.get_first_value(
+            rsegment = DBIntf.get_first_value(
                                "SELECT rsegment FROM segments " \
                                "WHERE rrecord=#{@track.rrecord} AND stitle=#{widget.child.label.to_sql}")
             DBUtils::client_sql("UPDATE tracks SET rsegment=#{rsegment} WHERE rtrack=#{iter[TTV_REF]}")
@@ -469,7 +469,7 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_trk_add_to_pl(widget)
-        rplist = CDSDB.get_first_value("SELECT rplist FROM plists WHERE sname=#{widget.child.label.to_sql}")
+        rplist = DBIntf.get_first_value("SELECT rplist FROM plists WHERE sname=#{widget.child.label.to_sql}")
         selection.selected_each { |model, path, iter| @mc.plists.add_to_plist(rplist, iter[TTV_REF]) }
     end
 

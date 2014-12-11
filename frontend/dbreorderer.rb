@@ -11,7 +11,7 @@ class DBReorderer
     end
 
     def dup_table(table) # Copy table as it, that is there are no change
-        CDSDB.execute("SELECT * FROM #{table}") do |row|
+        DBIntf.execute("SELECT * FROM #{table}") do |row|
             sql = "INSERT INTO #{table} VALUES ("
             row.each { |val| sql += val.to_sql+"," }
 #             row.each_with_index do |val, i|
@@ -57,14 +57,14 @@ class DBReorderer
         j = 0
         plist = PListDBClass.new
         pltrack = DBClassIntf.new(PLTrackDBS.new)
-        CDSDB.execute("SELECT * FROM plists ORDER BY LOWER(sname);") { |row|
+        DBIntf.execute("SELECT * FROM plists ORDER BY LOWER(sname);") { |row|
             i += 1
             plist.load_from_row(row)
             old_pl = plist.rplist
             plist.rplist = i
             @outfile.puts(plist.generate_insert)
 
-            CDSDB.execute("SELECT * FROM pltracks WHERE rplist=#{old_pl} ORDER BY iorder;") { |row2|
+            DBIntf.execute("SELECT * FROM pltracks WHERE rplist=#{old_pl} ORDER BY iorder;") { |row2|
                 j += 1
                 pltrack.load_from_row(row2)
                 pltrack.rpltrack = j
@@ -77,7 +77,7 @@ class DBReorderer
 
     def process_logs
         log = DBClassIntf.new(LogTrackDBS.new)
-        CDSDB.execute("SELECT * FROM logtracks;") { |row|
+        DBIntf.execute("SELECT * FROM logtracks;") { |row|
             log.load_from_row(row)
             log.rtrack = @trk_map[log.rtrack]
             @outfile.puts(log.generate_insert)
@@ -86,8 +86,8 @@ class DBReorderer
 
     def process_tracks
         seg_order = 0
-        ntracks_in_seg = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{@old_seg};")
-        CDSDB.execute("SELECT * FROM tracks WHERE rsegment=#{@old_seg} ORDER BY iorder;") { |row|
+        ntracks_in_seg = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{@old_seg};")
+        DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{@old_seg} ORDER BY iorder;") { |row|
             @track.load_from_row(row)
             @new_trk += 1
 
@@ -109,7 +109,7 @@ class DBReorderer
     end
 
     def process_segments
-        CDSDB.execute("SELECT * FROM segments WHERE rrecord=#{@old_rec} ORDER BY iorder;") { |row|
+        DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{@old_rec} ORDER BY iorder;") { |row|
             @segment.load_from_row(row)
             @new_seg += 1
             @old_seg = @segment.rsegment
@@ -123,7 +123,7 @@ class DBReorderer
     end
 
     def process_records
-        CDSDB.execute("SELECT * FROM records WHERE rartist=#{@old_art} ORDER BY LOWER(stitle);") { |row|
+        DBIntf.execute("SELECT * FROM records WHERE rartist=#{@old_art} ORDER BY LOWER(stitle);") { |row|
             @record.load_from_row(row)
             @new_rec += 1
             @old_rec = @record.rrecord
@@ -142,7 +142,7 @@ class DBReorderer
             end
             @outfile.puts(@record.generate_insert)
 
-            @rec_nsegs = CDSDB.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rrecord=#{@old_rec};")
+            @rec_nsegs = DBIntf.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rrecord=#{@old_rec};")
 
             process_segments
         }
@@ -174,7 +174,7 @@ class DBReorderer
         i = 0
         @artist.ref_load(0)
         @outfile.puts(@artist.generate_insert)
-        CDSDB.execute("SELECT * FROM artists WHERE rartist > 0 ORDER BY LOWER(sname);") { |row|
+        DBIntf.execute("SELECT * FROM artists WHERE rartist > 0 ORDER BY LOWER(sname);") { |row|
             @artist.load_from_row(row)
             @old_art = @artist.rartist
             @new_art += 1

@@ -370,7 +370,7 @@ p rseed
     #
     def Utils::tag_and_move_dir(dir, rrecord)
         # Get track count
-        trk_count = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{rrecord}")
+        trk_count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{rrecord}")
 
         # Get recursivelly all music files from the selected dir
         files = []
@@ -398,7 +398,7 @@ p rseed
         # Loops through each track
         track_infos = TrackInfos.new
         i = 0
-        CDSDB.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
+        DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
 #             yield
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], track_infos.get_track_infos(row[0]))
             i += 1
@@ -502,10 +502,10 @@ p rseed
         return if record.iissegmented == 0
 
         segment = SegmentDBClass.new
-        CDSDB.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
+        DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
             segment.load_from_row(seg_row)
             seg_order = 1
-            CDSDB.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") { |trk_row|
+            DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") { |trk_row|
                 DBUtils::log_exec("UPDATE tracks SET isegorder=#{seg_order} WHERE rtrack=#{trk_row[0]};")
                 seg_order += 1
             }
@@ -556,13 +556,13 @@ print "Checking #{file}\n"
         print "No more supported!!!\n"
         return
 
-        total = CDSDB.get_first_value("SELECT COUNT(rtrack) FROM tracks").to_f
+        total = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks").to_f
         i = 1.0
-        CDSDB.execute("SELECT * FROM tracks") do |row|
+        DBIntf.execute("SELECT * FROM tracks") do |row|
             file = Utils::audio_file_exists(get_track_info(row[FLD_RTRACK]))[1]
             unless file.empty?
                 file.gsub!(CFG.music_dir, "")
-                CDSDB.execute("UPDATE tracks SET saudioinfo=#{file.to_sql} WHERE rtrack=#{row[FLD_RTRACK]};")
+                DBIntf.execute("UPDATE tracks SET saudioinfo=#{file.to_sql} WHERE rtrack=#{row[FLD_RTRACK]};")
             end
         end
     end
@@ -627,7 +627,7 @@ print "Checking #{file}\n"
         end
 
         def Utils.dump_table(xdoc, table)
-            CDSDB.execute("SELECT * FROM #{table}") { |row|
+            DBIntf.execute("SELECT * FROM #{table}") { |row|
                 xdoc.root << new_node(table, row)
             }
         end
@@ -639,15 +639,15 @@ print "Checking #{file}\n"
 
         ["medias", "collections", "labels", "genres"].each { |table| dump_table(xdoc, table) }
 
-        #CDSDB.execute("SELECT * FROM artists WHERE rartist=273 ORDER BY sname") do |artrow|
-        #CDSDB.execute("SELECT * FROM artists ORDER BY sname") do |artrow|
-        CDSDB.execute("SELECT DISTINCT (artists.rartist), artists.sname FROM artists INNER JOIN records ON artists.rartist=records.rartist ORDER BY artists.sname") do |artrow|
+        #DBIntf.execute("SELECT * FROM artists WHERE rartist=273 ORDER BY sname") do |artrow|
+        #DBIntf.execute("SELECT * FROM artists ORDER BY sname") do |artrow|
+        DBIntf.execute("SELECT DISTINCT (artists.rartist), artists.sname FROM artists INNER JOIN records ON artists.rartist=records.rartist ORDER BY artists.sname") do |artrow|
             xdoc.root << artist = new_node("artist", artrow)
-            CDSDB.execute("SELECT * FROM records WHERE rartist=#{artrow[0]} ORDER BY stitle") do |recrow|
+            DBIntf.execute("SELECT * FROM records WHERE rartist=#{artrow[0]} ORDER BY stitle") do |recrow|
                 record = new_node("record", recrow)
-                CDSDB.execute("SELECT * FROM segments WHERE rrecord=#{recrow[0]} ORDER BY stitle") do |segrow|
+                DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{recrow[0]} ORDER BY stitle") do |segrow|
                     segment = new_node("segment", segrow)
-                    CDSDB.execute("SELECT * FROM tracks WHERE rsegment=#{segrow[0]} ORDER BY iorder") do |trkrow|
+                    DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{segrow[0]} ORDER BY iorder") do |trkrow|
                         segment << new_node("track", trkrow)
                     end
                     record << segment
@@ -660,7 +660,7 @@ print "Checking #{file}\n"
     end
 
     def Utils::test_ratings
-        lnmax_played = Math.log(CDSDB.get_first_value("SELECT MAX(iplayed) FROM tracks").to_f)
+        lnmax_played = Math.log(DBIntf.get_first_value("SELECT MAX(iplayed) FROM tracks").to_f)
         sql = "SELECT tracks.stitle, tracks.iplayed, tracks.irating, records.stitle, artists.sname FROM tracks " \
               "INNER JOIN records ON tracks.rrecord = records.rrecord " \
               "INNER JOIN segments ON tracks.rsegment = segments.rsegment " \
@@ -668,7 +668,7 @@ print "Checking #{file}\n"
               "WHERE tracks.iplayed > 0;"
         puts sql
         rt = []
-        CDSDB.execute(sql) { |row|
+        DBIntf.execute(sql) { |row|
             rating = 100.0*(((Math.log(row[1].to_f)/lnmax_played) + (row[2].to_f/2.0)/ (9.0-row[2].to_f)))
             #print Math.log(row[1].to_f), "/", lnmax_played, "\n"
             rt << [rating, row[0]+" by "+row[4]+" from "+row[3]] if rating > 0.0
@@ -789,9 +789,9 @@ TRACE.debug("Started gain evaluation for #{tracks.first.record.stitle}".green)
 
     def self.replay_gain_for_genre
 TRACE.debug("Start gaining".bold)
-        CDSDB.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=10 LIMIT 50").each do |rec|
+        DBIntf.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=10 LIMIT 50").each do |rec|
             tracks = []
-            CDSDB.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
+            DBIntf.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
                 tracks << AudioLink.new.set_record_ref(rec[0]).set_track_ref(track[0])
                 tracks.last.setup_audio_file
             end

@@ -29,9 +29,9 @@ class TrkPListsDialog
         sql = %Q{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack, plists.rplist FROM pltracks
                  INNER JOIN plists ON plists.rplist = pltracks.rplist
                  WHERE pltracks.rtrack=#{rtrack};}
-        CDSDB.execute(sql) { |row|
+        DBIntf.execute(sql) { |row|
             iter = tv.model.append
-            row[1] = CDSDB.get_first_value("SELECT COUNT(rpltrack)+1 FROM pltracks WHERE rplist=#{row[3]} AND iorder<#{row[1]};")
+            row[1] = DBIntf.get_first_value("SELECT COUNT(rpltrack)+1 FROM pltracks WHERE rplist=#{row[3]} AND iorder<#{row[1]};")
             row.each_with_index { |val, i| iter[i] = val if i < 3 }
         }
     end

@@ -84,7 +84,7 @@ class FilterWindow < TopWindow
 
         tv.append_column(Gtk::TreeViewColumn.new("Include", grenderer, :active => 0))
         tv.append_column(Gtk::TreeViewColumn.new(TITLES[table_name], srenderer, :text => 1))
-        CDSDB.execute("SELECT * FROM #{table_name};") do |row|
+        DBIntf.execute("SELECT * FROM #{table_name};") do |row|
             iter = tv.model.append
             iter[0] = false
             iter[1] = row[1]
@@ -107,7 +107,7 @@ class FilterWindow < TopWindow
 
     def load_ftv
         @ftv.model.clear
-        CDSDB.execute("SELECT * FROM filters") { |row|
+        DBIntf.execute("SELECT * FROM filters") { |row|
             iter = @ftv.model.append
             row.each_index { |column| iter[column] = column == 2 ? row[column].gsub(/\\n/, "\n") : row[column] }
         }
@@ -246,7 +246,7 @@ class FilterWindow < TopWindow
         max_played = 0
         tracks = []
         dblink = AudioLink.new
-        CDSDB.execute(sql) do |row|
+        DBIntf.execute(sql) do |row|
             # Skip tracks which aren't ripped
             dblink.reset.set_track_ref(row[0])
             if @mc.glade[FLT_CHK_MUSICFILE].active?
@@ -337,14 +337,14 @@ class FilterWindow < TopWindow
         links = []
         if destination == DEST_PLIST
             rplist = DBUtils::get_last_id("plist")+1
-            CDSDB.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, #{Time.now.to_i}, #{Time.now.to_i});")
+            DBIntf.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, #{Time.now.to_i}, #{Time.now.to_i});")
             rpltrack = DBUtils::get_last_id("pltrack")+1
         end
 
         tracks.each_with_index { |track, i|
             f << "i="<< i << "  Weight: " << track.weight << " for " << track.title << "\n"
             if destination == DEST_PLIST
-                CDSDB.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{(i+1)*1024});")
+                DBIntf.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{(i+1)*1024});")
             else
                 links << UILink.new.set_track_ref(track.rtrack)
             end
