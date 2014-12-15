@@ -328,7 +328,7 @@ class TracksBrowser < Gtk::TreeView
     #
     def audio_link_ok(uilink)
         uilink.set_audio_status(AudioLink::OK)
-        uilink.setup_audio_file if uilink.audio_file.empty?
+        uilink.setup_audio_file unless uilink.audio_file
         if iter = find_ref(uilink.track.rtrack)
             iter[TTV_PIX] = render_icon(@stocks[AudioLink::OK], Gtk::IconSize::MENU)
 #             iter[TTV_DATA].audio_file = uilink.audio_file

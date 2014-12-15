@@ -43,6 +43,8 @@ class MasterController
         @memos    = MemosWindow.new(self)
 
         @mw = MainWindow.new(self)
+
+        IMG_CACHE.preload_tracks_cover
     end
 
     #

@@ -56,7 +56,6 @@ class MainWindow < TopWindow
 
         # Set cd image to default image
         @glade[REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
-        IMG_CACHE.preload_tracks_cover
 
         Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"player.png"))
         Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"pqueue.png"))
@@ -217,6 +216,9 @@ class MainWindow < TopWindow
         # Disable sensible controls if not in admin mode
         ADMIN_CTRLS.each { |control| @glade[control].sensitive = false } unless CFG.admin?
 
+        @glade[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
+        @glade[MAIN_WINDOW].show
+
         #
         # Setup the treeviews
         #
@@ -227,11 +229,7 @@ class MainWindow < TopWindow
         # Load artists entries
         @art_browser.load_entries
 
-        # At last, we're ready to go!
         set_window_title
-
-        @glade[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
-        @glade[MAIN_WINDOW].show
 
         set_dbrefs_visibility
     end
@@ -404,7 +402,6 @@ TRACE.debug("new db version=#{srv_db_version}")
             end
             FileUtils.mv(file_name, DBIntf::build_db_name)
             DBCACHE.clear
-            DBIntf.connect
             @mc.reload_plists.reload_filters
             set_window_title
         end

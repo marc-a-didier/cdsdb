@@ -228,9 +228,10 @@ class PlayerWindow < TopWindow
         # status is valid. If audio link is OK, we just have to find the file name for the track.
 
         # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
-        if player_data.uilink.audio_file.empty? #&& player_data.uilink.playable?
+        # In fact, audio_file may only be nil if the cache has been cleared while there were ready
+        # to play tracks in the queue.
+        unless player_data.uilink.audio_file
             player_data.uilink.setup_audio_file
-            # player_data.uilink.search_audio_file
 TRACE.debug("Player audio file was empty!".red)
         end
 
