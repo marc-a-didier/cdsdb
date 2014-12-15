@@ -113,26 +113,19 @@ public
         @tvpt.model = @pts
         @tvpt.selection.mode = Gtk::SELECTION_MULTIPLE
 
+        @last_tool_tip = TooltipCache.new(nil, nil)
+
         @tvpt.set_has_tooltip(true)
         @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             row = @tvpt.get_dest_row(x, y) # Returns: [path, position] or nil
             if row
-                iter = @pts.get_iter(row[0]) # row[0] -> path (may use string in place of path class: path.to_s)
-                if iter
-                    link = iter[TT_DATA]
-                    if link
-                        tool_tip.set_markup(link.markup_tooltip)
-                        true
-                    else
-                        TRACE.warn("Tool tip PL link is nil!".red.bold)
-                        false
-                    end
-                else
-                    TRACE.warn("Tool tip PL link is nil!".red.bold)
-                    false
+                link = @pts.get_iter(row[0])[TT_DATA]
+                unless @last_tool_tip.link == link
+                    @last_tool_tip.link = link
+                    @last_tool_tip.text = link.markup_tooltip
                 end
-#                 tool_tip.set_markup(@pts.get_iter(path[0])[TT_DATA].markup_tooltip)
-#                 true
+                tool_tip.set_markup(@last_tool_tip.text)
+                true
             else
                 false
             end

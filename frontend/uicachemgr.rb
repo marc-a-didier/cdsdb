@@ -1,4 +1,6 @@
 
+TooltipCache = Struct.new(:link, :text)
+
 #
 # Stores pix map of covers into a struct that points to the large and small image.
 # Also the stores the base file name of the image.

@@ -60,32 +60,19 @@ class PQueueWindow < TopWindow
             selection_data.set(Gdk::Selection::TYPE_STRING, "pqueue:message:get_pqueue_selection")
         }
 
+        @last_tool_tip = TooltipCache.new(nil, nil)
+
         @tvpq.set_has_tooltip(true)
         @tvpq.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             row = @tvpq.get_dest_row(x, y) # Returns: [path, position] or nil
             if row
-                iter = @plq.get_iter(row[0]) # row[0] -> path (may use string in place of path class: path.to_s)
-                if iter
-                    pdata = iter[4]
-                    if pdata
-                        link = pdata.uilink
-                        if link
-                            tool_tip.set_markup(link.markup_tooltip)
-                            true
-                        else
-                            TRACE.warn("Tool tip PQ link is nil!".red.bold)
-                            false
-                        end
-                    else
-                        TRACE.warn("Tool tip PQ PlayerData is nil!".red.bold)
-                        false
-                    end
-                else
-                    TRACE.warn("Tool tip PQ iter is nil!".red.bold)
-                    false
+                link = @plq.get_iter(row[0])[4].uilink
+                unless @last_tool_tip.link == link
+                    @last_tool_tip.link = link
+                    @last_tool_tip.text = link.markup_tooltip
                 end
-#                 tool_tip.set_markup(@plq.get_iter(path[0])[4].uilink.markup_tooltip)
-#                 true
+                tool_tip.set_markup(@last_tool_tip.text)
+                true
             else
                 false
             end
