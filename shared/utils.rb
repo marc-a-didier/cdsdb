@@ -193,12 +193,12 @@ class Utils
     #
     def Utils::replace_dir_name(file_info)
         type, name, mtime = file_info.split(Cfg::FILE_INFO_SEP)
-        return CFG.dirs[type]+name
+        return CFG.dir(type.to_sym)+name
     end
 
     def Utils::has_matching_file?(file_info)
         type, name, mdtime = file_info.split(Cfg::FILE_INFO_SEP)
-        local_file = CFG.dirs[type]+name
+        local_file = CFG.dir(type.to_sym)+name
         return File::exists?(local_file) && File::mtime(local_file).to_i >= mdtime.to_i
     end
 

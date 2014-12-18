@@ -133,9 +133,9 @@ class MusicServer
 
     def synchronize_resources(session)
         session.puts("OK")
-        Cfg::DIR_NAMES[0..2].each { |name|
-            Find::find(CFG.dirs[name]) { |file|
-                session.puts(name+Cfg::FILE_INFO_SEP+file.sub(CFG.dirs[name], "")+
+        [:covers, :icons, :flags].each { |type|
+            Find::find(CFG.dir(type)) { |file|
+                session.puts(name+Cfg::FILE_INFO_SEP+file.sub(CFG.dir(type), "")+
                                   Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
             }
         }

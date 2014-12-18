@@ -14,7 +14,7 @@ class Cfg
     STAT_CONTINUE  = 1
     STAT_CANCELLED = 0
 
-    DIR_NAMES       = ["covers", "icons", "flags", "src", "db"]
+    DIRS            = [:covers, :icons, :flags, :src, :db]
     SERVER_RSRC_DIR = "../../"
     PREFS_FILE      = "prefs.yml"
     LOG_FILE        = "cdsdb.log"
@@ -40,8 +40,6 @@ class Cfg
                    "menus" => {}
                  }
 
-    attr_reader :dirs
-
     def initialize
         dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
         @config_dir = File.join(dir, 'cdsdb/')
@@ -49,17 +47,10 @@ class Cfg
 
         @remote = false
         @admin_mode = false
-        @dirs = {}
     end
 
     def load
-        @cfg = nil
-        @cfg = YAML.load_file(prefs_file) if File.exists?(prefs_file)
-        @cfg = DEF_CONFIG.clone if @cfg.nil?
-
-        DIR_NAMES.each { |dir| @dirs[dir] = rsrc_dir+dir+"/" }
-        @dirs[DIR_NAMES.last] = database_dir
-
+        @cfg = File.exists?(prefs_file) ? YAML.load_file(prefs_file) : DEF_CONFIG.clone
         return self
     end
 
@@ -129,19 +120,19 @@ class Cfg
     end
 
     def covers_dir
-        return @dirs[DIR_NAMES[0]]
+        return dir(:covers)
     end
 
     def icons_dir
-        return @dirs[DIR_NAMES[1]]
+        return dir(:icons)
     end
 
     def flags_dir
-        return @dirs[DIR_NAMES[2]]
+        return dir(:flags)
     end
 
     def sources_dir
-        return @dirs[DIR_NAMES[3]]
+        return dir(:src)
     end
 
     def prefs_file
@@ -150,6 +141,10 @@ class Cfg
 
     def rip_dir
         return ENV["HOME"]+"/rip/"
+    end
+
+    def dir(type)
+        return rsrc_dir+type.to_s+"/"
     end
 
     def db_version
@@ -164,7 +159,7 @@ class Cfg
     # Special cases for the server: db & log are forced to specific directories
     #
     def database_dir
-        return $0.match(/server\.rb$/) ? SERVER_RSRC_DIR+DIR_NAMES[4]+"/" : rsrc_dir+DIR_NAMES[4]+"/"
+        return $0.match(/server\.rb$/) ? SERVER_RSRC_DIR+"db/" : dir(:db)
     end
 
     def log_file
