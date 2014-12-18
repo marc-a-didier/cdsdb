@@ -135,7 +135,7 @@ class SQLGenerator
                         "VALUES (#{@recordid}, #{@disc.cddbid}, #{@main_rartist}, " \
                                 "#{@disc.title.to_sql}, #{@disc.year}, #{@rgenre}, " \
                                 "#{@disc.medium}, #{@disc.length}, " \
-                                "#{@rlabel}, #{@disc.catalog.to_sql}" \
+                                "#{@rlabel}, #{@disc.catalog.to_sql}, " \
                                 "#{@comments.to_sql}, #{Time.now.to_i}, #{issegd});\n"
         else
             @recordid = row[0]
