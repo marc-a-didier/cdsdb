@@ -3,6 +3,7 @@
 #require 'musicbrainz' !! A explorer!!
 
 gem 'gstreamer', '1.2.6'
+# require 'gstreamer'
 
 require 'gtk2'
 require 'gst'

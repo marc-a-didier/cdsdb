@@ -251,7 +251,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             end
         end
 
-        @playbin.clear
+        @playbin.clear  # Doesn't exist in GStreamer 1.0
         @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
 
         @source >> @decoder
@@ -408,6 +408,7 @@ debug_queue
         end
 
         @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
+#         @track_pos = @playbin.query_position(Gst::Format::TIME) # GStreamer 1.0
         @slider.signal_connect(:button_press_event) do
             @seeking = true
             @was_playing = playing?
@@ -440,7 +441,9 @@ debug_queue
 
         @decoder = Gst::ElementFactory.make("decodebin")
         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
+#         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
             pad.link(@convertor.get_pad("sink"))
+#             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
             if @mc.glade[UIConsts::MM_PLAYER_LEVELBEFORERG].active?
                 @convertor >> @level >> @rgain >> @sink
             else
@@ -455,6 +458,7 @@ debug_queue
         sleep(0.01) while not playing? # We're threaded and async
 
         track_len = Gst::QueryDuration.new(Gst::Format::TIME)
+#         track_len = @playbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
         @playbin.query(track_len)
         @total_time = track_len.parse[1].to_f/Gst::MSECOND
         @slider.set_range(0.0, @total_time)
@@ -533,10 +537,12 @@ debug_queue
 
     def playing?
         @playbin.get_state[1] == Gst::STATE_PLAYING
+#         @playbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
     end
 
     def paused?
         @playbin.get_state[1] == Gst::STATE_PAUSED
+#         @playbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
     end
 
 end
