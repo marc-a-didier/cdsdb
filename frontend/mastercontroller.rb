@@ -71,7 +71,7 @@ class MasterController
         @glade[MM_WIN_TASKS].active = false if window == @tasks
         @glade[MM_WIN_MEMOS].active = false if window == @memos
 
-        @player.provider_may_have_changed(window) if window == @pqueue || window == @plists
+        @player.unfetch(window) if window == @pqueue || window == @plists
     end
 
     def reset_filter_receiver
