@@ -11,7 +11,7 @@ class DBUtils
     end
 
     def self.log_exec(sql, host = "localhost")
-        TRACE.debug(sql)
+        TRACE.debug(sql) unless CFG.server_mode
         LOG.info(sql+" [#{host}]")
         DBIntf.execute(sql)
     end

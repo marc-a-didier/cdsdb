@@ -20,13 +20,15 @@ require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/trackinfos'
 
-# Returned array of peeraddr: ["AF_INET", 46515, "jukebox", "192.168.1.123"]
 
 class MusicServer
 
     def initialize(parent = nil)
         @parent = parent
-        CFG.load if @parent.nil?
+        if @parent.nil?
+            CFG.load
+            CFG.server_mode = true
+        end
         CFG.set_local_mode # On va pas cascader les serveurs...
 
         Thread.abort_on_exception = true
@@ -45,6 +47,16 @@ class MusicServer
         LOG.info(hosts)
     end
 
+    # Returned array of peeraddr: ["AF_INET", 46515, "jukebox", "192.168.1.123"]
+    def ip_address(session)
+        return session.peeraddr[3]
+    end
+
+    def hostname(session)
+        return session.peeraddr(:hostname)[2]
+    end
+
+
     def listen
         Signal.trap("TERM") {
             LOG.info("Server shutdown on TERM signal.")
@@ -54,7 +66,7 @@ class MusicServer
         begin
             loop do #while (session = server.accept)
                 Thread.start(server.accept) { |session|
-                    if @allowed_hosts.include?(session.peeraddr[3])
+                    if @allowed_hosts.include?(ip_address(session)) # || ip_address(session).match(/^192\.168\.0\./)
                         req = session.gets.chomp
                         #puts("Request: #{req}")
                         begin
@@ -63,7 +75,7 @@ class MusicServer
                             LOG.warn("Unknown request received (#{ex.class} : #{ex}).")
                         end
                     else
-                        LOG.warn("Connection refused from #{session.peeraddr[3]}")
+                        LOG.warn("Connection refused from #{ip_address(session)}")
                         session.puts("Fucked up...")
                     end
                     session.close
@@ -80,7 +92,7 @@ class MusicServer
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
         file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).file_name
-        LOG.info("Sending #{file} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
+        LOG.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
         if file.empty?
             session.puts("0")
         else
@@ -115,20 +127,20 @@ class MusicServer
     def update_stats(session)
         session.puts("OK")
         if @parent
-            @parent.notify_played(session.gets.chomp.to_i, session.peeraddr(:hostname)[2])
+            @parent.notify_played(session.gets.chomp.to_i, hostname(session))
         else
-            DBUtils::update_track_stats(session.gets.chomp.to_i, session.peeraddr(:hostname)[2])
+            DBUtils::update_track_stats(session.gets.chomp.to_i, hostname(session))
         end
     end
 
     def exec_sql(session)
         session.puts("OK")
-        DBUtils::log_exec(session.gets.chomp, session.peeraddr(:hostname)[2])
+        DBUtils::log_exec(session.gets.chomp, hostname(session))
     end
 
     def exec_batch(session)
         session.puts("OK")
-        DBUtils::exec_batch(session.gets.chomp.gsub(/\\n/, "\n"), session.peeraddr(:hostname)[2])
+        DBUtils::exec_batch(session.gets.chomp.gsub(/\\n/, "\n"), hostname(session))
     end
 
     def synchronize_resources(session)
@@ -161,11 +173,11 @@ class MusicServer
             file_name.sub!(/.dwl$/, "") # Remove temp ext from client if downloading the database
             file_name = File::expand_path(CFG.database_dir+File::basename(file_name))
         elsif file_name.index("/Music/").nil? && file_name.index(CFG.rsrc_dir).nil?
-            LOG.warn("Attempt to download file #{file_name} from #{session.peeraddr[3]}")
+            LOG.warn("Attempt to download file #{file_name} from #{ip_address(session)}")
             session.puts("Fucked up...")
             return
         end
-        LOG.info("Sending file #{file_name} in #{block_size} bytes chunks to #{session.peeraddr(:hostname)[2]}")
+        LOG.info("Sending file #{file_name} in #{block_size} bytes chunks to #{hostname(session)}")
         session.puts(File.size(file_name).to_s)
         File.open(file_name, "rb") { |f|
             while data = f.read(block_size)
@@ -181,10 +193,10 @@ class MusicServer
         new_title   = session.gets.chomp
         file_name   = Utils::audio_file_exists(track_infos).file_name
         if file_name.empty?
-            LOG.info("Attempt to rename inexisting track to #{new_title} [#{session.peeraddr(:hostname)[2]}]")
+            LOG.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")
         else
             track_infos.track.stitle = new_title
-            LOG.info("Track renaming [#{session.peeraddr(:hostname)[2]}]")
+            LOG.info("Track renaming [#{hostname(session)}]")
             Utils::tag_and_move_file(file_name, track_infos.build_access_infos)
         end
     end

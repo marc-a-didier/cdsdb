@@ -4,6 +4,8 @@ class Cfg
     include Singleton
     include UIConsts
 
+    attr_accessor :server_mode
+
     # Client/Server transmission block size
     TX_BLOCK_SIZE = 128*1024
     MSG_EOL       = "EOL"
@@ -30,7 +32,7 @@ class Cfg
                             PREFS_CD_DEVICE            => { "text=" => ["/dev/cdrom"] },
                             PREFS_ENTRY_SERVER         => { "text=" => ["madd510"] },
                             PREFS_ENTRY_PORT           => { "text=" => ["32666"] },
-                            PREFS_ENTRY_BLKSIZE        => { "text=" => ["256000"] },
+                            PREFS_ENTRY_BLKSIZE        => { "text=" => ["262144"] },
                             PREFS_CHKBTN_LOCALSTORE    => { "active=" => [true] },
                             PREFS_CB_LIVEUPDATE        => { "active=" => [true] },
                             PREFS_CB_LOGTRACKFILE      => { "active=" => [false] },
@@ -47,6 +49,7 @@ class Cfg
 
         @remote = false
         @admin_mode = false
+        @server_mode = false
     end
 
     def load
