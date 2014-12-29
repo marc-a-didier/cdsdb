@@ -118,7 +118,7 @@ public
         @tvpt.set_has_tooltip(true)
         @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             row = @tvpt.get_dest_row(x, y) # Returns: [path, position] or nil
-            if row
+            if row && tool_tip.is_a?(Gtk::Tooltip)
                 link = @pts.get_iter(row[0])[TT_DATA]
                 unless @last_tool_tip.link == link
                     @last_tool_tip.link = link

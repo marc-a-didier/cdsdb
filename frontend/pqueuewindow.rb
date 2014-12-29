@@ -65,7 +65,7 @@ class PQueueWindow < TopWindow
         @tvpq.set_has_tooltip(true)
         @tvpq.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             row = @tvpq.get_dest_row(x, y) # Returns: [path, position] or nil
-            if row
+            if row && tool_tip.is_a?(Gtk::Tooltip)
                 link = @plq.get_iter(row[0])[4].uilink
                 unless @last_tool_tip.link == link
                     @last_tool_tip.link = link
