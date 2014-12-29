@@ -15,24 +15,16 @@ class Stats
     # nombre signifie nombre ET duree
     #
 
-    GENRE_REF           = 0
-    GENRE_NAME          = 1
-    GENRE_TOT_TIME      = 2
-    GENRE_TOT_TRACKS    = 3
-    GENRE_PLAYED_TIME   = 4
-    GENRE_PLAYED_TRACKS = 5
-    GENRE_TOT_RECS      = 6
-    GENRE_TOT_RECTIME   = 7
-    GENRE_RIPPED        = 8
-    GENRE_RIPTIME       = 9
+    GenreStruct = Struct.new(:ref, :name, :tot_time, :tot_tracks, :played_time, :played_tracks,
+                             :tot_recs, :tot_rectime, :ripped, :riptime) do
+        def init
+            self.size.times { |i| self[i] = 0 if self[i].nil? && i != 1 }
+            return self
+        end
+    end
 
-    DBTOTS_ARTISTS = 0
-    DBTOTS_RECORDS = 1
-    DBTOTS_SEGS    = 2
-    DBTOTS_TRACKS  = 3
-    DBTOTS_PTIME   = 4
-    DBTOTS_PLAYED  = 5
-    DBTOTS_PPTIME  = 6 # Total played time for all tracks
+    DBTotals = Struct.new(:artists, :records, :segments, :tracks, :ptime, :played, :tot_ptime)
+
 
     TV_ITEMS = {"Played tracks" => [false, :played_tracks_stats],
                 "Rated and tagged tracks" => [false, :rating_tags_stats],
@@ -146,27 +138,30 @@ class Stats
 #                     background-color:#EAF2D3;
         @f << '</style></head><body>'
 
+        # @genres is an array of GenreStruct. @genres[0] is the global total of all genres
         @genres = []
-        @db_tots = []
+        @db_tots = DBTotals.new
         @media = Hash.new
 
-        @db_tots << get_count('artist') << get_count('record') << get_count('segment') << get_count('track')
-        @db_tots << DBIntf.get_first_value("SELECT SUM(iplaytime) FROM records;").to_i
-        @db_tots << DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks;")
-        @db_tots << DBIntf.get_first_value("SELECT SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
+        # Initialize db totals
+        %w[artist record segment track].each_with_index { |table, i| @db_tots[i] = get_count(table) }
+        @db_tots.ptime = DBIntf.get_first_value("SELECT SUM(iplaytime) FROM records;").to_i
+        @db_tots.played = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks;")
+        @db_tots.tot_ptime = DBIntf.get_first_value("SELECT SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
 
-        @genres << [0, "", 0, 0, 0, 0, 0, 0, 0, 0]
-        DBIntf.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << [row[0], row[1], 0, 0, 0, 0, 0, 0, 0, 0] }
+        # Initialize totals by genres
+        @genres << GenreStruct.new.init
+        DBIntf.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << GenreStruct.new(row[0], row[1]).init }
         @genres.each { |genre| init_table(genre) }
-        @genres.delete_if { |genre| genre[GENRE_TOT_TRACKS] == 0 } # Remove genres with no tracks
+        @genres.delete_if { |genre| genre.tot_tracks == 0 } # Remove genres with no tracks
     end
 
     def db_general_infos
         new_table("General infos")
-        new_row(["Total number of artists", @db_tots[DBTOTS_ARTISTS]])
-        new_row(["Total number of records", "#{@db_tots[DBTOTS_RECORDS]} - Play time: #{@db_tots[DBTOTS_PTIME].to_day_length}"])
-        new_row(["Total number of segments", @db_tots[DBTOTS_SEGS]])
-        new_row(["Total number of tracks", @db_tots[DBTOTS_TRACKS]])
+        new_row(["Total number of artists", @db_tots.artists])
+        new_row(["Total number of records", "#{@db_tots.records} - Play time: #{@db_tots.ptime.to_day_length}"])
+        new_row(["Total number of segments", @db_tots.segments])
+        new_row(["Total number of tracks", @db_tots.tracks])
         end_table
 
         new_table("Records by media type", ["Medium", "Records:R", "Play time:R"])
@@ -181,62 +176,61 @@ class Stats
     end
 
     def init_table(genre)
-        if genre[GENRE_REF] == 0
+        if genre.ref == 0
             row = DBIntf.get_first_row("SELECT COUNT(rtrack), SUM(iplaytime) FROM tracks;")
-            genre[GENRE_TOT_TRACKS] = row[0].to_i
-            genre[GENRE_TOT_TIME] = row[1].to_i
-#             row = DBIntf.get_first_row("SELECT SUM(iplayed), SUM(iplaytime) FROM tracks WHERE iplayed > 0;")
+            genre.tot_tracks = row[0].to_i
+            genre.tot_time = row[1].to_i
             row = DBIntf.get_first_row("SELECT SUM(iplayed), SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
-            genre[GENRE_PLAYED_TRACKS] = row[0].to_i
-            genre[GENRE_PLAYED_TIME] = row[1].to_i
+            genre.played_tracks = row[0].to_i
+            genre.played_time = row[1].to_i
             row = DBIntf.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia <> #{DBIntf::MEDIA_AUDIO_FILE}")
-            genre[GENRE_TOT_RECS] = row[0].to_i
-            genre[GENRE_TOT_RECTIME] = row[1].to_i
+            genre.tot_recs = row[0].to_i
+            genre.tot_rectime = row[1].to_i
         else
             sql = "SELECT COUNT(tracks.rtrack), SUM(tracks.iplaytime) FROM tracks
                    INNER JOIN records ON records.rrecord=tracks.rrecord
-                   WHERE records.rgenre=#{genre[GENRE_REF]};"
+                   WHERE records.rgenre=#{genre.ref};"
             row = DBIntf.get_first_row(sql)
-            genre[GENRE_TOT_TRACKS] = row[0].to_i
-            genre[GENRE_TOT_TIME] = row[1].to_i
+            genre.tot_tracks = row[0].to_i
+            genre.tot_time = row[1].to_i
             sql = "SELECT SUM(tracks.iplayed), SUM(tracks.iplaytime*tracks.iplayed) FROM tracks
                    INNER JOIN records ON records.rrecord=tracks.rrecord
-                   WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]};"
+                   WHERE iplayed > 0 AND records.rgenre=#{genre.ref};"
             row = DBIntf.get_first_row(sql)
-            genre[GENRE_PLAYED_TRACKS] = row[0].to_i
-            genre[GENRE_PLAYED_TIME] = row[1].to_i
+            genre.played_tracks = row[0].to_i
+            genre.played_time = row[1].to_i
             sql = "SELECT COUNT(rrecord), SUM(iplaytime) FROM records
-                   WHERE rgenre=#{genre[GENRE_REF]} AND rmedia <> #{DBIntf::MEDIA_AUDIO_FILE};"
+                   WHERE rgenre=#{genre.ref} AND rmedia <> #{DBIntf::MEDIA_AUDIO_FILE};"
             row = DBIntf.get_first_row(sql)
-            genre[GENRE_TOT_RECS] = row[0].to_i
-            genre[GENRE_TOT_RECTIME] = row[1].to_i
+            genre.tot_recs = row[0].to_i
+            genre.tot_rectime = row[1].to_i
         end
     end
 
     def ripped_stats(genre)
         track_infos = TrackInfos.new
-        DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre[GENRE_REF]} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
+        DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
             Gtk.main_iteration while Gtk.events_pending?
             rtrack = DBIntf.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
             if Utils::record_on_disk?(track_infos.get_track_infos(rtrack))
-                genre[GENRE_RIPPED] += 1
-                genre[GENRE_RIPTIME] += DBIntf.get_first_value("SELECT iplaytime FROM records WHERE rrecord=#{record[0]};").to_i
+                genre.ripped += 1
+                genre.riptime += DBIntf.get_first_value("SELECT iplaytime FROM records WHERE rrecord=#{record[0]};").to_i
             end
         end
-        @genres[0][GENRE_RIPPED] += genre[GENRE_RIPPED]
-        @genres[0][GENRE_RIPTIME] += genre[GENRE_RIPTIME]
+        @genres[0].ripped += genre.ripped
+        @genres[0].riptime += genre.riptime
     end
 
     def records_by_genre
         new_table("Ripped records", ["Genre", "Ripped:R", "Available:R", "Ripped play time:R", "Available play time:R"])
         @genres.each { |genre|
-            next if genre[GENRE_REF] == 0
-            new_row([genre[GENRE_NAME], genre[GENRE_RIPPED], genre[GENRE_TOT_RECS],
-                     genre[GENRE_RIPTIME].to_day_length, genre[GENRE_TOT_RECTIME].to_day_length])
+            next if genre.ref == 0
+            new_row([genre.name, genre.ripped, genre.tot_recs,
+                     genre.riptime.to_day_length, genre.tot_rectime.to_day_length])
         }
         genre = @genres[0]
-        new_row(["Total", genre[GENRE_RIPPED], genre[GENRE_TOT_RECS],
-                 genre[GENRE_RIPTIME].to_day_length, genre[GENRE_TOT_RECTIME].to_day_length])
+        new_row(["Total", genre.ripped, genre.tot_recs,
+                 genre.riptime.to_day_length, genre.tot_rectime.to_day_length])
         end_table
     end
 
@@ -265,8 +259,7 @@ class Stats
             @genres.each { |g| if g.index(row[1]) then genre = g; break; end }
             cols = [@altr.counter+1, row[0], row[1]]
             unless genre.nil?
-                cols += [row[2], genre[GENRE_TOT_TRACKS], "#{"%6.2f" % [row[2].to_f/genre[GENRE_TOT_TRACKS].to_f*100.0]}%"]
-#                 cols += ["#{Utils::format_day_length(genre[GENRE_PLAYED_TIME])}/#{Utils::format_day_length(genre[GENRE_TOT_TIME])}"]
+                cols += [row[2], genre.tot_tracks, "#{"%6.2f" % [row[2].to_f/genre.tot_tracks.to_f*100.0]}%"]
             end
             new_row(cols)
         end
@@ -279,12 +272,12 @@ class Stats
                LEFT OUTER JOIN artists ON artists.rartist=segments.rartist
                LEFT OUTER JOIN records ON tracks.rrecord=records.rrecord "
 
-        if genre[GENRE_REF] == 0
+        if genre.ref == 0
             new_table("All Styles Artists Top Chart", ["Rank:R", "Play count:R", "Artist"])
             sql += "WHERE iplayed > 0 GROUP BY artists.rartist ORDER BY totplayed DESC;"
         else
-            new_table("#{genre[GENRE_NAME]} Artists Top Chart", ["Rank:R", "Play count:R", "Artist"])
-            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY artists.rartist ORDER BY totplayed DESC;"
+            new_table("#{genre.name} Artists Top Chart", ["Rank:R", "Play count:R", "Artist"])
+            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre.ref} GROUP BY artists.rartist ORDER BY totplayed DESC;"
         end
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
@@ -298,12 +291,12 @@ class Stats
                LEFT OUTER JOIN records ON tracks.rrecord=records.rrecord
                LEFT OUTER JOIN artists ON artists.rartist=records.rartist "
 
-        if genre[GENRE_REF] == 0
+        if genre.ref == 0
             new_table("All Styles Records Top Chart", ["Rank:R", "Play count:R", "Record", "Artist"])
             sql += "WHERE iplayed > 0 GROUP BY records.rrecord ORDER BY totplayed DESC;"
         else
-            new_table("#{genre[GENRE_NAME]} Records Top Chart", ["Rank:R", "Play count:R", "Record", "Artist"])
-            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} GROUP BY records.rrecord ORDER BY totplayed DESC;"
+            new_table("#{genre.name} Records Top Chart", ["Rank:R", "Play count:R", "Record", "Artist"])
+            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre.ref} GROUP BY records.rrecord ORDER BY totplayed DESC;"
         end
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
@@ -313,15 +306,15 @@ class Stats
     end
 
     def top_tracks(genre)
-        if genre[GENRE_REF] == 0
+        if genre.ref == 0
             new_table("All Styles Tracks Top Chart", ["Rank:R", "Play count:R", "Track", "Artist", "Record", "Segment"])
             sql = "SELECT rtrack, stitle, iplayed FROM tracks WHERE iplayed > 0 ORDER BY iplayed DESC;"
         else
-            new_table("#{genre[GENRE_NAME]} Tracks Top Chart", ["Rank:R", "Play count:R", "Track", "Artist", "Record", "Segment"])
+            new_table("#{genre.name} Tracks Top Chart", ["Rank:R", "Play count:R", "Track", "Artist", "Record", "Segment"])
             sql = "SELECT tracks.rtrack, tracks.stitle, tracks.iplayed FROM tracks
                    INNER JOIN segments ON segments.rsegment=tracks.rsegment
                    INNER JOIN records ON records.rrecord=segments.rrecord
-                   WHERE iplayed > 0 AND records.rgenre=#{genre[GENRE_REF]} ORDER BY iplayed DESC;"
+                   WHERE iplayed > 0 AND records.rgenre=#{genre.ref} ORDER BY iplayed DESC;"
         end
         track_infos = TrackInfos.new
         DBIntf.execute(sql) do |row|
@@ -454,14 +447,14 @@ class Stats
         new_table("Played tracks by genre", ["Genre", "# of tracks:R", "Percentage:R", "Played:R", "Percentage:R", "Played time:R", "Percentage:R"])
         @genres.each_with_index do |genre, i|
             next if i == 0
-            new_row([genre[GENRE_NAME], genre[GENRE_TOT_TRACKS], "%6.2f" % [genre[GENRE_TOT_TRACKS]*100.0/@db_tots[DBTOTS_TRACKS]],
-                     genre[GENRE_PLAYED_TRACKS], "%6.2f" % [genre[GENRE_PLAYED_TRACKS]*100.0/@db_tots[DBTOTS_PLAYED]],
-                     genre[GENRE_PLAYED_TIME].to_day_length, "%6.2f" % [genre[GENRE_PLAYED_TIME]*100.0/@db_tots[DBTOTS_PPTIME]] ])
+            new_row([genre.name, genre.tot_tracks, "%6.2f" % [genre.tot_tracks*100.0/@db_tots.tracks],
+                     genre.played_tracks, "%6.2f" % [genre.played_tracks*100.0/@db_tots.played],
+                     genre.played_time.to_day_length, "%6.2f" % [genre.played_time*100.0/@db_tots.tot_ptime] ])
         end
         genre = @genres[0]
-        new_row(["Total", genre[GENRE_TOT_TRACKS], "%6.2f" % [genre[GENRE_TOT_TRACKS]*100.0/@db_tots[DBTOTS_TRACKS]],
-                 genre[GENRE_PLAYED_TRACKS], "%6.2f" % [genre[GENRE_PLAYED_TRACKS]*100.0/@db_tots[DBTOTS_PLAYED]],
-                 genre[GENRE_PLAYED_TIME].to_day_length, "%6.2f" % [genre[GENRE_PLAYED_TIME]*100.0/@db_tots[DBTOTS_PPTIME]] ])
+        new_row(["Total", genre.tot_tracks, "%6.2f" % [genre.tot_tracks*100.0/@db_tots.tracks],
+                 genre.played_tracks, "%6.2f" % [genre.played_tracks*100.0/@db_tots.played],
+                 genre.played_time.to_day_length, "%6.2f" % [genre.played_time*100.0/@db_tots.tot_ptime] ])
         end_table
     end
 
