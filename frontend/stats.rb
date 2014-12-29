@@ -157,6 +157,7 @@ class Stats
     end
 
     def db_general_infos
+        @f << "<h1>DB stats generated #{Time.now}</h1><br />"
         new_table("General infos")
         new_row(["Total number of artists", @db_tots.artists])
         new_row(["Total number of records", "#{@db_tots.records} - Play time: #{@db_tots.ptime.to_day_length}"])
