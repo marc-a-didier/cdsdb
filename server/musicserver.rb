@@ -147,8 +147,8 @@ class MusicServer
         session.puts("OK")
         [:covers, :icons, :flags].each { |type|
             Find::find(CFG.dir(type)) { |file|
-                session.puts(name+Cfg::FILE_INFO_SEP+file.sub(CFG.dir(type), "")+
-                                  Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
+                session.puts(type.to_s+Cfg::FILE_INFO_SEP+file.sub(CFG.dir(type), "")+
+                                       Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
             }
         }
         session.puts(Cfg::MSG_EOL)
