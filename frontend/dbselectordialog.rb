@@ -54,9 +54,13 @@ class DBSelectorDialog
     def do_op_delete()
         iter = @tv.selection().selected()
         return if iter.nil?
-        count = DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE #{@tbl_ref}=#{iter[0]}")
+        if @tbl_name == "origins"
+            count = DBIntf.get_first_value("SELECT COUNT(rartist) FROM artists WHERE #{@tbl_ref}=#{iter[0]}")
+        else
+            count = DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE #{@tbl_ref}=#{iter[0]}")
+        end
         if count > 0
-            UIUtils::show_message("Error: #{count} reference(s) still in records table", Gtk::MessageDialog::ERROR)
+            UIUtils::show_message("Error: #{count} reference(s) still in artists or records table", Gtk::MessageDialog::ERROR)
         else
             DBUtils::client_sql("DELETE FROM #{@tbl_name} WHERE #{@tbl_ref}=#{iter[0]}")
             @tv.model.remove(iter)
