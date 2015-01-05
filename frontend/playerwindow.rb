@@ -171,7 +171,7 @@ class PlayerWindow < TopWindow
 
         # Reset button states
         @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
-        @seeking = false
+#         @seeking = false
         set_window_title
         @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = true
         @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = false
@@ -259,7 +259,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         @source.location = player_data.uilink.audio_file
         @playbin.play
 
-        @was_playing = false # Probably useless
+#         @was_playing = false # Probably useless
 
 
         # Debug info
@@ -327,10 +327,10 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     # not the current provider as selected in the source menu
     def refetch(track_provider)
         if @queue[0] && @mc.track_provider == track_provider
-TRACE.debug("player refetched by #{track_provider.class.name}".red)
+# TRACE.debug("player refetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-debug_queue
+# debug_queue
             # Force to refetch if change occured after a previous fetch
             @file_prefetched = false
         end
@@ -341,9 +341,9 @@ debug_queue
     # Also called by mc when source changed to remove the tracks from previous provider
     def unfetch(track_provider)
         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
-TRACE.debug("player unfetched by #{track_provider.class.name}".red)
+# TRACE.debug("player unfetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
-debug_queue
+# debug_queue
         end
     end
 
@@ -385,7 +385,7 @@ debug_queue
     end
 
     def init_player
-        @seeking = false
+#         @seeking = false
 
         @playbin = Gst::Pipeline.new("levelmeter")
 
@@ -407,21 +407,34 @@ debug_queue
             true
         end
 
+
         @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
 #         @track_pos = @playbin.query_position(Gst::Format::TIME) # GStreamer 1.0
+        @was_playing = false # Only used to remember the state of the player when seeking
+        @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
         @slider.signal_connect(:button_press_event) do
-            @seeking = true
-            @was_playing = playing?
-            @playbin.pause if playing?
-            false # Means the parent handler has to be called
+            if playing? || paused?
+                @seek_handler = @slider.signal_connect(:value_changed) { seek; false }
+#                 @seeking = true
+                @was_playing = playing?
+                @playbin.pause if @was_playing
+                false # Means the parent handler has to be called
+            else
+                # Don't call parent handler so clicking on button has no effect
+                true
+            end
         end
         @slider.signal_connect(:button_release_event) do
-            @seeking = false
-            seek_set
-            @playbin.play if @was_playing
+#             @seeking = false
+            if @seek_handler
+                seek_set
+                @playbin.play if @was_playing
+                @slider.signal_handler_disconnect(@seek_handler)
+                @seek_handler = nil
+            end
             false # Means the parent handler has to be called
         end
-        @seek_handler = @slider.signal_connect(:value_changed) { seek if @seeking; false }
+#         @seek_handler = @slider.signal_connect(:value_changed) { seek if @seeking; false }
             #seek((@slider.value * Gst::MSECOND).to_i)
             #false
         #}
@@ -471,7 +484,8 @@ debug_queue
     end
 
     def update_hscale
-        return if @seeking || (!playing? && !paused?)
+#         return if @seeking || (!playing? && !paused?)
+        return if @seek_handler || (!playing? && !paused?)
 
         @playbin.query(@track_pos)
 
