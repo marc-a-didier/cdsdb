@@ -38,9 +38,12 @@ class PlayerWindow < TopWindow
         end
 
         @meter = @mc.glade[UIConsts::PLAYER_IMG_METER]
+#         @meter = GtkUI[UIConsts::PLAYER_IMG_METER]
+# p @meter
         @meter.signal_connect(:realize) { |widget| meter_setup }
 
         @counter = @mc.glade[UIConsts::PLAYER_IMG_COUNTER]
+#         @counter = GtkUI[UIConsts::PLAYER_IMG_COUNTER]
 #         @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
         @counter.signal_connect(:realize) { |widget| counter_setup }
 
@@ -48,10 +51,15 @@ class PlayerWindow < TopWindow
         @mc.glade[UIConsts::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
         @mc.glade[UIConsts::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
         @mc.glade[UIConsts::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
+#         GtkUI[UIConsts::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
+#         GtkUI[UIConsts::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
+#         GtkUI[UIConsts::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
+#         GtkUI[UIConsts::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
 
 #         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
         @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
+#         GtkUI[UIConsts::PLAYER_LABEL_TITLE].label = ""
 
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
@@ -59,6 +67,7 @@ class PlayerWindow < TopWindow
         @file_prefetched = false
 
         @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
+#         @slider = GtkUI[UIConsts::PLAYER_HSCALE]
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -255,6 +264,8 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
 
         @source >> @decoder
+
+system("vmtouch \"#{player_data.uilink.audio_file}\"")
 
         @source.location = player_data.uilink.audio_file
         @playbin.play
@@ -501,7 +512,10 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         # If there's a next playable track in queue, read the whole file in an attempt to make
         # it cached by the system and lose less time when skipping to it
         if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.playable?
-            IO.read(@queue[1].uilink.audio_file)
+#             system("vmtouch -t '#{@queue[1].uilink.audio_file}'")
+#             File.open(@queue[1].uilink.audio_file, "r") { |f| f.advise(:willneed) } #, 0, f.size) }
+            File.open(@queue[1].uilink.audio_file, "r") { |f| f.read_nonblock(f.size) }
+#             IO.read(@queue[1].uilink.audio_file)
             @file_prefetched = true
             TRACE.debug("Prefetch of #{@queue[1].uilink.audio_file}".brown)
         end
