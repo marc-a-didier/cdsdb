@@ -54,7 +54,8 @@ class MasterController
         @player.stop if @player.playing? || @player.paused?
         [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.save_menu_state(GtkUI[menu]) }
 #         [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
-        PREFS.save_windows([@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos])
+        PREFS.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,
+                            CHARTS_WINDOW, FILTER_WINDOW, TASKS_WINDOW, MEMOS_WINDOW])
         #system("rm -f ../mfiles/*")
         CFG.save
     end

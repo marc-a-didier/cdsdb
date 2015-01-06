@@ -8,12 +8,12 @@ class SearchDialog
 
         @dlg = GtkUI[GtkIDs::SEARCH_DIALOG]
 
-        @dlg.signal_connect(:show)           { PREFS.load_main(GtkIDs::SEARCH_DIALOG) }
-        @dlg.signal_connect(:delete_event)   { PREFS.save_window(@dlg)
+        @dlg.signal_connect(:show)           { PREFS.restore_window(GtkIDs::SEARCH_DIALOG) }
+        @dlg.signal_connect(:delete_event)   { PREFS.save_window(GtkIDs::SEARCH_DIALOG)
                                                @dlg.destroy
                                                false
                                              }
-        GtkUI[GtkIDs::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked)  { PREFS.save_window(@dlg); @dlg.destroy }
+        GtkUI[GtkIDs::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked)  { PREFS.save_window(GtkIDs::SEARCH_DIALOG); @dlg.destroy }
 
         GtkUI[GtkIDs::SRCH_DLG_BTN_SEARCH].signal_connect(:clicked) { do_search }
         GtkUI[GtkIDs::SRCH_DLG_BTN_SHOW].signal_connect(:clicked)   { do_show }

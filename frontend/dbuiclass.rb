@@ -114,14 +114,14 @@ class TrackUI < UILink
     def build_infos_string
         return "" unless valid?
         trk = DBCACHE.track(@rtrack) # Cache of the cache!!!
-        str  = UIConsts::RATINGS[trk.irating]+", "
+        str  = Qualifiers::RATINGS[trk.irating]+", "
         str += trk.iplayed > 0 ? "played "+trk.iplayed.to_s+" time".check_plural(trk.iplayed)+" " : "never played, "
         str += "(Last: "+trk.ilastplayed.to_std_date+"), " if trk.ilastplayed != 0
         if trk.itags == 0
             str += "no tags"
         else
             str += "tagged as "
-            UIConsts::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
+            Qualifiers::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
         end
         str += " [%8.4f | %8.4f]" % [trk.fgain, trk.fpeak]
         return str

@@ -65,10 +65,10 @@ TRACE.debug("in init_handlers")
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|
             if is_to
-                UIConsts::TAGS.each_index { |i| control.model.get_iter(i.to_s)[0] = dbs[field] & (1 << i) != 0 }
+                Qualifiers::TAGS.each_index { |i| control.model.get_iter(i.to_s)[0] = dbs[field] & (1 << i) != 0 }
             else
                 dbs[field] = 0
-                UIConsts::TAGS.each_index { |i| dbs[field] |= (1 << i) if control.model.get_iter(i.to_s)[0] }
+                Qualifiers::TAGS.each_index { |i| dbs[field] |= (1 << i) if control.model.get_iter(i.to_s)[0] }
             end
         }
         @@handlers << Proc.new { |control, dbs, field, is_to|

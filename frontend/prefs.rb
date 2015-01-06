@@ -18,24 +18,16 @@ class Prefs
     #
     #
 
-    # Called by windows or dialogs that are not TopWindow descendants.
-    def load_main(name)
-        return if CFG.windows[name].nil?
-        CFG.windows[name].each do |obj, msg|
+    def restore_window(gtk_id)
+        return if CFG.windows[gtk_id].nil?
+        CFG.windows[gtk_id].each do |obj, msg|
             msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
 
-    # Called by TopWindow descendants to restore their attributes
-    def load_window(top_window)
-        return if CFG.windows[top_window.window.builder_name].nil?
-        CFG.windows[top_window.window.builder_name].each do |obj, msg|
-            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
-        end
-    end
 
-    def save_window(any_window)
-        window = any_window.kind_of?(TopWindow) ? any_window.window : any_window
+    def save_window(gtk_id)
+        window = GtkUI[gtk_id]
 
         CFG.windows[window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
 
@@ -44,7 +36,7 @@ class Prefs
             CFG.windows[window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
         }
 
-        unless any_window.class == FilterWindow
+        unless window.class == FilterWindow
             objs = []
             child_controls(window, [Gtk::Expander], objs).each { |obj|
                 CFG.windows[window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
@@ -52,16 +44,17 @@ class Prefs
         end
     end
 
-    def save_windows(win_list)
-        win_list.each { |window| save_window(window) if window.window.visible? }
+    def save_windows(gtk_ids)
+        gtk_ids.each { |gtk_id| save_window(gtk_id) if GtkUI[gtk_id].visible? }
     end
 
 
     #
-    # Windows content related funcs (only used by the preferences dialog, as far as i remember...)
+    # Windows content related funcs (only used by the preferences and export dialog, as far as i remember...)
     #
 
-    def save_window_objects(window)
+    def save_window_objects(gtk_id)
+        window = GtkUI[gtk_id]
         CFG.windows[window.builder_name] = {}
 
         object_list = []
@@ -69,13 +62,6 @@ class Prefs
             CFG.windows[window.builder_name][obj.builder_name] = { "active=" => [obj.active?] } if [Gtk::RadioButton, Gtk::CheckButton].include?(obj.class)
             CFG.windows[window.builder_name][obj.builder_name] = { "text=" => [obj.text] }  if obj.class == Gtk::Entry
             CFG.windows[window.builder_name][obj.builder_name] = { "current_folder=" => [obj.current_folder] } if obj.class == Gtk::FileChooserButton
-        end
-    end
-
-    def restore_window_content(window)
-        return if CFG.windows[window.builder_name].nil?
-        CFG.windows[window.builder_name].each do |obj, msg|
-            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
 

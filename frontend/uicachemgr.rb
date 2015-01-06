@@ -366,12 +366,12 @@ class UILink < AudioLink
         text = "<b>Genre:</b> #{genre.sname}\n"
         text += "<b>Played:</b> #{track.iplayed}"
         text += track.ilastplayed == 0 ? "\n" : " (Last: #{track.ilastplayed.to_std_date})\n"
-        text += "<b>Rating:</b> #{UIConsts::RATINGS[track.irating]}\n"
+        text += "<b>Rating:</b> #{Qualifiers::RATINGS[track.irating]}\n"
         text += "<b>Tags:</b> "
         if track.itags == 0
             text += "No tags"
         else
-            UIConsts::TAGS.each_with_index { |tag, i| text += tag+" " if (track.itags & (1 << i)) != 0 }
+            Qualifiers::TAGS.each_with_index { |tag, i| text += tag+" " if (track.itags & (1 << i)) != 0 }
         end
         return text
     end

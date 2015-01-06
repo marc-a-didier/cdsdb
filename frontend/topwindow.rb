@@ -12,7 +12,7 @@ class TopWindow
         @mc = mc
         @gtk_id = gtk_id
 
-        window.signal_connect(:show) { PREFS.load_window(self) }
+        window.signal_connect(:show) { PREFS.restore_window(@gtk_id) }
         if gtk_id != GtkIDs::MAIN_WINDOW
             window.signal_connect(:delete_event) do
                 @mc.notify_closed(self)
@@ -31,7 +31,7 @@ class TopWindow
     end
 
     def hide
-        PREFS.save_window(self)
+        PREFS.save_window(@gtk_id)
         window.hide
     end
 

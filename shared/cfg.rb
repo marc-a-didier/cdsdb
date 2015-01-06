@@ -1,9 +1,27 @@
 
+module ConfigFields
+    PREFS_DIALOG                = "prefs_dialog"
+
+    PREFS_RB_REMOTE             = "prefs_rb_remote"
+    PREFS_ENTRY_SERVER          = "prefs_entry_server"
+    PREFS_ENTRY_PORT            = "prefs_entry_port"
+    PREFS_ENTRY_BLKSIZE         = "prefs_entry_blksize"
+    PREFS_FC_MUSICDIR           = "prefs_fc_musicdir"
+    PREFS_FC_RSRCDIR            = "prefs_fc_rsrcdir"
+    PREFS_CHKBTN_LOCALSTORE     = "prefs_chkbtn_localstore"
+    PREFS_CB_SHOWNOTIFICATIONS  = "prefs_cb_shownotifications"
+    PREFS_ENTRY_NOTIFDURATION   = "prefs_entry_notifduration"
+    PREFS_CB_LIVEUPDATE         = "prefs_cb_liveupdate"
+    PREFS_CB_LOGTRACKFILE       = "prefs_cb_logtrackfile"
+    PREFS_ENTRY_MAXITEMS        = "prefs_entry_maxitems"
+    PREFS_CD_DEVICE             = "prefs_entry_cddevice"
+end
+
 class Cfg
 
     include Singleton
-#     include UIConsts
-    include GtkIDs
+    include ConfigFields
+
 
     attr_accessor :server_mode
 

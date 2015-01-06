@@ -333,7 +333,7 @@ class Stats
         DBIntf.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
             track_infos.load_track(row[0])
-            new_row([@altr.counter+1, UIConsts::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
+            new_row([@altr.counter+1, Qualifiers::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
                      track_infos.record.stitle, track_infos.segment.stitle])
         end
         end_table
@@ -413,7 +413,7 @@ class Stats
         (1..6).each { |index|
             data_row = exec_filtered_sql("tracks.irating=#{index}")
 
-            gen_row(UIConsts::RATINGS[index], data_row, tot_row)
+            gen_row(Qualifiers::RATINGS[index], data_row, tot_row)
         }
         gen_row("Qualified", tot_rated_row, tot_row)
         gen_row("Unqualified", tot_unrated_row, tot_row)
@@ -430,7 +430,7 @@ class Stats
         tot_untagged_row = exec_filtered_sql("tracks.itags=0")
 
         gen_table("Tagged", "Tag")
-        UIConsts::TAGS.each_with_index { |tag, index|
+        Qualifiers::TAGS.each_with_index { |tag, index|
             data_row = exec_filtered_sql("(tracks.itags & #{1 << index}) <> 0")
 
             gen_row(tag, data_row, tot_row)

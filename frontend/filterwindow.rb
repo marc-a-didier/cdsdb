@@ -39,8 +39,8 @@ class FilterWindow < TopWindow
         @tv_tags.columns[0].signal_connect(:clicked) { @tv_tags.model.each { |model, path, iter| iter[0] = !iter[0] } }
 
         [FLT_CMB_MINRATING, FLT_CMB_MAXRATING].each { |cmb| GtkUI[cmb].remove_text(0) }
-        UIConsts::RATINGS.each { |rating| GtkUI[FLT_CMB_MINRATING].append_text(rating) }
-        UIConsts::RATINGS.each { |rating| GtkUI[FLT_CMB_MAXRATING].append_text(rating) }
+        Qualifiers::RATINGS.each { |rating| GtkUI[FLT_CMB_MINRATING].append_text(rating) }
+        Qualifiers::RATINGS.each { |rating| GtkUI[FLT_CMB_MAXRATING].append_text(rating) }
 
         @tvs = []
         TITLES.each_key { |key| @tvs << setup_tv(key) }

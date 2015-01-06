@@ -273,7 +273,7 @@ class TagsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         return case level
             when 0
-                UIConsts::TAGS.each_with_index { |tag, i|
+                Qualifiers::TAGS.each_with_index { |tag, i|
                     child = model.append(iter)
                     child[0] = i
                     child[1] = tag.to_html_italic
@@ -345,7 +345,7 @@ class RatingsRowProp < GenRowProp
     def select_for_level(level, iter, mc, model)
         return case level
             when 0
-                UIConsts::RATINGS.each_with_index { |rating, i|
+                Qualifiers::RATINGS.each_with_index { |rating, i|
                     child = model.append(iter)
                     child[0] = i
                     child[1] = rating.to_html_italic

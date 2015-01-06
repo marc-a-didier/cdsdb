@@ -12,7 +12,6 @@ require 'taglib2'
 require 'yaml'
 require 'rexml/document'
 
-require '../shared/uiconsts'
 require '../shared/cfg'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
@@ -23,12 +22,9 @@ require '../shared/trackinfos'
 
 class MusicServer
 
-    def initialize(parent = nil)
-        @parent = parent
-        if @parent.nil?
-            CFG.load
-            CFG.server_mode = true
-        end
+    def initialize
+        CFG.load
+        CFG.server_mode = true
         CFG.set_local_mode # On va pas cascader les serveurs...
 
         Thread.abort_on_exception = true
@@ -126,11 +122,7 @@ class MusicServer
 
     def update_stats(session)
         session.puts("OK")
-        if @parent
-            @parent.notify_played(session.gets.chomp.to_i, hostname(session))
-        else
-            DBUtils::update_track_stats(session.gets.chomp.to_i, hostname(session))
-        end
+        DBUtils::update_track_stats(session.gets.chomp.to_i, hostname(session))
     end
 
     def exec_sql(session)

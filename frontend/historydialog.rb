@@ -24,7 +24,7 @@ class HistoryDialog
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         @dlg.add_events( Gdk::Event::FOCUS_CHANGE)
         @dlg.signal_connect(:focus_in_event) { |widget, event| @mc.filter_receiver = self; false }
-        @dlg.signal_connect(:show)           { PREFS.load_main(GtkIDs::DLG_HISTORY) }
+        @dlg.signal_connect(:show)           { PREFS.restore_window(GtkIDs::DLG_HISTORY) }
         @dlg.signal_connect(:delete_event)   { notify_and_close; false }
 
         # J'aimerais bien piger une fois comment on envoie un delete_event a la fenetre!!!
@@ -77,7 +77,7 @@ class HistoryDialog
     def notify_and_close
         @mc.reset_filter_receiver
         @mc.history_closed(self)
-        PREFS.save_window(@dlg)
+        PREFS.save_window(GtkIDs::DLG_HISTORY)
         @dlg.destroy
     end
 

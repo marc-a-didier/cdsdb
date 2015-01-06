@@ -26,13 +26,11 @@ require 'thread' # For mutex in tasks window
 
 require 'logger'
 require 'yaml'
-#require 'xml'
+# require 'xml'
 require 'rexml/document'
 require 'uri'
 require 'cgi'
 
-require '../shared/uiconsts'
-require './gtkbuilderintf'
 require '../shared/cfg'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
@@ -42,6 +40,8 @@ require '../shared/dbutils'
 require '../shared/trackinfos'
 require '../shared/audiolink'
 
+require './qualifiers'
+require './gtkbuilderintf'
 
 require './multi_drag_treeview'
 require './extendedtreeview'

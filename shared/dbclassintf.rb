@@ -185,7 +185,7 @@ TrackDBClass = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :st
     end
 
     def banned?
-        return (self.itags & UIConsts::TAGS_BANNED) != 0
+        return (self.itags & Qualifiers::TAGS_BANNED) != 0
     end
 end
 

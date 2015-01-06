@@ -93,7 +93,7 @@ class UIUtils
 
         tvt.append_column(Gtk::TreeViewColumn.new("Match", arenderer, :active => 0))
         tvt.append_column(Gtk::TreeViewColumn.new("Tag", srenderer, :text => 1))
-        UIConsts::TAGS.each { |tag|
+        Qualifiers::TAGS.each { |tag|
             iter = tvt.model.append
             iter[0] = false
             iter[1] = tag

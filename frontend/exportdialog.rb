@@ -5,13 +5,13 @@ class ExportDialog
 
     def initialize()
         GtkUI.load_window(GtkIDs::EXPORT_DEVICE_DIALOG)
-        PREFS.restore_window_content(GtkUI[GtkIDs::EXPORT_DEVICE_DIALOG])
+        PREFS.restore_window(GtkIDs::EXPORT_DEVICE_DIALOG)
     end
 
     def run(exp_params)
         resp = GtkUI[GtkIDs::EXPORT_DEVICE_DIALOG].run
         if resp == Gtk::Dialog::RESPONSE_OK
-            PREFS.save_window_objects(GtkUI[GtkIDs::EXPORT_DEVICE_DIALOG])
+            PREFS.save_window_objects(GtkIDs::EXPORT_DEVICE_DIALOG)
             exp_params.src_folder   = GtkUI[GtkIDs::EXP_DLG_FC_SOURCE].current_folder+"/"
             exp_params.dest_folder  = GtkUI[GtkIDs::EXP_DLG_FC_DEST].current_folder+"/"
             exp_params.remove_genre = GtkUI[GtkIDs::EXP_DLG_CB_RMGENRE].active?

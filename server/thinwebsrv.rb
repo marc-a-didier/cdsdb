@@ -14,7 +14,6 @@ require '../shared/dbintf'
 require '../shared/dbutils'
 require '../shared/dbclassintf'
 require '../shared/utils'
-require '../shared/uiconsts'
 require '../shared/dbutils'
 require '../shared/trackinfos'
 

@@ -193,7 +193,7 @@ class MainWindow < TopWindow
         #RATINGS.each { |rating| iter = GtkUI[TRK_CMB_RATING].model.append; iter[0] = rating }
 
         rating_sm = Gtk::Menu.new
-        UIConsts::RATINGS.each { |rating|
+        Qualifiers::RATINGS.each { |rating|
             item = Gtk::MenuItem.new(rating, false)
             item.signal_connect(:activate) { |widget| on_set_rating(widget) }
             rating_sm.append(item)
@@ -204,7 +204,7 @@ class MainWindow < TopWindow
 
         @tags_handlers = []
         tags_sm = Gtk::Menu.new
-        UIConsts::TAGS.each { |tag|
+        Qualifiers::TAGS.each { |tag|
             item = Gtk::CheckMenuItem.new(tag, false)
             @tags_handlers << item.signal_connect(:activate) { |widget| on_set_tags(widget) }
             tags_sm.append(item)
