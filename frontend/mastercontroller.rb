@@ -17,14 +17,10 @@ class MasterController
 
     include GtkIDs
 
-    attr_reader   :glade
     attr_reader   :player, :pqueue, :plists, :charts, :tasks, :filters, :memos
     attr_accessor :main_filter, :filter_receiver
 
     def initialize
-#         @glade = GTBld.main
-
-
         # SQL AND/OR clause reflecting the filter settings that must be appended to the sql requests
         # if view is filtered
         @main_filter = ""

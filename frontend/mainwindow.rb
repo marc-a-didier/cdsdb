@@ -29,9 +29,6 @@ class MainWindow < TopWindow
     def initialize(mc)
         super(mc, MAIN_WINDOW)
 
-#         @glade = mc.glade
-
-
         @st_icon = Gtk::StatusIcon.new
         @st_icon.stock = Gtk::Stock::CDROM
         if @st_icon.respond_to?(:has_tooltip=) # To keep compat with gtk2 < 2.16

@@ -144,12 +144,11 @@ class ArtistEditor
     include GtkIDs
     include BaseUI
 
-    def initialize(glade, dbs)
-        @glade = glade
+    def initialize(dbs)
         @dbs = dbs
         init_baseui("arted_")
 
-        glade[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
+        GtkUI[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
     end
 end
 
@@ -159,20 +158,19 @@ class RecordEditor
     include GtkIDs
     include BaseUI
 
-    def initialize(glade, dbs)
-        @glade = glade
+    def initialize(dbs)
         @dbs = dbs
         init_baseui("reced_")
 
-        glade[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
-        glade[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
-        glade[RECED_BTN_LABEL].signal_connect(:clicked)      { select_dialog("rlabel") }
-        glade[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog("rmedia") }
-        glade[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog("rcollection") }
-        glade[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
+        GtkUI[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
+        GtkUI[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
+        GtkUI[RECED_BTN_LABEL].signal_connect(:clicked)      { select_dialog("rlabel") }
+        GtkUI[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog("rmedia") }
+        GtkUI[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog("rcollection") }
+        GtkUI[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
 
         [RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
-            glade[ctrl].sensitive = CFG.admin?
+            GtkUI[ctrl].sensitive = CFG.admin?
         }
     end
 
@@ -191,16 +189,15 @@ class SegmentEditor
     include GtkIDs
     include BaseUI
 
-    def initialize(glade, dbs)
-        @glade = glade
+    def initialize(dbs)
         @dbs = dbs
         init_baseui("seged_")
 
-        glade[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
-        glade[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
+        GtkUI[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
+        GtkUI[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
 
         [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
-            glade[ctrl].sensitive = CFG.admin?
+            GtkUI[ctrl].sensitive = CFG.admin?
         }
     end
 
@@ -219,20 +216,19 @@ class TrackEditor
     include GtkIDs
     include BaseUI
 
-    def initialize(glade, dbs)
-        @glade = glade
+    def initialize(dbs)
         @dbs = dbs
         init_baseui("trked_")
 
         #
         # Setup the rating combo
         #
-        RATINGS.each { |rating| glade[TRKED_CMB_RATING].append_text(rating) }
+        Qualifiers::RATINGS.each { |rating| GtkUI[TRKED_CMB_RATING].append_text(rating) }
 
         #
         # Setup the track tags treeview
         #
-        UIUtils::setup_tracks_tags_tv(glade[TRKED_TV_TAGS])
+        UIUtils::setup_tracks_tags_tv(GtkUI[TRKED_TV_TAGS])
     end
 end
 
@@ -246,7 +242,7 @@ class DBEditor
     TRACK_PAGE   = 3
 
     def initialize(mc, dblink, default_page)
-        @glade = GTBld::load(DLG_DB_EDITOR)
+        GtkUI.load_window(DLG_DB_EDITOR)
 
         @dblink = dblink
 
@@ -257,27 +253,27 @@ class DBEditor
 
         # Add editor only if there are data for it
         @editors = [nil, nil, nil, nil]
-        @editors[0] = ArtistEditor.new(@glade, @dblink.artist)   if @dblink.valid_artist_ref?
-        @editors[1] = RecordEditor.new(@glade, @dblink.record)   if @dblink.valid_record_ref?
-        @editors[2] = SegmentEditor.new(@glade, @dblink.segment) if @dblink.valid_segment_ref?
-        @editors[3] = TrackEditor.new(@glade, @dblink.track)     if @dblink.valid_track_ref?
+        @editors[0] = ArtistEditor.new(@dblink.artist)   if @dblink.valid_artist_ref?
+        @editors[1] = RecordEditor.new(@dblink.record)   if @dblink.valid_record_ref?
+        @editors[2] = SegmentEditor.new(@dblink.segment) if @dblink.valid_segment_ref?
+        @editors[3] = TrackEditor.new(@dblink.track)     if @dblink.valid_track_ref?
 
         # Set data to fields or remove page if no data. Do it backward so it doesn't screw with page
         # number since pages are in the tables hierarchy order
-        3.downto(0) { |i|  @editors[i] ? @editors[i].to_widgets : @glade[DBED_NBOOK].remove_page(i) }
+        3.downto(0) { |i|  @editors[i] ? @editors[i].to_widgets : GtkUI[DBED_NBOOK].remove_page(i) }
 
-        @glade[DBED_NBOOK].page = default_page # default page is in theory always visible
+        GtkUI[DBED_NBOOK].page = default_page # default page is in theory always visible
     end
 
     def run
-        @glade[DBED_BTN_OK].sensitive = CFG.admin?
+        GtkUI[DBED_BTN_OK].sensitive = CFG.admin?
 
-        response = @glade[DLG_DB_EDITOR].run
+        response = GtkUI[DLG_DB_EDITOR].run
         if response == Gtk::Dialog::RESPONSE_OK
             @editors.each { |dbs| dbs.from_widgets if dbs }
             @dblink.flush_main_tables
         end
-        @glade[DLG_DB_EDITOR].destroy
+        GtkUI[DLG_DB_EDITOR].destroy
         return response
     end
 end
@@ -290,7 +286,7 @@ class PListDialog < PListDBClass
     def initialize(rplist)
         super()
 
-        @glade = GTBld::load(DLG_PLIST_INFOS)
+        GtkUI.load_window(DLG_PLIST_INFOS)
         @dbs = self
         init_baseui("pldlg_")
 
@@ -299,7 +295,7 @@ class PListDialog < PListDBClass
 
     def run
         to_widgets
-        @glade[DLG_PLIST_INFOS].run
-        @glade[DLG_PLIST_INFOS].destroy
+        GtkUI[DLG_PLIST_INFOS].run
+        GtkUI[DLG_PLIST_INFOS].destroy
     end
 end

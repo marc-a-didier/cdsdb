@@ -11,7 +11,6 @@ class CDEditorWindow
     MODE_FILE = 2
 
     def initialize
-#         @glade = GTBld::load(GtkIDs::CD_EDITOR_WINDOW)
         GtkUI.load_window(GtkIDs::CD_EDITOR_WINDOW)
 
         @window = GtkUI[GtkIDs::CD_EDITOR_WINDOW]

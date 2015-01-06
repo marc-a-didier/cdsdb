@@ -15,13 +15,13 @@ class DateChooser
    end
 
     def set_date(control)
-        dlg_glade = GTBld.load(DLG_DATE_SELECTOR)
-        dlg_glade[DATED_CALENDAR].signal_connect(:day_selected_double_click) { dlg_glade[DATED_BTN_OK].send(:clicked) }
-        if dlg_glade[DLG_DATE_SELECTOR].run == Gtk::Dialog::RESPONSE_OK
-            dt = dlg_glade[DATED_CALENDAR].date
+        GtkUI.load_window(DLG_DATE_SELECTOR)
+        GtkUI[DATED_CALENDAR].signal_connect(:day_selected_double_click) { GtkUI[DATED_BTN_OK].send(:clicked) }
+        if GtkUI[DLG_DATE_SELECTOR].run == Gtk::Dialog::RESPONSE_OK
+            dt = GtkUI[DATED_CALENDAR].date
             control.text = dt[0].to_s+"-"+dt[1].to_s+"-"+dt[2].to_s
         end
-        dlg_glade[DLG_DATE_SELECTOR].destroy
+        GtkUI[DLG_DATE_SELECTOR].destroy
     end
 
     def run

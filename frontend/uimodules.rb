@@ -90,8 +90,8 @@ TRACE.debug("in init_handlers")
 
         @dbs.members.each { |member|
             TYPES_MAP.each { |ui_type, handler_type|
-                if @glade[prefix+ui_type+member.to_s]
-                    @controls[member.to_s] = [@glade[prefix+ui_type+member.to_s], @@handlers[handler_type]]
+                if GtkUI[prefix+ui_type+member.to_s]
+                    @controls[member.to_s] = [GtkUI[prefix+ui_type+member.to_s], @@handlers[handler_type]]
                     break;
                 end
             }
