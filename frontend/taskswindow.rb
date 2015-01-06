@@ -27,9 +27,9 @@ class TasksWindow < TopWindow
 
 
     def initialize(mc)
-        super(mc, UIConsts::TASKS_WINDOW)
+        super(mc, GtkIDs::TASKS_WINDOW)
 
-        @tv = @mc.glade[UIConsts::TASKS_TV]
+        @tv = GtkUI[GtkIDs::TASKS_TV]
 
         progress_renderer = Gtk::CellRendererProgress.new
         progress_renderer.sensitive = false
@@ -68,12 +68,12 @@ class TasksWindow < TopWindow
 
         @tv.signal_connect(:button_press_event) { |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
-                @mc.glade[UIConsts::TASKS_POPUP_MENU].popup(nil, nil, event.button, event.time)
+                GtkUI[GtkIDs::TASKS_POPUP_MENU].popup(nil, nil, event.button, event.time)
             end
         }
 
-        @mc.glade[UIConsts::TKPM_CLOSE].signal_connect(:activate) { @mc.glade[UIConsts::MM_WIN_TASKS].signal_emit(:activate) }
-        @mc.glade[UIConsts::TKPM_CLEAR].signal_connect(:activate) {
+        GtkUI[GtkIDs::TKPM_CLOSE].signal_connect(:activate) { GtkUI[GtkIDs::MM_WIN_TASKS].signal_emit(:activate) }
+        GtkUI[GtkIDs::TKPM_CLEAR].signal_connect(:activate) {
             @mutex.synchronize {
                 index = 0
                 while iter = @tv.model.get_iter(index.to_s)
@@ -88,7 +88,7 @@ class TasksWindow < TopWindow
         }
 
         # Check if there is at least one download in progress before setting the cancel flag
-        @mc.glade[UIConsts::TKPM_CANCEL].signal_connect(:activate) {
+        GtkUI[GtkIDs::TKPM_CANCEL].signal_connect(:activate) {
             @tv.model.each { |model, path, iter|
                 @has_cancelled = true if in_downloads?(iter)
                 break if @has_cancelled
@@ -125,7 +125,7 @@ class TasksWindow < TopWindow
             if @chk_thread.nil?
 TRACE.debug("task thread started...".green)
                 DBCACHE.set_audio_status_from_to(AudioLink::NOT_FOUND, AudioLink::UNKNOWN)
-#                 @mc.glade[UIConsts::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
+#                 GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
                 @chk_thread = Thread.new {
                     loop do
                         check_waiting_tasks
@@ -137,7 +137,7 @@ TRACE.debug("task thread started...".green)
             DBCACHE.set_audio_status_from_to(AudioLink::ON_SERVER, AudioLink::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
-#             @mc.glade[UIConsts::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
+#             GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
 TRACE.debug("task thread stopped".brown)
         end
     end

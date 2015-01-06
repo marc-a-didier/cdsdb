@@ -2,10 +2,10 @@
 class PlayHistoryDialog
 
     def initialize
-        @glade = GTBld::load(UIConsts::PLAY_HISTORY_DIALOG)
-        @dlg = @glade[UIConsts::PLAY_HISTORY_DIALOG]
+        GtkUI.load_window(GtkIDs::PLAY_HISTORY_DIALOG)
+        @dlg = GtkUI[GtkIDs::PLAY_HISTORY_DIALOG]
 
-        @tv = @glade[UIConsts::PH_TV]
+        @tv = GtkUI[GtkIDs::PH_TV]
     end
 
     def show_ranking(sql, ref)
@@ -20,7 +20,7 @@ class PlayHistoryDialog
             prev = row[0]
         }
 
-        @glade[UIConsts::PH_CHARTS_LBL].text = pos == 0 ? "---" : rank.to_s
+        GtkUI[GtkIDs::PH_CHARTS_LBL].text = pos == 0 ? "---" : rank.to_s
     end
 
     def show_track_history(rtrack)

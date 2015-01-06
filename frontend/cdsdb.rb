@@ -32,6 +32,7 @@ require 'uri'
 require 'cgi'
 
 require '../shared/uiconsts'
+require './gtkbuilderintf'
 require '../shared/cfg'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
@@ -40,6 +41,7 @@ require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/trackinfos'
 require '../shared/audiolink'
+
 
 require './multi_drag_treeview'
 require './extendedtreeview'
@@ -276,7 +278,7 @@ require './my_rr_lib'
 
 class Cdsdb
 
-    VERSION = "0.9.0"
+    VERSION = "0.9.5"
 
     def has_arg(arg)
         ARGV.each { |the_arg| return true if the_arg == arg }

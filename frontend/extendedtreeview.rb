@@ -2,14 +2,14 @@
 class Gtk::TreeView
 
     attr_accessor :mc
-    
+
 #     def initialize(mc)
 #         super()
 #         @mc = mc
 #     end
 
     def finalize_setup
-        set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
+        set_ref_column_visibility(GtkUI[GtkIDs::MM_VIEW_DBREFS].active?)
         return self
     end
 
@@ -74,8 +74,8 @@ class Gtk::TreeView
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view except in admin mode
             return if selection.selected.nil? && !CFG.admin?
-            @mc.update_tags_menu(self, @mc.glade[UIConsts::REC_POPUP_TAGS]) if self.instance_of?(RecordsBrowser)
-            @mc.glade[menu_name].popup(nil, nil, event.button, event.time)
+            @mc.update_tags_menu(self, GtkUI[GtkIDs::REC_POPUP_TAGS]) if self.instance_of?(RecordsBrowser)
+            GtkUI[menu_name].popup(nil, nil, event.button, event.time)
         end
     end
 

@@ -15,7 +15,7 @@
 
 class MainWindow < TopWindow
 
-    include UIConsts
+    include GtkIDs
 
     attr_reader :art_browser, :rec_browser, :trk_browser
     attr_reader :history, :search_dlg
@@ -29,7 +29,7 @@ class MainWindow < TopWindow
     def initialize(mc)
         super(mc, MAIN_WINDOW)
 
-        @glade = mc.glade
+#         @glade = mc.glade
 
 
         @st_icon = Gtk::StatusIcon.new
@@ -43,7 +43,7 @@ class MainWindow < TopWindow
             }
         end
         @st_icon.signal_connect(:popup_menu) { |tray, button, time|
-            @glade[TTPM_MENU].popup(nil, nil, button, time) { |menu, x, y, push_in|
+            GtkUI[TTPM_MENU].popup(nil, nil, button, time) { |menu, x, y, push_in|
                 @st_icon.position_menu(menu)
             }
         }
@@ -55,52 +55,52 @@ class MainWindow < TopWindow
 
 
         # Set cd image to default image
-        @glade[REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
+        GtkUI[REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
 
         Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"player.png"))
         Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"pqueue.png"))
         Gtk::IconTheme.add_builtin_icon("plists_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"plists.png"))
         Gtk::IconTheme.add_builtin_icon("charts_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"charts.png"))
-        @glade[MW_TBBTN_PLAYER].icon_name = "player_icon"
-        @glade[MW_TBBTN_PQUEUE].icon_name = "pqueue_icon"
-        @glade[MW_TBBTN_PLISTS].icon_name = "plists_icon"
-        @glade[MW_TBBTN_CHARTS].icon_name = "charts_icon"
+        GtkUI[MW_TBBTN_PLAYER].icon_name = "player_icon"
+        GtkUI[MW_TBBTN_PQUEUE].icon_name = "pqueue_icon"
+        GtkUI[MW_TBBTN_PLISTS].icon_name = "plists_icon"
+        GtkUI[MW_TBBTN_CHARTS].icon_name = "charts_icon"
 
         Gtk::IconTheme.add_builtin_icon("server_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"network-server.png"))
         Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, UIUtils::get_btn_icon(CFG.icons_dir+"tasks.png"))
         Gtk::IconTheme.add_builtin_icon("filter_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"filter.png"))
         Gtk::IconTheme.add_builtin_icon("memos_icon",  22, UIUtils::get_btn_icon(CFG.icons_dir+"document-edit.png"))
 
-        @glade[MW_TBBTN_SERVER].icon_name = "server_icon"
-        @glade[MW_TBBTN_TASKS].icon_name  = "tasks_icon"
-        @glade[MW_TBBTN_FILTER].icon_name = "filter_icon"
-        @glade[MW_TBBTN_MEMOS].icon_name  = "memos_icon"
+        GtkUI[MW_TBBTN_SERVER].icon_name = "server_icon"
+        GtkUI[MW_TBBTN_TASKS].icon_name  = "tasks_icon"
+        GtkUI[MW_TBBTN_FILTER].icon_name = "filter_icon"
+        GtkUI[MW_TBBTN_MEMOS].icon_name  = "memos_icon"
 
 
         # Connect signals needed to restore windows positions
-        @glade[MW_PLAYER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.player)  }
-        @glade[MW_PQUEUE_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.pqueue)  }
-        @glade[MW_PLISTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.plists)  }
-        @glade[MW_CHARTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.charts)  }
-        @glade[MW_TASKS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.tasks )  }
-        @glade[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filters) }
-        @glade[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
-        @glade[MW_SERVER_ACTION].signal_connect(:activate) {
-            CFG.set_remote(@glade[MW_SERVER_ACTION].active?)
+        GtkUI[MW_PLAYER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.player)  }
+        GtkUI[MW_PQUEUE_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.pqueue)  }
+        GtkUI[MW_PLISTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.plists)  }
+        GtkUI[MW_CHARTS_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.charts)  }
+        GtkUI[MW_TASKS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.tasks )  }
+        GtkUI[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filters) }
+        GtkUI[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
+        GtkUI[MW_SERVER_ACTION].signal_connect(:activate) {
+            CFG.set_remote(GtkUI[MW_SERVER_ACTION].active?)
             @mc.tasks.check_config
             @trk_browser.check_for_audio_file if @trk_browser
         }
 
-        @glade[MM_PLAYER_SRC_AUTO].signal_connect(:activate)    { |widget| @mc.set_player_source(nil) if widget.active?         }
-        @glade[MM_PLAYER_SRC_PQ].signal_connect(:activate)      { |widget| @mc.set_player_source(@mc.pqueue) if widget.active?  }
-        @glade[MM_PLAYER_SRC_PLIST].signal_connect(:activate)   { |widget| @mc.set_player_source(@mc.plists) if widget.active?  }
-        @glade[MM_PLAYER_SRC_BROWSER].signal_connect(:activate) { |widget| @mc.set_player_source(@trk_browser)if widget.active? }
+        GtkUI[MM_PLAYER_SRC_AUTO].signal_connect(:activate)    { |widget| @mc.set_player_source(nil) if widget.active?         }
+        GtkUI[MM_PLAYER_SRC_PQ].signal_connect(:activate)      { |widget| @mc.set_player_source(@mc.pqueue) if widget.active?  }
+        GtkUI[MM_PLAYER_SRC_PLIST].signal_connect(:activate)   { |widget| @mc.set_player_source(@mc.plists) if widget.active?  }
+        GtkUI[MM_PLAYER_SRC_BROWSER].signal_connect(:activate) { |widget| @mc.set_player_source(@trk_browser)if widget.active? }
 
         # Action called from the memos window, equivalent to File/Save of the main window
-        @glade[MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
+        GtkUI[MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
 
         # Load view menu before instantiating windows (plists case)
-        PREFS.load_menu_state(@mc, @glade[VIEW_MENU])
+        PREFS.load_menu_state(GtkUI[VIEW_MENU])
 
         # Set windows icons
         @mc.pqueue.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"pqueue.png")
@@ -116,71 +116,71 @@ class MainWindow < TopWindow
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
-        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.load_menu_state(@mc, @glade[menu]) }
+        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.load_menu_state(GtkUI[menu]) }
 
 
         #
         # Toute la plomberie...
         #
-        @glade[MM_FILE_CHECKCD].signal_connect(:activate)     { CDEditorWindow.new.edit_record }
-        @glade[MM_FILE_IMPORTSQL].signal_connect(:activate)   { import_sql_file }
-        @glade[MM_FILE_IMPORTAUDIO].signal_connect(:activate) { on_import_audio_file }
-        #@glade[MM_FILE_SAVE].signal_connect(:activate)        { on_save_item }
-        @glade[MM_FILE_QUIT].signal_connect(:activate)        { @mc.clean_up; Gtk.main_quit }
+        GtkUI[MM_FILE_CHECKCD].signal_connect(:activate)     { CDEditorWindow.new.edit_record }
+        GtkUI[MM_FILE_IMPORTSQL].signal_connect(:activate)   { import_sql_file }
+        GtkUI[MM_FILE_IMPORTAUDIO].signal_connect(:activate) { on_import_audio_file }
+        #GtkUI[MM_FILE_SAVE].signal_connect(:activate)        { on_save_item }
+        GtkUI[MM_FILE_QUIT].signal_connect(:activate)        { @mc.clean_up; Gtk.main_quit }
 
-        @glade[MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = SearchDialog.new(@mc).run }
-        @glade[MM_EDIT_PREFS].signal_connect(:activate)       { PrefsDialog.new.run; @mc.tasks.check_config }
+        GtkUI[MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = SearchDialog.new(@mc).run }
+        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { PrefsDialog.new.run; @mc.tasks.check_config }
 
 
-        @glade[MM_VIEW_BYRATING].signal_connect(:activate) { record_changed   }
-        @glade[MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
-        @glade[MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
+        GtkUI[MM_VIEW_BYRATING].signal_connect(:activate) { record_changed   }
+        GtkUI[MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
+        GtkUI[MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 
         # Faudra revoir, on peut ouvrir plusieurs fenetre des recent items en meme temps...
-        @glade[MM_WIN_RECENT].signal_connect(:activate) { handle_history(RECENT_ADDED)  }
-        @glade[MM_WIN_RIPPED].signal_connect(:activate) { handle_history(RECENT_RIPPED) }
-        @glade[MM_WIN_PLAYED].signal_connect(:activate) { handle_history(RECENT_PLAYED) }
-        @glade[MM_WIN_DATES].signal_connect(:activate)  { handle_history(VIEW_BY_DATES) }
+        GtkUI[MM_WIN_RECENT].signal_connect(:activate) { handle_history(RECENT_ADDED)  }
+        GtkUI[MM_WIN_RIPPED].signal_connect(:activate) { handle_history(RECENT_RIPPED) }
+        GtkUI[MM_WIN_PLAYED].signal_connect(:activate) { handle_history(RECENT_PLAYED) }
+        GtkUI[MM_WIN_DATES].signal_connect(:activate)  { handle_history(VIEW_BY_DATES) }
 
-        @glade[MM_TOOLS_BATCHRG].signal_connect(:activate) { Utils.replay_gain_for_genre }
+        GtkUI[MM_TOOLS_BATCHRG].signal_connect(:activate) { Utils.replay_gain_for_genre }
 #             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
 #                 Gtk.main_iteration while Gtk.events_pending?
 #             } )
 #         }
-        @glade[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
-        @glade[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(@glade["main_window"]) }
-        @glade[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played } # update_log_time
-        @glade[MM_TOOLS_SYNCSRC].signal_connect(:activate)     { on_update_sources }
-        @glade[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
-        @glade[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
-        @glade[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
-        @glade[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
-        @glade[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
-        @glade[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
+        GtkUI[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
+        GtkUI[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(GtkUI["main_window"]) }
+        GtkUI[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played } # update_log_time
+        GtkUI[MM_TOOLS_SYNCSRC].signal_connect(:activate)     { on_update_sources }
+        GtkUI[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
+        GtkUI[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
+        GtkUI[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
+        GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
+        GtkUI[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
+        GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
 
-        @glade[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
+        GtkUI[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
 
-        @glade[REC_VP_IMAGE].signal_connect("button_press_event") { zoom_rec_image }
+        GtkUI[REC_VP_IMAGE].signal_connect("button_press_event") { zoom_rec_image }
 
-        @glade[MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
-        @glade[MAIN_WINDOW].signal_connect(:delete_event) { @mc.clean_up; false }
+        GtkUI[MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
+        GtkUI[MAIN_WINDOW].signal_connect(:delete_event) { @mc.clean_up; false }
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
-        @glade[MAIN_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE) # It took me ages to research this
-        @glade[MAIN_WINDOW].signal_connect("focus_in_event") { |widget, event| @mc.filter_receiver = self; false }
+        GtkUI[MAIN_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE) # It took me ages to research this
+        GtkUI[MAIN_WINDOW].signal_connect("focus_in_event") { |widget, event| @mc.filter_receiver = self; false }
 
         # Status icon popup menu
-        @glade[TTPM_ITEM_PLAY].signal_connect(:activate)  { @glade[PLAYER_BTN_START].send(:clicked) }
-        @glade[TTPM_ITEM_PAUSE].signal_connect(:activate) { @glade[PLAYER_BTN_START].send(:clicked) }
-        @glade[TTPM_ITEM_STOP].signal_connect(:activate)  { @glade[PLAYER_BTN_STOP].send(:clicked) }
-        @glade[TTPM_ITEM_PREV].signal_connect(:activate)  { @glade[PLAYER_BTN_PREV].send(:clicked) }
-        @glade[TTPM_ITEM_NEXT].signal_connect(:activate)  { @glade[PLAYER_BTN_NEXT].send(:clicked) }
-        @glade[TTPM_ITEM_QUIT].signal_connect(:activate)  { @glade[MM_FILE_QUIT].send(:activate) }
+        GtkUI[TTPM_ITEM_PLAY].signal_connect(:activate)  { GtkUI[PLAYER_BTN_START].send(:clicked) }
+        GtkUI[TTPM_ITEM_PAUSE].signal_connect(:activate) { GtkUI[PLAYER_BTN_START].send(:clicked) }
+        GtkUI[TTPM_ITEM_STOP].signal_connect(:activate)  { GtkUI[PLAYER_BTN_STOP].send(:clicked) }
+        GtkUI[TTPM_ITEM_PREV].signal_connect(:activate)  { GtkUI[PLAYER_BTN_PREV].send(:clicked) }
+        GtkUI[TTPM_ITEM_NEXT].signal_connect(:activate)  { GtkUI[PLAYER_BTN_NEXT].send(:clicked) }
+        GtkUI[TTPM_ITEM_QUIT].signal_connect(:activate)  { GtkUI[MM_FILE_QUIT].send(:activate) }
 
 
         dragtable = [ ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105] ] #, #DragType::URI_LIST],
                       #["image/jpeg", Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
-        @ri = @glade[REC_VP_IMAGE]
+        @ri = GtkUI[REC_VP_IMAGE]
         Gtk::Drag::dest_set(@ri, Gtk::Drag::DEST_DEFAULT_ALL, dragtable, Gdk::DragContext::ACTION_COPY)
         @ri.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time|
             on_urls_received(widget, context, x, y, data, info, time)
@@ -190,34 +190,34 @@ class MainWindow < TopWindow
         # Generate the submenus for the tags and ratings of the records and tracks popup menus
         # One of worst piece of code ever seen!!!
         #
-        #RATINGS.each { |rating| iter = @glade[TRK_CMB_RATING].model.append; iter[0] = rating }
+        #RATINGS.each { |rating| iter = GtkUI[TRK_CMB_RATING].model.append; iter[0] = rating }
 
         rating_sm = Gtk::Menu.new
-        RATINGS.each { |rating|
+        UIConsts::RATINGS.each { |rating|
             item = Gtk::MenuItem.new(rating, false)
             item.signal_connect(:activate) { |widget| on_set_rating(widget) }
             rating_sm.append(item)
         }
-        @glade[REC_POPUP_RATING].submenu = rating_sm
-        @glade[TRK_POPUP_RATING].submenu = rating_sm
+        GtkUI[REC_POPUP_RATING].submenu = rating_sm
+        GtkUI[TRK_POPUP_RATING].submenu = rating_sm
         rating_sm.show_all
 
         @tags_handlers = []
         tags_sm = Gtk::Menu.new
-        TAGS.each { |tag|
+        UIConsts::TAGS.each { |tag|
             item = Gtk::CheckMenuItem.new(tag, false)
             @tags_handlers << item.signal_connect(:activate) { |widget| on_set_tags(widget) }
             tags_sm.append(item)
         }
-        @glade[REC_POPUP_TAGS].submenu = tags_sm
-        @glade[TRK_POPUP_TAGS].submenu = tags_sm
+        GtkUI[REC_POPUP_TAGS].submenu = tags_sm
+        GtkUI[TRK_POPUP_TAGS].submenu = tags_sm
         tags_sm.show_all
 
         # Disable sensible controls if not in admin mode
-        ADMIN_CTRLS.each { |control| @glade[control].sensitive = false } unless CFG.admin?
+        ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless CFG.admin?
 
-        @glade[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
-        @glade[MAIN_WINDOW].show
+        GtkUI[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
+        GtkUI[MAIN_WINDOW].show
 
         #
         # Setup the treeviews
@@ -235,7 +235,7 @@ class MainWindow < TopWindow
     end
 
     def set_window_title
-        @glade[MAIN_WINDOW].title = "CDsDB -- [#{DBUtils.get_total_played}]"
+        GtkUI[MAIN_WINDOW].title = "CDsDB #{Cdsdb::VERSION} -- [#{DBUtils.get_total_played}]"
     end
 
     def on_urls_received(widget, context, x, y, data, info, time)
@@ -311,7 +311,7 @@ class MainWindow < TopWindow
 
     def set_dbrefs_visibility
         [@art_browser, @rec_browser, @trk_browser, @mc.plists, @mc.filters].each { |receiver|
-            receiver.set_ref_column_visibility(@glade[MM_VIEW_DBREFS].active?)
+            receiver.set_ref_column_visibility(GtkUI[MM_VIEW_DBREFS].active?)
         }
     end
 

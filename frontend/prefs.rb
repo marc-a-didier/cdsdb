@@ -19,10 +19,10 @@ class Prefs
     #
 
     # Called by windows or dialogs that are not TopWindow descendants.
-    def load_main(glade, name)
+    def load_main(name)
         return if CFG.windows[name].nil?
         CFG.windows[name].each do |obj, msg|
-            msg.each { |method, params| glade[obj].send(method.to_sym, *params) }
+            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
 
@@ -30,7 +30,7 @@ class Prefs
     def load_window(top_window)
         return if CFG.windows[top_window.window.builder_name].nil?
         CFG.windows[top_window.window.builder_name].each do |obj, msg|
-            msg.each { |method, params| top_window.mc.glade[obj].send(method.to_sym, *params) }
+            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
 
@@ -72,10 +72,10 @@ class Prefs
         end
     end
 
-    def restore_window_content(glade, window)
+    def restore_window_content(window)
         return if CFG.windows[window.builder_name].nil?
         CFG.windows[window.builder_name].each do |obj, msg|
-            msg.each { |method, params| glade[obj].send(method.to_sym, *params) }
+            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
 
@@ -84,17 +84,17 @@ class Prefs
     # Menu config (waiting to find how to discover menus when looping through a window's children
     #
 
-    def save_menu_state(mw, menu)
+    def save_menu_state(menu)
         CFG.menus[menu.builder_name] = {}
         menu.each { |child|
             CFG.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.is_a?(Gtk::CheckMenuItem) || child.is_a?(Gtk::RadioMenuItem)
         }
     end
 
-    def load_menu_state(mw, menu)
+    def load_menu_state(menu)
         return if CFG.menus[menu.builder_name].nil?
         CFG.menus[menu.builder_name].each do |obj, msg|
-            msg.each { |method, params| mw.glade[obj].send(method.to_sym, *params) }
+            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
 
@@ -130,14 +130,14 @@ class Prefs
         return yml.to_yaml.gsub(/\n/, '\n')
     end
 
-    def content_from_yaml(glade, yaml_str)
+    def content_from_yaml(yaml_str)
         yml = YAML.load(yaml_str)
         yml[FILTER].each do |obj, msg|
             msg.each do |method, params|
                 if method == "items"
-                    params[0].bytes.each_with_index { |byte, i| glade[obj].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
+                    params[0].bytes.each_with_index { |byte, i| GtkUI[obj].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
                 else
-                    glade[obj].send(method.to_sym, *params)
+                    GtkUI[obj].send(method.to_sym, *params)
                 end
             end
         end

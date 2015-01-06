@@ -29,33 +29,33 @@ private
 public
 
     def initialize(mc)
-        super(mc, UIConsts::PLISTS_WINDOW)
+        super(mc, GtkIDs::PLISTS_WINDOW)
 
-        @mc.glade[UIConsts::PM_PL_ADD].signal_connect(:activate)           { do_add }
-        @mc.glade[UIConsts::PM_PL_DELETE].signal_connect(:activate)        { |widget| do_del(widget) }
-        @mc.glade[UIConsts::PM_PL_INFOS].signal_connect(:activate)         { show_infos(true) }
-        @mc.glade[UIConsts::PM_PL_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
-        @mc.glade[UIConsts::PM_PL_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
-        @mc.glade[UIConsts::PM_PL_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
-        @mc.glade[UIConsts::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { do_export_to_device }
-        @mc.glade[UIConsts::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
-        @mc.glade[UIConsts::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
-        @mc.glade[UIConsts::PM_PL_SHOWINBROWSER].signal_connect(:activate) {
+        GtkUI[GtkIDs::PM_PL_ADD].signal_connect(:activate)           { do_add }
+        GtkUI[GtkIDs::PM_PL_DELETE].signal_connect(:activate)        { |widget| do_del(widget) }
+        GtkUI[GtkIDs::PM_PL_INFOS].signal_connect(:activate)         { show_infos(true) }
+        GtkUI[GtkIDs::PM_PL_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
+        GtkUI[GtkIDs::PM_PL_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
+        GtkUI[GtkIDs::PM_PL_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
+        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { do_export_to_device }
+        GtkUI[GtkIDs::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
+        GtkUI[GtkIDs::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
+        GtkUI[GtkIDs::PM_PL_SHOWINBROWSER].signal_connect(:activate) {
             @mc.select_track(@pts.get_iter(@tvpt.selection.selected_rows[0])[TT_DATA])
         }
 
-        @mc.glade[UIConsts::PL_MB_NEW].signal_connect(:activate)           { do_add }
-        #@mc.glade[UIConsts::PL_MB_DELETE].signal_connect(:activate) { do_del }
-        @mc.glade[UIConsts::PL_MB_INFOS].signal_connect(:activate)         { show_infos(false) }
-        @mc.glade[UIConsts::PL_MB_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
-        @mc.glade[UIConsts::PL_MB_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
-        @mc.glade[UIConsts::PL_MB_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
-        @mc.glade[UIConsts::PL_MB_EXPORT_DEVICE].signal_connect(:activate) { do_export_to_device }
-        @mc.glade[UIConsts::PL_MB_CLOSE].signal_connect(:activate)         { window.signal_emit(:delete_event, nil) }
+        GtkUI[GtkIDs::PL_MB_NEW].signal_connect(:activate)           { do_add }
+        #GtkUI[GtkIDs::PL_MB_DELETE].signal_connect(:activate) { do_del }
+        GtkUI[GtkIDs::PL_MB_INFOS].signal_connect(:activate)         { show_infos(false) }
+        GtkUI[GtkIDs::PL_MB_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
+        GtkUI[GtkIDs::PL_MB_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
+        GtkUI[GtkIDs::PL_MB_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
+        GtkUI[GtkIDs::PL_MB_EXPORT_DEVICE].signal_connect(:activate) { do_export_to_device }
+        GtkUI[GtkIDs::PL_MB_CLOSE].signal_connect(:activate)         { window.signal_emit(:delete_event, nil) }
 
-        @mc.glade[UIConsts::PL_MB_SHUFFLE].signal_connect(:activate)   { shuffle_play_list }
-        @mc.glade[UIConsts::PL_MB_RENUMBER].signal_connect(:activate)  { do_renumber }
-        @mc.glade[UIConsts::PL_MB_CHKORPHAN].signal_connect(:activate) { do_check_orphans }
+        GtkUI[GtkIDs::PL_MB_SHUFFLE].signal_connect(:activate)   { shuffle_play_list }
+        GtkUI[GtkIDs::PL_MB_RENUMBER].signal_connect(:activate)  { do_renumber }
+        GtkUI[GtkIDs::PL_MB_CHKORPHAN].signal_connect(:activate) { do_check_orphans }
 
         edrenderer = Gtk::CellRendererText.new()
         edrenderer.editable = true
@@ -66,7 +66,7 @@ public
 #         trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
 #         trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[col] }
 
-        @tvpl = @mc.glade[UIConsts::TV_PLISTS]
+        @tvpl = GtkUI[GtkIDs::TV_PLISTS]
         @pls = Gtk::ListStore.new(Integer, String)
         @current_pl = PListDBClass.new
 
@@ -83,7 +83,7 @@ public
 
         @tvpl.signal_connect(:cursor_changed) { on_pl_change }
 
-        @tvpt = @mc.glade[UIConsts::TV_PLTRACKS]
+        @tvpt = GtkUI[GtkIDs::TV_PLTRACKS]
         @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class, Integer)
 
         ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index { |name, i|
@@ -141,20 +141,20 @@ public
 
         # Threading problems...
 
-#         set_ref_column_visibility(@mc.glade[UIConsts::MM_VIEW_DBREFS].active?)
+#         set_ref_column_visibility(GtkUI[GtkIDs::MM_VIEW_DBREFS].active?)
 
         reset_player_data_state
     end
 
     def show_popup(widget, event, is_play_list)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
-            @mc.glade[UIConsts::PM_PL_ADD].sensitive = is_play_list == 1
-            @mc.glade[UIConsts::PM_PL_EXPORT_XSPF].sensitive = is_play_list == 1
-            @mc.glade[UIConsts::PM_PL_EXPORT_M3U].sensitive = is_play_list == 1
-            @mc.glade[UIConsts::PM_PL_EXPORT_PLS].sensitive = is_play_list == 1
-            @mc.glade[UIConsts::PM_PL_ENQUEUE].sensitive = is_play_list == 0
-            @mc.glade[UIConsts::PM_PL_SHOWINBROWSER].sensitive = is_play_list == 0
-            @mc.glade[UIConsts::PM_PL].popup(nil, nil, event.button, event.time)
+            GtkUI[GtkIDs::PM_PL_ADD].sensitive = is_play_list == 1
+            GtkUI[GtkIDs::PM_PL_EXPORT_XSPF].sensitive = is_play_list == 1
+            GtkUI[GtkIDs::PM_PL_EXPORT_M3U].sensitive = is_play_list == 1
+            GtkUI[GtkIDs::PM_PL_EXPORT_PLS].sensitive = is_play_list == 1
+            GtkUI[GtkIDs::PM_PL_ENQUEUE].sensitive = is_play_list == 0
+            GtkUI[GtkIDs::PM_PL_SHOWINBROWSER].sensitive = is_play_list == 0
+            GtkUI[GtkIDs::PM_PL].popup(nil, nil, event.button, event.time)
         end
     end
 
@@ -294,18 +294,18 @@ p new_iorder
 
     # Displayed infos when plists window is not the current player provider
     def plist_infos
-        @mc.glade[UIConsts::PL_LBL_TRACKS].text = @tracks.to_s+" track".check_plural(@tracks)
-        @mc.glade[UIConsts::PL_LBL_PTIME].text = @ttime.to_hr_length
-        @mc.glade[UIConsts::PL_LBL_ETA].text = ""
+        GtkUI[GtkIDs::PL_LBL_TRACKS].text = @tracks.to_s+" track".check_plural(@tracks)
+        GtkUI[GtkIDs::PL_LBL_PTIME].text = @ttime.to_hr_length
+        GtkUI[GtkIDs::PL_LBL_ETA].text = ""
     end
 
     def update_tracks_label
-        @mc.glade[UIConsts::PL_LBL_TRACKS].text = "Track #{@track_ref+1} of #{@tracks}"
+        GtkUI[GtkIDs::PL_LBL_TRACKS].text = "Track #{@track_ref+1} of #{@tracks}"
     end
 
     def update_ptime_label(rmg_time)
-        @mc.glade[UIConsts::PL_LBL_PTIME].text = "#{rmg_time.to_hr_length} left of #{@ttime.to_hr_length}"
-        @mc.glade[UIConsts::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime("%a %d, %H:%M")
+        GtkUI[GtkIDs::PL_LBL_PTIME].text = "#{rmg_time.to_hr_length} left of #{@ttime.to_hr_length}"
+        GtkUI[GtkIDs::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime("%a %d, %H:%M")
     end
 
     def update_remaining_time
@@ -396,7 +396,7 @@ p new_iorder
 
     def do_del(widget)
         # Check if the add item is sensitive to determinate if the popup is in the play lists or tracks
-        unless @mc.glade[UIConsts::PM_PL_ADD].sensitive?
+        unless GtkUI[GtkIDs::PM_PL_ADD].sensitive?
             iters = []
             sql = "DELETE FROM pltracks WHERE rpltrack IN ("
             @tvpt.selection.selected_each { |model, path, iter| sql += iter[0].to_s+","; iters << iter }
@@ -456,7 +456,7 @@ p new_iorder
 
     def show_infos(is_popup)
         if is_popup
-            if @mc.glade[UIConsts::PM_PL_ADD].sensitive?
+            if GtkUI[GtkIDs::PM_PL_ADD].sensitive?
                 PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected
             else
                 iter = @tvpt.selection.count_selected_rows > 0 ? @pts.get_iter(@tvpt.selection.selected_rows[0]) : nil

@@ -11,12 +11,13 @@ class CDEditorWindow
     MODE_FILE = 2
 
     def initialize
-        @glade = GTBld::load(UIConsts::CD_EDITOR_WINDOW)
+#         @glade = GTBld::load(GtkIDs::CD_EDITOR_WINDOW)
+        GtkUI.load_window(GtkIDs::CD_EDITOR_WINDOW)
 
-        @window = @glade[UIConsts::CD_EDITOR_WINDOW]
-        @tv = @glade[UIConsts::CDED_TV]
+        @window = GtkUI[GtkIDs::CD_EDITOR_WINDOW]
+        @tv = GtkUI[GtkIDs::CDED_TV]
 
-        @window.signal_connect(:show)         { PREFS.load_main(@glade, UIConsts::CD_EDITOR_WINDOW) }
+        @window.signal_connect(:show)         { PREFS.load_main(GtkIDs::CD_EDITOR_WINDOW) }
         @window.signal_connect(:delete_event) { PREFS.save_window(@window); false }
 
 
@@ -25,12 +26,12 @@ class CDEditorWindow
                       ["text/plain", Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
         @tv.enable_model_drag_dest(dragtable, Gdk::DragContext::ACTION_COPY)
 
-        @glade[UIConsts::CDED_BTN_CP_ARTIST].signal_connect(:clicked) { on_cp_btn(3) }
-        @glade[UIConsts::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
-        @glade[UIConsts::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
-        @glade[UIConsts::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
-        @glade["cded_btn_rip"].signal_connect(:clicked)               { rip_tracks }
-        @glade[UIConsts::CDED_BTN_CLOSE].signal_connect(:clicked)     {
+        GtkUI[GtkIDs::CDED_BTN_CP_ARTIST].signal_connect(:clicked) { on_cp_btn(3) }
+        GtkUI[GtkIDs::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
+        GtkUI[GtkIDs::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
+        GtkUI[GtkIDs::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
+        GtkUI["cded_btn_rip"].signal_connect(:clicked)               { rip_tracks }
+        GtkUI[GtkIDs::CDED_BTN_CLOSE].signal_connect(:clicked)     {
             PREFS.save_window(@window)
             @window.destroy
         }
@@ -54,7 +55,7 @@ class CDEditorWindow
 
     def on_cp_btn(column_id)
         @tv.model.each { |model, path, iter|
-            iter[column_id] = column_id == 3 ? @glade[UIConsts::CDED_ENTRY_ARTIST].text : @glade[UIConsts::CDED_ENTRY_TITLE].text
+            iter[column_id] = column_id == 3 ? GtkUI[GtkIDs::CDED_ENTRY_ARTIST].text : GtkUI[GtkIDs::CDED_ENTRY_TITLE].text
         }
     end
 
@@ -68,10 +69,10 @@ class CDEditorWindow
     end
 
     def rip_tracks
-        if @glade["cded_chk_flac"].active? || @glade["cded_chk_ogg"].active?
-            @ripper.settings['flac'] = @glade["cded_chk_flac"].active?
+        if GtkUI["cded_chk_flac"].active? || GtkUI["cded_chk_ogg"].active?
+            @ripper.settings['flac'] = GtkUI["cded_chk_flac"].active?
             @ripper.settings['flacsettings'] = "--best -V"
-            @ripper.settings['vorbis'] = @glade["cded_chk_ogg"].active?
+            @ripper.settings['vorbis'] = GtkUI["cded_chk_ogg"].active?
             @ripper.settings['vorbissettings'] = "-q 8"
             Thread.new { @ripper.prepareRip }
         else
@@ -80,12 +81,12 @@ class CDEditorWindow
     end
 
     def generate_sql
-        @disc.title = @glade[UIConsts::CDED_ENTRY_TITLE].text
-        @disc.artist = @glade[UIConsts::CDED_ENTRY_ARTIST].text
-        @disc.genre = @glade[UIConsts::CDED_ENTRY_GENRE].text
-        @disc.year = @glade[UIConsts::CDED_ENTRY_YEAR].text.to_i
-        @disc.label = @glade[UIConsts::CDED_ENTRY_LABEL].text
-        @disc.catalog = @glade[UIConsts::CDED_ENTRY_CATALOG].text
+        @disc.title = GtkUI[GtkIDs::CDED_ENTRY_TITLE].text
+        @disc.artist = GtkUI[GtkIDs::CDED_ENTRY_ARTIST].text
+        @disc.genre = GtkUI[GtkIDs::CDED_ENTRY_GENRE].text
+        @disc.year = GtkUI[GtkIDs::CDED_ENTRY_YEAR].text.to_i
+        @disc.label = GtkUI[GtkIDs::CDED_ENTRY_LABEL].text
+        @disc.catalog = GtkUI[GtkIDs::CDED_ENTRY_CATALOG].text
 
         @disc.tracks.each_with_index { |track, i|
             iter = @tv.model.get_iter(i.to_s)
@@ -132,10 +133,10 @@ class CDEditorWindow
     end
 
     def setup_tv
-        @glade[UIConsts::CDED_ENTRY_TITLE].text = @disc.title
-        @glade[UIConsts::CDED_ENTRY_ARTIST].text = @disc.artist
-        @glade[UIConsts::CDED_ENTRY_GENRE].text = @disc.genre
-        @glade[UIConsts::CDED_ENTRY_YEAR].text = @disc.year.to_s
+        GtkUI[GtkIDs::CDED_ENTRY_TITLE].text = @disc.title
+        GtkUI[GtkIDs::CDED_ENTRY_ARTIST].text = @disc.artist
+        GtkUI[GtkIDs::CDED_ENTRY_GENRE].text = @disc.genre
+        GtkUI[GtkIDs::CDED_ENTRY_YEAR].text = @disc.year.to_s
 
         @disc.tracks.each { |track| add_track(track) }
     end

@@ -460,7 +460,7 @@ class ArtistsBrowser < Gtk::TreeView
 
     def setup(mc)
         @mc = mc
-        @mc.glade[UIConsts::ARTISTS_TVC].add(self)
+        GtkUI[GtkIDs::ARTISTS_TVC].add(self)
         self.visible = true
         self.enable_search = true
         self.search_column = 3
@@ -487,12 +487,12 @@ class ArtistsBrowser < Gtk::TreeView
         selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         signal_connect(:button_press_event) { |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS || event.button == 3 # left mouse button
-                [UIConsts::ART_POPUP_ADD, UIConsts::ART_POPUP_DEL,
-                 UIConsts::ART_POPUP_EDIT, UIConsts::ART_POPUP_INFOS].each { |item|
-                    @mc.glade[item].sensitive = @tvs && model.iter_depth(@tvs) == @tvs[2].max_level
+                [GtkIDs::ART_POPUP_ADD, GtkIDs::ART_POPUP_DEL,
+                 GtkIDs::ART_POPUP_EDIT, GtkIDs::ART_POPUP_INFOS].each { |item|
+                    GtkUI[item].sensitive = @tvs && model.iter_depth(@tvs) == @tvs[2].max_level
                 }
-                @mc.glade[UIConsts::ART_POPUP_REFRESH].sensitive = @tvs && model.iter_depth(@tvs) < @tvs[2].max_level
-                show_popup(widget, event, UIConsts::ART_POPUP_MENU) if @tvs
+                GtkUI[GtkIDs::ART_POPUP_REFRESH].sensitive = @tvs && model.iter_depth(@tvs) < @tvs[2].max_level
+                show_popup(widget, event, GtkIDs::ART_POPUP_MENU) if @tvs
             end
         }
 
@@ -511,11 +511,11 @@ class ArtistsBrowser < Gtk::TreeView
 #             model.iter_depth(iter) < iter[2].max_level
 #         }
 
-        @mc.glade[UIConsts::ART_POPUP_ADD].signal_connect(:activate)     { on_art_popup_add   }
-        @mc.glade[UIConsts::ART_POPUP_DEL].signal_connect(:activate)     { on_art_popup_del   }
-        @mc.glade[UIConsts::ART_POPUP_EDIT].signal_connect(:activate)    { edit_artist        }
-        @mc.glade[UIConsts::ART_POPUP_INFOS].signal_connect(:activate)   { show_artists_infos }
-        @mc.glade[UIConsts::ART_POPUP_REFRESH].signal_connect(:activate) { reload_sub_tree    }
+        GtkUI[GtkIDs::ART_POPUP_ADD].signal_connect(:activate)     { on_art_popup_add   }
+        GtkUI[GtkIDs::ART_POPUP_DEL].signal_connect(:activate)     { on_art_popup_del   }
+        GtkUI[GtkIDs::ART_POPUP_EDIT].signal_connect(:activate)    { edit_artist        }
+        GtkUI[GtkIDs::ART_POPUP_INFOS].signal_connect(:activate)   { show_artists_infos }
+        GtkUI[GtkIDs::ART_POPUP_REFRESH].signal_connect(:activate) { reload_sub_tree    }
 
         return finalize_setup
     end
@@ -741,22 +741,22 @@ p sql
                INNER JOIN tracks ON tracks.rsegment=segments.rsegment
                WHERE segments.rartist=#{@tvs[0]} AND records.rartist=0;})
 
-        glade = GTBld::load(UIConsts::DLG_ART_INFOS)
+        GtkUI.load_window(GtkIDs::DLG_ART_INFOS)
 
-        glade[UIConsts::ARTINFOS_LBL_RECS_COUNT].text = recs_infos[0].to_s
-        glade[UIConsts::ARTINFOS_LBL_RECS_TRKS].text  = recs_infos[2].to_s
-        glade[UIConsts::ARTINFOS_LBL_RECS_PT].text    = recs_infos[1].to_i.to_day_length
+        GtkUI[GtkIDs::ARTINFOS_LBL_RECS_COUNT].text = recs_infos[0].to_s
+        GtkUI[GtkIDs::ARTINFOS_LBL_RECS_TRKS].text  = recs_infos[2].to_s
+        GtkUI[GtkIDs::ARTINFOS_LBL_RECS_PT].text    = recs_infos[1].to_i.to_day_length
 
-        glade[UIConsts::ARTINFOS_LBL_COMP_COUNT].text = comp_infos[0].to_s
-        glade[UIConsts::ARTINFOS_LBL_COMP_TRKS].text  = comp_infos[2].to_s
-        glade[UIConsts::ARTINFOS_LBL_COMP_PT].text    = comp_infos[1].to_i.to_day_length
+        GtkUI[GtkIDs::ARTINFOS_LBL_COMP_COUNT].text = comp_infos[0].to_s
+        GtkUI[GtkIDs::ARTINFOS_LBL_COMP_TRKS].text  = comp_infos[2].to_s
+        GtkUI[GtkIDs::ARTINFOS_LBL_COMP_PT].text    = comp_infos[1].to_i.to_day_length
 
-        glade[UIConsts::ARTINFOS_LBL_TOT_COUNT].text = (recs_infos[0]+comp_infos[0]).to_s
-        glade[UIConsts::ARTINFOS_LBL_TOT_TRKS].text  = (recs_infos[2]+comp_infos[2]).to_s
-        glade[UIConsts::ARTINFOS_LBL_TOT_PT].text    = (recs_infos[1].to_i+comp_infos[1].to_i).to_day_length
+        GtkUI[GtkIDs::ARTINFOS_LBL_TOT_COUNT].text = (recs_infos[0]+comp_infos[0]).to_s
+        GtkUI[GtkIDs::ARTINFOS_LBL_TOT_TRKS].text  = (recs_infos[2]+comp_infos[2]).to_s
+        GtkUI[GtkIDs::ARTINFOS_LBL_TOT_PT].text    = (recs_infos[1].to_i+comp_infos[1].to_i).to_day_length
 
-        glade[UIConsts::DLG_ART_INFOS].show.run
-        glade[UIConsts::DLG_ART_INFOS].destroy
+        GtkUI[GtkIDs::DLG_ART_INFOS].show.run
+        GtkUI[GtkIDs::DLG_ART_INFOS].destroy
     end
 
 end

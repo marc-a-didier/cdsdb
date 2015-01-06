@@ -1,7 +1,7 @@
 
 class FilterWindow < TopWindow
 
-    include UIConsts
+    include GtkIDs
 
     # Struct that keeps the infos needed to compute a weight or to sort on given criteria
     #     weight:  Global computed weight
@@ -21,26 +21,26 @@ class FilterWindow < TopWindow
     def initialize(mc)
         super(mc, FILTER_WINDOW)
 
-        @mc.glade[FLT_BTN_APPLY].signal_connect(:clicked) { @mc.filter_receiver.set_filter(generate_filter, @must_join_logtracks) }
-        @mc.glade[FLT_BTN_CLEAR].signal_connect(:clicked) { @mc.filter_receiver.set_filter("", false) }
-        @mc.glade[FLT_BTN_SAVE].signal_connect(:clicked)  { save_filter }
-        @mc.glade[FLT_BTN_PLGEN].signal_connect(:clicked) { generate_play_list(DEST_PLIST) }
-        @mc.glade[FLT_BTN_PQGEN].signal_connect(:clicked) { generate_play_list(DEST_PQUEUE) }
+        GtkUI[FLT_BTN_APPLY].signal_connect(:clicked) { @mc.filter_receiver.set_filter(generate_filter, @must_join_logtracks) }
+        GtkUI[FLT_BTN_CLEAR].signal_connect(:clicked) { @mc.filter_receiver.set_filter("", false) }
+        GtkUI[FLT_BTN_SAVE].signal_connect(:clicked)  { save_filter }
+        GtkUI[FLT_BTN_PLGEN].signal_connect(:clicked) { generate_play_list(DEST_PLIST) }
+        GtkUI[FLT_BTN_PQGEN].signal_connect(:clicked) { generate_play_list(DEST_PQUEUE) }
 
-        @mc.glade[FLT_POPITM_NEW].signal_connect(:activate)    { new_filter }
-        @mc.glade[FLT_POPITM_DELETE].signal_connect(:activate) { delete_filter }
+        GtkUI[FLT_POPITM_NEW].signal_connect(:activate)    { new_filter }
+        GtkUI[FLT_POPITM_DELETE].signal_connect(:activate) { delete_filter }
 
-        @mc.glade[FLT_BTN_FROMDATE].signal_connect(:clicked) { set_date(@mc.glade[FLT_ENTRY_FROMDATE]) }
-        @mc.glade[FLT_BTN_TODATE].signal_connect(:clicked)   { set_date(@mc.glade[FLT_ENTRY_TODATE]) }
+        GtkUI[FLT_BTN_FROMDATE].signal_connect(:clicked) { set_date(GtkUI[FLT_ENTRY_FROMDATE]) }
+        GtkUI[FLT_BTN_TODATE].signal_connect(:clicked)   { set_date(GtkUI[FLT_ENTRY_TODATE]) }
 
-        @tv_tags = @mc.glade[FTV_TAGS]
+        @tv_tags = GtkUI[FTV_TAGS]
         UIUtils::setup_tracks_tags_tv(@tv_tags)
         @tv_tags.columns[0].clickable = true
         @tv_tags.columns[0].signal_connect(:clicked) { @tv_tags.model.each { |model, path, iter| iter[0] = !iter[0] } }
 
-        [FLT_CMB_MINRATING, FLT_CMB_MAXRATING].each { |cmb| @mc.glade[cmb].remove_text(0) }
-        RATINGS.each { |rating| @mc.glade[FLT_CMB_MINRATING].append_text(rating) }
-        RATINGS.each { |rating| @mc.glade[FLT_CMB_MAXRATING].append_text(rating) }
+        [FLT_CMB_MINRATING, FLT_CMB_MAXRATING].each { |cmb| GtkUI[cmb].remove_text(0) }
+        UIConsts::RATINGS.each { |rating| GtkUI[FLT_CMB_MINRATING].append_text(rating) }
+        UIConsts::RATINGS.each { |rating| GtkUI[FLT_CMB_MAXRATING].append_text(rating) }
 
         @tvs = []
         TITLES.each_key { |key| @tvs << setup_tv(key) }
@@ -49,7 +49,7 @@ class FilterWindow < TopWindow
         edrenderer.editable = true
         edrenderer.signal_connect(:edited) { |widget, path, new_text| ftv_name_edited(widget, path, new_text) }
 
-        @ftv = @mc.glade["flt_tv_dbase"]
+        @ftv = GtkUI["flt_tv_dbase"]
         @ftv.model = Gtk::ListStore.new(Integer, String, String)
 
         @ftv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new(), :text => 0))
@@ -61,7 +61,7 @@ class FilterWindow < TopWindow
         @ftv.columns[1].clickable = true
         @ftv.columns[2].visible = false
 
-#         set_ref_column_visibility(@mc.glade[MM_VIEW_DBREFS].active?)
+#         set_ref_column_visibility(GtkUI[MM_VIEW_DBREFS].active?)
         @ftv.selection.signal_connect(:changed)  { |widget| on_filter_changed(widget) }
         @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, FLT_POP_ACTIONS) }
         load_ftv
@@ -70,7 +70,7 @@ class FilterWindow < TopWindow
     end
 
     def setup_tv(table_name)
-        tv = @mc.glade["ftv_"+table_name]
+        tv = GtkUI["ftv_"+table_name]
         ls = Gtk::ListStore.new(TrueClass, String, Integer)
         tv.model = ls
 
@@ -101,7 +101,7 @@ class FilterWindow < TopWindow
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view
-            @mc.glade[menu_name].popup(nil, nil, event.button, event.time) if @ftv.selection.selected
+            GtkUI[menu_name].popup(nil, nil, event.button, event.time) if @ftv.selection.selected
         end
     end
 
@@ -119,7 +119,7 @@ class FilterWindow < TopWindow
 
     def on_filter_changed(widget)
         # @ftv.selection.selected may be nil when a new filter is created
-        PREFS.content_from_yaml(@mc.glade, @ftv.selection.selected[2]) if @ftv.selection.selected
+        PREFS.content_from_yaml(@ftv.selection.selected[2]) if @ftv.selection.selected
     end
 
     def new_filter
@@ -135,7 +135,7 @@ class FilterWindow < TopWindow
     end
 
     def save_filter
-        yml_data = PREFS.yaml_from_content(@mc.glade[FLT_VBOX_EXPANDERS]).to_sql
+        yml_data = PREFS.yaml_from_content(GtkUI[FLT_VBOX_EXPANDERS]).to_sql
         DBUtils.client_sql("UPDATE filters SET sxmldata=#{yml_data} WHERE rfilter=#{@ftv.selection.selected[0]}")
         @ftv.selection.selected[2] = yml_data
     end
@@ -157,27 +157,27 @@ class FilterWindow < TopWindow
 
     def generate_filter()
         is_for_charts = @mc.filter_receiver == @mc.charts
-        @must_join_logtracks = @mc.glade[FLT_EXP_PLAYDATES].expanded?
+        @must_join_logtracks = GtkUI[FLT_EXP_PLAYDATES].expanded?
 
         wc = ""
-        if @mc.glade[FLT_EXP_PCOUNT].expanded?
-            min = @mc.glade[FLT_SPIN_MINP].value.round
-            max = @mc.glade[FLT_SPIN_MAXP].value.round
+        if GtkUI[FLT_EXP_PCOUNT].expanded?
+            min = GtkUI[FLT_SPIN_MINP].value.round
+            max = GtkUI[FLT_SPIN_MAXP].value.round
             wc += " AND tracks.iplayed >= #{min}"
             wc += " AND tracks.iplayed <= #{max}" unless min > max
         end
-        if @mc.glade[FLT_EXP_RATING].expanded?
-            wc += " AND tracks.irating >= #{@mc.glade[FLT_CMB_MINRATING].active} AND tracks.irating <= #{@mc.glade[FLT_CMB_MAXRATING].active}"
+        if GtkUI[FLT_EXP_RATING].expanded?
+            wc += " AND tracks.irating >= #{GtkUI[FLT_CMB_MINRATING].active} AND tracks.irating <= #{GtkUI[FLT_CMB_MAXRATING].active}"
         end
-        if @mc.glade[FLT_EXP_PLAYTIME].expanded?
-            len = @mc.glade[FLT_SPIN_MINPTIMEM].value.round*60*1000+@mc.glade[FLT_SPIN_MINPTIMES].value.round*1000
+        if GtkUI[FLT_EXP_PLAYTIME].expanded?
+            len = GtkUI[FLT_SPIN_MINPTIMEM].value.round*60*1000+GtkUI[FLT_SPIN_MINPTIMES].value.round*1000
             wc += " AND tracks.iplaytime >= #{len}" if len > 0
-            len = @mc.glade[FLT_SPIN_MAXPTIMEM].value.round*60*1000+@mc.glade[FLT_SPIN_MAXPTIMES].value.round*1000
+            len = GtkUI[FLT_SPIN_MAXPTIMEM].value.round*60*1000+GtkUI[FLT_SPIN_MAXPTIMES].value.round*1000
             wc += " AND tracks.iplaytime <= #{len}" if len > 0
         end
-        if @mc.glade[FLT_EXP_PLAYDATES].expanded?
-            from_date = @mc.glade[FLT_ENTRY_FROMDATE].text.to_date
-            to_date   = @mc.glade[FLT_ENTRY_TODATE].text.to_date
+        if GtkUI[FLT_EXP_PLAYDATES].expanded?
+            from_date = GtkUI[FLT_ENTRY_FROMDATE].text.to_date
+            to_date   = GtkUI[FLT_ENTRY_TODATE].text.to_date
 #            to_date, from_date = from_date, to_date if to_date < from_date
 
             wc += " AND (SELECT idateplayed FROM logtracks WHERE logtracks.rtrack=tracks.rtrack" unless is_for_charts
@@ -188,15 +188,15 @@ class FilterWindow < TopWindow
 
 
         # Where clause on selected tags if any
-        if @mc.glade[FLT_EXP_TAGS].expanded?
+        if GtkUI[FLT_EXP_TAGS].expanded?
             mask = UIUtils::get_tags_mask(@tv_tags)
             unless mask == 0
-                wc += @mc.glade[FLT_CB_MATCHALL].active? ? " AND ((tracks.itags & #{mask}) = #{mask})" :
+                wc += GtkUI[FLT_CB_MATCHALL].active? ? " AND ((tracks.itags & #{mask}) = #{mask})" :
                                                            " AND ((tracks.itags & #{mask}) <> 0)"
             end
         end
 
-        @tvs.each_with_index { |tv, i| wc += add_tv_clause(tv.model, COND_FIELDS[i]) if @mc.glade[EXP_FILEDS[i]].expanded? }
+        @tvs.each_with_index { |tv, i| wc += add_tv_clause(tv.model, COND_FIELDS[i]) if GtkUI[EXP_FILEDS[i]].expanded? }
 
         wc += " " unless wc.empty?
 # puts wc
@@ -234,7 +234,7 @@ class FilterWindow < TopWindow
 
         # This option is only available for play list/queue generation
         # so its not coded in the generate_filter method
-        wc += " ORDER BY tracks.ilastplayed" if @mc.glade[FLT_CMB_SELECTBY].active == 3 # Oldest played tracks
+        wc += " ORDER BY tracks.ilastplayed" if GtkUI[FLT_CMB_SELECTBY].active == 3 # Oldest played tracks
 
         wc = " WHERE "+wc[5..-1]
         sql = "SELECT tracks.rtrack FROM tracks " \
@@ -249,7 +249,7 @@ class FilterWindow < TopWindow
         DBIntf.execute(sql) do |row|
             # Skip tracks which aren't ripped
             dblink.reset.set_track_ref(row[0])
-            if @mc.glade[FLT_CHK_MUSICFILE].active?
+            if GtkUI[FLT_CHK_MUSICFILE].active?
                 next if dblink.setup_audio_file == AudioLink::NOT_FOUND
             end
 
@@ -268,17 +268,17 @@ class FilterWindow < TopWindow
         end
 
         #
-        max_tracks = @mc.glade[FLT_SPIN_PLENTRIES].value.round
+        max_tracks = GtkUI[FLT_SPIN_PLENTRIES].value.round
 
         # Store play count and rating weight for effiency purpose
-        pcweight = @mc.glade[FLT_SPIN_PCWEIGHT].value
-        rtweight = @mc.glade[FLT_SPIN_RATINGWEIGHT].value
+        pcweight = GtkUI[FLT_SPIN_PCWEIGHT].value
+        rtweight = GtkUI[FLT_SPIN_RATINGWEIGHT].value
 
         # The array is ready. If random selection, shuffle it else compute and sort by weight
-        if @mc.glade[FLT_CMB_SELECTBY].active == 0 # Random selection
+        if GtkUI[FLT_CMB_SELECTBY].active == 0 # Random selection
             rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
             tracks = Array.new(rvalues.size).fill { |i| tracks[rvalues[i]] }.uniq
-        elsif @mc.glade[FLT_CMB_SELECTBY].active != 3 # Do nothing if oldest played first
+        elsif GtkUI[FLT_CMB_SELECTBY].active != 3 # Do nothing if oldest played first
             tracks.each { |track|
                 track.played = track.played/max_played*100.0 if max_played > 0
                 track.weight = track.played*pcweight+track.rating*rtweight
@@ -290,8 +290,8 @@ class FilterWindow < TopWindow
 
             # Manage the starting offset in results if set
             start_offset = 0
-            if @mc.glade[FLT_HSCL_ADJSELSTART].value > 0.0
-                start_offset = tracks.size*@mc.glade[FLT_HSCL_ADJSELSTART].value.round/100
+            if GtkUI[FLT_HSCL_ADJSELSTART].value > 0.0
+                start_offset = tracks.size*GtkUI[FLT_HSCL_ADJSELSTART].value.round/100
                 if start_offset+max_tracks > tracks.size
                     start_offset = tracks.size-max_tracks
                     start_offset = 0 if start_offset < 0
@@ -302,7 +302,7 @@ class FilterWindow < TopWindow
                 tracks.shift(start_offset)
             end
 
-            if @mc.glade[FLT_CMB_SELECTBY].active == 2 # Randomize hits with same weight
+            if GtkUI[FLT_CMB_SELECTBY].active == 2 # Randomize hits with same weight
                 # Search for the number of entries with same weight. While we don't have
                 # enough tracks, shuffle the first result and append it to the selected tracks
                 # array then get all tracks of the next weight and repeat the operation

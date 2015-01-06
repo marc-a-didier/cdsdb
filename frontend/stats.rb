@@ -477,8 +477,8 @@ class Stats
     end
 
     def db_stats
-        glade = GTBld::load(UIConsts::DLG_STATS)
-        tv = glade[UIConsts::STATS_TV]
+        GtkUI.load_window(GtkIDs::DLG_STATS)
+        tv = GtkUI[GtkIDs::STATS_TV]
 
         tv.model = Gtk::ListStore.new(TrueClass, String)
 
@@ -498,8 +498,8 @@ class Stats
             iter[1] = key
         }
 
-        if glade[UIConsts::DLG_STATS].run != Gtk::Dialog::RESPONSE_OK
-            glade[UIConsts::DLG_STATS].destroy
+        if GtkUI[GtkIDs::DLG_STATS].run != Gtk::Dialog::RESPONSE_OK
+            GtkUI[GtkIDs::DLG_STATS].destroy
             return
         end
 
@@ -520,7 +520,7 @@ class Stats
 
         cleanup
 
-        glade[UIConsts::DLG_STATS].destroy
+        GtkUI[GtkIDs::DLG_STATS].destroy
     end
 
 end

@@ -9,26 +9,26 @@
 # @@main is the content of cdsdb.glade in which windows are NEVER deleted but hidden instead.
 #
 # load(win_id) is used to load the UI definition of the windows from the corresponding file.
-# In this case, windows MUST be destroyed or leaks looms in the dark...
+# In this case, windows MUST be destroyed or leaks loom in the dark...
 #
 
-class GTBld
-
-private
-    @@main = nil
-
-public
-    def self.main
-        #@@main ? @@main : @@main = Gtk::Builder.new.add(CFG.rsrc_dir+"cdsdb.gtb").connect_signals { |handler| method(handler) }
-        @@main ? @@main : @@main = Gtk::Builder.new.add("../glade/cdsdb.glade").connect_signals { |handler| method(handler) }
-    end
-
-    def self.load(win_id)
-        #build = Gtk::Builder.new.add(CFG.rsrc_dir+win_id+".glade").connect_signals { |handler| method(handler) }
-        build = Gtk::Builder.new.add("../glade/#{win_id}.glade").connect_signals { |handler| method(handler) }
-        return build
-    end
-end
+# class GTBld
+#
+# private
+#     @@main = nil
+#
+# public
+#     def self.main
+#         #@@main ? @@main : @@main = Gtk::Builder.new.add(CFG.rsrc_dir+"cdsdb.gtb").connect_signals { |handler| method(handler) }
+#         @@main ? @@main : @@main = Gtk::Builder.new.add("../glade/cdsdb.glade").connect_signals { |handler| method(handler) }
+#     end
+#
+#     def self.load(win_id)
+#         #build = Gtk::Builder.new.add(CFG.rsrc_dir+win_id+".glade").connect_signals { |handler| method(handler) }
+#         build = Gtk::Builder.new.add("../glade/#{win_id}.glade").connect_signals { |handler| method(handler) }
+#         return build
+#     end
+# end
 
 # A bit of treeview extension...
 # class Gtk::TreeView

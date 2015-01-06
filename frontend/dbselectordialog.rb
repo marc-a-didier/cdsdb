@@ -5,12 +5,12 @@ class DBSelectorDialog
         @tbl_name = ""
         @tbl_ref  = ""
 
-        @glade = GTBld::load(UIConsts::DBSEL_DIALOG)
-        @glade[UIConsts::DBSEL_TBBTN_ADD].signal_connect(:clicked)    { do_op_add() }
-        @glade[UIConsts::DBSEL_TBBTN_EDIT].signal_connect(:clicked)   { do_op_modify() }
-        @glade[UIConsts::DBSEL_TBBTN_DELETE].signal_connect(:clicked) { do_op_delete() }
+        GtkUI.load_window(GtkIDs::DBSEL_DIALOG)
+        GtkUI[GtkIDs::DBSEL_TBBTN_ADD].signal_connect(:clicked)    { do_op_add() }
+        GtkUI[GtkIDs::DBSEL_TBBTN_EDIT].signal_connect(:clicked)   { do_op_modify() }
+        GtkUI[GtkIDs::DBSEL_TBBTN_DELETE].signal_connect(:clicked) { do_op_delete() }
 
-        @tv = @glade[UIConsts::DBSEL_TV]
+        @tv = GtkUI[GtkIDs::DBSEL_TV]
 
         renderer = Gtk::CellRendererText.new()
         renderer.editable = true
@@ -79,13 +79,13 @@ class DBSelectorDialog
         end
 
         value = -1
-        @glade[UIConsts::DBSEL_DIALOG].run() do |response|
+        GtkUI[GtkIDs::DBSEL_DIALOG].run() do |response|
             if response == Gtk::Dialog::RESPONSE_OK
                 iter = @tv.selection().selected()
                 value = iter[0] unless iter.nil?
             end
         end
-        @glade[UIConsts::DBSEL_DIALOG].destroy()
+        GtkUI[GtkIDs::DBSEL_DIALOG].destroy()
 
         return value
     end

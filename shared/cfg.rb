@@ -2,7 +2,8 @@
 class Cfg
 
     include Singleton
-    include UIConsts
+#     include UIConsts
+    include GtkIDs
 
     attr_accessor :server_mode
 

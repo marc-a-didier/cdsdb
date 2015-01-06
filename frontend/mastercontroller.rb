@@ -15,14 +15,14 @@
 
 class MasterController
 
-    include UIConsts
+    include GtkIDs
 
     attr_reader   :glade
     attr_reader   :player, :pqueue, :plists, :charts, :tasks, :filters, :memos
     attr_accessor :main_filter, :filter_receiver
 
     def initialize
-        @glade = GTBld.main
+#         @glade = GTBld.main
 
 
         # SQL AND/OR clause reflecting the filter settings that must be appended to the sql requests
@@ -52,7 +52,7 @@ class MasterController
     #
     def clean_up
         @player.stop if @player.playing? || @player.paused?
-        [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.save_menu_state(self, @glade[menu]) }
+        [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.save_menu_state(GtkUI[menu]) }
 #         [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
         PREFS.save_windows([@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos])
         #system("rm -f ../mfiles/*")
@@ -63,13 +63,13 @@ class MasterController
     # Set the check item to false to really close the window
     #
     def notify_closed(window)
-        @glade[MM_WIN_PLAYER].active = false if window == @player
-        @glade[MM_WIN_PLAYQUEUE].active = false if window == @pqueue
-        @glade[MM_WIN_PLAYLISTS].active = false if window == @plists
-        @glade[MM_WIN_CHARTS].active = false if window == @charts
-        @glade[MM_WIN_FILTER].active = false if window == @filters
-        @glade[MM_WIN_TASKS].active = false if window == @tasks
-        @glade[MM_WIN_MEMOS].active = false if window == @memos
+        GtkUI[MM_WIN_PLAYER].active = false if window == @player
+        GtkUI[MM_WIN_PLAYQUEUE].active = false if window == @pqueue
+        GtkUI[MM_WIN_PLAYLISTS].active = false if window == @plists
+        GtkUI[MM_WIN_CHARTS].active = false if window == @charts
+        GtkUI[MM_WIN_FILTER].active = false if window == @filters
+        GtkUI[MM_WIN_TASKS].active = false if window == @tasks
+        GtkUI[MM_WIN_MEMOS].active = false if window == @memos
 
         @player.unfetch(window) if window == @pqueue || window == @plists
     end
@@ -79,7 +79,7 @@ class MasterController
     end
 
     def show_segment_title?
-        return @glade[MM_VIEW_SEGTITLE].active?
+        return GtkUI[MM_VIEW_SEGTITLE].active?
     end
 
     def history_closed(sender)
@@ -116,7 +116,7 @@ class MasterController
     end
 
     def view_compile?
-        return @glade[MM_VIEW_COMPILE].active?
+        return GtkUI[MM_VIEW_COMPILE].active?
     end
 
     # Update the artist browser infos line from rartist data
@@ -216,7 +216,7 @@ class MasterController
             File.open(uilink.audio_file, "r") { |f| f.advise(:dontneed) } #, 0, f.size) }
         }
 
-#         if @glade[UIConsts::MM_VIEW_UPDATENP].active?
+#         if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
 #             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
 #                 @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
 #             end

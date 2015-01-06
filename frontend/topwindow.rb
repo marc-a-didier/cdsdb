@@ -8,18 +8,22 @@ class TopWindow
 
     attr_reader :mc
 
-    def initialize(mc, window_id)
+    def initialize(mc, gtk_id)
         @mc = mc
-        @window_id = window_id
+        @gtk_id = gtk_id
 
         window.signal_connect(:show) { PREFS.load_window(self) }
-        if window_id != UIConsts::MAIN_WINDOW
-            window.signal_connect(:delete_event) { @mc.notify_closed(self); @mc.reset_filter_receiver; true }
+        if gtk_id != GtkIDs::MAIN_WINDOW
+            window.signal_connect(:delete_event) do
+                @mc.notify_closed(self)
+                @mc.reset_filter_receiver
+                true
+            end
         end
     end
 
     def window
-        return @mc.glade[@window_id]
+        return GtkUI[@gtk_id]
     end
 
     def show

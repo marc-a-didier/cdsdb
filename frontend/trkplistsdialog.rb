@@ -6,14 +6,14 @@ class TrkPListsDialog
     COL_REF   = 2
 
     def initialize(mc, rtrack)
-        glade = GTBld::load(UIConsts::TRK_PLISTS_DIALOG)
-        @dlg = glade[UIConsts::TRK_PLISTS_DIALOG]
+        GtkUI.load_window(GtkIDs::TRK_PLISTS_DIALOG)
+        @dlg = GtkUI[GtkIDs::TRK_PLISTS_DIALOG]
 
-        tv = glade[UIConsts::TRK_PLISTS_TV]
+        tv = GtkUI[GtkIDs::TRK_PLISTS_TV]
 
-        glade[UIConsts::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) {
+        GtkUI[GtkIDs::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) {
             if tv.selection.selected
-                mc.glade[UIConsts::MM_WIN_PLAYLISTS].send(:activate) unless mc.plists.window.visible?
+                mc.GtkUI[GtkIDs::MM_WIN_PLAYLISTS].send(:activate) unless mc.plists.window.visible?
                 mc.plists.position_browser(tv.selection.selected[COL_REF])
             end
         }

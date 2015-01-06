@@ -40,7 +40,7 @@ class TracksBrowser < Gtk::TreeView
 
     def setup(mc)
         @mc = mc
-        @mc.glade[UIConsts::TRACKS_TVC].add(self)
+        GtkUI[GtkIDs::TRACKS_TVC].add(self)
         self.visible = true
 
         renderer = Gtk::CellRendererText.new
@@ -79,31 +79,31 @@ class TracksBrowser < Gtk::TreeView
 
         selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         selection.mode = Gtk::SELECTION_MULTIPLE
-        signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::TRK_POPUP_MENU) }
+        signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, GtkIDs::TRK_POPUP_MENU) }
 #         @tv.signal_connect(:start_interactive_search, "mydata") { |tv, data| puts "search started...".green }
 
-        @mc.glade[UIConsts::TRK_POPUP_EDIT].signal_connect(:activate)      { edit_track }
-        @mc.glade[UIConsts::TRK_POPUP_ADD].signal_connect(:activate)       { on_trk_add }
-        @mc.glade[UIConsts::TRK_POPUP_DEL].signal_connect(:activate)       { on_trk_del }
-        @mc.glade[UIConsts::TRK_POPUP_DELFROMFS].signal_connect(:activate) { on_del_from_fs }
-#         @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { on_download_trk }
-        @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { download_tracks(true) }
-        @mc.glade[UIConsts::TRK_POPUP_TAGFILE].signal_connect(:activate)   { on_tag_file }
-        @mc.glade[UIConsts::TRK_POPUP_UPDPTIME].signal_connect(:activate)  { on_update_playtime }
-        @mc.glade[UIConsts::TRK_POPUP_ENQUEUE].signal_connect(:activate)   { on_trk_enqueue(false) }
-        @mc.glade[UIConsts::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
+        GtkUI[GtkIDs::TRK_POPUP_EDIT].signal_connect(:activate)      { edit_track }
+        GtkUI[GtkIDs::TRK_POPUP_ADD].signal_connect(:activate)       { on_trk_add }
+        GtkUI[GtkIDs::TRK_POPUP_DEL].signal_connect(:activate)       { on_trk_del }
+        GtkUI[GtkIDs::TRK_POPUP_DELFROMFS].signal_connect(:activate) { on_del_from_fs }
+#         GtkUI[GtkIDs::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { on_download_trk }
+        GtkUI[GtkIDs::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { download_tracks(true) }
+        GtkUI[GtkIDs::TRK_POPUP_TAGFILE].signal_connect(:activate)   { on_tag_file }
+        GtkUI[GtkIDs::TRK_POPUP_UPDPTIME].signal_connect(:activate)  { on_update_playtime }
+        GtkUI[GtkIDs::TRK_POPUP_ENQUEUE].signal_connect(:activate)   { on_trk_enqueue(false) }
+        GtkUI[GtkIDs::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
 
-        @mc.glade[UIConsts::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
+        GtkUI[GtkIDs::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
             if @trklnk.track.valid? && @trklnk.playable?
                 AudioDialog.new.show(@trklnk.audio_file)
             else
                 UIUtils::show_message("File not found!", Gtk::MessageDialog::ERROR)
             end
         }
-        @mc.glade[UIConsts::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
+        GtkUI[GtkIDs::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
             PlayHistoryDialog.new.show_track(@trklnk.track.rtrack)
         }
-        @mc.glade[UIConsts::TRK_POPUP_CONTPL].signal_connect(:activate) {
+        GtkUI[GtkIDs::TRK_POPUP_CONTPL].signal_connect(:activate) {
             TrkPListsDialog.new(@mc, @trklnk.track.rtrack).run
         }
 
@@ -118,8 +118,8 @@ class TracksBrowser < Gtk::TreeView
             # No popup if no selection in the track tree view except in admin mode (to add track)
             return if selection.count_selected_rows < 1 && !CFG.admin?
             # Add segments of the current record to the segment association submenu
-            sub_menu = @mc.glade[UIConsts::TRK_POPUP_SEGASS].submenu
-            @mc.glade[UIConsts::TRK_POPUP_SEGASS].remove_submenu
+            sub_menu = GtkUI[GtkIDs::TRK_POPUP_SEGASS].submenu
+            GtkUI[GtkIDs::TRK_POPUP_SEGASS].remove_submenu
             sub_menu.destroy if sub_menu
             if @trklnk.track.rrecord != 0 && @mc.record.valid? #if 0 no tracks in the tree-view
                 smtpm = Gtk::Menu.new
@@ -135,13 +135,13 @@ class TracksBrowser < Gtk::TreeView
                     items.last.signal_connect(:activate) { |widget| on_trk_assign_first_segment(widget) }
                     smtpm.append(items.last)
                 end
-                @mc.glade[UIConsts::TRK_POPUP_SEGASS].submenu = smtpm
+                GtkUI[GtkIDs::TRK_POPUP_SEGASS].submenu = smtpm
                 smtpm.show_all
             end
 
             # Add play lists to the play lists submenu
-            sub_menu = @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].submenu
-            @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].remove_submenu
+            sub_menu = GtkUI[GtkIDs::TRK_POPUP_ADDTOPL].submenu
+            GtkUI[GtkIDs::TRK_POPUP_ADDTOPL].remove_submenu
             sub_menu.destroy if sub_menu
             if DBIntf.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
                 pltpm = Gtk::Menu.new
@@ -151,11 +151,11 @@ class TracksBrowser < Gtk::TreeView
                     items.last.signal_connect(:activate) { |widget| on_trk_add_to_pl(widget) }
                     pltpm.append(items.last)
                 }
-                @mc.glade[UIConsts::TRK_POPUP_ADDTOPL].submenu = pltpm
+                GtkUI[GtkIDs::TRK_POPUP_ADDTOPL].submenu = pltpm
                 pltpm.show_all
             end
 
-            @mc.update_tags_menu(self, @mc.glade[UIConsts::TRK_POPUP_TAGS])
+            @mc.update_tags_menu(self, GtkUI[GtkIDs::TRK_POPUP_TAGS])
 
             download_enabled = false
             selection.selected_each { |model, path, iter|
@@ -164,10 +164,10 @@ class TracksBrowser < Gtk::TreeView
                     break
                 end
             } if self.selection
-            @mc.glade[UIConsts::TRK_POPUP_DOWNLOAD].sensitive = download_enabled
+            GtkUI[GtkIDs::TRK_POPUP_DOWNLOAD].sensitive = download_enabled
 
 
-            @mc.glade[menu_name].popup(nil, nil, event.button, event.time)
+            GtkUI[menu_name].popup(nil, nil, event.button, event.time)
         end
     end
 
@@ -189,7 +189,7 @@ class TracksBrowser < Gtk::TreeView
             sql += @mc.main_filter
             sql += " AND "+@mc.sub_filter unless @mc.sub_filter.empty?
             sql += " ORDER BY "
-            sql += "(tracks.irating*1000+tracks.iplayed) DESC, " if @mc.glade[UIConsts::MM_VIEW_BYRATING].active?
+            sql += "(tracks.irating*1000+tracks.iplayed) DESC, " if GtkUI[GtkIDs::MM_VIEW_BYRATING].active?
             sql += "tracks.iorder;"
         else
             sql += "WHERE rtrack=#{rtrack};"
@@ -202,7 +202,7 @@ class TracksBrowser < Gtk::TreeView
         iter[TTV_REF]       = row[ROW_REF]
         iter[TTV_ORDER]     = row[ROW_ORDER]
         iter[TTV_TITLE]     = row[ROW_TITLE]
-        iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && @mc.glade[UIConsts::MM_VIEW_TRACKINDEX].active?
+        iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && GtkUI[GtkIDs::MM_VIEW_TRACKINDEX].active?
         iter[TTV_PLAY_TIME] = row[ROW_PLAY_TIME].to_ms_length
         if columns[TTV_ART_OR_SEG].visible?
             iter[TTV_ART_OR_SEG] = @mc.artist.compile? ? row[ROW_ART_NAME] : row[ROW_SEG_TITLE]
@@ -223,7 +223,7 @@ class TracksBrowser < Gtk::TreeView
         DBIntf.execute(generate_sql) { |row| map_row_to_entry(row, model.append) }
 
         # Sets the icons matching the file status for each entry
-        if @mc.glade[UIConsts::MM_VIEW_AUTOCHECK].active?
+        if GtkUI[GtkIDs::MM_VIEW_AUTOCHECK].active?
             check_for_audio_file
         else
             model.each { |model, path, iter| iter[TTV_PIX] = render_icon(@stocks[TRK_UNKOWN], Gtk::IconSize::MENU) }
@@ -379,7 +379,7 @@ class TracksBrowser < Gtk::TreeView
 
     def invalidate
         model.clear
-        @mc.glade[UIConsts::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
+        GtkUI[GtkIDs::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
         @trklnk.reset.to_widgets if @trklnk.valid?
     end
 

@@ -1,15 +1,15 @@
 
 class DateChooser
 
-    include UIConsts
+    include GtkIDs
 
     def initialize
-        @glade = GTBld::load(DLG_DATE_CHOOSER)
+        GtkUI.load_window(DLG_DATE_CHOOSER)
 
-        @dlg = @glade[DLG_DATE_CHOOSER]
+        @dlg = GtkUI[DLG_DATE_CHOOSER]
 
-        @glade[DTDLG_BTN_FROMDATE].signal_connect(:clicked) { set_date(@glade[DTDLG_ENTRY_FROMDATE]) }
-        @glade[DTDLG_BTN_TODATE].signal_connect(:clicked)   { set_date(@glade[DTDLG_ENTRY_TODATE])   }
+        GtkUI[DTDLG_BTN_FROMDATE].signal_connect(:clicked) { set_date(GtkUI[DTDLG_ENTRY_FROMDATE]) }
+        GtkUI[DTDLG_BTN_TODATE].signal_connect(:clicked)   { set_date(GtkUI[DTDLG_ENTRY_TODATE])   }
 
         @dates = nil
    end
@@ -27,7 +27,7 @@ class DateChooser
     def run
         @dlg.run { |response|
             if response == Gtk::Dialog::RESPONSE_OK
-                @dates = [@glade[DTDLG_ENTRY_FROMDATE].text.to_date, @glade[DTDLG_ENTRY_TODATE].text.to_date]
+                @dates = [GtkUI[DTDLG_ENTRY_FROMDATE].text.to_date, GtkUI[DTDLG_ENTRY_TODATE].text.to_date]
 
                 # Switch dates if only until date is filled
                 (@dates[0], @dates[1] = @dates[1], @dates[0]) if @dates[0] == 0

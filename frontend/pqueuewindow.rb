@@ -6,21 +6,21 @@ class PQueueWindow < TopWindow
     PQData = Struct.new(:internal_ref, :uilink)
 
     def initialize(mc)
-        super(mc, UIConsts::PQUEUE_WINDOW)
+        super(mc, GtkIDs::PQUEUE_WINDOW)
 
-        @mc.glade[UIConsts::PM_PQ_REMOVE].signal_connect(:activate)     { |widget| do_del(widget, false) }
-        @mc.glade[UIConsts::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
-        @mc.glade[UIConsts::PM_PQ_CLEAR].signal_connect(:activate)      { clear }
-        @mc.glade[UIConsts::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
-        @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
+        GtkUI[GtkIDs::PM_PQ_REMOVE].signal_connect(:activate)     { |widget| do_del(widget, false) }
+        GtkUI[GtkIDs::PM_PQ_RMFROMHERE].signal_connect(:activate) { |widget| do_del(widget, true) }
+        GtkUI[GtkIDs::PM_PQ_CLEAR].signal_connect(:activate)      { clear }
+        GtkUI[GtkIDs::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
+        GtkUI[GtkIDs::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
             @mc.select_track(@tvpq.selection.selected[4].uilink) #if @tvpq.selection.selected
         }
-        @mc.glade[UIConsts::PM_PQ_INFOS].signal_connect(:activate) {
+        GtkUI[GtkIDs::PM_PQ_INFOS].signal_connect(:activate) {
             DBEditor.new(@mc, @tvpq.selection.selected[4].uilink, DBEditor::TRACK_PAGE).run
         }
 
         srenderer = Gtk::CellRendererText.new()
-        @tvpq = @mc.glade[UIConsts::TV_PQUEUE]
+        @tvpq = GtkUI[GtkIDs::TV_PQUEUE]
         # Displayed: Seq, cover, title, length -- Hidden: rtrack, rrecord, track length, true file name
         #@plq = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Integer, Integer, Integer, String)
         @plq = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
@@ -51,7 +51,7 @@ class PQueueWindow < TopWindow
         dragtable = [ ["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700], #DragType::BROWSER_SELECTION],
                       ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105], #DragType::URI_LIST],
                       ["text/plain", Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
-        @sw = @mc.glade[UIConsts::SCROLLEDWINDOW_PQUEUE]
+        @sw = GtkUI[GtkIDs::SCROLLEDWINDOW_PQUEUE]
         Gtk::Drag::dest_set(@sw, Gtk::Drag::DEST_DEFAULT_ALL, dragtable, Gdk::DragContext::ACTION_COPY)
         @sw.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time| on_drag_received(widget, context, x, y, data, info, time) }
 
@@ -122,11 +122,11 @@ class PQueueWindow < TopWindow
     def show_popup(widget, event)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             has_sel = !@tvpq.selection.selected.nil?
-            @mc.glade[UIConsts::PM_PQ_REMOVE].sensitive = has_sel
-            @mc.glade[UIConsts::PM_PQ_RMFROMHERE].sensitive = has_sel
-            @mc.glade[UIConsts::PM_PQ_SHOWINBROWSER].sensitive = has_sel
-            @mc.glade[UIConsts::PM_PQ_INFOS].sensitive = has_sel && @tvpq.selection.selected[4].uilink.tags == nil
-            @mc.glade[UIConsts::PM_PQ].popup(nil, nil, event.button, event.time)
+            GtkUI[GtkIDs::PM_PQ_REMOVE].sensitive = has_sel
+            GtkUI[GtkIDs::PM_PQ_RMFROMHERE].sensitive = has_sel
+            GtkUI[GtkIDs::PM_PQ_SHOWINBROWSER].sensitive = has_sel
+            GtkUI[GtkIDs::PM_PQ_INFOS].sensitive = has_sel && @tvpq.selection.selected[4].uilink.tags == nil
+            GtkUI[GtkIDs::PM_PQ].popup(nil, nil, event.button, event.time)
         end
     end
 
@@ -242,15 +242,15 @@ class PQueueWindow < TopWindow
     end
 
     def update_tracks_label
-        @mc.glade[UIConsts::PQ_LBL_TRACKS].text = @ntracks == 0 ?  "No track" : "#{@ntracks} #{"track".check_plural(@ntracks)}"
+        GtkUI[GtkIDs::PQ_LBL_TRACKS].text = @ntracks == 0 ?  "No track" : "#{@ntracks} #{"track".check_plural(@ntracks)}"
     end
 
     def update_ptime_label(ptime)
-        @mc.glade[UIConsts::PQ_LBL_PTIME].text = @ntracks == 0 ? "00:00:00" : ptime.to_hr_length
+        GtkUI[GtkIDs::PQ_LBL_PTIME].text = @ntracks == 0 ? "00:00:00" : ptime.to_hr_length
     end
 
     def update_eta_label(ptime)
-        @mc.glade[UIConsts::PQ_LBL_ETA].text = @ntracks == 0 ? "" : Time.at(Time.now.to_i+ptime/1000).strftime("%a %d, %H:%M")
+        GtkUI[GtkIDs::PQ_LBL_ETA].text = @ntracks == 0 ? "" : Time.at(Time.now.to_i+ptime/1000).strftime("%a %d, %H:%M")
     end
 
     #
@@ -260,7 +260,7 @@ class PQueueWindow < TopWindow
     def timer_notification(ms_time)
         if ms_time == -1
             update_status
-            @mc.glade[UIConsts::PQ_LBL_ETA].text = ""
+            GtkUI[GtkIDs::PQ_LBL_ETA].text = ""
         else
             update_ptime_label(@play_time-ms_time)
             update_eta_label(@play_time-ms_time)

@@ -18,12 +18,12 @@ class ArtistUI < DBCacheLink
     end
 
     def to_widgets
-        GTBld.main[UIConsts::MW_INFLBL_ARTIST].text = build_infos_string
-        GTBld.main[UIConsts::MEMO_ARTIST].buffer.text = valid? ? artist.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MW_INFLBL_ARTIST].text = build_infos_string
+        GtkUI[GtkIDs::MEMO_ARTIST].buffer.text = valid? ? artist.mnotes.to_memo : ""
     end
 
     def from_widgets
-        artist.mnotes = GTBld.main[UIConsts::MEMO_ARTIST].buffer.text.to_dbstring
+        artist.mnotes = GtkUI[GtkIDs::MEMO_ARTIST].buffer.text.to_dbstring
         artist.sql_update
         return self
     end
@@ -46,16 +46,16 @@ class RecordUI < DBCacheLink
     end
 
     def to_widgets(is_record)
-        GTBld.main[UIConsts::MW_INFLBL_RECORD].text = is_record ? build_rec_infos_string : build_seg_infos_string
-        GTBld.main[UIConsts::MEMO_RECORD].buffer.text  = valid? ? record.mnotes.to_memo : ""
-        GTBld.main[UIConsts::MEMO_SEGMENT].buffer.text = valid? ? segment.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MW_INFLBL_RECORD].text = is_record ? build_rec_infos_string : build_seg_infos_string
+        GtkUI[GtkIDs::MEMO_RECORD].buffer.text  = valid? ? record.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text = valid? ? segment.mnotes.to_memo : ""
         return self
     end
 
     def from_widgets
-        record.mnotes = GTBld.main[UIConsts::MEMO_RECORD].buffer.text.to_dbstring
+        record.mnotes = GtkUI[GtkIDs::MEMO_RECORD].buffer.text.to_dbstring
         record.sql_update
-        segment.mnotes = GTBld.main[UIConsts::MEMO_SEGMENT].buffer.text.to_dbstring
+        segment.mnotes = GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text.to_dbstring
         segment.sql_update
         return self
     end
@@ -94,19 +94,19 @@ class TrackUI < UILink
     end
 
     def to_widgets
-        GTBld.main[UIConsts::MW_INFLBL_TRACK].text   = build_infos_string
-        GTBld.main[UIConsts::MEMO_TRACK].buffer.text = valid? ? track.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MW_INFLBL_TRACK].text   = build_infos_string
+        GtkUI[GtkIDs::MEMO_TRACK].buffer.text = valid? ? track.mnotes.to_memo : ""
         return self
     end
 
     # TODO: find a way to not redraw image each time if not changed
     def to_widgets_with_cover
-        GTBld.main[UIConsts::REC_IMAGE].pixbuf = large_track_cover #if @pix_key.empty? || @curr_pix_key != @pix_key
+        GtkUI[GtkIDs::REC_IMAGE].pixbuf = large_track_cover #if @pix_key.empty? || @curr_pix_key != @pix_key
         return to_widgets
     end
 
     def from_widgets
-        track.mnotes = GTBld.main[UIConsts::MEMO_TRACK].buffer.text.to_dbstring
+        track.mnotes = GtkUI[GtkIDs::MEMO_TRACK].buffer.text.to_dbstring
         track.sql_update
         return self
     end
@@ -141,7 +141,7 @@ end
 
 class ArtistEditor
 
-    include UIConsts
+    include GtkIDs
     include BaseUI
 
     def initialize(glade, dbs)
@@ -156,7 +156,7 @@ end
 
 class RecordEditor
 
-    include UIConsts
+    include GtkIDs
     include BaseUI
 
     def initialize(glade, dbs)
@@ -188,7 +188,7 @@ end
 
 class SegmentEditor
 
-    include UIConsts
+    include GtkIDs
     include BaseUI
 
     def initialize(glade, dbs)
@@ -216,7 +216,7 @@ end
 
 class TrackEditor
 
-    include UIConsts
+    include GtkIDs
     include BaseUI
 
     def initialize(glade, dbs)
@@ -238,7 +238,7 @@ end
 
 class DBEditor
 
-    include UIConsts
+    include GtkIDs
 
     ARTIST_PAGE  = 0
     RECORD_PAGE  = 1
@@ -284,7 +284,7 @@ end
 
 class PListDialog < PListDBClass
 
-    include UIConsts
+    include GtkIDs
     include BaseUI
 
     def initialize(rplist)

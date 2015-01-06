@@ -13,7 +13,7 @@
 
 class ChartsWindow < TopWindow
 
-    include UIConsts
+    include GtkIDs
 
     VIEW_TRACKS    = 0
     VIEW_RECORDS   = 1
@@ -38,37 +38,37 @@ class ChartsWindow < TopWindow
     ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :uilink)
 
     def initialize(mc)
-        super(mc, UIConsts::CHARTS_WINDOW)
+        super(mc, CHARTS_WINDOW)
 
         @view_type  = VIEW_TRACKS
         @count_type = COUNT_PLAYED
         @filter = ""
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
-        @mc.glade[CHARTS_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE)
-        @mc.glade[CHARTS_WINDOW].signal_connect("focus_in_event")  { |widget, event| @mc.filter_receiver = self; false }
+        GtkUI[CHARTS_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE)
+        GtkUI[CHARTS_WINDOW].signal_connect("focus_in_event")  { |widget, event| @mc.filter_receiver = self; false }
 
-        @mc.glade[CHARTS_MM_TRACKS].signal_connect(:activate)    { load_view(VIEW_TRACKS)    }
-        @mc.glade[CHARTS_MM_RECORDS].signal_connect(:activate)   { load_view(VIEW_RECORDS)   }
-        @mc.glade[CHARTS_MM_ARTISTS].signal_connect(:activate)   { load_view(VIEW_ARTISTS)   }
-        @mc.glade[CHARTS_MM_MTYPES].signal_connect(:activate)    { load_view(VIEW_MTYPES)    }
-        @mc.glade[CHARTS_MM_COUNTRIES].signal_connect(:activate) { load_view(VIEW_COUNTRIES) }
-        @mc.glade[CHARTS_MM_LABELS].signal_connect(:activate)    { load_view(VIEW_LABELS)    }
-        @mc.glade[CHARTS_MM_PLAYED].signal_connect(:activate)    { @count_type = COUNT_PLAYED; load_view(@view_type) }
-        @mc.glade[CHARTS_MM_TIME].signal_connect(:activate)      { @count_type = COUNT_TIME;   load_view(@view_type) }
-        @mc.glade[CHARTS_MM_CLOSE].signal_connect(:activate)     { @mc.notify_closed(self) }
+        GtkUI[CHARTS_MM_TRACKS].signal_connect(:activate)    { load_view(VIEW_TRACKS)    }
+        GtkUI[CHARTS_MM_RECORDS].signal_connect(:activate)   { load_view(VIEW_RECORDS)   }
+        GtkUI[CHARTS_MM_ARTISTS].signal_connect(:activate)   { load_view(VIEW_ARTISTS)   }
+        GtkUI[CHARTS_MM_MTYPES].signal_connect(:activate)    { load_view(VIEW_MTYPES)    }
+        GtkUI[CHARTS_MM_COUNTRIES].signal_connect(:activate) { load_view(VIEW_COUNTRIES) }
+        GtkUI[CHARTS_MM_LABELS].signal_connect(:activate)    { load_view(VIEW_LABELS)    }
+        GtkUI[CHARTS_MM_PLAYED].signal_connect(:activate)    { @count_type = COUNT_PLAYED; load_view(@view_type) }
+        GtkUI[CHARTS_MM_TIME].signal_connect(:activate)      { @count_type = COUNT_TIME;   load_view(@view_type) }
+        GtkUI[CHARTS_MM_CLOSE].signal_connect(:activate)     { @mc.notify_closed(self) }
 
-        @mc.glade[CHARTS_PM_ENQUEUE].signal_connect(:activate)     { enqueue }
-        @mc.glade[CHARTS_PM_ENQUEUEFROM].signal_connect(:activate) { enqueue_multiple_tracks }
-        @mc.glade[CHARTS_PM_PLAYHISTORY].signal_connect(:activate) {
+        GtkUI[CHARTS_PM_ENQUEUE].signal_connect(:activate)     { enqueue }
+        GtkUI[CHARTS_PM_ENQUEUEFROM].signal_connect(:activate) { enqueue_multiple_tracks }
+        GtkUI[CHARTS_PM_PLAYHISTORY].signal_connect(:activate) {
             if @view_type == VIEW_TRACKS
                 PlayHistoryDialog.new.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             else
                 PlayHistoryDialog.new.show_record(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             end
         }
-        @mc.glade[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
-        @mc.glade[CHARTS_PM_SHOWINDB].signal_connect(:activate) {
+        GtkUI[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
+        GtkUI[CHARTS_PM_SHOWINDB].signal_connect(:activate) {
             case @view_type
                 when VIEW_TRACKS  then @mc.select_track(entry_from_selection.uilink)
                 when VIEW_RECORDS then @mc.select_record(entry_from_selection.uilink)
@@ -76,10 +76,10 @@ class ChartsWindow < TopWindow
             end
         }
 
-        @mc.glade[CHARTS_TV].signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
+        GtkUI[CHARTS_TV].signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
 
         srenderer = Gtk::CellRendererText.new()
-        @tvc = @mc.glade[UIConsts::CHARTS_TV]
+        @tvc = GtkUI[CHARTS_TV]
         # Columns: Entry, Rank, cover, title, played -- Hidden: ref
         @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, String, Integer)
 
@@ -115,11 +115,11 @@ class ChartsWindow < TopWindow
     def show_popup(widget, event)
         return if [VIEW_COUNTRIES, VIEW_MTYPES, VIEW_LABELS].include?(@view_type) # No possible action
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
-            @mc.glade[CHARTS_PM_ENQUEUE].sensitive = @view_type != VIEW_ARTISTS
-            @mc.glade[CHARTS_PM_ENQUEUEFROM].sensitive = @view_type == VIEW_TRACKS
-            @mc.glade[CHARTS_PM_GENPL].sensitive = @view_type == VIEW_TRACKS
-            @mc.glade[CHARTS_PM_PLAYHISTORY].sensitive = @view_type != VIEW_ARTISTS
-            @mc.glade[CHARTS_PM].popup(nil, nil, event.button, event.time)
+            GtkUI[CHARTS_PM_ENQUEUE].sensitive = @view_type != VIEW_ARTISTS
+            GtkUI[CHARTS_PM_ENQUEUEFROM].sensitive = @view_type == VIEW_TRACKS
+            GtkUI[CHARTS_PM_GENPL].sensitive = @view_type == VIEW_TRACKS
+            GtkUI[CHARTS_PM_PLAYHISTORY].sensitive = @view_type != VIEW_ARTISTS
+            GtkUI[CHARTS_PM].popup(nil, nil, event.button, event.time)
         end
     end
 

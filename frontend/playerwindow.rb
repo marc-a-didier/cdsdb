@@ -29,7 +29,7 @@ class PlayerWindow < TopWindow
 
 
     def initialize(mc)
-        super(mc, UIConsts::PLAYER_WINDOW)
+        super(mc, GtkIDs::PLAYER_WINDOW)
 
         window.signal_connect(:delete_event) do
             stop if playing?
@@ -37,37 +37,28 @@ class PlayerWindow < TopWindow
             true
         end
 
-        @meter = @mc.glade[UIConsts::PLAYER_IMG_METER]
-#         @meter = GtkUI[UIConsts::PLAYER_IMG_METER]
-# p @meter
+        @meter = GtkUI[GtkIDs::PLAYER_IMG_METER]
         @meter.signal_connect(:realize) { |widget| meter_setup }
 
-        @counter = @mc.glade[UIConsts::PLAYER_IMG_COUNTER]
-#         @counter = GtkUI[UIConsts::PLAYER_IMG_COUNTER]
+        @counter = GtkUI[GtkIDs::PLAYER_IMG_COUNTER]
 #         @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
         @counter.signal_connect(:realize) { |widget| counter_setup }
 
-        @mc.glade[UIConsts::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
-        @mc.glade[UIConsts::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
-        @mc.glade[UIConsts::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
-        @mc.glade[UIConsts::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
-#         GtkUI[UIConsts::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
-#         GtkUI[UIConsts::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
-#         GtkUI[UIConsts::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
-#         GtkUI[UIConsts::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
+        GtkUI[GtkIDs::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
+        GtkUI[GtkIDs::PLAYER_BTN_STOP].signal_connect(:clicked)  { on_btn_stop }
+        GtkUI[GtkIDs::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
+        GtkUI[GtkIDs::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
 
-#         @mc.glade[UIConsts::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
+#         GtkUI[GtkIDs::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
-        @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
-#         GtkUI[UIConsts::PLAYER_LABEL_TITLE].label = ""
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
 
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
 
         @file_prefetched = false
 
-        @slider = @mc.glade[UIConsts::PLAYER_HSCALE]
-#         @slider = GtkUI[UIConsts::PLAYER_HSCALE]
+        @slider = GtkUI[GtkIDs::PLAYER_HSCALE]
 
         @time_view_mode = ELAPSED
         @total_time = 0
@@ -179,12 +170,12 @@ class PlayerWindow < TopWindow
         end
 
         # Reset button states
-        @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
+        GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
 #         @seeking = false
         set_window_title
-        @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = true
-        @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = false
-        @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = false
+        GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = true
+        GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = false
+        GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = false
 
         # Clear level meter
         @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
@@ -193,17 +184,17 @@ class PlayerWindow < TopWindow
 
         # Clear title, time and slider
         reset_counter
-        @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = ""
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
         @slider.value = 0.0
     end
 
     def on_btn_play
         if playing? || paused?
             playing? ? @playbin.pause : @playbin.play
-            @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = PLAY_STATE_BTN[playing?]
-            @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = paused?
-            @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = playing?
-            @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
+            GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = PLAY_STATE_BTN[playing?]
+            GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = paused?
+            GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = playing?
+            GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         else
             new_track(:start)
         end
@@ -249,10 +240,10 @@ TRACE.debug("Player audio file was empty!".red)
         # Can't use replay gain if track has been dropped.
         # Replay gain should work if tags are set in the audio file
         if player_data.uilink.tags.nil?
-            if player_data.uilink.use_record_gain? && @mc.glade[UIConsts::MM_PLAYER_USERECRG].active?
+            if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
                 @rgain.fallback_gain = player_data.uilink.record.fgain
 TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
-            elsif @mc.glade[UIConsts::MM_PLAYER_USETRKRG].active?
+            elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
                 @rgain.fallback_gain = player_data.uilink.track.fgain
 TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             else
@@ -283,11 +274,11 @@ system("vmtouch \"#{player_data.uilink.audio_file}\"")
 
         player_data.owner.started_playing(player_data)
 
-        @mc.glade[UIConsts::PLAYER_LABEL_TITLE].label = player_data.uilink.html_track_title_no_track_num(false, " ")
-        @mc.glade[UIConsts::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
-        @mc.glade[UIConsts::TTPM_ITEM_PLAY].sensitive = false
-        @mc.glade[UIConsts::TTPM_ITEM_PAUSE].sensitive = true
-        @mc.glade[UIConsts::TTPM_ITEM_STOP].sensitive = true
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = player_data.uilink.html_track_title_no_track_num(false, " ")
+        GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
+        GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = false
+        GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = true
+        GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         if CFG.notifications?
             file_name = player_data.uilink.cover_file_name
             system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{player_data.uilink.html_track_title(true)}\"")
@@ -468,7 +459,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 #         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
             pad.link(@convertor.get_pad("sink"))
 #             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
-            if @mc.glade[UIConsts::MM_PLAYER_LEVELBEFORERG].active?
+            if GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?
                 @convertor >> @level >> @rgain >> @sink
             else
                 @convertor >> @rgain >> @level >> @sink
@@ -543,7 +534,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             # To show decreasing time use uncomment this
             # time_to_digits(format_time(@total_time-itime)+"-"+format_time(itime))
         else
-            @mc.glade[UIConsts::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
+            GtkUI[GtkIDs::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
         end
     end
 

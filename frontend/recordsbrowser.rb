@@ -17,7 +17,7 @@ class RecordsBrowser < Gtk::TreeView
 
     def setup(mc)
         @mc = mc
-        @mc.glade[UIConsts::RECORDS_TVC].add(self)
+        GtkUI[GtkIDs::RECORDS_TVC].add(self)
         self.visible = true
         self.enable_search = true
         self.search_column = 1
@@ -39,24 +39,24 @@ class RecordsBrowser < Gtk::TreeView
             selection_data.set(Gdk::Selection::TYPE_STRING, "records:message:get_tracks_list")
         }
         selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
-        signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, UIConsts::REC_POPUP_MENU) }
+        signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, GtkIDs::REC_POPUP_MENU) }
 
         signal_connect(:row_expanded) { |widget, iter, path| on_row_expanded(widget, iter, path) }
 
-        @mc.glade[UIConsts::REC_POPUP_EDIT].signal_connect(:activate)     { on_rec_edit }
-        @mc.glade[UIConsts::REC_POPUP_ADD].signal_connect(:activate)      { on_rec_add }
-        @mc.glade[UIConsts::REC_POPUP_DEL].signal_connect(:activate)      { on_rec_or_seg_del }
-        @mc.glade[UIConsts::REC_POPUP_SEGADD].signal_connect(:activate)   { on_seg_add }
-        @mc.glade[UIConsts::REC_POPUP_CPTITLE].signal_connect(:activate)  { on_cp_title_to_segs }
-        @mc.glade[UIConsts::REC_POPUP_TAGDIR].signal_connect(:activate)   { on_tag_dir }
-        @mc.glade[UIConsts::REC_POPUP_ENQUEUE].signal_connect(:activate)  { @mc.enqueue_record }
-        @mc.glade[UIConsts::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
-        @mc.glade[UIConsts::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils::assign_track_seg_order(@reclnk.record.rrecord) }
-        @mc.glade[UIConsts::REC_POPUP_PHISTORY].signal_connect(:activate) {
+        GtkUI[GtkIDs::REC_POPUP_EDIT].signal_connect(:activate)     { on_rec_edit }
+        GtkUI[GtkIDs::REC_POPUP_ADD].signal_connect(:activate)      { on_rec_add }
+        GtkUI[GtkIDs::REC_POPUP_DEL].signal_connect(:activate)      { on_rec_or_seg_del }
+        GtkUI[GtkIDs::REC_POPUP_SEGADD].signal_connect(:activate)   { on_seg_add }
+        GtkUI[GtkIDs::REC_POPUP_CPTITLE].signal_connect(:activate)  { on_cp_title_to_segs }
+        GtkUI[GtkIDs::REC_POPUP_TAGDIR].signal_connect(:activate)   { on_tag_dir }
+        GtkUI[GtkIDs::REC_POPUP_ENQUEUE].signal_connect(:activate)  { @mc.enqueue_record }
+        GtkUI[GtkIDs::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
+        GtkUI[GtkIDs::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils::assign_track_seg_order(@reclnk.record.rrecord) }
+        GtkUI[GtkIDs::REC_POPUP_PHISTORY].signal_connect(:activate) {
             PlayHistoryDialog.new.show_record(@reclnk.record.rrecord)
         }
 
-        @mc.glade[UIConsts::REC_POPUP_GETRPGAIN].signal_connect(:activate) { get_replay_gain }
+        GtkUI[GtkIDs::REC_POPUP_GETRPGAIN].signal_connect(:activate) { get_replay_gain }
 
         return finalize_setup
     end
