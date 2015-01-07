@@ -60,11 +60,11 @@ class DBSelectorDialog
             count = DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE #{@tbl_ref}=#{iter[0]}")
         end
         if count > 0
-            UIUtils::show_message("Error: #{count} reference(s) still in artists or records table", Gtk::MessageDialog::ERROR)
+            GtkUtils.show_message("Error: #{count} reference(s) still in artists or records table", Gtk::MessageDialog::ERROR)
         else
             DBUtils::client_sql("DELETE FROM #{@tbl_name} WHERE #{@tbl_ref}=#{iter[0]}")
             @tv.model.remove(iter)
-            UIUtils::show_message("Entry removed", Gtk::MessageDialog::INFO)
+            GtkUtils.show_message("Entry removed", Gtk::MessageDialog::INFO)
         end
     end
 

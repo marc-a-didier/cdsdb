@@ -46,8 +46,9 @@ require './gtkbuilderintf'
 require './multi_drag_treeview'
 require './extendedtreeview'
 
-require './uicachemgr'
-require './uiutils'
+require './imagecache'
+require './uilink'
+require './gtkutils'
 
 require './playerintf'
 require './topwindow'
@@ -77,7 +78,7 @@ require './musicclient'
 
 require './taskswindow'
 
-require './uimodules'
+require './controlshandler'
 require './dbuiclass'
 
 require './dbreorderer'

@@ -136,17 +136,16 @@ end
 #
 # Now that editors work with the cache and do not inherit from any class,
 # the @dbs and @glade members must be set since they are used in the
-# included BaseUI module.
+# included ControlsHandler module.
 #
 
 class ArtistEditor
 
     include GtkIDs
-    include BaseUI
+    include ControlsHandler
 
     def initialize(dbs)
-        @dbs = dbs
-        init_baseui("arted_")
+        setup_controls("arted_", dbs)
 
         GtkUI[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
     end
@@ -156,11 +155,10 @@ end
 class RecordEditor
 
     include GtkIDs
-    include BaseUI
+    include ControlsHandler
 
     def initialize(dbs)
-        @dbs = dbs
-        init_baseui("reced_")
+        setup_controls("reced_", dbs)
 
         GtkUI[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
         GtkUI[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
@@ -187,11 +185,10 @@ end
 class SegmentEditor
 
     include GtkIDs
-    include BaseUI
+    include ControlsHandler
 
     def initialize(dbs)
-        @dbs = dbs
-        init_baseui("seged_")
+        setup_controls("seged_", dbs)
 
         GtkUI[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
         GtkUI[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
@@ -214,11 +211,10 @@ end
 class TrackEditor
 
     include GtkIDs
-    include BaseUI
+    include ControlsHandler
 
     def initialize(dbs)
-        @dbs = dbs
-        init_baseui("trked_")
+        setup_controls("trked_", dbs)
 
         #
         # Setup the rating combo
@@ -228,13 +224,19 @@ class TrackEditor
         #
         # Setup the track tags treeview
         #
-        UIUtils::setup_tracks_tags_tv(GtkUI[TRKED_TV_TAGS])
+        GtkUtils.setup_tracks_tags_tv(GtkUI[TRKED_TV_TAGS])
     end
 end
 
 class DBEditor
 
     include GtkIDs
+
+    # These constants are used by callers to tell which page should be the default one
+    ARTIST_PAGE  = 0
+    RECORD_PAGE  = 1
+    SEGMENT_PAGE = 2
+    TRACK_PAGE   = 3
 
     def initialize(mc, dblink, default_page)
         GtkUI.load_window(DLG_DB_EDITOR)
@@ -276,14 +278,13 @@ end
 class PListDialog < PListDBClass
 
     include GtkIDs
-    include BaseUI
+    include ControlsHandler
 
     def initialize(rplist)
         super()
 
         GtkUI.load_window(DLG_PLIST_INFOS)
-        @dbs = self
-        init_baseui("pldlg_")
+        setup_controls("pldlg_", self)
 
         ref_load(rplist)
     end

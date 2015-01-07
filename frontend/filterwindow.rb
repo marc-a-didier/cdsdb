@@ -34,7 +34,7 @@ class FilterWindow < TopWindow
         GtkUI[FLT_BTN_TODATE].signal_connect(:clicked)   { set_date(GtkUI[FLT_ENTRY_TODATE]) }
 
         @tv_tags = GtkUI[FTV_TAGS]
-        UIUtils::setup_tracks_tags_tv(@tv_tags)
+        GtkUtils.setup_tracks_tags_tv(@tv_tags)
         @tv_tags.columns[0].clickable = true
         @tv_tags.columns[0].signal_connect(:clicked) { @tv_tags.model.each { |model, path, iter| iter[0] = !iter[0] } }
 
@@ -189,7 +189,7 @@ class FilterWindow < TopWindow
 
         # Where clause on selected tags if any
         if GtkUI[FLT_EXP_TAGS].expanded?
-            mask = UIUtils::get_tags_mask(@tv_tags)
+            mask = GtkUtils.get_tags_mask(@tv_tags)
             unless mask == 0
                 wc += GtkUI[FLT_CB_MATCHALL].active? ? " AND ((tracks.itags & #{mask}) = #{mask})" :
                                                            " AND ((tracks.itags & #{mask}) <> 0)"
@@ -228,7 +228,7 @@ class FilterWindow < TopWindow
         wc = generate_filter
 
         if wc.empty?
-            UIUtils.show_message("Can't generate a play list from the current criteria", Gtk::MessageDialog::ERROR)
+            GtkUtils.how_message("Can't generate a play list from the current criteria", Gtk::MessageDialog::ERROR)
             return
         end
 

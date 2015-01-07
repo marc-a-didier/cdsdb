@@ -301,8 +301,8 @@ p row
         return if cursor.nil?
         iter = model.get_iter(cursor[RTV_REF])
         txt = iter.parent ? "segment" : "record"
-        if UIUtils::get_response("Sure to delete this #{txt}?") == Gtk::Dialog::RESPONSE_OK
-            res = iter.parent ? UIUtils::delete_segment(iter[RTV_REF]) : UIUtils::delete_record(iter[RTV_REF])
+        if GtkUtils.get_response("Sure to delete this #{txt}?") == Gtk::Dialog::RESPONSE_OK
+            res = iter.parent ? GtkUtils.delete_segment(iter[RTV_REF]) : GtkUtils.delete_record(iter[RTV_REF])
             model.remove(iter) if res == 0
         end
     end
@@ -318,11 +318,11 @@ p row
 # p uilink.full_dir
         default_dir = uilink.playable? ? uilink.full_dir : CFG.rip_dir
 
-        dir = UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
+        dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
             expected, found = uilink.tag_and_move_dir(dir) { |param| @mc.audio_link_ok(param) }
             if expected != found
-                UIUtils::show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
+                GtkUtils.show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
             elsif dir.match(CFG.rip_dir[0..-2]) # Remove last / if files are not in rip sub dir
                 # Set the ripped date only if processing files from the rip directory.
                 @reclnk.record.idateripped = Time::now.to_i
@@ -336,7 +336,7 @@ p row
         tracks.each do |trackui|
             trackui.setup_audio_file if trackui.audio_file.empty?
             unless trackui.playable?
-                UIUtils.show_message("All tracks must be available on disk.",  Gtk::MessageDialog::ERROR)
+                GtkUtils.show_message("All tracks must be available on disk.",  Gtk::MessageDialog::ERROR)
                 return
             end
         end

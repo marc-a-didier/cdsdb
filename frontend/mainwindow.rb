@@ -54,19 +54,19 @@ class MainWindow < TopWindow
         # Set cd image to default image
         GtkUI[REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
 
-        Gtk::IconTheme.add_builtin_icon("player_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"player.png"))
-        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"pqueue.png"))
-        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"plists.png"))
-        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"charts.png"))
+        Gtk::IconTheme.add_builtin_icon("player_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"player.png"))
+        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"pqueue.png"))
+        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"plists.png"))
+        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"charts.png"))
         GtkUI[MW_TBBTN_PLAYER].icon_name = "player_icon"
         GtkUI[MW_TBBTN_PQUEUE].icon_name = "pqueue_icon"
         GtkUI[MW_TBBTN_PLISTS].icon_name = "plists_icon"
         GtkUI[MW_TBBTN_CHARTS].icon_name = "charts_icon"
 
-        Gtk::IconTheme.add_builtin_icon("server_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"network-server.png"))
-        Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, UIUtils::get_btn_icon(CFG.icons_dir+"tasks.png"))
-        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, UIUtils::get_btn_icon(CFG.icons_dir+"filter.png"))
-        Gtk::IconTheme.add_builtin_icon("memos_icon",  22, UIUtils::get_btn_icon(CFG.icons_dir+"document-edit.png"))
+        Gtk::IconTheme.add_builtin_icon("server_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"network-server.png"))
+        Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, GtkUtils.get_btn_icon(CFG.icons_dir+"tasks.png"))
+        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"filter.png"))
+        Gtk::IconTheme.add_builtin_icon("memos_icon",  22, GtkUtils.get_btn_icon(CFG.icons_dir+"document-edit.png"))
 
         GtkUI[MW_TBBTN_SERVER].icon_name = "server_icon"
         GtkUI[MW_TBBTN_TASKS].icon_name  = "tasks_icon"
@@ -140,7 +140,7 @@ class MainWindow < TopWindow
         GtkUI[MM_WIN_DATES].signal_connect(:activate)  { handle_history(VIEW_BY_DATES) }
 
         GtkUI[MM_TOOLS_BATCHRG].signal_connect(:activate) { Utils.replay_gain_for_genre }
-#             Utils::search_for_orphans(UIUtils::select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
+#             Utils::search_for_orphans(GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER) {
 #                 Gtk.main_iteration while Gtk.events_pending?
 #             } )
 #         }
@@ -283,7 +283,7 @@ class MainWindow < TopWindow
     # Send the value of tags selection to the popup owner so it can do what it wants of it
     #
     def on_set_tags(widget)
-        bit = 1 << TAGS.index(widget.child.label)
+        bit = 1 << Qualifiers::TAGS.index(widget.child.label)
         bit = -bit unless widget.active? # Send negative value to tell it must be unset
         @trk_browser.set_track_field("itags", bit, @pm_owner.instance_of?(RecordsBrowser))
     end
@@ -292,7 +292,7 @@ class MainWindow < TopWindow
     # Send the value of rating selection to the popup owner so it can do what it wants of it
     #
     def on_set_rating(widget)
-        @trk_browser.set_track_field("irating", RATINGS.index(widget.child.label), @pm_owner.instance_of?(RecordsBrowser))
+        @trk_browser.set_track_field("irating", Qualifiers::RATINGS.index(widget.child.label), @pm_owner.instance_of?(RecordsBrowser))
     end
 
 
@@ -342,14 +342,14 @@ TRACE.debug("*** save memos called")
     end
 
     def on_import_audio_file
-        file = UIUtils.select_source(Gtk::FileChooser::ACTION_OPEN)
+        file = GtkUtils.select_source(Gtk::FileChooser::ACTION_OPEN)
         CDEditorWindow.new.edit_audio_file(file) unless file.empty?
     end
 
     def on_tag_dir_genre
         value = DBSelectorDialog.new.run(DBIntf::TBL_GENRES)
         unless value == -1
-            dir = UIUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
+            dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
             Utils.tag_full_dir_to_genre(DBUtils.name_from_id(value, DBIntf::TBL_GENRES), dir) unless dir.empty?
         end
     end
@@ -375,7 +375,7 @@ TRACE.debug("*** save memos called")
     #
     def on_update_db
         if Socket.gethostname.match("madD510|192.168.1.14") || !CFG.remote?
-            UIUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
+            GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
         srv_db_version = MusicClient.new.get_server_db_version

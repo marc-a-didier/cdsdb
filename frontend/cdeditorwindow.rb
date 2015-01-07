@@ -75,7 +75,7 @@ class CDEditorWindow
             @ripper.settings['vorbissettings'] = "-q 8"
             Thread.new { @ripper.prepareRip }
         else
-            UIUtils::show_message("Faudrait p't'êt' sélectionner un format, non?", Gtk::MessageDialog::ERROR)
+            GtkUtils.show_message("Faudrait p't'êt' sélectionner un format, non?", Gtk::MessageDialog::ERROR)
         end
     end
 
@@ -148,13 +148,13 @@ class CDEditorWindow
         @ripper = RipperClient.new(CFG.cd_device)
         disc = @ripper.settings['cd'] #Disc.new(CFG.cd_device) # ("/dev/sr0")
         if disc.md.nil?
-            UIUtils::show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)
+            GtkUtils.show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL
         end
 
         #disc.md.freedb($rr_defaultSettings)
         if disc.md.tracklist.size == 0
-            UIUtils::show_message("Disc not found on freedb!", Gtk::MessageDialog::INFO)
+            GtkUtils.show_message("Disc not found on freedb!", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL
         end
 

@@ -190,7 +190,7 @@ public
 
     def add_to_plist(rplist, rtrack)
         count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM pltracks WHERE rplist=#{rplist} AND rtrack=#{rtrack};")
-        count = 0 if count > 0 && UIUtils::get_response("This track is already in this play list. Add anyway?") == Gtk::Dialog::RESPONSE_OK
+        count = 0 if count > 0 && GtkUtils.get_response("This track is already in this play list. Add anyway?") == Gtk::Dialog::RESPONSE_OK
         if count == 0
             seq = DBIntf.get_first_value("SELECT MAX(iorder) FROM pltracks WHERE rplist=#{rplist}").to_i+1
             exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
@@ -416,7 +416,7 @@ p new_iorder
             update_tracks_time_infos
             notify_player_if_provider
         else
-            if UIUtils::get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
+            if GtkUtils.get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
                 exec_sql("DELETE FROM pltracks WHERE rplist=#{@current_pl.rplist};")
                 exec_sql("DELETE FROM plists WHERE rplist=#{@current_pl.rplist};")
                 update_tvpl

@@ -97,7 +97,7 @@ class TracksBrowser < Gtk::TreeView
             if @trklnk.track.valid? && @trklnk.playable?
                 AudioDialog.new.show(@trklnk.audio_file)
             else
-                UIUtils::show_message("File not found!", Gtk::MessageDialog::ERROR)
+                GtkUtils.show_message("File not found!", Gtk::MessageDialog::ERROR)
             end
         }
         GtkUI[GtkIDs::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
@@ -395,15 +395,15 @@ class TracksBrowser < Gtk::TreeView
 
     def on_trk_del
         msg = selection.count_selected_rows == 1 ? "Sure to delete this track?" : "Sure to delete these tracks?"
-        if UIUtils::get_response(msg) == Gtk::Dialog::RESPONSE_OK
-            selection.selected_each { |model, path, iter| UIUtils::delete_track(iter[TTV_REF]); model.remove(iter) }
+        if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
+            selection.selected_each { |model, path, iter| GtkUtils.delete_track(iter[TTV_REF]); model.remove(iter) }
             load_entries_select_first
         end
     end
 
     def on_del_from_fs
         msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
-        if UIUtils::get_response(msg) == Gtk::Dialog::RESPONSE_OK
+        if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
             selection.selected_each { |model, path, iter|
                 Utils::remove_file(iter[TTV_REF])
                 iter[TTV_DATA].set_audio_status(AudioLink::UNKNOWN)
@@ -416,7 +416,7 @@ class TracksBrowser < Gtk::TreeView
         trackui = selected_track
         return if !trackui || trackui.audio_status == AudioLink::UNKNOWN
 
-        file = UIUtils::select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
+        file = GtkUtils.select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
         unless file.empty?
             trackui.set_artist_ref(@mc.segment.rartist)
             trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) }

@@ -10,7 +10,7 @@ class MusicClient
         rescue Errno::ECONNREFUSED => ex
             puts "Connection error (#{ex.class} : #{ex})."
             CFG.set_local_mode
-            UIUtils::show_message("Can't connect to server #{CFG.server} on port #{CFG.port}.\n
+            GtkUtils.show_message("Can't connect to server #{CFG.server} on port #{CFG.port}.\n
                                    Config reset to local browsing mode.", Gtk::MessageDialog::ERROR)
             return nil
         end

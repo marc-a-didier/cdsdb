@@ -486,7 +486,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     def update_hscale
-#         return if @seeking || (!playing? && !paused?)
         return if @seek_handler || (!playing? && !paused?)
 
         @playbin.query(@track_pos)
@@ -505,7 +504,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.playable?
 #             system("vmtouch -t '#{@queue[1].uilink.audio_file}'")
 #             File.open(@queue[1].uilink.audio_file, "r") { |f| f.advise(:willneed) } #, 0, f.size) }
-            File.open(@queue[1].uilink.audio_file, "r") { |f| f.read_nonblock(f.size) }
+            File.open(@queue[1].uilink.audio_file, "r") { |f| f.read_nonblock(f.size); f.advise(:willneed) }
 #             IO.read(@queue[1].uilink.audio_file)
             @file_prefetched = true
             TRACE.debug("Prefetch of #{@queue[1].uilink.audio_file}".brown)

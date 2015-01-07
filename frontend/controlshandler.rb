@@ -65,7 +65,7 @@ GTK_HANDLERS = {
 #
 #
 
-module BaseUI
+module ControlsHandler
 
     FLD_CTRL = 0
     FLD_PROC = 1
@@ -74,14 +74,15 @@ module BaseUI
     FROM_WIDGET = false
 
 
-    def init_baseui(prefix)
+    def setup_controls(prefix, dbs)
+        @dbs = dbs
         @controls = {}
 
         @dbs.members.each { |member|
             GTK_HANDLERS.each { |ui_type, handler_proc|
                 if GtkUI[prefix+ui_type+member.to_s]
                     @controls[member.to_s] = [GtkUI[prefix+ui_type+member.to_s], handler_proc]
-                    break;
+                    break
                 end
             }
         }
@@ -117,28 +118,8 @@ module BaseUI
         value = DBSelectorDialog.new.run(dbfield[1..-1])
         unless value == -1
             @dbs[dbfield] = value
-#             self.sql_update.field_to_widget(dbfield)
             self.field_to_widget(dbfield)
         end
-    end
-
-end
-
-
-#
-# Overrides from_widgets in order to save only the text view entry of the main window tabs.
-# Must be included AFTER BaseUI
-#
-module MainTabsUI
-
-    def from_widgets
-        widget_to_field("mnotes")
-        return self
-    end
-
-    def to_infos_widget(widget)
-        widget.text = build_infos_string
-        return self
     end
 
 end

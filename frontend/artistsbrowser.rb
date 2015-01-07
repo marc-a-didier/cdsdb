@@ -658,7 +658,7 @@ class ArtistsBrowser < Gtk::TreeView
     end
 
     def on_art_popup_del
-        model.remove(@tvs) if UIUtils::delete_artist(@tvs[ATV_REF]) == 0 if !@tvs.nil? && UIUtils::get_response("Sure to delete this artist?") == Gtk::Dialog::RESPONSE_OK
+        model.remove(@tvs) if GtkUtils.delete_artist(@tvs[ATV_REF]) == 0 if !@tvs.nil? && GtkUtils.get_response("Sure to delete this artist?") == Gtk::Dialog::RESPONSE_OK
     end
 
     def on_art_popup_edit
