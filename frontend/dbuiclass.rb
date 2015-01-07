@@ -236,11 +236,6 @@ class DBEditor
 
     include GtkIDs
 
-    ARTIST_PAGE  = 0
-    RECORD_PAGE  = 1
-    SEGMENT_PAGE = 2
-    TRACK_PAGE   = 3
-
     def initialize(mc, dblink, default_page)
         GtkUI.load_window(DLG_DB_EDITOR)
 

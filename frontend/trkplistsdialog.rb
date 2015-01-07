@@ -7,7 +7,6 @@ class TrkPListsDialog
 
     def initialize(mc, rtrack)
         GtkUI.load_window(GtkIDs::TRK_PLISTS_DIALOG)
-        @dlg = GtkUI[GtkIDs::TRK_PLISTS_DIALOG]
 
         tv = GtkUI[GtkIDs::TRK_PLISTS_TV]
 
@@ -37,7 +36,7 @@ class TrkPListsDialog
     end
 
     def run
-        @dlg.run
-        @dlg.destroy
+        GtkUI[GtkIDs::TRK_PLISTS_DIALOG].run
+        GtkUI[GtkIDs::TRK_PLISTS_DIALOG].destroy
     end
 end
