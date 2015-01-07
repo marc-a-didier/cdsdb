@@ -1,23 +1,71 @@
 
 
 #
-# UI handlers designed to be inclued in dbclassintf subclasses (the @dbs struct is mandatory)
+# Handlers is an array of proc to do the appropriate job on each type of control that
+# is used in the UI.
 #
+# Each UI element is automatically filled and read
+# using the handler associated to the control which is itself associated to a dbs field.
 #
-module BaseUI
+GTK_HANDLERS = {
+    'entry_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field].to_s : dbs[field] = control.text.to_i
+        },
+    'lkentry_' =>
+        Proc.new { |control, dbs, field, is_to| # Lookup fields are automotically set when edited so there's no 'from'
+            control.text = DBUtils::name_from_id(dbs[field], field[1..-1]) if is_to
+        },
+    'timeentry_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field].to_ms_length : dbs[field] = control.text.to_ms_length
+        },
+    'dateentry_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field].to_std_date : dbs[field] = control.text.to_date_from_utc
+        },
+    'ndateentry_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field].to_std_date('Never') : dbs[field] = control.text.to_date_from_utc
+        },
+    'cb_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.active = dbs[field] > 0 : dbs[field] = control.active? ? 1 : 0
+        },
+    'cmb_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.active = dbs[field] : dbs[field] = control.active
+        },
+    'tv_' =>
+        Proc.new { |control, dbs, field, is_to|
+            if is_to
+                Qualifiers::TAGS.each_index { |i| control.model.get_iter(i.to_s)[0] = dbs[field] & (1 << i) != 0 }
+            else
+                dbs[field] = 0
+                Qualifiers::TAGS.each_index { |i| dbs[field] |= (1 << i) if control.model.get_iter(i.to_s)[0] }
+            end
+        },
+    'sentry_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field] : dbs[field] = control.text
+        },
+    'txtview_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.buffer.text = dbs[field].to_memo : dbs[field] = control.buffer.text.to_dbstring
+        },
+    'fltentry_' =>
+        Proc.new { |control, dbs, field, is_to|
+            is_to ? control.text = dbs[field].to_s : dbs[field] = control.text.to_f
+        }
+}
 
-    # Order in which methods are added to @@handlers
-    INT_HDL   = 0
-    LKUP_HDL  = 1
-    TIME_HDL  = 2
-    UDT_HDL   = 3
-    NDT_HDL   = 4
-    CB_HDL    = 5
-    CMB_HDL   = 6
-    TV_HDL    = 7
-    STR_HDL   = 8
-    TXT_HDL   = 9
-    FLT_HDL   = 10
+
+#
+# UI handlers designed to be included in dbclassintf subclasses (the @dbs struct is mandatory)
+#
+#
+
+module BaseUI
 
     FLD_CTRL = 0
     FLD_PROC = 1
@@ -25,73 +73,14 @@ module BaseUI
     TO_WIDGET   = true
     FROM_WIDGET = false
 
-    TYPES_MAP = {"entry_"      => INT_HDL, "lkentry_" => LKUP_HDL, "timeentry_" => TIME_HDL, "dateentry_" => UDT_HDL,
-                 "ndateentry_" => NDT_HDL, "cb_"      => CB_HDL,   "cmb_"       => CMB_HDL,  "tv_"        => TV_HDL,
-                 "sentry_"     => STR_HDL, "txtview_" => TXT_HDL,  "fltentry_"  => FLT_HDL }
-
-
-    #
-    # Handlers is an array of proc to do the appropriate job on each type of control that
-    # is used in the UI.
-    #
-    # Each UI (tabs from the main window and editors) is automatically filled and read from
-    # using the handler associated to the control which is itself associated to a dbs field.
-    #
-
-    @@handlers = []
-
-    def init_handlers
-TRACE.debug("in init_handlers")
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = dbs[field].to_s : dbs[field] = control.text.to_i
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to| # Lookup fields are automotically set when edited so there's no 'from'
-            control.text = DBUtils::name_from_id(dbs[field], field[1..-1]) if is_to
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = dbs[field].to_ms_length : dbs[field] = control.text.to_ms_length
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = dbs[field].to_std_date : dbs[field] = control.text.to_date_from_utc
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = dbs[field].to_std_date("Never") : dbs[field] = control.text.to_date_from_utc
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.active = dbs[field] > 0 : dbs[field] = control.active? ? 1 : 0
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.active = dbs[field] : dbs[field] = control.active
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            if is_to
-                Qualifiers::TAGS.each_index { |i| control.model.get_iter(i.to_s)[0] = dbs[field] & (1 << i) != 0 }
-            else
-                dbs[field] = 0
-                Qualifiers::TAGS.each_index { |i| dbs[field] |= (1 << i) if control.model.get_iter(i.to_s)[0] }
-            end
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = dbs[field] : dbs[field] = control.text
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.buffer.text = dbs[field].to_memo : dbs[field] = control.buffer.text.to_dbstring
-        }
-        @@handlers << Proc.new { |control, dbs, field, is_to|
-            is_to ? control.text = dbs[field].to_s : dbs[field] = control.text.to_f
-        }
-    end
 
     def init_baseui(prefix)
-# TRACE.debug("in init_baseui: prefix=#{prefix}")
         @controls = {}
 
-        init_handlers if @@handlers.size == 0
-
         @dbs.members.each { |member|
-            TYPES_MAP.each { |ui_type, handler_type|
+            GTK_HANDLERS.each { |ui_type, handler_proc|
                 if GtkUI[prefix+ui_type+member.to_s]
-                    @controls[member.to_s] = [GtkUI[prefix+ui_type+member.to_s], @@handlers[handler_type]]
+                    @controls[member.to_s] = [GtkUI[prefix+ui_type+member.to_s], handler_proc]
                     break;
                 end
             }
