@@ -15,9 +15,9 @@ module DBClassIntf
     # and as a string if it begins with s or m.
     def reset
         self.members.each_with_index { |member, i|
-            # i == 0 means first field, that is the primary key which is set to -1 to tell that the entry is not valid
+            # i == 0 means first field, that is the primary key which is set to nil to tell that the entry is not valid
             if i == 0
-                self[i] = -1
+                self[i] = nil
             else
                 self[i] = case member.to_s[0]
                     when "r", "i" then 0  # r or i
@@ -94,11 +94,21 @@ TRACE.debug("DB update : #{sql}".red)
     end
 
     def valid?
-        return self[0] != -1
+        return self[0]
     end
 
     def disp_value(val)
         valid? ? val : nil
+    end
+
+    def select_by_field(field, value, opts = :case_sensitive)
+        if opts == :case_insensitive
+            row = DBIntf.get_first_row("SELECT * FROM #{tbl_name} WHERE LOWER(#{field})=LOWER(#{value.to_sql});")
+        else
+            row = DBIntf.get_first_row("SELECT * FROM #{tbl_name} WHERE #{field}=#{value.to_sql};")
+        end
+        row.nil? ? reset : load_from_row(row)
+        return valid?
     end
 end
 

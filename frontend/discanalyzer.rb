@@ -1,93 +1,121 @@
 
-class DiscAnalyzer
+#
+# Analyze and generate SQL statements to add a new record to the DB.
+#
+#
+# Things to remember:
+#   - Compilations are NOT marked as segmented unless there are trully segments.
+#   - A record with only one segment which has a different title than the record is NOT marked as segmented.
+#
+#
 
+module DiscAnalyzer
+
+   RESULT_SQL_FILE = CFG.rsrc_dir+'discanalyzer.sql'
 
     ArtistStruct = Struct.new(:segments, :db_class)
     SegmentStruct = Struct.new(:tracks, :db_class)
 
-    def initialize(disc)
-        @disc = disc
+    # Check if an entry already exists in the db. If not, add a new insert statement to the file
+    def self.get_reference(klass, ref, f)
+        unless klass.select_by_field("sname", ref, :case_insensitive)
+            klass[0] = klass.get_last_id+1
+            klass.sname = ref
+            f.puts(klass.generate_insert)
+        end
+        return klass
     end
 
-    def analyze_data
-        # Find if the disc is a compilation
-#         @disc.tracks.each_with_index do |track, index|
-#             # Add new artist if doesn't exist
-#             @artists[track.artist] = {} unless @artists[track.artist]
-#
-#             # Set segment name to empty if it has the name as the record
-#             segment = @disc.title == track.segment ? "" : track.segment
-#
-#             # Add a new segment to the current artist if it doesn't already exist
-#             @artist[track.artist][segment] = [] unless @artist[track.artist][segment]
-#
-#             # Add the track number to the current segment
-#             @artist[track.artist][segment] << index
-#         end
+    def self.process(disc)
+        f = File.open(RESULT_SQL_FILE, "w")
 
+        genre = self.get_reference(GenreDBClass.new, disc.genre, f)
+        label = self.get_reference(LabelDBClass.new, disc.label, f)
+
+        # Builds a structure that groups tracks into segments and segements into artists
         artists = {}
-        @disc.tracks.each_with_index do |track, index|
+        disc.tracks.each_with_index do |track, index|
             # Add new artist if doesn't exist
-            artists[track.artist] = ArtistStruct.new(Hash.new, ArtistDBclass.new) unless @artists[track.artist]
+            artists[track.artist] = ArtistStruct.new(Hash.new, ArtistDBClass.new) unless artists[track.artist]
 
             # Set segment name to empty if it has the name as the record
-            segment = @disc.title == track.segment ? "" : track.segment
+            segment = disc.title == track.segment ? "" : track.segment
 
             # Add a new segment to the current artist if it doesn't already exist
-            artists[track.artist].segments = SegmentStruct.new(Array.new, SegmentDBClass.new) unless artists[track.artist].segments
+            artists[track.artist].segments[segment] = SegmentStruct.new(Array.new, SegmentDBClass.new) unless artists[track.artist].segments[segment]
 
             # Add the track number to the current segment
             artists[track.artist].segments[segment].tracks << index
         end
 
+        # Keep a flag that say if the record is segmented or not
+        is_segmented = false
+        artists.each { |name, struct| is_segmented = true if struct.segments.size > 1 }
+
+        # Iterate through artists and add those who are missing in the db
         last_id = artists[artists.keys[0]].db_class.get_last_id+1
         artists.each do |name, struct|
-            struct.db_class.rartist = last_id
-            struct.db_class.sname = name
-            struct.db_class.generate_insert
-            last_id += 1
-        end
-
-        record = RecordDBClass.new
-        record.rartist = @artists.keys.size > 1 ? 0 : artist.rartist
-        record.rrecord = record.get_last_id+1
-        record.stitle = @disc.title
-#         record.rgenre = GtkUI[GtkIDs::CDED_ENTRY_GENRE].text
-        record.iyear = @disc.year
-        record.slabel = @disc.label
-        record.scatalog = @disc.catalog
-        record.iplaytime = @disc.length
-        record.icddbid = @disc.cddbid
-        record.rmedia = @disc.medium
-#         record.rlabel = @disc.label
-        record.iissegmented = artists.size > 1 || artists.keys[0].segments.size > 1
-        record.generate_insert
-
-        last_id = artists[artists.keys[0]].segments[artists[artists.keys[0]].segments.keys[0]].db_class.get_last_id+1
-        artists.each do |art_name, art_struct|
-            art_struct.segments.each do |seg_name, seg_struct|
-                seg_struct.db_class.rsegment = last_id
-                seg_struct.db_class.stitle = seg_name
-                seg_struct.tracks.each { |track_index| seg_struct.db_class.iplaytime += @disc.tracks[track_index].length }
-                seg_struct.generate_insert
+            unless struct.db_class.select_by_field("sname", name, :case_insensitive)
+                struct.db_class.rartist = last_id
+                struct.db_class.sname = name
+                f.puts(struct.db_class.generate_insert)
                 last_id += 1
             end
         end
 
+        # Setup the record entry and generate the insert statement
+        record = RecordDBClass.new
+        record.rartist = artists.size > 1 ? 0 : artists[artists.keys[0]].db_class.rartist
+        record.rrecord = record.get_last_id+1
+        record.stitle = disc.title
+        record.rgenre = genre.rgenre
+        record.iyear = disc.year
+        record.rlabel = label.rlabel
+        record.scatalog = disc.catalog
+        record.iplaytime = disc.length
+        record.icddbid = disc.cddbid
+        record.rmedia = disc.medium
+        record.iissegmented = is_segmented ? 1 : 0
+        f.puts(record.generate_insert)
+
+        # Generate insert statement for each segment
+        last_id = artists[artists.keys[0]].segments[artists[artists.keys[0]].segments.keys[0]].db_class.get_last_id+1
+        artists.each do |art_name, art_struct|
+            art_struct.segments.each do |seg_name, seg_struct|
+                seg_struct.db_class.rsegment = last_id
+                seg_struct.db_class.rartist = art_struct.db_class.rartist
+                seg_struct.db_class.rrecord = record.rrecord
+                seg_struct.db_class.stitle = seg_name
+                seg_struct.tracks.each { |track_index| seg_struct.db_class.iplaytime += disc.tracks[track_index].length }
+                f.puts(seg_struct.db_class.generate_insert)
+                last_id += 1
+            end
+        end
+
+        # Generate the insert statement for each track.
+        # Getting back the segment reference and segment order is a bit tricky!!!
         track = TrackDBClass.new
         last_id = track.get_last_id+1
-        @disc.tracks.each_with_index do |dtrack, track_index|
+        disc.tracks.each_with_index do |dtrack, track_index|
+            track.isegorder = 0
             track.rtrack = last_id
             track.rrecord = record.rrecord
             artists.each do |art_name, art_struct|
                 art_struct.segments.each do |seg_name, seg_struct|
-                    seg_struct.tracks.each { |seg_track| track.rsegment = seg_struct.db_class.rsegment if seg_track == track_index }
+                    seg_struct.tracks.each_with_index do |seg_track, seg_order|
+                        if seg_track == track_index
+                            track.rsegment = seg_struct.db_class.rsegment
+                            track.isegorder = seg_order+1 if is_segmented
+                        end
+                    end
                 end
             end
             track.stitle = dtrack.title
             track.iplaytime = dtrack.length
-            track.generate_insert
+            f.puts(track.generate_insert)
             last_id += 1
         end
+
+        f.close
     end
 end

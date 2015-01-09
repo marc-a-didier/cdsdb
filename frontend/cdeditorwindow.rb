@@ -1,10 +1,9 @@
 # encoding: utf-8
 
-TrackData = Struct.new(:track, :title, :segment, :artist, :length)
-
-DiscInfo = Struct.new(:title, :artist, :genre, :year, :length, :label, :catalog, :medium, :cddbid, :tracks)
-
 class CDEditorWindow
+
+    TrackData = Struct.new(:track, :title, :segment, :artist, :length)
+    DiscInfo  = Struct.new(:title, :artist, :genre, :year, :length, :label, :catalog, :medium, :cddbid, :tracks)
 
     MODE_NONE = 0
     MODE_DISC = 1
@@ -94,7 +93,8 @@ class CDEditorWindow
             track.artist = iter[3]
         }
 
-        SQLGenerator.new.process_record(@disc)
+#         SQLGenerator.new.process_record(@disc)
+        DiscAnalyzer.process(@disc)
     end
 
     def on_drag_received(widget, context, x, y, data, info, time)

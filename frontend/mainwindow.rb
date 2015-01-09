@@ -151,7 +151,7 @@ class MainWindow < TopWindow
         GtkUI[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
         GtkUI[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
         GtkUI[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
-        GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
+        GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DiscAnalyzer.new(nil) } # DBReorderer.new.run }
         GtkUI[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
         GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
 
@@ -326,7 +326,7 @@ class MainWindow < TopWindow
 
     def import_sql_file
         batch = ""
-        IO.foreach(SQLGenerator::RESULT_SQL_FILE) { |line| batch += line }
+        IO.foreach(DiscAnalyzer::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils.exec_batch(batch, Socket.gethostname)
         @art_browser.reload
         @mc.select_record(UILink.new.set_record_ref(RecordDBClass.new.get_last_id)) # The best guess to find the imported record
