@@ -151,7 +151,7 @@ class MainWindow < TopWindow
         GtkUI[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
         GtkUI[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
         GtkUI[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
-        GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DiscAnalyzer.new(nil) } # DBReorderer.new.run }
+        GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
         GtkUI[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
         GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
 

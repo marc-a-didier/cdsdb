@@ -16,36 +16,53 @@ module DiscAnalyzer
     ArtistStruct = Struct.new(:segments, :db_class)
     SegmentStruct = Struct.new(:tracks, :db_class)
 
+    def self.format_artist(artist)
+        return "Unknown" if artist.empty?
+
+        return artist.match(/^the |^die |^les /i) ? artist[4..-1]+", "+artist[0..2] : artist
+    end
+
     # Check if an entry already exists in the db. If not, add a new insert statement to the file
     def self.get_reference(klass, ref, f)
-        unless klass.select_by_field("sname", ref, :case_insensitive)
-            klass[0] = klass.get_last_id+1
-            klass.sname = ref
-            f.puts(klass.generate_insert)
+        if ref.empty?
+            klass[0] = 0
+        else
+            unless klass.select_by_field("sname", ref, :case_insensitive)
+                klass[0] = klass.get_last_id+1
+                klass.sname = ref
+                f.puts(klass.generate_insert)
+            end
         end
         return klass
     end
 
-    def self.process(disc)
-        f = File.open(RESULT_SQL_FILE, "w")
-
+    def self.analyze(disc, f)
         genre = self.get_reference(GenreDBClass.new, disc.genre, f)
         label = self.get_reference(LabelDBClass.new, disc.label, f)
 
         # Builds a structure that groups tracks into segments and segements into artists
+        seg_order = 0
         artists = {}
         disc.tracks.each_with_index do |track, index|
+            # Format artist name
+            name = self.format_artist(track.artist)
+
             # Add new artist if doesn't exist
-            artists[track.artist] = ArtistStruct.new(Hash.new, ArtistDBClass.new) unless artists[track.artist]
+            artists[name] = ArtistStruct.new(Hash.new, ArtistDBClass.new) unless artists[name]
 
             # Set segment name to empty if it has the name as the record
             segment = disc.title == track.segment ? "" : track.segment
 
             # Add a new segment to the current artist if it doesn't already exist
-            artists[track.artist].segments[segment] = SegmentStruct.new(Array.new, SegmentDBClass.new) unless artists[track.artist].segments[segment]
+            unless artists[name].segments[segment]
+                artists[name].segments[segment] = SegmentStruct.new(Array.new, SegmentDBClass.new)
+                # Already set segment order in db class cause can't find it again since it's a hash
+                seg_order += 1
+                artists[name].segments[segment].db_class.iorder = seg_order
+            end
 
             # Add the track number to the current segment
-            artists[track.artist].segments[segment].tracks << index
+            artists[name].segments[segment].tracks << index
         end
 
         # Keep a flag that say if the record is segmented or not
@@ -73,7 +90,7 @@ module DiscAnalyzer
         record.rlabel = label.rlabel
         record.scatalog = disc.catalog
         record.iplaytime = disc.length
-        record.icddbid = disc.cddbid
+        record.icddbid = disc.cddbid.to_i
         record.rmedia = disc.medium
         record.iissegmented = is_segmented ? 1 : 0
         f.puts(record.generate_insert)
@@ -110,12 +127,15 @@ module DiscAnalyzer
                     end
                 end
             end
+            track.iorder = track_index+1
             track.stitle = dtrack.title
             track.iplaytime = dtrack.length
             f.puts(track.generate_insert)
             last_id += 1
         end
+    end
 
-        f.close
+    def self.process(disc)
+        File.open(RESULT_SQL_FILE, "w") { |f| self.analyze(disc, f) }
     end
 end

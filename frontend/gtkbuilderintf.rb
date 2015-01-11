@@ -271,17 +271,9 @@ module GtkIDs
     #
     # Search dialog
     #
+    # Config fields are declared in shared/cfg.rb because they're also used by the server
+    #
     include ConfigFields
-#     SEARCH_DIALOG       = "search_dialog"
-#     SRCH_DLG_BTN_SEARCH = "srch_dlg_btn_search"
-#     SRCH_DLG_BTN_SHOW   = "srch_dlg_btn_show"
-#     SRCH_DLG_BTN_CLOSE  = "srch_dlg_btn_close"
-#     SRCH_DLG_TV         = "srch_dlg_tv"
-#     SRCH_DLG_RB_TRACK   = "srch_dlg_rb_track"
-#     SRCH_DLG_RB_LYRICS  = "srch_dlg_rb_lyrics"
-#     SRCH_DLG_RB_REC     = "srch_dlg_rb_rec"
-#     SRCH_DLG_RB_SEG     = "srch_dlg_rb_seg"
-#     SRCH_ENTRY_TEXT     = "srch_entry_text"
 
     #
     # Prefs dialogs
