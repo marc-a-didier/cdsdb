@@ -207,7 +207,6 @@ class PlayerWindow < TopWindow
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
-        @file_prefetched = false
     end
 
     def on_btn_next
@@ -502,12 +501,12 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         # If there's a next playable track in queue, read the whole file in an attempt to make
         # it cached by the system and lose less time when skipping to it
         if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.playable?
-#             system("vmtouch -t '#{@queue[1].uilink.audio_file}'")
-#             File.open(@queue[1].uilink.audio_file, "r") { |f| f.advise(:willneed) } #, 0, f.size) }
-            File.open(@queue[1].uilink.audio_file, "r") { |f| f.read_nonblock(f.size); f.advise(:willneed) }
-#             IO.read(@queue[1].uilink.audio_file)
+            TRACE.debug("Start prefetch of #{@queue[1].uilink.audio_file}".brown)
+#             Thread.new { File.open(@queue[1].uilink.audio_file, "r") { |f| f.read_nonblock(f.size) } } #; f.advise(:willneed) }
+#             Thread.new { system("vmtouch -t \"#{@queue[1].uilink.audio_file.gsub(/"/, '\"')}\"") }
+            Thread.new { IO.binread(@queue[1].uilink.audio_file) }
+            TRACE.debug("Prefetch done".brown)
             @file_prefetched = true
-            TRACE.debug("Prefetch of #{@queue[1].uilink.audio_file}".brown)
         end
     end
 
@@ -544,6 +543,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     def stop
         @playbin.stop
         Gtk::timeout_remove(@timer)
+        File.open(@queue[0].uilink.audio_file, "r") { |f| f.advise(:dontneed) }
     end
 
     def show_tooltip(si, tool_tip)

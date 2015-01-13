@@ -209,8 +209,6 @@ class MasterController
             @charts.live_update(uilink) if CFG.live_charts_update? && @charts.window.visible?
 
             MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?
-# puts "freeing #{uilink.audio_file}"
-            File.open(uilink.audio_file, "r") { |f| f.advise(:dontneed) } #, 0, f.size) }
         }
 
 #         if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
