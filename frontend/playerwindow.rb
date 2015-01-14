@@ -171,7 +171,6 @@ class PlayerWindow < TopWindow
 
         # Reset button states
         GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
-#         @seeking = false
         set_window_title
         GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = true
         GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = false
@@ -259,9 +258,6 @@ system("vmtouch \"#{player_data.uilink.audio_file}\"")
 
         @source.location = player_data.uilink.audio_file
         @playbin.play
-
-#         @was_playing = false # Probably useless
-
 
         # Debug info
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
@@ -386,8 +382,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     def init_player
-#         @seeking = false
-
         @playbin = Gst::Pipeline.new("levelmeter")
 
         @playbin.bus.add_watch do |bus, message|
@@ -416,7 +410,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         @slider.signal_connect(:button_press_event) do
             if playing? || paused?
                 @seek_handler = @slider.signal_connect(:value_changed) { seek; false }
-#                 @seeking = true
                 @was_playing = playing?
                 @playbin.pause if @was_playing
                 false # Means the parent handler has to be called
@@ -426,7 +419,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             end
         end
         @slider.signal_connect(:button_release_event) do
-#             @seeking = false
             if @seek_handler
                 seek_set
                 @playbin.play if @was_playing
@@ -435,11 +427,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             end
             false # Means the parent handler has to be called
         end
-#         @seek_handler = @slider.signal_connect(:value_changed) { seek if @seeking; false }
-            #seek((@slider.value * Gst::MSECOND).to_i)
-            #false
-        #}
-        #@seek_handler = @slider.signal_connect(:value_changed) { puts @slider.value.to_s; seek_set; seek; }
 
         @convertor = Gst::ElementFactory.make("audioconvert")
 
@@ -490,9 +477,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         @playbin.query(@track_pos)
 
         itime = (@track_pos.parse[1].to_f/Gst::MSECOND).to_i
-        #@slider.signal_handler_block(@seek_handler)
-        @slider.value = itime #@track_pos.parse[1].to_f/Gst::MSECOND
-        #@slider.signal_handler_unblock(@seek_handler)
+        @slider.value = itime
 
         show_time(itime)
 

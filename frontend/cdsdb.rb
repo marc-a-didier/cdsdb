@@ -205,6 +205,9 @@ require './my_rr_lib'
 # DONE: ajouter un tooltip avec des infos sur le morceau dans la playq & playlist, voir charts?
 # DONE: ajouter qqch dans le filtre pour specifier les morceaux les plus anciennement joues (cool, p.ex.)
 
+# DONE: Ajouter un menu dans le player menu pour selectionner la source du player?
+#       Avec un mode 'automatique' qui fonctionne comme actuellement.
+
 
 #
 # ^^^       ^^^
@@ -248,10 +251,10 @@ require './my_rr_lib'
 #       Refaire les browser qui descendent de generic browser et virer les tv & model,
 #       c'est debile. Utiliser model a la place et virer le treeview.
 
-# TODO: Ajouter un menu dans le player menu pour selectionner la source du player?
-#       Avec un mode 'automatique' qui fonctionne comme actuellement.
-
 # TODO: Check track existence by just finding the number of the track rather than the full name???
+
+# TODO: Try to have to playbin in player and switch from one to the other when track change.
+#       This would maybe drastically reduce the gap between two tracks.
 
 
 # Peu realistes:
