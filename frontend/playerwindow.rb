@@ -3,11 +3,11 @@ PlayerData = Struct.new(:owner, :internal_ref, :uilink, :rplist)
 
 class PlayerWindow < TopWindow
 
-    LEVEL_ELEMENT_NAME = "my_level_meter"
+#     LEVEL_ELEMENT_NAME = "my_level_meter"
     MIN_LEVEL = -80.0  # The scale range will be from this value to 0 dB, has to be negative
     POS_MIN_LEVEL = -1 * MIN_LEVEL
 #     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
-    INTERVAL = 40000000    # How often update the meter? (in nanoseconds) - 25 times/sec in this case
+#     INTERVAL = 40000000    # How often update the meter? (in nanoseconds) - 25 times/sec in this case
 
     METER_WIDTH = 449.0 # Offset start 10 pixels idem end
     IMAGE_WIDTH = 469.0
@@ -21,8 +21,8 @@ class PlayerWindow < TopWindow
 
     Y_OFFSETS = [16, 28]
 
-    LEFT_CHANNEL  = 0
-    RIGHT_CHANNEL = 1
+#     LEFT_CHANNEL  = 0
+#     RIGHT_CHANNEL = 1
 
     DIGIT_HEIGHT = 20
     DIGIT_WIDTH  = 12
@@ -32,7 +32,7 @@ class PlayerWindow < TopWindow
         super(mc, GtkIDs::PLAYER_WINDOW)
 
         window.signal_connect(:delete_event) do
-            stop if playing?
+            @playbin.stop if @playbin.playing?
             @mc.notify_closed(self)
             true
         end
@@ -151,7 +151,7 @@ class PlayerWindow < TopWindow
     end
 
     def set_window_title
-        msg = case @playbin.get_state[1]
+        msg = case @playbin.get_state #[1]
             when Gst::STATE_PLAYING then "Playing"
             when Gst::STATE_PAUSED  then "Paused"
             else "Stopped"
@@ -187,12 +187,16 @@ class PlayerWindow < TopWindow
         @slider.value = 0.0
     end
 
+    def terminate
+        @playbin.stop if @playbin.playing? || @playbin.paused?
+    end
+
     def on_btn_play
-        if playing? || paused?
-            playing? ? @playbin.pause : @playbin.play
-            GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = PLAY_STATE_BTN[playing?]
-            GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = paused?
-            GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = playing?
+        if @playbin.playing? || @playbin.paused?
+            @playbin.playing? ? @playbin.pause : @playbin.play
+            GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = PLAY_STATE_BTN[@playbin.playing?]
+            GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = @playbin.paused?
+            GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = @playbin.playing?
             GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         else
             new_track(:start)
@@ -201,22 +205,22 @@ class PlayerWindow < TopWindow
     end
 
     def on_btn_stop
-        return unless playing? || paused?
-        stop
+        return unless @playbin.playing? || @playbin.paused?
+        @playbin.stop
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
     end
 
     def on_btn_next
-        return if !playing? || paused? || !@queue[1]
-        stop
+        return if !@playbin.playing? || @playbin.paused? || !@queue[1]
+        @playbin.stop
         new_track(:next)
     end
 
     def on_btn_prev
-        return if !playing? || paused? || !@queue[0].owner.has_track(@queue[0], :prev)
-        stop
+        return if !@playbin.playing? || @playbin.paused? || !@queue[0].owner.has_track(@queue[0], :prev)
+        @playbin.stop
         new_track(:prev)
     end
 
@@ -237,27 +241,27 @@ TRACE.debug("Player audio file was empty!".red)
 
         # Can't use replay gain if track has been dropped.
         # Replay gain should work if tags are set in the audio file
+        replay_gain = 0.0
         if player_data.uilink.tags.nil?
             if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
-                @rgain.fallback_gain = player_data.uilink.record.fgain
+                replay_gain = player_data.uilink.record.fgain
 TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
             elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
-                @rgain.fallback_gain = player_data.uilink.track.fgain
+                replay_gain = player_data.uilink.track.fgain
 TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
-            else
-                @rgain.fallback_gain = 0.0
             end
         end
 
-        @playbin.clear  # Doesn't exist in GStreamer 1.0
-        @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
-
-        @source >> @decoder
-
-system("vmtouch \"#{player_data.uilink.audio_file}\"")
-
-        @source.location = player_data.uilink.audio_file
-        @playbin.play
+#         @playbin.clear  # Doesn't exist in GStreamer 1.0
+#         @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
+#
+#         @source >> @decoder
+#
+# system("vmtouch \"#{player_data.uilink.audio_file}\"")
+#
+#         @source.location = player_data.uilink.audio_file
+#         @playbin.play
+        @playbin.new_track(player_data.uilink.audio_file, replay_gain)
 
         # Debug info
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
@@ -379,38 +383,42 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
                           Gdk::RGB::DITHER_NONE, 0, 0)
 
         @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
+
+        @meter.set(@mpix, nil) if channel == GstPlayer::RIGHT_CHANNEL
     end
 
     def init_player
-        @playbin = Gst::Pipeline.new("levelmeter")
+#         @playbin = Gst::Pipeline.new("levelmeter")
+#
+#         @playbin.bus.add_watch do |bus, message|
+#             case message.type
+#                 when Gst::Message::Type::ELEMENT
+#                     if message.source.name == LEVEL_ELEMENT_NAME
+#                         draw_level(message.structure, LEFT_CHANNEL)
+#                         draw_level(message.structure, RIGHT_CHANNEL)
+#
+#                         @meter.set(@mpix, nil)
+#                     end
+#                 when Gst::Message::EOS
+#                     stop
+#                     new_track(:stream_ended)
+#                 when Gst::Message::ERROR
+#                     stop
+#             end
+#             true
+#         end
+#
+#
+#         @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
+# #         @track_pos = @playbin.query_position(Gst::Format::TIME) # GStreamer 1.0
+        @playbin = GstPlayer.new(self).setup
 
-        @playbin.bus.add_watch do |bus, message|
-            case message.type
-                when Gst::Message::Type::ELEMENT
-                    if message.source.name == LEVEL_ELEMENT_NAME
-                        draw_level(message.structure, LEFT_CHANNEL)
-                        draw_level(message.structure, RIGHT_CHANNEL)
-
-                        @meter.set(@mpix, nil)
-                    end
-                when Gst::Message::EOS
-                    stop
-                    new_track(:stream_ended)
-                when Gst::Message::ERROR
-                    stop
-            end
-            true
-        end
-
-
-        @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
-#         @track_pos = @playbin.query_position(Gst::Format::TIME) # GStreamer 1.0
         @was_playing = false # Only used to remember the state of the player when seeking
         @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
         @slider.signal_connect(:button_press_event) do
-            if playing? || paused?
+            if @playbin.playing? || @playbin.paused?
                 @seek_handler = @slider.signal_connect(:value_changed) { seek; false }
-                @was_playing = playing?
+                @was_playing = @playbin.playing?
                 @playbin.pause if @was_playing
                 false # Means the parent handler has to be called
             else
@@ -420,7 +428,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         end
         @slider.signal_connect(:button_release_event) do
             if @seek_handler
-                seek_set
+                @playbin.seek_set(@slider.value)
                 @playbin.play if @was_playing
                 @slider.signal_handler_disconnect(@seek_handler)
                 @seek_handler = nil
@@ -428,55 +436,58 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             false # Means the parent handler has to be called
         end
 
-        @convertor = Gst::ElementFactory.make("audioconvert")
-
-        @level = Gst::ElementFactory.make("level", LEVEL_ELEMENT_NAME)
-        @level.interval = INTERVAL
-        @level.message = true
-        @level.peak_falloff = 100
-        @level.peak_ttl = 200000000
-
-        @rgain = Gst::ElementFactory.make("rgvolume")
-
-        @sink = Gst::ElementFactory.make("autoaudiosink")
-
-        @decoder = Gst::ElementFactory.make("decodebin")
-        @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
-#         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
-            pad.link(@convertor.get_pad("sink"))
-#             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
-            if GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?
-                @convertor >> @level >> @rgain >> @sink
-            else
-                @convertor >> @rgain >> @level >> @sink
-            end
-        }
-
-        @source = Gst::ElementFactory.make("filesrc")
+#         @convertor = Gst::ElementFactory.make("audioconvert")
+#
+#         @level = Gst::ElementFactory.make("level", LEVEL_ELEMENT_NAME)
+#         @level.interval = INTERVAL
+#         @level.message = true
+#         @level.peak_falloff = 100
+#         @level.peak_ttl = 200000000
+#
+#         @rgain = Gst::ElementFactory.make("rgvolume")
+#
+#         @sink = Gst::ElementFactory.make("autoaudiosink")
+#
+#         @decoder = Gst::ElementFactory.make("decodebin")
+#         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
+# #         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
+#             pad.link(@convertor.get_pad("sink"))
+# #             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
+#             if GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?
+#                 @convertor >> @level >> @rgain >> @sink
+#             else
+#                 @convertor >> @rgain >> @level >> @sink
+#             end
+#         }
+#
+#         @source = Gst::ElementFactory.make("filesrc")
     end
 
     def setup_hscale
-        sleep(0.01) while not playing? # We're threaded and async
+        sleep(0.01) while not @playbin.playing? # We're threaded and async
 
-        track_len = Gst::QueryDuration.new(Gst::Format::TIME)
-#         track_len = @playbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
-        @playbin.query(track_len)
-        @total_time = track_len.parse[1].to_f/Gst::MSECOND
+#         track_len = Gst::QueryDuration.new(Gst::Format::TIME)
+# #         track_len = @playbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
+#         @playbin.query(track_len)
+#         @total_time = track_len.parse[1].to_f/Gst::MSECOND
+        @total_time = @playbin.play_time
         @slider.set_range(0.0, @total_time)
         @total_time = @total_time.to_i
 
-        @playbin.query(@track_pos)
+#         @playbin.query(@track_pos)
         update_hscale
 
-        @timer = Gtk::timeout_add(500) { update_hscale; true }
+#         @timer = Gtk::timeout_add(500) { update_hscale; true }
+        @playbin.start_notfications
     end
 
     def update_hscale
-        return if @seek_handler || (!playing? && !paused?)
+        return if @seek_handler || (!@playbin.playing? && !@playbin.paused?)
 
-        @playbin.query(@track_pos)
-
-        itime = (@track_pos.parse[1].to_f/Gst::MSECOND).to_i
+#         @playbin.query(@track_pos)
+#
+#         itime = (@track_pos.parse[1].to_f/Gst::MSECOND).to_i
+        itime = @playbin.play_position
         @slider.value = itime
 
         show_time(itime)
@@ -495,18 +506,18 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         end
     end
 
-    def seek_set
-        @playbin.seek(1.0, Gst::Format::Type::TIME,
-                      Gst::Seek::FLAG_FLUSH.to_i |
-                      Gst::Seek::FLAG_KEY_UNIT.to_i,
-                      Gst::Seek::TYPE_SET,
-                      (@slider.value * Gst::MSECOND).to_i,
-                      Gst::Seek::TYPE_NONE, -1)
-        # Wait at most 100 miliseconds for a state changes, this throttles the seek
-        # events to ensure the playbin can keep up
-        @playbin.get_state(100 * Gst::MSECOND)
-    end
-
+#     def seek_set
+#         @playbin.seek(1.0, Gst::Format::Type::TIME,
+#                       Gst::Seek::FLAG_FLUSH.to_i |
+#                       Gst::Seek::FLAG_KEY_UNIT.to_i,
+#                       Gst::Seek::TYPE_SET,
+#                       (@slider.value * Gst::MSECOND).to_i,
+#                       Gst::Seek::TYPE_NONE, -1)
+#         # Wait at most 100 miliseconds for a state changes, this throttles the seek
+#         # events to ensure the playbin can keep up
+#         @playbin.get_state(100 * Gst::MSECOND)
+#     end
+#
     def seek
         show_time(@slider.value)
     end
@@ -525,27 +536,31 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         return sprintf("%02d:%02d", itime/60000, (itime % 60000)/1000)
     end
 
-    def stop
-        @playbin.stop
-        Gtk::timeout_remove(@timer)
-        File.open(@queue[0].uilink.audio_file, "r") { |f| f.advise(:dontneed) }
-    end
-
+#     def stop
+#         @playbin.stop
+#         Gtk::timeout_remove(@timer)
+#         File.open(@queue[0].uilink.audio_file, "r") { |f| f.advise(:dontneed) }
+#     end
+#
     def show_tooltip(si, tool_tip)
-        @tip_pix = @queue[0].uilink.large_track_cover if @tip_pix.nil?
-        tool_tip.set_icon(@tip_pix)
-        text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
+        if @playbin.playing?
+            @tip_pix = @queue[0].uilink.large_track_cover if @tip_pix.nil?
+            tool_tip.set_icon(@tip_pix)
+            text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
+        else
+            text = "\n<b>CDs DB: waiting for tracks to play...</b>\n"
+        end
         tool_tip.set_markup(text)
     end
 
-    def playing?
-        @playbin.get_state[1] == Gst::STATE_PLAYING
-#         @playbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
-    end
-
-    def paused?
-        @playbin.get_state[1] == Gst::STATE_PAUSED
-#         @playbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
-    end
-
+#     def playing?
+#         @playbin.get_state[1] == Gst::STATE_PLAYING
+# #         @playbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
+#     end
+#
+#     def paused?
+#         @playbin.get_state[1] == Gst::STATE_PAUSED
+# #         @playbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
+#     end
+#
 end

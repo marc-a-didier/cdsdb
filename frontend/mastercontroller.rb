@@ -47,7 +47,7 @@ class MasterController
     # Save windows positions, windows states and clean up the client music cache
     #
     def clean_up
-        @player.stop if @player.playing? || @player.paused?
+        @player.terminate
         [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.save_menu_state(GtkUI[menu]) }
 #         [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
         PREFS.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,

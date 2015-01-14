@@ -34,8 +34,7 @@ class MainWindow < TopWindow
         if @st_icon.respond_to?(:has_tooltip=) # To keep compat with gtk2 < 2.16
             @st_icon.has_tooltip = true
             @st_icon.signal_connect(:query_tooltip) { |si, x, y, is_kbd, tool_tip|
-                @mc.player.playing? ? @mc.player.show_tooltip(si, tool_tip) :
-                                     tool_tip.set_markup("\n<b>CDs DB: waiting for tracks to play...</b>\n")
+                @mc.player.show_tooltip(si, tool_tip)
                 true
             }
         end

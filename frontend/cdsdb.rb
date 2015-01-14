@@ -40,6 +40,8 @@ require '../shared/dbutils'
 require '../shared/trackinfos'
 require '../shared/audiolink'
 
+require './gstplayer'
+
 require './qualifiers'
 require './gtkbuilderintf'
 
