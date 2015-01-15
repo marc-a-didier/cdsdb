@@ -64,7 +64,10 @@ class PlayerWindow < TopWindow
         # Tooltip cache. Inited when a new track starts.
         @tip_pix = nil
 
-        @playbin = GstPlayer.new(self).setup
+        @gstbin1  = GstPlayer.new(self).setup
+        @gstbin2  = GstPlayer.new(self).setup
+        @playbin  = @gstbin1
+        @readybin = @gstbin2
 
         @was_playing = false # Only used to remember the state of the player when seeking
         @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
@@ -217,7 +220,7 @@ class PlayerWindow < TopWindow
             GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = @playbin.playing?
             GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         else
-            process_message(:start)
+            track_message(:start)
         end
         set_window_title
     end
@@ -225,6 +228,7 @@ class PlayerWindow < TopWindow
     def on_btn_stop
         return unless @playbin.active?
         @playbin.stop
+        @readybin.stop if @readybin
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
@@ -233,29 +237,22 @@ class PlayerWindow < TopWindow
     def on_btn_next
         return if !@playbin.active? || !@queue[1]
         @playbin.stop
-        process_message(:next)
+        track_message(:next)
     end
 
     def on_btn_prev
         return if !@playbin.active? || !@queue[0].owner.has_track(@queue[0], :prev)
         @playbin.stop
-        process_message(:prev)
+        track_message(:prev)
     end
 
-    def play_track(player_data)
-        # The status cache prevent the file name to be reloaded when selection is changed
-        # in the track browser. So, from now, we may receive an empty file name but the
-        # status is valid. If audio link is OK, we just have to find the file name for the track.
-
-        # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
-        # In fact, audio_file may only be nil if the cache has been cleared while there were ready
+    def set_ready(player_data)
+        # audio_file may only be nil if the cache has been cleared while there were ready
         # to play tracks in the queue.
         unless player_data.uilink.audio_file
             player_data.uilink.setup_audio_file
 TRACE.debug("Player audio file was empty!".red)
         end
-
-        # Restart player as soon as possible
 
         # Can't use replay gain if track has been dropped.
         # Replay gain should work if tags are set in the audio file
@@ -270,7 +267,39 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             end
         end
 
-        @playbin.new_track(player_data.uilink.audio_file, replay_gain)
+        @readybin.set_ready(player_data.uilink.audio_file, replay_gain)
+    end
+
+    def play_track(player_data)
+        # The status cache prevent the file name to be reloaded when selection is changed
+        # in the track browser. So, from now, we may receive an empty file name but the
+        # status is valid. If audio link is OK, we just have to find the file name for the track.
+
+        # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
+        # In fact, audio_file may only be nil if the cache has been cleared while there were ready
+        # to play tracks in the queue.
+#         unless player_data.uilink.audio_file
+#             player_data.uilink.setup_audio_file
+# TRACE.debug("Player audio file was empty!".red)
+#         end
+
+        # Restart player as soon as possible
+
+        # Can't use replay gain if track has been dropped.
+        # Replay gain should work if tags are set in the audio file
+#         replay_gain = 0.0
+#         if player_data.uilink.tags.nil?
+#             if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
+#                 replay_gain = player_data.uilink.record.fgain
+# TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
+#             elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
+#                 replay_gain = player_data.uilink.track.fgain
+# TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
+#             end
+#         end
+
+        @playbin, @readybin = @readybin, @playbin
+        @playbin.new_track #(player_data.uilink.audio_file, replay_gain)
 
         # Debug info
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
@@ -304,7 +333,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
     end
 
-    def process_message(msg)
+    def track_message(msg)
 start = Time.now.to_f
 
         if msg == :stream_ended
@@ -328,7 +357,11 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             end
 
             # queue[0] may be nil only if play button is pressed while there's nothing to play
-            play_track(@queue[0]) if @queue[0]
+            if @queue[0]
+                set_ready(@queue[0])
+                play_track(@queue[0])
+            end
+#             play_track(@queue[0]) if @queue[0]
         end
 
         @queue.compact! # Remove nil entries
@@ -419,6 +452,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         if @queue[1] && @queue[1].uilink.track.rtrack != @prefetched_track && @total_time-itime < 10000 && @queue[1].uilink.playable?
             TRACE.debug("Start prefetch of #{@queue[1].uilink.audio_file}".brown)
             Thread.new { IO.binread(@queue[1].uilink.audio_file) }
+            set_ready(@queue[1])
             TRACE.debug("Prefetch done".brown)
             @prefetched_track = @queue[1].uilink.track.rtrack
         end

@@ -3,37 +3,42 @@
 # GStreamer player
 #
 # New instances must be provided with a client that has to respond to 3 messages:
-#   - process_message(:symbol) received when a stream has ended
-#   - process_timer() received each half second
-#   - process_level(stucture) received 25 times a second with the current rms and peak for each channel
+#   - track_message(:symbol) received when a stream has ended
+#   - timer_message() received each half second
+#   - level_message(stucture) received 25 times a second with the current rms and peak for each channel
 #
 #
 
 class GstPlayer
 
-    LEVEL_ELEMENT_NAME = "my_level_meter"
+    LEVEL_ELEMENT_NAME = "mad_level_meter"
 #     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
     INTERVAL = 40000000    # How often update the meter? (in nanoseconds) - 25 times/sec in this case
 
     LEFT_CHANNEL  = 0
     RIGHT_CHANNEL = 1
 
+    @@instance_id = 0
+
     def initialize(client)
         @client = client
+
+        @@instance_id += 1
+        @element_name = LEVEL_ELEMENT_NAME+@@instance_id.to_s
     end
 
     def setup
-        @gstbin = Gst::Pipeline.new("levelmeter")
+        @gstbin = Gst::Pipeline.new #("levelmeter")
 
         @gstbin.bus.add_watch do |bus, message|
             case message.type
                 when Gst::Message::Type::ELEMENT
-                    if message.source.name == LEVEL_ELEMENT_NAME
+                    if message.source.name == @element_name #LEVEL_ELEMENT_NAME
                         @client.level_message(message.structure)
                     end
                 when Gst::Message::EOS
                     stop
-                    @client.process_message(:stream_ended)
+                    @client.track_message(:stream_ended)
                 when Gst::Message::ERROR
                     stop
             end
@@ -48,7 +53,7 @@ class GstPlayer
 
         @convertor = Gst::ElementFactory.make("audioconvert")
 
-        @level = Gst::ElementFactory.make("level", LEVEL_ELEMENT_NAME)
+        @level = Gst::ElementFactory.make("level", @element_name) #LEVEL_ELEMENT_NAME)
         @level.interval = INTERVAL
         @level.message = true
         @level.peak_falloff = 100
@@ -75,7 +80,10 @@ class GstPlayer
         return self
     end
 
-    def new_track(audio_file, replay_gain)
+    def set_ready(audio_file, replay_gain)
+        # Must stop if track order changes as there already was a paused ready bin
+        @gstbin.stop if paused?
+
         @rgain.fallback_gain = replay_gain
 
         @gstbin.clear  # Doesn't exist in GStreamer 1.0
@@ -83,9 +91,14 @@ class GstPlayer
 
         @source >> @decoder
 
-system("vmtouch \"#{audio_file}\"")
-
         @source.location = audio_file
+        @gstbin.pause
+    end
+
+    def new_track #(audio_file, replay_gain)
+system("vmtouch \"#{@source.location}\"")
+
+#         set_ready(audio_file, replay_gain)
         @gstbin.play
 
         sleep(0.001) while not playing?
