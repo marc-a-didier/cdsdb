@@ -3,11 +3,10 @@ PlayerData = Struct.new(:owner, :internal_ref, :uilink, :rplist)
 
 class PlayerWindow < TopWindow
 
-#     LEVEL_ELEMENT_NAME = "my_level_meter"
-    MIN_LEVEL = -80.0  # The scale range will be from this value to 0 dB, has to be negative
+    CHANNELS = [GstPlayer::LEFT_CHANNEL, GstPlayer::RIGHT_CHANNEL]
+
+    MIN_LEVEL     = -80.0  # The scale range will be from this value to 0 dB, has to be negative
     POS_MIN_LEVEL = -1 * MIN_LEVEL
-#     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
-#     INTERVAL = 40000000    # How often update the meter? (in nanoseconds) - 25 times/sec in this case
 
     METER_WIDTH = 449.0 # Offset start 10 pixels idem end
     IMAGE_WIDTH = 469.0
@@ -21,18 +20,17 @@ class PlayerWindow < TopWindow
 
     Y_OFFSETS = [16, 28]
 
-#     LEFT_CHANNEL  = 0
-#     RIGHT_CHANNEL = 1
-
     DIGIT_HEIGHT = 20
     DIGIT_WIDTH  = 12
 
+    STD_PEAK_COLOR = Gdk::Color.new(0xffff, 0xffff, 0xffff)
+    OVR_PEAK_COLOR = Gdk::Color.new(0xffff, 0x0000, 0x0000)
 
     def initialize(mc)
         super(mc, GtkIDs::PLAYER_WINDOW)
 
         window.signal_connect(:delete_event) do
-            @playbin.stop if @playbin.playing?
+            terminate
             @mc.notify_closed(self)
             true
         end
@@ -56,7 +54,7 @@ class PlayerWindow < TopWindow
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
 
-        @file_prefetched = false
+        @prefetched_track = nil
 
         @slider = GtkUI[GtkIDs::PLAYER_HSCALE]
 
@@ -66,7 +64,30 @@ class PlayerWindow < TopWindow
         # Tooltip cache. Inited when a new track starts.
         @tip_pix = nil
 
-        init_player
+        @playbin = GstPlayer.new(self).setup
+
+        @was_playing = false # Only used to remember the state of the player when seeking
+        @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
+        @slider.signal_connect(:button_press_event) do
+            if @playbin.active?
+                @seek_handler = @slider.signal_connect(:value_changed) { seek; false }
+                @was_playing = @playbin.playing?
+                @playbin.pause if @was_playing
+                false # Means the parent handler has to be called
+            else
+                # Don't call parent handler so clicking on button has no effect
+                true
+            end
+        end
+        @slider.signal_connect(:button_release_event) do
+            if @seek_handler
+                @playbin.seek_set(@slider.value)
+                @playbin.play if @was_playing
+                @slider.signal_handler_disconnect(@seek_handler)
+                @seek_handler = nil
+            end
+            false # Means the parent handler has to be called
+        end
     end
 
     # Build the backgroud image of the level meter when the GTK image is realized
@@ -76,9 +97,6 @@ class PlayerWindow < TopWindow
 
         # Get the image graphic context and set the foreground color to white
         @gc = Gdk::GC.new(@meter.window)
-
-        @std_peak_color = Gdk::Color.new(0xffff, 0xffff, 0xffff)
-        @ovr_peak_color = Gdk::Color.new(0xffff, 0x0000, 0x0000)
 
         # Get the meter image, unlit and lit images from their files
         scale   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
@@ -188,24 +206,24 @@ class PlayerWindow < TopWindow
     end
 
     def terminate
-        @playbin.stop if @playbin.playing? || @playbin.paused?
+        @playbin.stop if @playbin.active?
     end
 
     def on_btn_play
-        if @playbin.playing? || @playbin.paused?
+        if @playbin.active?
             @playbin.playing? ? @playbin.pause : @playbin.play
             GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = PLAY_STATE_BTN[@playbin.playing?]
             GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = @playbin.paused?
             GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = @playbin.playing?
             GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         else
-            new_track(:start)
+            process_message(:start)
         end
         set_window_title
     end
 
     def on_btn_stop
-        return unless @playbin.playing? || @playbin.paused?
+        return unless @playbin.active?
         @playbin.stop
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
@@ -213,15 +231,15 @@ class PlayerWindow < TopWindow
     end
 
     def on_btn_next
-        return if !@playbin.playing? || @playbin.paused? || !@queue[1]
+        return if !@playbin.active? || !@queue[1]
         @playbin.stop
-        new_track(:next)
+        process_message(:next)
     end
 
     def on_btn_prev
-        return if !@playbin.playing? || @playbin.paused? || !@queue[0].owner.has_track(@queue[0], :prev)
+        return if !@playbin.active? || !@queue[0].owner.has_track(@queue[0], :prev)
         @playbin.stop
-        new_track(:prev)
+        process_message(:prev)
     end
 
     def play_track(player_data)
@@ -252,15 +270,6 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
             end
         end
 
-#         @playbin.clear  # Doesn't exist in GStreamer 1.0
-#         @playbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
-#
-#         @source >> @decoder
-#
-# system("vmtouch \"#{player_data.uilink.audio_file}\"")
-#
-#         @source.location = player_data.uilink.audio_file
-#         @playbin.play
         @playbin.new_track(player_data.uilink.audio_file, replay_gain)
 
         # Debug info
@@ -269,7 +278,13 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
 
         # Delayed UI operations start now
         @tip_pix = nil
-        setup_hscale
+
+        # Update the slider to the new track length
+        @total_time = @playbin.play_time
+        @slider.set_range(0.0, @total_time)
+        @total_time = @total_time.to_i
+
+        update_hscale
 
         player_data.owner.started_playing(player_data)
 
@@ -280,7 +295,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         if CFG.notifications?
             file_name = player_data.uilink.cover_file_name
-            system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDs DB now playing' \"#{player_data.uilink.html_track_title(true)}\"")
+            system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDsDB now playing' \"#{player_data.uilink.html_track_title(true)}\"")
         end
     end
 
@@ -289,7 +304,7 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
         @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
     end
 
-    def new_track(msg)
+    def process_message(msg)
 start = Time.now.to_f
 
         if msg == :stream_ended
@@ -318,8 +333,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 
         @queue.compact! # Remove nil entries
         @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE) if @queue[0]
-
-        @file_prefetched = false
     end
 
     # Called by mc if any change made in the provider track list
@@ -332,8 +345,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
 # debug_queue
-            # Force to refetch if change occured after a previous fetch
-            @file_prefetched = false
         end
     end
 
@@ -348,145 +359,54 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         end
     end
 
-    def draw_level(msg_struct, channel)
-        rms  = msg_struct["rms"][channel]
-        peak = msg_struct["decay"][channel]
-
-
-        rms = rms > MIN_LEVEL ? (METER_WIDTH*rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-
-        peak = peak > MIN_LEVEL ? (METER_WIDTH*peak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-        if peak >= METER_WIDTH
-            peak = METER_WIDTH-1
-            @gc.set_rgb_fg_color(@ovr_peak_color)
-        else
-            @gc.set_rgb_fg_color(@std_peak_color)
-        end
-
-        # draw_pixbuf Proto:
-        #       draw_pixbuf(gc, copied pixbuf,
-        #                   copied pixbuf src_x, copied pixbuf src_y,
-        #                   dest (self) dest_x, dest (self) dest_y,
-        #                   width, height, dither, x_dither, y_dither)
-
-        # Draws the lit part from zero upto the rms level
-        @mpix.draw_pixbuf(nil, @bright,
-                          10,  0,
-                          10,  Y_OFFSETS[channel],
-                          rms, 8,
-                          Gdk::RGB::DITHER_NONE, 0, 0)
-        # Draws the unlit part from rms level to the end
-        @mpix.draw_pixbuf(nil, @dark,
-                          rms+11,            0,
-                          rms+11,            Y_OFFSETS[channel],
-                          METER_WIDTH-rms+1, 8,
-                          Gdk::RGB::DITHER_NONE, 0, 0)
-
-        @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
-
-        @meter.set(@mpix, nil) if channel == GstPlayer::RIGHT_CHANNEL
-    end
-
-    def init_player
-#         @playbin = Gst::Pipeline.new("levelmeter")
-#
-#         @playbin.bus.add_watch do |bus, message|
-#             case message.type
-#                 when Gst::Message::Type::ELEMENT
-#                     if message.source.name == LEVEL_ELEMENT_NAME
-#                         draw_level(message.structure, LEFT_CHANNEL)
-#                         draw_level(message.structure, RIGHT_CHANNEL)
-#
-#                         @meter.set(@mpix, nil)
-#                     end
-#                 when Gst::Message::EOS
-#                     stop
-#                     new_track(:stream_ended)
-#                 when Gst::Message::ERROR
-#                     stop
-#             end
-#             true
-#         end
-#
-#
-#         @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
-# #         @track_pos = @playbin.query_position(Gst::Format::TIME) # GStreamer 1.0
-        @playbin = GstPlayer.new(self).setup
-
-        @was_playing = false # Only used to remember the state of the player when seeking
-        @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
-        @slider.signal_connect(:button_press_event) do
-            if @playbin.playing? || @playbin.paused?
-                @seek_handler = @slider.signal_connect(:value_changed) { seek; false }
-                @was_playing = @playbin.playing?
-                @playbin.pause if @was_playing
-                false # Means the parent handler has to be called
-            else
-                # Don't call parent handler so clicking on button has no effect
-                true
-            end
-        end
-        @slider.signal_connect(:button_release_event) do
-            if @seek_handler
-                @playbin.seek_set(@slider.value)
-                @playbin.play if @was_playing
-                @slider.signal_handler_disconnect(@seek_handler)
-                @seek_handler = nil
-            end
-            false # Means the parent handler has to be called
-        end
-
-#         @convertor = Gst::ElementFactory.make("audioconvert")
-#
-#         @level = Gst::ElementFactory.make("level", LEVEL_ELEMENT_NAME)
-#         @level.interval = INTERVAL
-#         @level.message = true
-#         @level.peak_falloff = 100
-#         @level.peak_ttl = 200000000
-#
-#         @rgain = Gst::ElementFactory.make("rgvolume")
-#
-#         @sink = Gst::ElementFactory.make("autoaudiosink")
-#
-#         @decoder = Gst::ElementFactory.make("decodebin")
-#         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
-# #         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
-#             pad.link(@convertor.get_pad("sink"))
-# #             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
-#             if GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?
-#                 @convertor >> @level >> @rgain >> @sink
-#             else
-#                 @convertor >> @rgain >> @level >> @sink
-#             end
-#         }
-#
-#         @source = Gst::ElementFactory.make("filesrc")
-    end
-
-    def setup_hscale
-        sleep(0.01) while not @playbin.playing? # We're threaded and async
-
-#         track_len = Gst::QueryDuration.new(Gst::Format::TIME)
-# #         track_len = @playbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
-#         @playbin.query(track_len)
-#         @total_time = track_len.parse[1].to_f/Gst::MSECOND
-        @total_time = @playbin.play_time
-        @slider.set_range(0.0, @total_time)
-        @total_time = @total_time.to_i
-
-#         @playbin.query(@track_pos)
+    def timer_message
         update_hscale
+    end
 
-#         @timer = Gtk::timeout_add(500) { update_hscale; true }
-        @playbin.start_notfications
+    def level_message(msg_struct)
+        CHANNELS.each do |channel|
+            rms  = msg_struct["rms"][channel]
+            peak = msg_struct["decay"][channel]
+
+            rms = rms > MIN_LEVEL ? (METER_WIDTH*rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
+
+            peak = peak > MIN_LEVEL ? (METER_WIDTH*peak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
+            if peak >= METER_WIDTH
+                peak = METER_WIDTH-1
+                @gc.set_rgb_fg_color(OVR_PEAK_COLOR)
+            else
+                @gc.set_rgb_fg_color(STD_PEAK_COLOR)
+            end
+
+            # draw_pixbuf Proto:
+            #       draw_pixbuf(gc, copied pixbuf,
+            #                   copied pixbuf src_x, copied pixbuf src_y,
+            #                   dest (self) dest_x, dest (self) dest_y,
+            #                   width, height, dither, x_dither, y_dither)
+
+            # Draws the lit part from zero upto the rms level
+            @mpix.draw_pixbuf(nil, @bright,
+                            10,  0,
+                            10,  Y_OFFSETS[channel],
+                            rms, 8,
+                            Gdk::RGB::DITHER_NONE, 0, 0)
+            # Draws the unlit part from rms level to the end
+            @mpix.draw_pixbuf(nil, @dark,
+                            rms+11,            0,
+                            rms+11,            Y_OFFSETS[channel],
+                            METER_WIDTH-rms+1, 8,
+                            Gdk::RGB::DITHER_NONE, 0, 0)
+
+            @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
+        end
+
+        # Draw image to screen
+        @meter.set(@mpix, nil)
     end
 
     def update_hscale
-        return if @seek_handler || (!@playbin.playing? && !@playbin.paused?)
+        return if @seek_handler || !@playbin.active?
 
-#         @playbin.query(@track_pos)
-#
-#         itime = (@track_pos.parse[1].to_f/Gst::MSECOND).to_i
         itime = @playbin.play_position
         @slider.value = itime
 
@@ -496,28 +416,14 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
 
         # If there's a next playable track in queue, read the whole file in an attempt to make
         # it cached by the system and lose less time when skipping to it
-        if @queue[1] && !@file_prefetched && @total_time-itime < 10000 && @queue[1].uilink.playable?
+        if @queue[1] && @queue[1].uilink.track.rtrack != @prefetched_track && @total_time-itime < 10000 && @queue[1].uilink.playable?
             TRACE.debug("Start prefetch of #{@queue[1].uilink.audio_file}".brown)
-#             Thread.new { File.open(@queue[1].uilink.audio_file, "r") { |f| f.read_nonblock(f.size) } } #; f.advise(:willneed) }
-#             Thread.new { system("vmtouch -t \"#{@queue[1].uilink.audio_file.gsub(/"/, '\"')}\"") }
             Thread.new { IO.binread(@queue[1].uilink.audio_file) }
             TRACE.debug("Prefetch done".brown)
-            @file_prefetched = true
+            @prefetched_track = @queue[1].uilink.track.rtrack
         end
     end
 
-#     def seek_set
-#         @playbin.seek(1.0, Gst::Format::Type::TIME,
-#                       Gst::Seek::FLAG_FLUSH.to_i |
-#                       Gst::Seek::FLAG_KEY_UNIT.to_i,
-#                       Gst::Seek::TYPE_SET,
-#                       (@slider.value * Gst::MSECOND).to_i,
-#                       Gst::Seek::TYPE_NONE, -1)
-#         # Wait at most 100 miliseconds for a state changes, this throttles the seek
-#         # events to ensure the playbin can keep up
-#         @playbin.get_state(100 * Gst::MSECOND)
-#     end
-#
     def seek
         show_time(@slider.value)
     end
@@ -536,31 +442,14 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         return sprintf("%02d:%02d", itime/60000, (itime % 60000)/1000)
     end
 
-#     def stop
-#         @playbin.stop
-#         Gtk::timeout_remove(@timer)
-#         File.open(@queue[0].uilink.audio_file, "r") { |f| f.advise(:dontneed) }
-#     end
-#
     def show_tooltip(si, tool_tip)
         if @playbin.playing?
             @tip_pix = @queue[0].uilink.large_track_cover if @tip_pix.nil?
             tool_tip.set_icon(@tip_pix)
             text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
         else
-            text = "\n<b>CDs DB: waiting for tracks to play...</b>\n"
+            text = "\n<b>CDsDB: waiting for tracks to play...</b>\n"
         end
         tool_tip.set_markup(text)
     end
-
-#     def playing?
-#         @playbin.get_state[1] == Gst::STATE_PLAYING
-# #         @playbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
-#     end
-#
-#     def paused?
-#         @playbin.get_state[1] == Gst::STATE_PAUSED
-# #         @playbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
-#     end
-#
 end

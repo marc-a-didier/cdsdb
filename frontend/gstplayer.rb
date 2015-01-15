@@ -1,4 +1,14 @@
 
+#
+# GStreamer player
+#
+# New instances must be provided with a client that has to respond to 3 messages:
+#   - process_message(:symbol) received when a stream has ended
+#   - process_timer() received each half second
+#   - process_level(stucture) received 25 times a second with the current rms and peak for each channel
+#
+#
+
 class GstPlayer
 
     LEVEL_ELEMENT_NAME = "my_level_meter"
@@ -8,8 +18,8 @@ class GstPlayer
     LEFT_CHANNEL  = 0
     RIGHT_CHANNEL = 1
 
-    def initialize(owner)
-        @owner = owner
+    def initialize(client)
+        @client = client
     end
 
     def setup
@@ -19,12 +29,11 @@ class GstPlayer
             case message.type
                 when Gst::Message::Type::ELEMENT
                     if message.source.name == LEVEL_ELEMENT_NAME
-                        @owner.draw_level(message.structure, LEFT_CHANNEL)
-                        @owner.draw_level(message.structure, RIGHT_CHANNEL)
+                        @client.level_message(message.structure)
                     end
                 when Gst::Message::EOS
                     stop
-                    @owner.new_track(:stream_ended)
+                    @client.process_message(:stream_ended)
                 when Gst::Message::ERROR
                     stop
             end
@@ -78,6 +87,12 @@ system("vmtouch \"#{audio_file}\"")
 
         @source.location = audio_file
         @gstbin.play
+
+        sleep(0.001) while not playing?
+
+        @gstbin.query(@track_len)
+
+        @timer = Gtk::timeout_add(500) { @client.timer_message; true }
     end
 
     def play
@@ -91,7 +106,7 @@ system("vmtouch \"#{audio_file}\"")
     def stop
         @gstbin.stop
         Gtk::timeout_remove(@timer)
-#         File.open(@queue[0].uilink.audio_file, "r") { |f| f.advise(:dontneed) }
+        File.open(@source.location, "r") { |f| f.advise(:dontneed) }
     end
 
     def playing?
@@ -104,6 +119,10 @@ system("vmtouch \"#{audio_file}\"")
 #         @gstbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
     end
 
+    def active?
+        return playing? || paused?
+    end
+
     def get_state
         return @gstbin.get_state[1]
     end
@@ -111,7 +130,6 @@ system("vmtouch \"#{audio_file}\"")
 
     # Returned value is a FLOAT in millisecond
     def play_time
-        @gstbin.query(@track_len)
         return @track_len.parse[1].to_f/Gst::MSECOND
     end
 
@@ -131,9 +149,5 @@ system("vmtouch \"#{audio_file}\"")
         # Wait at most 100 miliseconds for a state changes, this throttles the seek
         # events to ensure the playbin can keep up
         @gstbin.get_state(100 * Gst::MSECOND)
-    end
-
-    def start_notfications
-        @timer = Gtk::timeout_add(500) { @owner.update_hscale; true }
     end
 end
