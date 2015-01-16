@@ -11,31 +11,25 @@
 
 class GstPlayer
 
-    LEVEL_ELEMENT_NAME = "mad_level_meter"
-#     INTERVAL = 50000000    # How often update the meter? (in nanoseconds) - 20 times/sec in this case
-    INTERVAL = 40000000    # How often update the meter? (in nanoseconds) - 25 times/sec in this case
+    INTERVAL = 40000000  # Meter update interval (in nanoseconds) - 25Hz (50000000 -> 20Hz)
 
     LEFT_CHANNEL  = 0
     RIGHT_CHANNEL = 1
-
-    @@instance_id = 0
+    CHANNELS      = [LEFT_CHANNEL, RIGHT_CHANNEL]
 
     def initialize(client)
         @client = client
-
-        @@instance_id += 1
-        @element_name = LEVEL_ELEMENT_NAME+@@instance_id.to_s
     end
 
     def setup
-        @gstbin = Gst::Pipeline.new #("levelmeter")
+        @timer = nil
+
+        @gstbin = Gst::Pipeline.new
 
         @gstbin.bus.add_watch do |bus, message|
             case message.type
                 when Gst::Message::Type::ELEMENT
-                    if message.source.name == @element_name #LEVEL_ELEMENT_NAME
-                        @client.level_message(message.structure)
-                    end
+                    @client.level_message(message.structure) if message.source.is_a?(Gst::ElementLevel)
                 when Gst::Message::EOS
                     stop
                     @client.track_message(:stream_ended)
@@ -53,7 +47,7 @@ class GstPlayer
 
         @convertor = Gst::ElementFactory.make("audioconvert")
 
-        @level = Gst::ElementFactory.make("level", @element_name) #LEVEL_ELEMENT_NAME)
+        @level = Gst::ElementFactory.make("level")
         @level.interval = INTERVAL
         @level.message = true
         @level.peak_falloff = 100
@@ -95,10 +89,9 @@ class GstPlayer
         @gstbin.pause
     end
 
-    def new_track #(audio_file, replay_gain)
-system("vmtouch \"#{@source.location}\"")
+    def start_track
+        # system("vmtouch \"#{@source.location}\"")
 
-#         set_ready(audio_file, replay_gain)
         @gstbin.play
 
         sleep(0.001) while not playing?
@@ -106,6 +99,12 @@ system("vmtouch \"#{@source.location}\"")
         @gstbin.query(@track_len)
 
         @timer = Gtk::timeout_add(500) { @client.timer_message; true }
+    end
+
+    # This method must not be called while playing, the source
+    # location becomes unavailable when gstreamer processes it.
+    def audio_file
+        return @source.location
     end
 
     def play
@@ -118,8 +117,10 @@ system("vmtouch \"#{@source.location}\"")
 
     def stop
         @gstbin.stop
-        Gtk::timeout_remove(@timer)
-        File.open(@source.location, "r") { |f| f.advise(:dontneed) }
+        if @timer
+            Gtk::timeout_remove(@timer)
+            @timer = nil
+        end
     end
 
     def playing?

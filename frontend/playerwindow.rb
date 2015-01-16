@@ -3,8 +3,6 @@ PlayerData = Struct.new(:owner, :internal_ref, :uilink, :rplist)
 
 class PlayerWindow < TopWindow
 
-    CHANNELS = [GstPlayer::LEFT_CHANNEL, GstPlayer::RIGHT_CHANNEL]
-
     MIN_LEVEL     = -80.0  # The scale range will be from this value to 0 dB, has to be negative
     POS_MIN_LEVEL = -1 * MIN_LEVEL
 
@@ -25,6 +23,7 @@ class PlayerWindow < TopWindow
 
     STD_PEAK_COLOR = Gdk::Color.new(0xffff, 0xffff, 0xffff)
     OVR_PEAK_COLOR = Gdk::Color.new(0xffff, 0x0000, 0x0000)
+
 
     def initialize(mc)
         super(mc, GtkIDs::PLAYER_WINDOW)
@@ -54,8 +53,6 @@ class PlayerWindow < TopWindow
         # Intended to be a PlayerData array to pre-fetch tracks to play
         @queue = []
 
-        @prefetched_track = nil
-
         @slider = GtkUI[GtkIDs::PLAYER_HSCALE]
 
         @time_view_mode = ELAPSED
@@ -64,11 +61,14 @@ class PlayerWindow < TopWindow
         # Tooltip cache. Inited when a new track starts.
         @tip_pix = nil
 
-        @gstbin1  = GstPlayer.new(self).setup
-        @gstbin2  = GstPlayer.new(self).setup
-        @playbin  = @gstbin1
-        @readybin = @gstbin2
+        # Two instances of GstPlayer are created, playbin being the actual player
+        # while readybin is in charge of prefecthing the next track to be played.
+        # When playbin finishes its track, readybin becomes the playbin and
+        # the playbin becomes the readybin.
+        @playbin  = GstPlayer.new(self).setup
+        @readybin = GstPlayer.new(self).setup
 
+        # Handling of slider button draging
         @was_playing = false # Only used to remember the state of the player when seeking
         @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
         @slider.signal_connect(:button_press_event) do
@@ -186,7 +186,7 @@ class PlayerWindow < TopWindow
         if notify
             TRACE.debug("[nil]".red)
             if CFG.notifications?
-                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDs DB' 'End of play list'")
+                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDsDB' 'End of play list'")
             end
         end
 
@@ -209,7 +209,8 @@ class PlayerWindow < TopWindow
     end
 
     def terminate
-        @playbin.stop if @playbin.active?
+        @playbin.stop
+        @readybin.stop
     end
 
     def on_btn_play
@@ -227,8 +228,7 @@ class PlayerWindow < TopWindow
 
     def on_btn_stop
         return unless @playbin.active?
-        @playbin.stop
-        @readybin.stop if @readybin
+        terminate
         @queue[0].owner.notify_played(@queue[0], :stop)
         reset_player(false)
         @queue.clear
@@ -236,13 +236,13 @@ class PlayerWindow < TopWindow
 
     def on_btn_next
         return if !@playbin.active? || !@queue[1]
-        @playbin.stop
+        terminate
         track_message(:next)
     end
 
     def on_btn_prev
         return if !@playbin.active? || !@queue[0].owner.has_track(@queue[0], :prev)
-        @playbin.stop
+        terminate
         track_message(:prev)
     end
 
@@ -251,55 +251,36 @@ class PlayerWindow < TopWindow
         # to play tracks in the queue.
         unless player_data.uilink.audio_file
             player_data.uilink.setup_audio_file
-TRACE.debug("Player audio file was empty!".red)
+            TRACE.debug("Player audio file was empty!".red)
         end
 
-        # Can't use replay gain if track has been dropped.
-        # Replay gain should work if tags are set in the audio file
-        replay_gain = 0.0
-        if player_data.uilink.tags.nil?
-            if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
-                replay_gain = player_data.uilink.record.fgain
-TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
-            elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
-                replay_gain = player_data.uilink.track.fgain
-TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
+        # Check if the ready bin already has the same audio file
+        unless player_data.uilink.audio_file == @readybin.audio_file
+            TRACE.debug("Readying #{player_data.uilink.audio_file}".brown)
+
+            # Can't use replay gain if track has been dropped.
+            # Replay gain should work if tags are set in the audio file
+            replay_gain = 0.0
+            if player_data.uilink.tags.nil?
+                if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
+                    replay_gain = player_data.uilink.record.fgain
+                    TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
+                elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
+                    replay_gain = player_data.uilink.track.fgain
+                    TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
+                end
             end
-        end
 
-        @readybin.set_ready(player_data.uilink.audio_file, replay_gain)
+            @readybin.set_ready(player_data.uilink.audio_file, replay_gain)
+        end
     end
 
     def play_track(player_data)
-        # The status cache prevent the file name to be reloaded when selection is changed
-        # in the track browser. So, from now, we may receive an empty file name but the
-        # status is valid. If audio link is OK, we just have to find the file name for the track.
-
-        # Not sure it's still true... Anyway, the caller MUST give a valid file to play, that's all!
-        # In fact, audio_file may only be nil if the cache has been cleared while there were ready
-        # to play tracks in the queue.
-#         unless player_data.uilink.audio_file
-#             player_data.uilink.setup_audio_file
-# TRACE.debug("Player audio file was empty!".red)
-#         end
-
-        # Restart player as soon as possible
-
-        # Can't use replay gain if track has been dropped.
-        # Replay gain should work if tags are set in the audio file
-#         replay_gain = 0.0
-#         if player_data.uilink.tags.nil?
-#             if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
-#                 replay_gain = player_data.uilink.record.fgain
-# TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
-#             elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
-#                 replay_gain = player_data.uilink.track.fgain
-# TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
-#             end
-#         end
-
+        # Swap ready bin and play bin so play bin becomes the next ready bin and
+        # the ready bin becomes the actual player
         @playbin, @readybin = @readybin, @playbin
-        @playbin.new_track #(player_data.uilink.audio_file, replay_gain)
+
+        @playbin.start_track
 
         # Debug info
         info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
@@ -334,11 +315,12 @@ TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
     end
 
     def track_message(msg)
-start = Time.now.to_f
+        start = Time.now.to_f
 
         if msg == :stream_ended
             @queue[1] ? play_track(@queue[1]) : reset_player(true)
-TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+            TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+
             # If next provider is different from current, notify current provider it has finished
             @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
             @mc.notify_played(@queue[0].uilink)
@@ -361,11 +343,13 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
                 set_ready(@queue[0])
                 play_track(@queue[0])
             end
-#             play_track(@queue[0]) if @queue[0]
         end
 
         @queue.compact! # Remove nil entries
-        @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE) if @queue[0]
+        if @queue[0]
+            @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
+            set_ready(@queue[1]) if @queue[1]
+        end
     end
 
     # Called by mc if any change made in the provider track list
@@ -374,10 +358,11 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     # not the current provider as selected in the source menu
     def refetch(track_provider)
         if @queue[0] && @mc.track_provider == track_provider
-# TRACE.debug("player refetched by #{track_provider.class.name}".red)
+            # TRACE.debug("player refetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-# debug_queue
+            set_ready(@queue[1]) if @queue[1]
+            # debug_queue
         end
     end
 
@@ -386,9 +371,9 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     # Also called by mc when source changed to remove the tracks from previous provider
     def unfetch(track_provider)
         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
-# TRACE.debug("player unfetched by #{track_provider.class.name}".red)
+            # TRACE.debug("player unfetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
-# debug_queue
+            # debug_queue
         end
     end
 
@@ -397,7 +382,7 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
     end
 
     def level_message(msg_struct)
-        CHANNELS.each do |channel|
+        GstPlayer::CHANNELS.each do |channel|
             rms  = msg_struct["rms"][channel]
             peak = msg_struct["decay"][channel]
 
@@ -446,16 +431,6 @@ TRACE.debug("Elapsed: #{Time.now.to_f-start}")
         show_time(itime)
 
         @queue[0].owner.timer_notification(itime)
-
-        # If there's a next playable track in queue, read the whole file in an attempt to make
-        # it cached by the system and lose less time when skipping to it
-        if @queue[1] && @queue[1].uilink.track.rtrack != @prefetched_track && @total_time-itime < 10000 && @queue[1].uilink.playable?
-            TRACE.debug("Start prefetch of #{@queue[1].uilink.audio_file}".brown)
-            Thread.new { IO.binread(@queue[1].uilink.audio_file) }
-            set_ready(@queue[1])
-            TRACE.debug("Prefetch done".brown)
-            @prefetched_track = @queue[1].uilink.track.rtrack
-        end
     end
 
     def seek
