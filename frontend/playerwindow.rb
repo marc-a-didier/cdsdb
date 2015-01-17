@@ -247,15 +247,16 @@ class PlayerWindow < TopWindow
     end
 
     def set_ready(player_data)
-        # audio_file may only be nil if the cache has been cleared while there were ready
-        # to play tracks in the queue.
+        # audio_file may only be nil if the cache has been cleared
+        # while there were ready to play tracks in the queue.
         unless player_data.uilink.audio_file
             player_data.uilink.setup_audio_file
             TRACE.debug("Player audio file was empty!".red)
         end
 
         # Check if the ready bin already has the same audio file
-        unless player_data.uilink.audio_file == @readybin.audio_file
+        # If the file is the same we also have to check that the ready bin is in paused state
+        if player_data.uilink.audio_file != @readybin.audio_file || !@readybin.paused?
             TRACE.debug("Readying #{player_data.uilink.audio_file}".brown)
 
             # Can't use replay gain if track has been dropped.
@@ -271,7 +272,7 @@ class PlayerWindow < TopWindow
                 end
             end
 
-            @readybin.set_ready(player_data.uilink.audio_file, replay_gain)
+            @readybin.set_ready(player_data.uilink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
         end
     end
 
@@ -328,7 +329,7 @@ class PlayerWindow < TopWindow
         else
             case msg
                 when :next
-                    # We know it's not the last track because :next is not sent if no more track
+                    # We know @queue[1] is valid because :next is not sent if there's nothing next
                     @queue[0].owner.notify_played(@queue[0],  @queue[1].owner != @queue[0].owner ? :finish : :next)
                     @queue.shift
                 when :prev

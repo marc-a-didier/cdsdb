@@ -19,6 +19,12 @@ class GstPlayer
 
     def initialize(client)
         @client = client
+        @level_before_rg = true
+    end
+
+    def set_level_before_rg(level_before_rg)
+        @level_before_rg = level_before_rg
+        return self
     end
 
     def setup
@@ -62,7 +68,7 @@ class GstPlayer
 #         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
             pad.link(@convertor.get_pad("sink"))
 #             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
-            if GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?
+            if @level_before_rg
                 @convertor >> @level >> @rgain >> @sink
             else
                 @convertor >> @rgain >> @level >> @sink
@@ -74,7 +80,9 @@ class GstPlayer
         return self
     end
 
-    def set_ready(audio_file, replay_gain)
+    def set_ready(audio_file, replay_gain, level_before_rg = true)
+        @level_before_rg = level_before_rg
+
         # Must stop if track order changes as there already was a paused ready bin
         @gstbin.stop if paused?
 
