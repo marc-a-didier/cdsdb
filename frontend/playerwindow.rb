@@ -221,7 +221,7 @@ class PlayerWindow < TopWindow
             GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = @playbin.playing?
             GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         else
-            track_message(:start)
+            new_track(:start)
         end
         set_window_title
     end
@@ -237,13 +237,13 @@ class PlayerWindow < TopWindow
     def on_btn_next
         return if !@playbin.active? || !@queue[1]
         terminate
-        track_message(:next)
+        new_track(:next)
     end
 
     def on_btn_prev
         return if !@playbin.active? || !@queue[0].owner.has_track(@queue[0], :prev)
         terminate
-        track_message(:prev)
+        new_track(:prev)
     end
 
     def set_ready(player_data)
@@ -281,6 +281,9 @@ class PlayerWindow < TopWindow
         # the ready bin becomes the actual player
         @playbin, @readybin = @readybin, @playbin
 
+        # May be this test would be helpful even if it's less than probable to meet in this case
+        # It may only happen if the first track to play is being downloaded from the server (play list or browser case)
+        # sleep(0.01) while not player_data.uilink.playable?
         @playbin.start_track
 
         # Debug info
@@ -315,42 +318,47 @@ class PlayerWindow < TopWindow
         @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
     end
 
-    def track_message(msg)
-        start = Time.now.to_f
-
-        if msg == :stream_ended
-            @queue[1] ? play_track(@queue[1]) : reset_player(true)
-            TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-
-            # If next provider is different from current, notify current provider it has finished
-            @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
-            @mc.notify_played(@queue[0].uilink)
-            @queue.shift # Remove first entry, no more needed
-        else
-            case msg
-                when :next
-                    # We know @queue[1] is valid because :next is not sent if there's nothing next
-                    @queue[0].owner.notify_played(@queue[0],  @queue[1].owner != @queue[0].owner ? :finish : :next)
-                    @queue.shift
-                when :prev
-                    @queue[0] = @queue[0].owner.get_track(@queue[0], :prev)
-                    @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
-                when :start
-                    @queue[0] = @mc.get_track(nil, :start)
-            end
-
-            # queue[0] may be nil only if play button is pressed while there's nothing to play
-            if @queue[0]
-                set_ready(@queue[0])
-                play_track(@queue[0])
-            end
-        end
-
+    def prepare_next_track
         @queue.compact! # Remove nil entries
         if @queue[0]
             @queue[0].owner.prefetch_tracks(@queue, PREFETCH_SIZE)
             set_ready(@queue[1]) if @queue[1]
         end
+    end
+
+    def gstplayer_eos
+        start = Time.now.to_f
+        @queue[1] ? play_track(@queue[1]) : reset_player(true)
+        TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+
+        # If next provider is different from current, notify current provider it has finished
+        @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
+        @mc.notify_played(@queue[0].uilink)
+        @queue.shift # Remove first entry, no more needed
+
+        prepare_next_track
+    end
+
+    def new_track(msg)
+        case msg
+            when :start
+                @queue[0] = @mc.get_track(nil, :start)
+            when :next
+                # We know @queue[1] is valid because :next is not sent if there's nothing next
+                @queue[0].owner.notify_played(@queue[0],  @queue[1].owner != @queue[0].owner ? :finish : :next)
+                @queue.shift
+            when :prev
+                @queue[0] = @queue[0].owner.get_track(@queue[0], :prev)
+                @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
+        end
+
+        # queue[0] may be nil only if play button is pressed while there's nothing to play
+        if @queue[0]
+            set_ready(@queue[0])
+            play_track(@queue[0])
+        end
+
+        prepare_next_track
     end
 
     # Called by mc if any change made in the provider track list
@@ -378,11 +386,11 @@ class PlayerWindow < TopWindow
         end
     end
 
-    def timer_message
+    def gstplayer_timer
         update_hscale
     end
 
-    def level_message(msg_struct)
+    def gstplayer_level(msg_struct)
         GstPlayer::CHANNELS.each do |channel|
             rms  = msg_struct["rms"][channel]
             peak = msg_struct["decay"][channel]

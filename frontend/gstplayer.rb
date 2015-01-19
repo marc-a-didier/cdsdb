@@ -3,9 +3,9 @@
 # GStreamer player
 #
 # New instances must be provided with a client that has to respond to 3 messages:
-#   - track_message(:symbol) received when a stream has ended
-#   - timer_message() received each half second
-#   - level_message(stucture) received 25 times a second with the current rms and peak for each channel
+#   - gstplayer_eos() received when a stream has ended
+#   - gstplayer_timer() received each half second
+#   - gstplayer_level(stucture) received 25 times a second with the current rms and peak for each channel
 #
 #
 
@@ -35,10 +35,10 @@ class GstPlayer
         @gstbin.bus.add_watch do |bus, message|
             case message.type
                 when Gst::Message::Type::ELEMENT
-                    @client.level_message(message.structure) if message.source.is_a?(Gst::ElementLevel)
+                    @client.gstplayer_level(message.structure) if message.source.is_a?(Gst::ElementLevel)
                 when Gst::Message::EOS
                     stop
-                    @client.track_message(:stream_ended)
+                    @client.gstplayer_eos
                 when Gst::Message::ERROR
                     stop
             end
@@ -106,7 +106,7 @@ class GstPlayer
 
         @gstbin.query(@track_len)
 
-        @timer = Gtk::timeout_add(500) { @client.timer_message; true }
+        @timer = Gtk::timeout_add(500) { @client.gstplayer_timer; true }
     end
 
     # This method must not be called while playing, the source
