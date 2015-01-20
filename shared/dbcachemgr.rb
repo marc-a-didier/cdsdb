@@ -117,7 +117,7 @@ class DBCache
     end
 
     def clear
-#         instance_variables.each { |cache| cache.clear } # Marche pas!!!???
+        # instance_variables.each { |cache| cache.clear } # Marche pas!!!???
         [@artists, @records, @segments, @tracks, @audio,
          @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
         TRACE.debug("ALL CACHES cleared") if TRACE_CACHE

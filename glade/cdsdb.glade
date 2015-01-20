@@ -3,16 +3,6 @@
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
-  <object class="GtkToggleAction" id="mw_player_action"/>
-  <object class="GtkToggleAction" id="mw_plists_action"/>
-  <object class="GtkToggleAction" id="mw_pqueue_action"/>
-  <object class="GtkToggleAction" id="mw_server_action"/>
-  <object class="GtkToggleAction" id="mw_tasks_action"/>
-  <object class="GtkAdjustment" id="adjustment10">
-    <property name="upper">1000</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkAdjustment" id="adjustment11">
     <property name="upper">1000</property>
     <property name="step_increment">1</property>
@@ -48,6 +38,16 @@
   <object class="GtkToggleAction" id="mw_filter_action"/>
   <object class="GtkAction" id="mw_memo_save_action"/>
   <object class="GtkToggleAction" id="mw_memos_action"/>
+  <object class="GtkToggleAction" id="mw_player_action"/>
+  <object class="GtkToggleAction" id="mw_plists_action"/>
+  <object class="GtkToggleAction" id="mw_pqueue_action"/>
+  <object class="GtkToggleAction" id="mw_server_action"/>
+  <object class="GtkToggleAction" id="mw_tasks_action"/>
+  <object class="GtkAdjustment" id="adjustment10">
+    <property name="upper">1000</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkMenu" id="apm_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -2841,11 +2841,11 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">in</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkImage" id="player_img_counter">
                         <property name="width_request">132</property>
-                        <property name="height_request">20</property>
+                        <property name="height_request">19</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xalign">0</property>
@@ -2855,7 +2855,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
@@ -2921,7 +2921,7 @@
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
+                    <property name="fill">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>

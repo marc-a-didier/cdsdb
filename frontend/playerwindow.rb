@@ -130,8 +130,6 @@ class PlayerWindow < TopWindow
     end
 
     def counter_setup
-        # @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
-
         @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
 
         @digits = []
@@ -287,7 +285,7 @@ class PlayerWindow < TopWindow
 
             # It may happen that we have to wait for a track being downloaded from server
             sleep(0.1) while not player_data.uilink.playable?
-            
+
             @readybin.set_ready(player_data.uilink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
         end
     end
