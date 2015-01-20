@@ -38,7 +38,7 @@ class PlayerWindow < TopWindow
         @meter.signal_connect(:realize) { |widget| meter_setup }
 
         @counter = GtkUI[GtkIDs::PLAYER_IMG_COUNTER]
-#         @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
+        # @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
         @counter.signal_connect(:realize) { |widget| counter_setup }
 
         GtkUI[GtkIDs::PLAYER_BTN_START].signal_connect(:clicked) { on_btn_play }
@@ -46,7 +46,7 @@ class PlayerWindow < TopWindow
         GtkUI[GtkIDs::PLAYER_BTN_NEXT].signal_connect(:clicked)  { on_btn_next }
         GtkUI[GtkIDs::PLAYER_BTN_PREV].signal_connect(:clicked)  { on_btn_prev }
 
-#         GtkUI[GtkIDs::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
+        # GtkUI[GtkIDs::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
         GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
 
@@ -73,7 +73,7 @@ class PlayerWindow < TopWindow
         @seek_handler = nil # Signal is only connected when needed, that is when draging the slider button
         @slider.signal_connect(:button_press_event) do
             if @playbin.active?
-                @seek_handler = @slider.signal_connect(:value_changed) { seek; false }
+                @seek_handler = @slider.signal_connect(:value_changed) { show_time(@slider.value); false }
                 @was_playing = @playbin.playing?
                 @playbin.pause if @was_playing
                 false # Means the parent handler has to be called
@@ -92,6 +92,11 @@ class PlayerWindow < TopWindow
             false # Means the parent handler has to be called
         end
     end
+
+
+    ###########################################################################
+    # User interface setup and utilities
+    ###########################################################################
 
     # Build the backgroud image of the level meter when the GTK image is realized
     def meter_setup
@@ -124,6 +129,20 @@ class PlayerWindow < TopWindow
         @meter.set(@mpix, nil)
     end
 
+    def counter_setup
+        # @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
+
+        @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
+
+        @digits = []
+        10.times { |i| @digits[i] = Gdk::Pixbuf.new(CFG.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
+        @digits[10] = Gdk::Pixbuf.new(CFG.icons_dir+"unlitdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[11] = Gdk::Pixbuf.new(CFG.icons_dir+"colondigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[12] = Gdk::Pixbuf.new(CFG.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+
+        reset_counter
+    end
+
     def reset_counter
         11.times do |i|
             if i == 2 || i == 8
@@ -152,25 +171,6 @@ class PlayerWindow < TopWindow
         @counter.set(@dpix, nil)
     end
 
-    def counter_setup
-#         @counter.set_size_request(11*DIGIT_WIDTH, DIGIT_HEIGHT)
-
-        @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
-
-        @digits = []
-        10.times { |i| @digits[i] = Gdk::Pixbuf.new(CFG.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
-        @digits[10] = Gdk::Pixbuf.new(CFG.icons_dir+"unlitdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[11] = Gdk::Pixbuf.new(CFG.icons_dir+"colondigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[12] = Gdk::Pixbuf.new(CFG.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-
-        reset_counter
-    end
-
-    def on_change_time_view
-        @time_view_mode = @time_view_mode == ELAPSED ? REMAINING : ELAPSED
-        update_hscale
-    end
-
     def set_window_title
         msg = case @playbin.get_state #[1]
             when Gst::STATE_PLAYING then "Playing"
@@ -180,37 +180,9 @@ class PlayerWindow < TopWindow
         window.title = "Player - [#{msg}]"
     end
 
-    def reset_player(notify)
-        @tip_pix = nil
-
-        if notify
-            TRACE.debug("[nil]".red)
-            if CFG.notifications?
-                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDsDB' 'End of play list'")
-            end
-        end
-
-        # Reset button states
-        GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
-        set_window_title
-        GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = true
-        GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = false
-        GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = false
-
-        # Clear level meter
-        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
-        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 28, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
-        @meter.set(@mpix, nil)
-
-        # Clear title, time and slider
-        reset_counter
-        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
-        @slider.value = 0.0
-    end
-
-    def terminate
-        @playbin.stop
-        @readybin.stop
+    def on_change_time_view
+        @time_view_mode = @time_view_mode == ELAPSED ? REMAINING : ELAPSED
+        update_hscale
     end
 
     def on_btn_play
@@ -246,6 +218,47 @@ class PlayerWindow < TopWindow
         new_track(:prev)
     end
 
+    # Set the UI to initial state (stopped) and display an end of play notification if wanted
+    def reset_player(notify)
+        @tip_pix = nil
+
+        if notify
+            TRACE.debug("[nil]".red)
+            if CFG.notifications?
+                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDsDB' 'End of play list'")
+            end
+        end
+
+        # Reset button states
+        GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PLAY
+        set_window_title
+        GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = true
+        GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = false
+        GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = false
+
+        # Clear level meter
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 16, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+        @mpix.draw_pixbuf(nil, @dark, 0, 0, 0, 28, 469, 8, Gdk::RGB::DITHER_NONE, 0, 0)
+        @meter.set(@mpix, nil)
+
+        # Clear title, time and slider
+        reset_counter
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
+        @slider.value = 0.0
+    end
+
+
+    ###########################################################################
+    # Player control methods
+    ###########################################################################
+
+    # Stop all bins
+    def terminate
+        @playbin.stop
+        @readybin.stop
+    end
+
+    # Initialize the next track to be played in paused state in the ready bin
     def set_ready(player_data)
         # audio_file may only be nil if the cache has been cleared
         # while there were ready to play tracks in the queue.
@@ -272,18 +285,19 @@ class PlayerWindow < TopWindow
                 end
             end
 
+            # It may happen that we have to wait for a track being downloaded from server
+            sleep(0.1) while not player_data.uilink.playable?
+            
             @readybin.set_ready(player_data.uilink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
         end
     end
 
+    # Start the track to be played by swaping the ready and play bins
     def play_track(player_data)
         # Swap ready bin and play bin so play bin becomes the next ready bin and
         # the ready bin becomes the actual player
         @playbin, @readybin = @readybin, @playbin
 
-        # May be this test would be helpful even if it's less than probable to meet in this case
-        # It may only happen if the first track to play is being downloaded from the server (play list or browser case)
-        # sleep(0.01) while not player_data.uilink.playable?
         @playbin.start_track
 
         # Debug info
@@ -313,11 +327,7 @@ class PlayerWindow < TopWindow
         end
     end
 
-    def debug_queue
-        puts("Queue: #{@queue.size} entries:")
-        @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
-    end
-
+    # Fetch the ready bin with the next track if any
     def prepare_next_track
         @queue.compact! # Remove nil entries
         if @queue[0]
@@ -326,19 +336,7 @@ class PlayerWindow < TopWindow
         end
     end
 
-    def gstplayer_eos
-        start = Time.now.to_f
-        @queue[1] ? play_track(@queue[1]) : reset_player(true)
-        TRACE.debug("Elapsed: #{Time.now.to_f-start}")
-
-        # If next provider is different from current, notify current provider it has finished
-        @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
-        @mc.notify_played(@queue[0].uilink)
-        @queue.shift # Remove first entry, no more needed
-
-        prepare_next_track
-    end
-
+    # Handle messages from the window buttons
     def new_track(msg)
         case msg
             when :start
@@ -360,6 +358,12 @@ class PlayerWindow < TopWindow
 
         prepare_next_track
     end
+
+
+
+    ###########################################################################
+    # Queue fetching/unfetching
+    ###########################################################################
 
     # Called by mc if any change made in the provider track list
     # or if player source has been switched
@@ -384,6 +388,24 @@ class PlayerWindow < TopWindow
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             # debug_queue
         end
+    end
+
+
+    ###########################################################################
+    # GstPlayer messages implementation
+    ###########################################################################
+
+    def gstplayer_eos
+        start = Time.now.to_f
+        @queue[1] ? play_track(@queue[1]) : reset_player(true)
+        TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+
+        # If next provider is different from current, notify current provider it has finished
+        @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
+        @mc.notify_played(@queue[0].uilink)
+        @queue.shift # Remove first entry, no more needed
+
+        prepare_next_track
     end
 
     def gstplayer_timer
@@ -413,16 +435,16 @@ class PlayerWindow < TopWindow
 
             # Draws the lit part from zero upto the rms level
             @mpix.draw_pixbuf(nil, @bright,
-                            10,  0,
-                            10,  Y_OFFSETS[channel],
-                            rms, 8,
-                            Gdk::RGB::DITHER_NONE, 0, 0)
+                              10,  0,
+                              10,  Y_OFFSETS[channel],
+                              rms, 8,
+                              Gdk::RGB::DITHER_NONE, 0, 0)
             # Draws the unlit part from rms level to the end
             @mpix.draw_pixbuf(nil, @dark,
-                            rms+11,            0,
-                            rms+11,            Y_OFFSETS[channel],
-                            METER_WIDTH-rms+1, 8,
-                            Gdk::RGB::DITHER_NONE, 0, 0)
+                              rms+11,            0,
+                              rms+11,            Y_OFFSETS[channel],
+                              METER_WIDTH-rms+1, 8,
+                              Gdk::RGB::DITHER_NONE, 0, 0)
 
             @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
         end
@@ -430,6 +452,11 @@ class PlayerWindow < TopWindow
         # Draw image to screen
         @meter.set(@mpix, nil)
     end
+
+
+    ###########################################################################
+    # Misc methods
+    ###########################################################################
 
     def update_hscale
         return if @seek_handler || !@playbin.active?
@@ -440,10 +467,6 @@ class PlayerWindow < TopWindow
         show_time(itime)
 
         @queue[0].owner.timer_notification(itime)
-    end
-
-    def seek
-        show_time(@slider.value)
     end
 
     def show_time(itime)
@@ -469,5 +492,10 @@ class PlayerWindow < TopWindow
             text = "\n<b>CDsDB: waiting for tracks to play...</b>\n"
         end
         tool_tip.set_markup(text)
+    end
+
+    def debug_queue
+        puts("Queue: #{@queue.size} entries:")
+        @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
     end
 end

@@ -48,8 +48,8 @@ class GstPlayer
 
         @track_len = Gst::QueryDuration.new(Gst::Format::TIME)
         @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
-#         @track_pos = @gstbin.query_position(Gst::Format::TIME) # GStreamer 1.0
-#         @track_len = @gstbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
+        # @track_pos = @gstbin.query_position(Gst::Format::TIME) # GStreamer 1.0
+        # @track_len = @gstbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
 
         @convertor = Gst::ElementFactory.make("audioconvert")
 
@@ -65,9 +65,9 @@ class GstPlayer
 
         @decoder = Gst::ElementFactory.make("decodebin")
         @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
-#         @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
+            # @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
             pad.link(@convertor.get_pad("sink"))
-#             pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
+            # pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
             if @level_before_rg
                 @convertor >> @level >> @rgain >> @sink
             else
@@ -133,12 +133,12 @@ class GstPlayer
 
     def playing?
         @gstbin.get_state[1] == Gst::STATE_PLAYING
-#         @gstbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
+        # @gstbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
     end
 
     def paused?
         @gstbin.get_state[1] == Gst::STATE_PAUSED
-#         @gstbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
+        # @gstbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
     end
 
     def active?
