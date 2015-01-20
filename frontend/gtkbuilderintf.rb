@@ -268,31 +268,26 @@ module GtkIDs
     CDED_ENTRY_LABEL    = "cded_entry_label"
     CDED_ENTRY_CATALOG  = "cded_entry_catalog"
 
+
     #
     # Search dialog
     #
-    # Config fields are declared in shared/cfg.rb because they're also used by the server
+    SEARCH_DIALOG       = "search_dialog"
+    SRCH_DLG_BTN_SEARCH = "srch_dlg_btn_search"
+    SRCH_DLG_BTN_SHOW   = "srch_dlg_btn_show"
+    SRCH_DLG_BTN_CLOSE  = "srch_dlg_btn_close"
+    SRCH_DLG_TV         = "srch_dlg_tv"
+    SRCH_DLG_RB_TRACK   = "srch_dlg_rb_track"
+    SRCH_DLG_RB_LYRICS  = "srch_dlg_rb_lyrics"
+    SRCH_DLG_RB_REC     = "srch_dlg_rb_rec"
+    SRCH_DLG_RB_SEG     = "srch_dlg_rb_seg"
+    SRCH_ENTRY_TEXT     = "srch_entry_text"
+
+    #
+    # Config fields (PREFS_DIALOG) are now declared in shared/cfg.rb
+    # because they're also used by the server
     #
     include ConfigFields
-
-    #
-    # Prefs dialogs
-    #
-    PREFS_DIALOG                = "prefs_dialog"
-
-    PREFS_RB_REMOTE             = "prefs_rb_remote"
-    PREFS_ENTRY_SERVER          = "prefs_entry_server"
-    PREFS_ENTRY_PORT            = "prefs_entry_port"
-    PREFS_ENTRY_BLKSIZE         = "prefs_entry_blksize"
-    PREFS_FC_MUSICDIR           = "prefs_fc_musicdir"
-    PREFS_FC_RSRCDIR            = "prefs_fc_rsrcdir"
-    PREFS_CHKBTN_LOCALSTORE     = "prefs_chkbtn_localstore"
-    PREFS_CB_SHOWNOTIFICATIONS  = "prefs_cb_shownotifications"
-    PREFS_ENTRY_NOTIFDURATION   = "prefs_entry_notifduration"
-    PREFS_CB_LIVEUPDATE         = "prefs_cb_liveupdate"
-    PREFS_CB_LOGTRACKFILE       = "prefs_cb_logtrackfile"
-    PREFS_ENTRY_MAXITEMS        = "prefs_entry_maxitems"
-    PREFS_CD_DEVICE             = "prefs_entry_cddevice"
 
     #
     # Play lists window
