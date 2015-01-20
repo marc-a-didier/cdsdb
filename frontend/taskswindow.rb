@@ -124,7 +124,7 @@ class TasksWindow < TopWindow
         if CFG.remote?
             if @chk_thread.nil?
 TRACE.debug("task thread started...".green)
-                DBCACHE.set_audio_status_from_to(AudioLink::NOT_FOUND, AudioLink::UNKNOWN)
+                DBCACHE.set_audio_status_from_to(AudioStatus::NOT_FOUND, AudioStatus::UNKNOWN)
 #                 GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
                 @chk_thread = Thread.new {
                     loop do
@@ -134,7 +134,7 @@ TRACE.debug("task thread started...".green)
                 }
             end
         elsif !@chk_thread.nil?
-            DBCACHE.set_audio_status_from_to(AudioLink::ON_SERVER, AudioLink::NOT_FOUND)
+            DBCACHE.set_audio_status_from_to(AudioStatus::ON_SERVER, AudioStatus::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
 #             GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Local mode]"

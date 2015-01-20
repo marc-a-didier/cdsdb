@@ -12,7 +12,7 @@ class TrkPListsDialog
 
         GtkUI[GtkIDs::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) {
             if tv.selection.selected
-                mc.GtkUI[GtkIDs::MM_WIN_PLAYLISTS].send(:activate) unless mc.plists.window.visible?
+                GtkUI[GtkIDs::MM_WIN_PLAYLISTS].send(:activate) unless mc.plists.window.visible?
                 mc.plists.position_browser(tv.selection.selected[COL_REF])
             end
         }

@@ -250,7 +250,7 @@ class FilterWindow < TopWindow
             # Skip tracks which aren't ripped
             dblink.reset.set_track_ref(row[0])
             if GtkUI[FLT_CHK_MUSICFILE].active?
-                next if dblink.setup_audio_file == AudioLink::NOT_FOUND
+                next if dblink.setup_audio_file == AudioStatus::NOT_FOUND
             end
 
             max_played = dblink.track.iplayed if dblink.track.iplayed > max_played

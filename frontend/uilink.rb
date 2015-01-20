@@ -15,7 +15,7 @@ module CoverMgr
 
     def get_cover_file_name
         files = Dir[CFG.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
-# TRACE.debug "CoverMgr search key #{@pix_key} - disk access".red
+        # TRACE.debug "CoverMgr search key #{@pix_key} - disk access".red
         return files.size > 0 ? File::basename(files[0]) : ImageCache::DEF_RECORD_FILE
     end
 
@@ -127,17 +127,17 @@ class UILink < AudioLink
     end
 
     def available_on_server?
-        if audio_status == AudioLink::NOT_FOUND && CFG.remote?
-            if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0].to_i != AudioLink::NOT_FOUND
-                set_audio_status(AudioLink::ON_SERVER)
+        if audio_status == AudioStatus::NOT_FOUND && CFG.remote?
+            if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0].to_i != AudioStatus::NOT_FOUND
+                set_audio_status(AudioStatus::ON_SERVER)
             end
         end
-        return audio_status == AudioLink::ON_SERVER
+        return audio_status == AudioStatus::ON_SERVER
     end
 
     def get_audio_file(emitter, tasks)
         # Try to find a local file if status is unknown
-        setup_audio_file if audio_status == AudioLink::UNKNOWN || audio.file.nil?
+        setup_audio_file if audio_status == AudioStatus::UNKNOWN || audio.file.nil?
 
         # If status is on server, get the remote file.
         return get_remote_audio_file(emitter, tasks) if available_on_server?
@@ -149,10 +149,10 @@ class UILink < AudioLink
         if CFG.remote? && CFG.local_store?
             unless tasks.track_in_download?(self)
                 tasks.new_track_download(emitter, self)
-                set_audio_status(AudioLink::ON_SERVER)
+                set_audio_status(AudioStatus::ON_SERVER)
             end
         else
-            set_audio_status(AudioLink::NOT_FOUND)
+            set_audio_status(AudioStatus::NOT_FOUND)
         end
         return audio_status
     end

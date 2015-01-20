@@ -80,7 +80,7 @@ class GstPlayer
         return self
     end
 
-    def set_ready(audio_file, replay_gain, level_before_rg = true)
+    def set_ready(audio_file, replay_gain = 0.0, level_before_rg = true)
         @level_before_rg = level_before_rg
 
         # Must stop if track order changes as there already was a paused ready bin
@@ -106,7 +106,10 @@ class GstPlayer
 
         @gstbin.query(@track_len)
 
-        @timer = Gtk::timeout_add(500) { @client.gstplayer_timer; true }
+        @timer = Gtk::timeout_add(500) do
+            @client.gstplayer_timer
+            true
+        end
     end
 
     # This method must not be called while playing, the source

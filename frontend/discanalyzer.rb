@@ -11,7 +11,7 @@
 
 module DiscAnalyzer
 
-   RESULT_SQL_FILE = CFG.rsrc_dir+'discanalyzer.sql'
+    RESULT_SQL_FILE = CFG.rsrc_dir+'discanalyzer.sql'
 
     ArtistStruct = Struct.new(:segments, :db_class)
     SegmentStruct = Struct.new(:tracks, :db_class)

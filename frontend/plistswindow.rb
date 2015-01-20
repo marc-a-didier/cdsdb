@@ -4,7 +4,6 @@ class PListsWindow < TopWindow
     include PlayerIntf
     include BrowserPlayerIntf
 
-private
     TT_REF    = 0
     TT_ORDER  = 1
     TT_TRACK  = 2
@@ -26,8 +25,6 @@ private
     TDB_ARTISTS  = 8
     TDB_ILENGTH  = 9
 
-public
-
     def initialize(mc)
         super(mc, GtkIDs::PLISTS_WINDOW)
 
@@ -47,10 +44,11 @@ public
         GtkUI[GtkIDs::PL_MB_NEW].signal_connect(:activate)           { do_add }
         #GtkUI[GtkIDs::PL_MB_DELETE].signal_connect(:activate) { do_del }
         GtkUI[GtkIDs::PL_MB_INFOS].signal_connect(:activate)         { show_infos(false) }
-        GtkUI[GtkIDs::PL_MB_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
-        GtkUI[GtkIDs::PL_MB_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
-        GtkUI[GtkIDs::PL_MB_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
-        GtkUI[GtkIDs::PL_MB_EXPORT_DEVICE].signal_connect(:activate) { do_export_to_device }
+        GtkUI[GtkIDs::PL_MB_EXPORT_XSPF].signal_connect(:activate)   { PListExporter.export_to_xspf(@pts, @current_pl.sname) }
+        GtkUI[GtkIDs::PL_MB_EXPORT_M3U].signal_connect(:activate)    { PListExporter.export_to_m3u(@pts, @current_pl.sname)  }
+        GtkUI[GtkIDs::PL_MB_EXPORT_PLS].signal_connect(:activate)    { PListExporter.export_to_pls(@pts, @current_pl.sname)  }
+        GtkUI[GtkIDs::PL_MB_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
+
         GtkUI[GtkIDs::PL_MB_CLOSE].signal_connect(:activate)         { window.signal_emit(:delete_event, nil) }
 
         GtkUI[GtkIDs::PL_MB_SHUFFLE].signal_connect(:activate)   { shuffle_play_list }
@@ -63,8 +61,8 @@ public
 
         srenderer = Gtk::CellRendererText.new()
         trk_renderer = Gtk::CellRendererText.new
-#         trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
-#         trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[col] }
+        # trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
+        # trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[col] }
 
         @tvpl = GtkUI[GtkIDs::TV_PLISTS]
         @pls = Gtk::ListStore.new(Integer, String)
@@ -138,10 +136,6 @@ public
 
         # Var to check if play list changed while playing to avoid to update tracks and time infos
         @playing_pl = 0
-
-        # Threading problems...
-
-#         set_ref_column_visibility(GtkUI[GtkIDs::MM_VIEW_DBREFS].active?)
 
         reset_player_data_state
     end
@@ -220,7 +214,7 @@ public
                 if r.nil?
                     iter = @pts.append
                     new_iorder = @pts.get_iter((iter.path.to_s.to_i-1).to_s)[TT_IORDER]+1024
-puts("new=#{new_iorder}")
+                    TRACE.debug("new order=#{new_iorder}")
                 else
                     pos = r[0].to_s.to_i
                     pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
@@ -228,7 +222,7 @@ puts("new=#{new_iorder}")
                     prev = pos == 0 ? nil : @pts.get_iter((pos-1).to_s)
                     succ = @pts.get_iter((pos+1).to_s) # succ can't be nil, handled by r.nil? test
                     new_iorder = prev.nil? ? succ[TT_IORDER]/2 : (succ[TT_IORDER]+prev[TT_IORDER])/2
-p new_iorder
+                    TRACE.debug("new order=#{new_iorder}")
                 end
                 @pts.n_columns.times { |i| iter[i] = itr[i] }
                 @pts.remove(itr)
@@ -467,81 +461,6 @@ p new_iorder
         end
     end
 
-    def do_export_xspf
-        xdoc = REXML::Document.new << REXML::XMLDecl.new("1.0", "UTF-8", "no")
-
-        xdoc.add_element("playlist", {"version"=>"1", "xmlns"=>"http://xspf.org/ns/0/"})
-        xdoc.root.add_element("creator").text = "CDsDB #{Cdsdb::VERSION}"
-        tracklist = xdoc.root.add_element("trackList")
-
-        @pts.each { |model, path, iter|
-            next if iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
-            track = REXML::Element.new("track")
-            # In xspf specs, file name must be URI style formatted.
-            track.add_element("location").text = URI::escape("file://"+iter[TT_DATA].audio_file)
-            tracklist << track
-        }
-
-        fname = CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.xspf"
-        File.open(fname, "w") { |file| MyFormatter.new.write(xdoc, file) }
-    end
-
-    def do_export_m3u
-        file = File.new(CFG.music_dir+"Playlists/"+@current_pl.sname+".cdsdb.m3u", "w")
-        file << "#EXTM3U\n"
-        @pts.each { |model, path, iter|
-            file << iter[TT_DATA].audio_file+"\n" unless iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
-        }
-        file.close
-    end
-
-    def do_export_pls
-        counter = 0
-        file = File.new(CFG.music_dir+"Playlists/#{@current_pl.sname}.cdsdb.pls", "w")
-        file << "[playlist]\n\n"
-        @pts.each { |model, path, iter|
-            next if iter[TT_DATA].setup_audio_file == AudioLink::NOT_FOUND
-            counter += 1
-            file << "File#{counter}=#{URI::escape("file://"+iter[TT_DATA].audio_file)}\n" <<
-                    "Title#{counter}=#{iter[TT_DATA].track.stitle}\n" <<
-                    "Length#{counter}=#{iter[TT_DATA].track.ilength/1000}\n\n"
-        }
-        file << "NumberOfEntries=#{counter}\n\n" << "Version=2\n"
-        file.close
-    end
-
-    def do_export_to_device
-        dlg = ExportDialog.new
-        exp = ExportParams.new
-        return if dlg.run(exp) == Gtk::Dialog::RESPONSE_CANCEL # Run is auto-destroying
-
-        track_infos = TrackInfos.new
-        @pts.each { |model, path, iter|
-            track_infos.get_track_infos(iter[TT_DATA].track.rtrack)
-            audio_file = Utils::audio_file_exists(track_infos).file_name
-            dest_file = exp.remove_genre ? audio_file.sub(/^#{exp.src_folder}[0-9A-Za-z ']*\//, exp.dest_folder) : audio_file.sub(/^#{exp.src_folder}/, exp.dest_folder)
-            dest_file = dest_file.make_fat_compliant if exp.fat_compat
-            if File.exists?(dest_file)
-                puts "Export: file #{dest_file} already exists."
-            else
-                puts "Export: copying #{audio_file} to #{dest_file}"
-                File.mkpath(File.dirname(dest_file))
-                file_size = File.size(audio_file)
-                curr_size = 0
-                inf  = File.new(audio_file, "rb")
-                outf = File.new(dest_file, "wb")
-                dl_id = @mc.tasks.new_upload(File.basename(audio_file))
-                while (data = inf.read(128*1024))
-                    curr_size += data.size
-                    @mc.tasks.update_file_op(dl_id, curr_size, file_size)
-                    outf.write(data)
-                    Gtk.main_iteration while Gtk.events_pending?
-                end
-                @mc.tasks.end_file_op(dl_id, audio_file, 0)
-            end
-        }
-    end
-
     def position_browser(rpltrack)
         rplist = DBIntf.get_first_value("SELECT rplist FROM pltracks WHERE rpltrack=#{rpltrack};")
         if sel_iter = @tvpl.find_ref(rplist)
@@ -552,7 +471,7 @@ p new_iorder
 
     def update_tvpl
         @pls.clear
-        DBIntf.execute( "SELECT rplist, sname FROM plists" ) do |row|
+        DBIntf.execute("SELECT rplist, sname FROM plists") do |row|
             iter = @pls.append
             iter[0] = row[0]
             iter[1] = row[1]

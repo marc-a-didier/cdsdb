@@ -20,7 +20,7 @@ class MusicClient
 
     def get_server_db_version
         return "" unless socket = get_connection
-TRACE.debug("get db version")
+        TRACE.debug("get db version")
         db_version = ""
         socket.puts("get db version")
         if socket.gets.chomp == "OK"
@@ -97,7 +97,7 @@ TRACE.debug("get db version")
         end
         socket.close
         TRACE.debug("<--> Resources list received.".green)
-p resources
+        p resources
         return resources
     end
 
@@ -120,7 +120,7 @@ p resources
 
     def rename_audio(rtrack, new_title)
         return "" unless socket = get_connection
-TRACE.debug("rename audio")
+        TRACE.debug("rename audio")
         socket.puts("rename audio")
         if socket.gets.chomp == "OK"
             TRACE.debug("<--> Rename audio OK".green)
@@ -188,7 +188,6 @@ TRACE.debug("rename audio")
             socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED) if curr_size < file_size
             break if status == Cfg::MSG_CANCELLED
             f.write(data)
-# sleep(0.5)
         end
         tasks.end_file_op(task_id, file_name, status)
         f.close

@@ -8,12 +8,6 @@ TagsData = Struct.new(:artist, :album, :title, :track, :length, :year, :genre, :
 #
 class AudioLink < DBCacheLink
 
-    NOT_FOUND = 0 # Local audio file not found and/or not on server
-    OK        = 1 # Local audio file found where expected to be
-    MISPLACED = 2 # Local audio file found but NOT where it should be
-    ON_SERVER = 3 # No local file but available from server
-    UNKNOWN   = 4 # Should be default value, no check has been made
-
     attr_reader   :tags
 
     def initialize
@@ -33,7 +27,7 @@ class AudioLink < DBCacheLink
     end
 
     def audio_status
-        return tags.nil? ? super : OK
+        return tags.nil? ? super : AudioStatus::OK
     end
 
     def load_from_tags(file_name)
@@ -49,7 +43,7 @@ class AudioLink < DBCacheLink
     # as we may guess the file really exists.
     def set_audio_file(file_name)
         super(file_name)
-        set_audio_status(OK)
+        set_audio_status(AudioStatus::OK)
     end
 
     # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
@@ -80,7 +74,7 @@ class AudioLink < DBCacheLink
     def setup_audio_file
         # Must reset @audio_file to empty if status is unknown because then
         # audio status cache may have been reset when toggling connected/local mode.
-        set_audio_file(nil) if audio_status == UNKNOWN
+        set_audio_file(nil) if audio_status == AudioStatus::UNKNOWN
 
         return audio.status if audio.file
 
@@ -100,7 +94,7 @@ class AudioLink < DBCacheLink
     end
 
     def playable?
-        return (audio_status == OK || audio_status == MISPLACED) && audio.file
+        return (audio_status == AudioStatus::OK || audio_status == AudioStatus::MISPLACED) && audio.file
     end
 
     # Search the Music directory for a file matching the theoretical file name.
@@ -112,7 +106,7 @@ class AudioLink < DBCacheLink
         Utils::AUDIO_EXTS.each { |ext|
             if File.exists?(audio.file+ext)
                 audio.file += ext
-                return OK
+                return AudioStatus::OK
             end
         }
 
@@ -123,11 +117,11 @@ class AudioLink < DBCacheLink
             Utils::AUDIO_EXTS.each { |ext|
                 if File.exists?(entry+file+ext)
                     audio.file = entry+file+ext
-                    return MISPLACED
+                    return AudioStatus::MISPLACED
                 end
             }
         }
-        return NOT_FOUND
+        return AudioStatus::NOT_FOUND
     end
 
     def make_track_title(want_segment_title, want_track_number = true)

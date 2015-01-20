@@ -17,27 +17,7 @@ class ExportDialog
             exp_params.remove_genre = GtkUI[GtkIDs::EXP_DLG_CB_RMGENRE].active?
             exp_params.fat_compat   = GtkUI[GtkIDs::EXP_DLG_CB_FATCOMPAT].active?
         end
-        destroy #unless resp == Gtk::Dialog::RESPONSE_OK
-        return resp
-    end
-
-#     def src
-#         return GtkUI[GtkIDs::EXP_DLG_FC_SOURCE].current_folder+"/"
-#     end
-#
-#     def dest
-#         return GtkUI[GtkIDs::EXP_DLG_FC_DEST].current_folder+"/"
-#     end
-#
-#     def remove_genre?
-#         return GtkUI[GtkIDs::EXP_DLG_CB_RMGENRE].active?
-#     end
-#
-#     def fat_compat?
-#         return GtkUI[GtkIDs::EXP_DLG_CB_FATCOMPAT].active?
-#     end
-
-    def destroy
         GtkUI[GtkIDs::EXPORT_DEVICE_DIALOG].destroy
+        return resp
     end
 end

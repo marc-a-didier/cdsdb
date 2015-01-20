@@ -110,7 +110,7 @@ module BrowserPlayerIntf
                 return nil if player_data.internal_ref+index < 0
                 iter = tv.model.get_iter((player_data.internal_ref+index).to_s)
                 return nil if iter.nil?
-                iter[link_index].setup_audio_file if iter[link_index].audio_status == AudioLink::UNKNOWN
+                iter[link_index].setup_audio_file if iter[link_index].audio_status == AudioStatus::UNKNOWN
                 return PlayerData.new(self, iter.path.to_s.to_i, iter[link_index]) if iter[link_index].playable?
             end
         end
@@ -137,14 +137,14 @@ module BrowserPlayerIntf
             end
 
             tv.set_cursor(iter.path, nil, false)
-            if iter[link_index].get_audio_file(self, @mc.tasks) == AudioLink::NOT_FOUND
+            if iter[link_index].get_audio_file(self, @mc.tasks) == AudioStatus::NOT_FOUND
                 @track_ref += 1
             else
                 break
             end
         end
 
-        while iter[link_index].audio_status == AudioLink::ON_SERVER
+        while iter[link_index].audio_status == AudioStatus::ON_SERVER
             Gtk.main_iteration while Gtk.events_pending?
             sleep(0.1)
         end

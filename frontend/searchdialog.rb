@@ -6,17 +6,19 @@ class SearchDialog
 
         GtkUI.load_window(GtkIDs::SEARCH_DIALOG)
 
-        @dlg = GtkUI[GtkIDs::SEARCH_DIALOG]
+        GtkUI[GtkIDs::SEARCH_DIALOG].signal_connect(:show) { PREFS.restore_window(GtkIDs::SEARCH_DIALOG) }
+        GtkUI[GtkIDs::SEARCH_DIALOG].signal_connect(:delete_event) do
+            PREFS.save_window(GtkIDs::SEARCH_DIALOG)
+            GtkUI[GtkIDs::SEARCH_DIALOG].destroy
+            false
+        end
+        GtkUI[GtkIDs::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked) do
+            PREFS.save_window(GtkIDs::SEARCH_DIALOG)
+            GtkUI[GtkIDs::SEARCH_DIALOG].destroy
+        end
 
-        @dlg.signal_connect(:show)           { PREFS.restore_window(GtkIDs::SEARCH_DIALOG) }
-        @dlg.signal_connect(:delete_event)   { PREFS.save_window(GtkIDs::SEARCH_DIALOG)
-                                               @dlg.destroy
-                                               false
-                                             }
-        GtkUI[GtkIDs::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked)  { PREFS.save_window(GtkIDs::SEARCH_DIALOG); @dlg.destroy }
-
-        GtkUI[GtkIDs::SRCH_DLG_BTN_SEARCH].signal_connect(:clicked) { do_search }
-        GtkUI[GtkIDs::SRCH_DLG_BTN_SHOW].signal_connect(:clicked)   { do_show }
+        GtkUI[GtkIDs::SRCH_DLG_BTN_SEARCH].signal_connect(:clicked) { search }
+        GtkUI[GtkIDs::SRCH_DLG_BTN_SHOW].signal_connect(:clicked)   { show }
 
         title_renderer = Gtk::CellRendererText.new
         title_col = Gtk::TreeViewColumn.new("Found in", title_renderer)
@@ -40,7 +42,7 @@ class SearchDialog
         }
 
         @tv.set_has_tooltip(true)
-        @tv.signal_connect(:query_tooltip) { |widget, x, y, is_kbd, tool_tip|
+        @tv.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             path = @tv.get_dest_row(x, y)
             if path && search_track?
                 tool_tip.set_markup(@tv.model.get_iter(path[0])[2].markup_tooltip)
@@ -48,7 +50,7 @@ class SearchDialog
             else
                 false
             end
-        }
+        end
     end
 
     def get_selection
@@ -69,7 +71,7 @@ class SearchDialog
         return GtkUI[GtkIDs::SRCH_DLG_RB_TRACK].active? || GtkUI[GtkIDs::SRCH_DLG_RB_LYRICS].active?
     end
 
-    def do_search
+    def search
         @tv.model.clear
         txt = ("%"+GtkUI[GtkIDs::SRCH_ENTRY_TEXT].text+"%").to_sql
         if search_record?
@@ -114,7 +116,7 @@ class SearchDialog
         end
     end
 
-    def do_show
+    def show
         return unless @tv.selection.count_selected_rows > 0
         uilink = @tv.model.get_iter(@tv.selection.selected_rows[0])[2]
         @mc.select_segment(uilink) if search_segment?
@@ -123,9 +125,7 @@ class SearchDialog
     end
 
     def run
-        @dlg.show
+        GtkUI[GtkIDs::SEARCH_DIALOG].show
         return self
-#         while GtkUI[GtkIDs::SEARCH_DIALOG].run != Gtk::Dialog::RESPONSE_CLOSE do end
-#         GtkUI[GtkIDs::SEARCH_DIALOG].destroy
     end
 end

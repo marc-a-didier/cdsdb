@@ -113,7 +113,7 @@ module GtkUtils
 
     def self.import_played_tracks
         return if self.get_response("OK to import tracks from playedtracks.sql?") != Gtk::Dialog::RESPONSE_OK
-        rlogtrack = DBUtils::get_last_id("logtrack")
+        rlogtrack = DBUtils.get_last_id("logtrack")
         IO.foreach(CFG.rsrc_dir+"playedtracks.sql") { |line|
             line = line.chomp
             if line.match(/^INSERT/)
@@ -122,7 +122,7 @@ module GtkUtils
                 line.sub!(/\([0-9]*/, "(#{rlogtrack}")
                 #puts line
             end
-            DBUtils::log_exec(line)
+            DBUtils.log_exec(line)
         }
     end
 
@@ -138,7 +138,7 @@ module GtkUtils
         if msg.length > 0
             self.show_message(msg, Gtk::MessageDialog::ERROR)
         else
-            DBUtils::client_sql("DELETE FROM artists WHERE rartist=#{rartist};")
+            DBUtils.client_sql("DELETE FROM artists WHERE rartist=#{rartist};")
             return 0
         end
         return 1
@@ -149,7 +149,7 @@ module GtkUtils
         if count > 0
             self.show_message("Error: #{count} reference(s) still in tracks table.", Gtk::MessageDialog::ERROR)
         else
-            DBUtils::client_sql("DELETE FROM segments WHERE rsegment=#{rsegment};")
+            DBUtils.client_sql("DELETE FROM segments WHERE rsegment=#{rsegment};")
         end
         return count
     end
@@ -159,7 +159,7 @@ module GtkUtils
         if count > 0
             self.show_message("Error: #{count} reference(s) still in segments table.", Gtk::MessageDialog::ERROR)
         else
-            DBUtils::client_sql("DELETE FROM records WHERE rrecord=#{rrecord};")
+            DBUtils.client_sql("DELETE FROM records WHERE rrecord=#{rrecord};")
         end
         return count
     end
@@ -175,8 +175,8 @@ module GtkUtils
             count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{row[0][1]}")
             del_rec = count == 1 && self.get_response("This is the last track of its record. Remove it along?") == Gtk::Dialog::RESPONSE_OK
 
-            DBUtils::client_sql("DELETE FROM logtracks WHERE rtrack=#{rtrack};")
-            DBUtils::client_sql("DELETE FROM tracks WHERE rtrack=#{rtrack};")
+            DBUtils.client_sql("DELETE FROM logtracks WHERE rtrack=#{rtrack};")
+            DBUtils.client_sql("DELETE FROM tracks WHERE rtrack=#{rtrack};")
 
             delete_segment(row[0][0]) if del_seg
             delete_record(row[0][1]) if del_rec

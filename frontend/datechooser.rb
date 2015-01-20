@@ -6,8 +6,6 @@ class DateChooser
     def initialize
         GtkUI.load_window(DLG_DATE_CHOOSER)
 
-        @dlg = GtkUI[DLG_DATE_CHOOSER]
-
         GtkUI[DTDLG_BTN_FROMDATE].signal_connect(:clicked) { set_date(GtkUI[DTDLG_ENTRY_FROMDATE]) }
         GtkUI[DTDLG_BTN_TODATE].signal_connect(:clicked)   { set_date(GtkUI[DTDLG_ENTRY_TODATE])   }
 
@@ -25,7 +23,7 @@ class DateChooser
     end
 
     def run
-        @dlg.run { |response|
+        GtkUI[DLG_DATE_CHOOSER].run { |response|
             if response == Gtk::Dialog::RESPONSE_OK
                 @dates = [GtkUI[DTDLG_ENTRY_FROMDATE].text.to_date, GtkUI[DTDLG_ENTRY_TODATE].text.to_date]
 
@@ -46,7 +44,7 @@ class DateChooser
     end
 
     def close
-        @dlg.destroy
+        GtkUI[DLG_DATE_CHOOSER].destroy
     end
 
     def dates

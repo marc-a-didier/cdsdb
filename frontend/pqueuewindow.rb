@@ -169,14 +169,13 @@ class PQueueWindow < TopWindow
                     end
                 else
                     if type == "message"
-# TRACE.debug("message received, calling back #{call_back}")
+                        # TRACE.debug("message received, calling back #{call_back}")
                         tracks = param ? @mc.send(call_back, param.to_i) : @mc.send(call_back)
                         # When a full record or segment is dropped, set the use of record gain
                         # rather than track gain. But if the use of record gain is not enabled in the
                         # player menu, the player will use the track gain or no gain at all.
                         tracks.each { |uilink| uilink.set_use_of_record_gain } if sender == "records"
                         enqueue(tracks)
-#                         param ? enqueue(@mc.send(call_back, param.to_i)) : enqueue(@mc.send(call_back))
                     end
                 end
 
@@ -196,16 +195,15 @@ class PQueueWindow < TopWindow
         end
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
         update_status
-#         @mc.track_list_changed(self)
         return true
     end
 
     def enqueue(uilinks)
         uilinks.each { |uilink|
-# TRACE.debug("enq before: audiostatus=#{uilink.audio_status}")
+            # TRACE.debug("enq before: audiostatus=#{uilink.audio_status}")
             uilink.get_audio_file(self, @mc.tasks) unless uilink.playable?
-# TRACE.debug("enq after : audiostatus=#{uilink.audio_status}")
-            unless uilink.audio_status == AudioLink::NOT_FOUND
+            # TRACE.debug("enq after : audiostatus=#{uilink.audio_status}")
+            unless uilink.audio_status == AudioStatus::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
 
@@ -217,7 +215,7 @@ class PQueueWindow < TopWindow
 
                 # When in slow client mode, pqueue was not refreshed while it didn't have
                 # all responses when tracks are on server.
-                if uilink.audio_status == AudioLink::ON_SERVER
+                if uilink.audio_status == AudioStatus::ON_SERVER
                     Gtk.main_iteration while Gtk.events_pending?
                 end
             end
@@ -289,7 +287,7 @@ class PQueueWindow < TopWindow
         @plq.each { |model, path, iter|
             # Must check for every track if it's already in the queue. It may have been moved or something else.
             in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
-            if !in_queue && iter[4].uilink.audio_status != AudioLink::ON_SERVER
+            if !in_queue && iter[4].uilink.audio_status != AudioStatus::ON_SERVER
                 queue << PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
                 break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
@@ -299,7 +297,7 @@ class PQueueWindow < TopWindow
     def get_track(player_data, direction)
         if direction == :start
             @plq.each { |model, path, iter|
-                unless iter[4].uilink.audio_status == AudioLink::ON_SERVER
+                unless iter[4].uilink.audio_status == AudioStatus::ON_SERVER
                     return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
                 end
             }
@@ -312,5 +310,4 @@ class PQueueWindow < TopWindow
     def has_track(player_data, direction)
         return false
     end
-
 end
