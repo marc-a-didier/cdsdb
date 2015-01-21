@@ -65,7 +65,7 @@ class DBCache
     def track(rtrack)
         if @tracks[rtrack].nil?
             @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
-            @audio[rtrack] = AudioInfos.new(4, nil)
+            @audio[rtrack] = AudioInfos.new(AudioStatus::UNKNOWN, nil)
             TRACE.debug("Track cache MISS for key #{rtrack}, size=#{@tracks.size}") if TRACE_CACHE
         else
             TRACE.debug("Track cache HIT for key #{rtrack}, size=#{@tracks.size}") if TRACE_CACHE
@@ -175,35 +175,68 @@ class DBCacheLink
     # Tries to feed the artist primary key from record or segment if possible
     #
     def track
-        return DBCACHE.track(@rtrack)
+        return @rtrack ? DBCACHE.track(@rtrack) : nil
     end
 
     def segment
-        @rsegment = DBCACHE.segment(track.rsegment).rsegment if @rsegment.nil?
+        if @rsegment.nil?
+            if track
+                @rsegment = track.rsegment
+            else
+                return nil
+            end
+        end
         return DBCACHE.segment(@rsegment)
     end
 
     def record
-        @rrecord = DBCACHE.record(track.rrecord).rrecord if @rrecord.nil?
+        if @rrecord.nil?
+            if track
+                @rrecord = track.rrecord
+            else
+                if segment
+                    @rrecord = segment.rrecord
+                else
+                    return nil
+                end
+            end
+        end
         return DBCACHE.record(@rrecord)
     end
 
     def artist
+        if @rartist.nil?
+            segment_artist
+            record_artist unless @rartist
+            return nil unless @rartist
+        end
         return DBCACHE.artist(@rartist)
     end
 
     def segment_artist
-        @rartist = DBCACHE.artist(segment.rartist).rartist if @rartist.nil? || @rartist != DBCACHE.segment(@rsegment).rartist
+        if segment
+            @rartist = segment.rartist
+        else
+            return nil unless @rartist
+        end
         return DBCACHE.artist(@rartist)
     end
 
     def record_artist
-        @rartist = DBCACHE.artist(record.rartist).rartist if @rartist.nil? || @rartist != DBCACHE.record(@rrecord).rartist
+        if record
+            @rartist = record.rartist
+        else
+            return nil unless @rartist
+        end
         return DBCACHE.artist(@rartist)
     end
 
     def genre
-        @rgenre = DBCACHE.genre(record.rgenre).rgenre if @rgenre.nil?
+        if record
+            @rgenre = record.rgenre
+        else
+            return nil unless @rgenre
+        end
         return DBCACHE.genre(@rgenre)
     end
 
@@ -232,21 +265,22 @@ class DBCacheLink
 
     #
     # Methods to check if a reference has been set for the cache to get it
+    # May be used as bool func since nil or false behave the same
     #
     def valid_track_ref?
-        return !@rtrack.nil?
+        return @rtrack
     end
 
     def valid_segment_ref?
-        return !@rsegment.nil?
+        return @rsegment
     end
 
     def valid_record_ref?
-        return !@rrecord.nil?
+        return @rrecord
     end
 
     def valid_artist_ref?
-        return !@rartist.nil?
+        return @rartist
     end
 
 
@@ -308,7 +342,7 @@ class DBCacheLink
         DBCACHE.segment(@rsegment).sql_update if valid_segment_ref?
         DBCACHE.track(@rtrack).sql_update if valid_track_ref?
 
-#         [DBCACHE.track(@rtrack), DBCACHE.record(@rrecord),
-#          DBCACHE.segment(@rsegment), DBCACHE.artist(@rartist)].each { |dbclass| dbclass.sql_update }
+        # [DBCACHE.track(@rtrack), DBCACHE.record(@rrecord),
+        #  DBCACHE.segment(@rsegment), DBCACHE.artist(@rartist)].each { |dbclass| dbclass.sql_update }
     end
 end
