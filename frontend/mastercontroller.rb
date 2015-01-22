@@ -102,6 +102,9 @@ class MasterController
     def is_on_never_played?; @mw.art_browser.is_on_never_played?       end
     def is_on_compilations?; @mw.art_browser.is_on_compile?            end
 
+    def track_uilink;       @mw.trk_browser.trklnk;                     end
+
+
     def invalidate_tabs
         return if @mw.nil? # Required on fedora at startup
         @mw.rec_browser.invalidate
@@ -220,7 +223,7 @@ class MasterController
 
 
     def select_artist(rartist, force_reload = false)
-        if !@mw.art_browser.artlnk.valid? || self.artist.rartist != rartist || force_reload
+        if !@mw.art_browser.artlnk.valid_track_ref? || self.artist.rartist != rartist || force_reload
             @mw.art_browser.select_artist(rartist)
         end
     end
@@ -233,7 +236,7 @@ class MasterController
             rartist = uilink.record.rartist
         end
         select_artist(rartist)
-        if !@mw.rec_browser.reclnk.valid? || self.record.rrecord != uilink.record.rrecord || force_reload
+        if !@mw.rec_browser.reclnk.valid_record_ref? || self.record.rrecord != uilink.record.rrecord || force_reload
             @mw.rec_browser.select_record(uilink.record.rrecord)
         end
     end
@@ -246,7 +249,7 @@ class MasterController
 
     def select_track(uilink, force_reload = false)
         select_record(uilink)
-        if !@mw.trk_browser.trklnk.valid? || self.track.rtrack != uilink.track.rtrack || force_reload
+        if !@mw.trk_browser.trklnk.valid_track_ref? || self.track.rtrack != uilink.track.rtrack || force_reload
             @mw.trk_browser.position_to(uilink.track.rtrack)
         end
     end

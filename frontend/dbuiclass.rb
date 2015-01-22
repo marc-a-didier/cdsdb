@@ -13,13 +13,13 @@ class ArtistUI < DBCacheLink
         super
     end
 
-    def valid?
-        return !@rartist.nil?
-    end
+#     def valid?
+#         return !@rartist.nil?
+#     end
 
     def to_widgets
         GtkUI[GtkIDs::MW_INFLBL_ARTIST].text = build_infos_string
-        GtkUI[GtkIDs::MEMO_ARTIST].buffer.text = valid? ? artist.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MEMO_ARTIST].buffer.text = valid_artist_ref? ? artist.mnotes.to_memo : ""
     end
 
     def from_widgets
@@ -29,7 +29,7 @@ class ArtistUI < DBCacheLink
     end
 
     def build_infos_string
-        return "" if !valid? || artist.rorigin == 0
+        return "" if !valid_artist_ref? || artist.rorigin == 0
         return DBCACHE.origin(artist.rorigin).sname
     end
 end
@@ -41,14 +41,14 @@ class RecordUI < DBCacheLink
         super
     end
 
-    def valid?
-        return !@rrecord.nil?
-    end
+#     def valid?
+#         return !@rrecord.nil?
+#     end
 
     def to_widgets(is_record)
         GtkUI[GtkIDs::MW_INFLBL_RECORD].text = is_record ? build_rec_infos_string : build_seg_infos_string
-        GtkUI[GtkIDs::MEMO_RECORD].buffer.text  = valid? ? record.mnotes.to_memo : ""
-        GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text = valid? ? segment.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MEMO_RECORD].buffer.text  = valid_record_ref?  ? record.mnotes.to_memo  : ""
+        GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text = valid_segment_ref? ? segment.mnotes.to_memo : ""
         return self
     end
 
@@ -61,7 +61,7 @@ class RecordUI < DBCacheLink
     end
 
     def build_rec_infos_string
-        return "" unless valid?
+        return "" unless valid_record_ref?
         rec = DBCACHE.record(@rrecord) # Cache of the cache!!!
         str  = DBCACHE.media(rec.rmedia).sname
         str += rec.iyear == 0 ? ", Unknown" : ", "+rec.iyear.to_s
@@ -75,7 +75,7 @@ class RecordUI < DBCacheLink
     end
 
     def build_seg_infos_string
-        return "" unless valid?
+        return "" unless valid_segment_ref?
         str  = "Segment "+segment.iorder.to_s
         str += " "+segment.stitle unless segment.stitle.empty?
         str += " by "+segment_artist.sname+" "+segment.iplaytime.to_ms_length
@@ -89,13 +89,13 @@ class TrackUI < UILink
         super
     end
 
-    def valid?
-        return !@rtrack.nil?
-    end
+#     def valid?
+#         return !@rtrack.nil?
+#     end
 
     def to_widgets
         GtkUI[GtkIDs::MW_INFLBL_TRACK].text   = build_infos_string
-        GtkUI[GtkIDs::MEMO_TRACK].buffer.text = valid? ? track.mnotes.to_memo : ""
+        GtkUI[GtkIDs::MEMO_TRACK].buffer.text = valid_track_ref? ? track.mnotes.to_memo : ""
         return self
     end
 
@@ -112,7 +112,7 @@ class TrackUI < UILink
     end
 
     def build_infos_string
-        return "" unless valid?
+        return "" unless valid_track_ref?
         trk = DBCACHE.track(@rtrack) # Cache of the cache!!!
         str  = Qualifiers::RATINGS[trk.irating]+", "
         str += trk.iplayed > 0 ? "played "+trk.iplayed.to_s+" time".check_plural(trk.iplayed)+" " : "never played, "

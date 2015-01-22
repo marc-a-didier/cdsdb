@@ -17,7 +17,10 @@ require '../shared/dbintf'
 require '../shared/dbclassintf'
 require '../shared/utils'
 require '../shared/dbutils'
-require '../shared/trackinfos'
+require '../shared/audio'
+require '../shared/dbcachemgr'
+require '../shared/audiolink'
+# require '../shared/trackinfos'
 
 
 class MusicServer
@@ -58,13 +61,15 @@ class MusicServer
             LOG.info("Server shutdown on TERM signal.")
             exit(0)
         }
+        Signal.trap("HUP") { LOG.info("SIGHUP trapped and ignored.") }
+
         server = TCPServer.new('0.0.0.0', CFG.port)
         begin
             loop do #while (session = server.accept)
                 Thread.start(server.accept) { |session|
                     if @allowed_hosts.include?(ip_address(session)) # || ip_address(session).match(/^192\.168\.0\./)
                         req = session.gets.chomp
-                        #puts("Request: #{req}")
+                        # puts("Request: #{req}")
                         begin
                             self.send(req.gsub(/ /, "_").to_sym, session)
                         rescue NoMethodError => ex
@@ -87,12 +92,9 @@ class MusicServer
         block_size = session.gets.chomp.to_i
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
-#         file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).file_name
         file = AudioLink.new.set_track_ref(rtrack).setup_audio_file.file
         LOG.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
-        if file.empty?
-            session.puts("0")
-        else
+        if file
             session.puts(File.size(file).to_s)
             session.puts(file.sub(CFG.music_dir, ""))
             File.open(file, "rb") { |f|
@@ -101,6 +103,8 @@ class MusicServer
                     break if session.gets.chomp == Cfg::MSG_CANCELLED unless f.eof?
                 end
             }
+        else
+            session.puts("0")
         end
     end
 
@@ -108,18 +112,15 @@ class MusicServer
     def check_single_audio(session)
         session.puts("OK")
         rtrack = session.gets.chomp.to_i
-#         session.puts(Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).status.to_s)
         session.puts(AudioLink.new.set_track_ref(rtrack).setup_audio_file.status.to_s)
     end
 
     def check_multiple_audio(session)
         session.puts("OK")
-#         track_mgr = TrackInfos.new
         audio_link = AudioLink.new
         rs = ""
         session.gets.chomp.split(" ").each { |track|
-#             rs << Utils::audio_file_exists(track_mgr.get_track_infos(track.to_i)).status.to_s+" "
-            rs << audio_link.set_track_ref(rtrack).setup_audio_file.status.to_s+" "
+            rs << audio_link.reset.set_track_ref(track.to_i).setup_audio_file.status.to_s+" "
         }
         session.puts(rs)
     end
@@ -185,17 +186,12 @@ class MusicServer
 
     def rename_audio(session)
         session.puts("OK")
-#         track_infos = TrackInfos.new.get_track_infos(session.gets.chomp.to_i)
         audio_link = AudioLink.new.set_track_ref(session.gets.chomp.to_i)
         new_title  = session.gets.chomp
-#         file_name  = Utils::audio_file_exists(track_infos).file_name
         file_name  = audio_link.setup_audio_file.file
-#         if file_name.empty?
         if file_name
-#             track_infos.track.stitle = new_title
             audio_link.track.stitle = new_title
             LOG.info("Track renaming [#{hostname(session)}]")
-#             Utils::tag_and_move_file(file_name, track_infos.build_access_infos)
             audio_link.tag_and_move_file(file_name)
         else
             LOG.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")

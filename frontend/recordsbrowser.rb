@@ -141,7 +141,7 @@ class RecordsBrowser < Gtk::TreeView
 # TRACE.debug("record selection changed")
         update_ui_handlers(selection.selected)
 
-        if @reclnk.record.valid?
+        if @reclnk.valid_record_ref?
             # Redraw segment only if on a segment or the infos string will overwrite the record infos
             if selection.selected.parent
                 @reclnk.to_widgets(false)
@@ -234,7 +234,7 @@ p row
 
     def invalidate
         model.clear
-        @reclnk.reset.to_widgets(true) if @reclnk.valid?
+        @reclnk.reset.to_widgets(true) if @reclnk.valid_record_ref?
     end
 
     def is_on_record
@@ -312,6 +312,7 @@ p row
     end
 
     def on_tag_dir
+        # TODO: Urgence: y'a bug!!! uilink is set to the last track. Replace it with a new instance of AudioLink!!
         uilink = @mc.get_track_uilink(0) #.clone
         return if !uilink || uilink.audio_status == Audio::Status::UNKNOWN
 

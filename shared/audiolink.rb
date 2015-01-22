@@ -9,13 +9,11 @@ class AudioLink < DBCacheLink
 
     def initialize
         super
-
         reset
     end
 
     def reset
         @tags = nil
-
         return super
     end
 
@@ -62,7 +60,7 @@ class AudioLink < DBCacheLink
     end
 
     def setup_audio_file
-        search_audio_file(build_audio_file_name) unless audio.file
+        search_audio_file(build_audio_file_name) unless audio && audio.file
 
         return audio
     end
@@ -86,25 +84,25 @@ class AudioLink < DBCacheLink
     # Returns the status of for the file.
     # If a matching file is found, set the full name to the match.
     def search_audio_file(file_name)
-        TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
-        Audio::FILE_EXTS.each { |ext|
+        # TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
+        Audio::FILE_EXTS.each do |ext|
             if File.exists?(file_name+ext)
                 set_audio_state(Audio::Status::OK, file_name+ext)
                 return audio.status
             end
-        }
+        end
 
         # Remove the root dir & genre dir to get the appropriate sub dir
         file = track_dir(file_name)
-        Dir[CFG.music_dir+"*"].each { |entry|
+        Dir[CFG.music_dir+"*"].each do |entry|
             next unless File.directory?(entry)
-            Audio::FILE_EXTS.each { |ext|
+            Audio::FILE_EXTS.each do |ext|
                 if File.exists?(entry+file+ext)
                     set_audio_state(Audio::Status::MISPLACED, entry+file+ext)
                     return audio.status
                 end
-            }
-        }
+            end
+        end
 
         set_audio_state(Audio::Status::NOT_FOUND, nil)
         return audio.status
@@ -185,7 +183,8 @@ class AudioLink < DBCacheLink
         # Loops through each track
         i = 0
         DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
-            set_track_ref(row[0])
+            # Force to reset the link so it must update it's artist/segment in case of compilation
+            reset.set_track_ref(row[0])
             # set_segment_ref(track.rsegment)
             # set_artist_ref(segment.rartist)
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], &call_back)

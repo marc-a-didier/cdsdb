@@ -94,7 +94,7 @@ class TracksBrowser < Gtk::TreeView
         GtkUI[GtkIDs::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
 
         GtkUI[GtkIDs::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
-            if @trklnk.track.valid? && @trklnk.playable?
+            if @trklnk.valid_track_ref? && @trklnk.playable?
                 AudioDialog.new.show(@trklnk.audio_file)
             else
                 GtkUtils.show_message("File not found!", Gtk::MessageDialog::ERROR)
@@ -279,7 +279,7 @@ class TracksBrowser < Gtk::TreeView
         # Refresh the cache
         meth.call { |model, path, iter| iter[TTV_DATA].track.sql_load }
 
-        @trklnk.to_widgets if @trklnk.valid? # @trklnk is invalid if multiple selection was made
+        @trklnk.to_widgets if @trklnk.valid_track_ref? # @trklnk is invalid if multiple selection was made
     end
 
     # Returns the uilink for the track at position track_index in the view
@@ -347,7 +347,7 @@ class TracksBrowser < Gtk::TreeView
     # Redraws infos line
     # Emitted by master controller when a track has been played
     def update_infos
-        @trklnk.to_widgets if @trklnk.valid? && selected_track == @trklnk
+        @trklnk.to_widgets if @trklnk.valid_track_ref? && selected_track == @trklnk
     end
 
     #
@@ -363,7 +363,7 @@ class TracksBrowser < Gtk::TreeView
         if trackui
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
-            return if @trklnk.valid? && @trklnk == trackui
+            return if @trklnk.valid_track_ref? && @trklnk == trackui
 # TRACE.debug("track selection changed.".brown)
 
             @trklnk = trackui
@@ -380,11 +380,11 @@ class TracksBrowser < Gtk::TreeView
     def invalidate
         model.clear
         GtkUI[GtkIDs::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
-        @trklnk.reset.to_widgets if @trklnk.valid?
+        @trklnk.reset.to_widgets if @trklnk.valid_track_ref?
     end
 
     def set_cover(url)
-        @trklnk.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @trklnk.track.valid?
+        @trklnk.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @trklnk.track.valid_track_ref?
     end
 
     def on_trk_add

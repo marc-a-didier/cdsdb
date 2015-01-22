@@ -101,7 +101,7 @@ class Prefs
 
         objs = []
         child_controls(gtk_object, [Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView], objs).each do |obj|
-            if (obj.class == Gtk::TreeView)
+            if obj.class == Gtk::TreeView
                 items = ""
                 obj.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
                 yml[FILTER][obj.builder_name] = { "items" => [items] }

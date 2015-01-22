@@ -176,9 +176,9 @@ class MainWindow < TopWindow
 
         dragtable = [ ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105] ] #, #DragType::URI_LIST],
                       #["image/jpeg", Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
-        @ri = GtkUI[REC_VP_IMAGE]
-        Gtk::Drag::dest_set(@ri, Gtk::Drag::DEST_DEFAULT_ALL, dragtable, Gdk::DragContext::ACTION_COPY)
-        @ri.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time|
+#         @ri = GtkUI[REC_VP_IMAGE]
+        Gtk::Drag::dest_set(GtkUI[REC_VP_IMAGE], Gtk::Drag::DEST_DEFAULT_ALL, dragtable, Gdk::DragContext::ACTION_COPY)
+        GtkUI[REC_VP_IMAGE].signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time|
             on_urls_received(widget, context, x, y, data, info, time)
         }
 
@@ -355,12 +355,12 @@ class MainWindow < TopWindow
 
 
     def zoom_rec_image
-#         cover_name = Utils.get_cover_file_name(@mc.record.rrecord, @mc.track.rtrack, @mc.record.irecsymlink)
-        cover_name = @mc.track ? @mc.track.get_cover_file_name : nil
+        cover_name = @mc.track_uilink ? @mc.track_uilink.cover_file_name : nil
         return unless cover_name
         dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
         dlg.vbox.add(Gtk::Image.new(cover_name))
-        dlg.show_all.run
+        dlg.show_all
+        dlg.run
         dlg.destroy
     end
 
