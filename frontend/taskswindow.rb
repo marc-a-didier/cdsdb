@@ -124,7 +124,7 @@ class TasksWindow < TopWindow
         if CFG.remote?
             if @chk_thread.nil?
 TRACE.debug("task thread started...".green)
-                DBCACHE.set_audio_status_from_to(AudioStatus::NOT_FOUND, AudioStatus::UNKNOWN)
+                DBCACHE.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
 #                 GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
                 @chk_thread = Thread.new {
                     loop do
@@ -134,7 +134,7 @@ TRACE.debug("task thread started...".green)
                 }
             end
         elsif !@chk_thread.nil?
-            DBCACHE.set_audio_status_from_to(AudioStatus::ON_SERVER, AudioStatus::NOT_FOUND)
+            DBCACHE.set_audio_status_from_to(Audio::Status::ON_SERVER, Audio::Status::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
 #             GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
@@ -187,7 +187,7 @@ TRACE.debug("task thread stopped".brown)
         else
             iter[COL_PROGRESS] = 100
             iter[COL_STATUS]   = STAT_DONE
-            iter[COL_REF].user_ref.set_audio_file(file_name) if iter[COL_REF].user_ref.kind_of?(AudioLink)
+            iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_REF].user_ref.kind_of?(AudioLink)
             iter[COL_REF].emitter.dwl_file_name_notification(iter[COL_REF].user_ref, file_name) if iter[COL_REF].emitter
         end
     end

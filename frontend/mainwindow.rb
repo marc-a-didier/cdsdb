@@ -336,7 +336,7 @@ class MainWindow < TopWindow
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
         # Segment is handled in record class
-TRACE.debug("*** save memos called")
+        TRACE.debug("*** save memos called")
         [@art_browser.artlnk, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
     end
 
@@ -355,8 +355,9 @@ TRACE.debug("*** save memos called")
 
 
     def zoom_rec_image
-        cover_name = Utils.get_cover_file_name(@mc.record.rrecord, @mc.track.rtrack, @mc.record.irecsymlink)
-        return if cover_name.empty?
+#         cover_name = Utils.get_cover_file_name(@mc.record.rrecord, @mc.track.rtrack, @mc.record.irecsymlink)
+        cover_name = @mc.track ? @mc.track.get_cover_file_name : nil
+        return unless cover_name
         dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
         dlg.vbox.add(Gtk::Image.new(cover_name))
         dlg.show_all.run

@@ -273,7 +273,7 @@ p row
             @reclnk.to_widgets(!selection.selected.parent)
             # If genre changed in editor, reset the audio status to unknown to force reload
             if @reclnk.record.rgenre != rgenre
-                @mc.get_tracks_list.each { |dblink| dblink.set_audio_status(AudioStatus::UNKNOWN) }
+                @mc.get_tracks_list.each { |dblink| dblink.set_audio_status(Audio::Status::UNKNOWN) }
                 @mc.record_changed
             end
         end
@@ -313,7 +313,7 @@ p row
 
     def on_tag_dir
         uilink = @mc.get_track_uilink(0) #.clone
-        return if !uilink || uilink.audio_status == AudioStatus::UNKNOWN
+        return if !uilink || uilink.audio_status == Audio::Status::UNKNOWN
 
 # p uilink.full_dir
         default_dir = uilink.playable? ? uilink.full_dir : CFG.rip_dir

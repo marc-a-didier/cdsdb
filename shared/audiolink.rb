@@ -1,8 +1,5 @@
 
 
-# Tags are back to life. BUT I should find a better way!
-TagsData = Struct.new(:artist, :album, :title, :track, :length, :year, :genre, :file_name)
-
 #
 # Provides audio files handling goodness
 #
@@ -27,23 +24,16 @@ class AudioLink < DBCacheLink
     end
 
     def audio_status
-        return tags.nil? ? super : AudioStatus::OK
+        return tags.nil? ? super : Audio::Status::OK
     end
 
     def load_from_tags(file_name)
         tags = TagLib::File.new(file_name)
-        @tags = TagsData.new(tags.artist, tags.album, tags.title, tags.track,
-                             tags.length*1000, tags.year, tags.genre, file_name)
+        @tags = Audio::Tags.new(tags.artist, tags.album, tags.title, tags.track,
+                                tags.length*1000, tags.year, tags.genre, file_name)
         tags.close
 
         return self
-    end
-
-    # Force the audio file to a specific name. The status is set to OK
-    # as we may guess the file really exists.
-    def set_audio_file(file_name)
-        super(file_name)
-        set_audio_status(AudioStatus::OK)
     end
 
     # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
@@ -68,24 +58,18 @@ class AudioLink < DBCacheLink
         fname = sprintf("%02d - %s", track.iorder, title.clean_path)
         dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
 
-        set_audio_file(CFG.music_dir+genre.sname+"/"+dir+"/"+fname)
+        return CFG.music_dir+genre.sname+"/"+dir+"/"+fname
     end
 
     def setup_audio_file
-        # Must reset @audio_file to empty if status is unknown because then
-        # audio status cache may have been reset when toggling connected/local mode.
-        set_audio_file(nil) if audio_status == AudioStatus::UNKNOWN
+        search_audio_file(build_audio_file_name) unless audio.file
 
-        return audio.status if audio.file
-
-        build_audio_file_name
-        set_audio_status(search_audio_file)
-        return audio_status
+        return audio
     end
 
     # Returns the file name without the music dir and genre
-    def track_dir
-        file = audio.file.sub(CFG.music_dir, "")
+    def track_dir(file_name)
+        file = file_name.sub(CFG.music_dir, "")
         return file.sub(file.split("/")[0], "")
     end
 
@@ -94,34 +78,36 @@ class AudioLink < DBCacheLink
     end
 
     def playable?
-        return (audio_status == AudioStatus::OK || audio_status == AudioStatus::MISPLACED) && audio.file
+        return (audio_status == Audio::Status::OK || audio_status == Audio::Status::MISPLACED) && audio.file
     end
 
     # Search the Music directory for a file matching the theoretical file name.
     # If no match at first attempt, search in each first level directory of the Music directory.
     # Returns the status of for the file.
     # If a matching file is found, set the full name to the match.
-    def search_audio_file
-# TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
-        Utils::AUDIO_EXTS.each { |ext|
-            if File.exists?(audio.file+ext)
-                audio.file += ext
-                return AudioStatus::OK
+    def search_audio_file(file_name)
+        TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
+        Audio::FILE_EXTS.each { |ext|
+            if File.exists?(file_name+ext)
+                set_audio_state(Audio::Status::OK, file_name+ext)
+                return audio.status
             end
         }
 
         # Remove the root dir & genre dir to get the appropriate sub dir
-        file = track_dir
+        file = track_dir(file_name)
         Dir[CFG.music_dir+"*"].each { |entry|
             next unless File.directory?(entry)
-            Utils::AUDIO_EXTS.each { |ext|
+            Audio::FILE_EXTS.each { |ext|
                 if File.exists?(entry+file+ext)
-                    audio.file = entry+file+ext
-                    return AudioStatus::MISPLACED
+                    set_audio_state(Audio::Status::MISPLACED, entry+file+ext)
+                    return audio.status
                 end
             }
         }
-        return AudioStatus::NOT_FOUND
+
+        set_audio_state(Audio::Status::NOT_FOUND, nil)
+        return audio.status
     end
 
     def make_track_title(want_segment_title, want_track_number = true)
@@ -157,15 +143,14 @@ class AudioLink < DBCacheLink
         tag_file(file_name)
 
         # Build the new name since some data used to build it may have changed
-        build_audio_file_name
-        set_audio_file(audio.file+File::extname(file_name))
+        set_audio_state(Audio::Status::OK, build_audio_file_name+File.extname(file_name))
 
         # Move the original file to it's new location
         root_dir = CFG.music_dir+genre.sname+File::SEPARATOR
-        FileUtils.mkpath(root_dir+File::dirname(track_dir))
+        FileUtils.mkpath(root_dir+File.dirname(track_dir(audio.file)))
         FileUtils.mv(file_name, audio.file)
         LOG.info("Source #{file_name} tagged and moved to "+audio.file)
-        Utils::remove_dirs(File.dirname(file_name))
+        Utils.remove_dirs(File.dirname(file_name))
 
         call_back.call(self) if block_given?
     end
@@ -178,7 +163,7 @@ class AudioLink < DBCacheLink
         files = []
         Find::find(dir) { |file|
             #puts file;
-            files << [File::basename(file), File::dirname(file)] if Utils::AUDIO_EXTS.include?(File.extname(file).downcase)
+            files << [File::basename(file), File::dirname(file)] if Audio::FILE_EXTS.include?(File.extname(file).downcase)
         }
 
         # Check if track numbers contain a leading 0. If not rename the file with a leading 0.
@@ -201,12 +186,22 @@ class AudioLink < DBCacheLink
         i = 0
         DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
             set_track_ref(row[0])
-            set_segment_ref(track.rsegment)
-            set_artist_ref(segment.rartist)
+            # set_segment_ref(track.rsegment)
+            # set_artist_ref(segment.rartist)
             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], &call_back)
             i += 1
         end
         return [trk_count, files.size]
     end
 
+    def remove_from_fs
+        setup_audio_file unless audio.file
+        FileUtils.rm(audio.file)
+        Utils.remove_dirs(File.dirname(audio.file))
+    end
+
+    def record_on_disk?
+        setup_audio_file unless audio.file
+        return Dir.exists?(File.dirname(audio.file))
+    end
 end

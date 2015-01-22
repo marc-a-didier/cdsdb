@@ -159,7 +159,7 @@ class TracksBrowser < Gtk::TreeView
 
             download_enabled = false
             selection.selected_each { |model, path, iter|
-                if iter[TTV_DATA].audio_status == AudioStatus::ON_SERVER
+                if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                     download_enabled = true
                     break
                 end
@@ -297,8 +297,8 @@ class TracksBrowser < Gtk::TreeView
 
         # Get local files first and stores the state of each track
         model.each { |model, path, iter|
-            if iter[TTV_DATA].audio_status.nil? || iter[TTV_DATA].audio_status == AudioStatus::UNKNOWN
-                check_on_server = true if iter[TTV_DATA].setup_audio_file == AudioStatus::NOT_FOUND
+            if iter[TTV_DATA].audio_status.nil? || iter[TTV_DATA].audio_status == Audio::Status::UNKNOWN
+                check_on_server = true if iter[TTV_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
             end
         }
 
@@ -310,7 +310,7 @@ class TracksBrowser < Gtk::TreeView
             # Replace each file not found state with server state
             MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
                 iter = model.get_iter(i.to_s)
-                iter[TTV_DATA].set_audio_status(AudioStatus::ON_SERVER) if (iter[TTV_DATA].audio_status == AudioStatus::NOT_FOUND) && found != '0'
+                iter[TTV_DATA].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_DATA].audio_status == Audio::Status::NOT_FOUND) && found != '0'
             }
         end
 
@@ -327,10 +327,10 @@ class TracksBrowser < Gtk::TreeView
     #          is not in the cache but in the link itself.
     #
     def audio_link_ok(uilink)
-        uilink.set_audio_status(AudioStatus::OK)
+        uilink.set_audio_status(Audio::Status::OK)
         uilink.setup_audio_file unless uilink.audio_file
         if iter = find_ref(uilink.track.rtrack)
-            iter[TTV_PIX] = render_icon(@stocks[AudioStatus::OK], Gtk::IconSize::MENU)
+            iter[TTV_PIX] = render_icon(@stocks[Audio::Status::OK], Gtk::IconSize::MENU)
 #             iter[TTV_DATA].audio_file = uilink.audio_file
 # p iter[TTV_DATA]
 # p uilink
@@ -405,16 +405,18 @@ class TracksBrowser < Gtk::TreeView
         msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
         if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
             selection.selected_each { |model, path, iter|
-                Utils::remove_file(iter[TTV_REF])
-                iter[TTV_DATA].set_audio_status(AudioStatus::UNKNOWN)
+                iter[TTV_DATA].remove_from_fs
+#                 Utils.remove_file(iter[TTV_REF])
+#                 iter[TTV_DATA].set_audio_status(Audio::Status::UNKNOWN)
             }
-            load_entries_select_first
+#             load_entries_select_first
+            check_for_audio_file
         end
     end
 
     def on_tag_file
         trackui = selected_track
-        return if !trackui || trackui.audio_status == AudioStatus::UNKNOWN
+        return if !trackui || !trackui.playable?
 
         file = GtkUtils.select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
         unless file.empty?
@@ -424,15 +426,21 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_update_playtime
-        return unless selection.count_selected_rows == 1
-        track_infos = TrackInfos.new.get_track_infos(@track.rtrack)
-        fname = Utils::audio_file_exists(track_infos).file_name
-        return if fname.empty?
-        tags_infos = TrackInfos.new.from_tags(fname)
-        @track.iplaytime = tags_infos.track.iplaytime
+        trackui = selected_track
+        return if !trackui || !trackui.playable?
+#         return unless selection.count_selected_rows == 1
+#         track_infos = TrackInfos.new.get_track_infos(@track.rtrack)
+#         fname = Utils::audio_file_exists(track_infos).file_name
+#         return if fname.empty?
+#         tags_infos = TrackInfos.new.from_tags(fname)
+#         @track.iplaytime = tags_infos.track.iplaytime
+#         @track.iplaytime = file.tags.iplaytime
+        @track.iplaytime = AudioLink.new.load_from_tags(trackui.audio_file).tags.iplaytime
         @track.sql_update.to_widgets
-        DBUtils::update_segment_playtime(@track.rsegment)
-        DBUtils::update_record_playtime(@track.rrecord)
+
+        DBUtils.update_segment_playtime(@track.rsegment)
+        DBUtils.update_record_playtime(@track.rrecord)
+
         @mc.segment.ref_load(@track.rsegment).to_widgets
         @mc.record.ref_load(@track.rrecord).to_widgets
     end
@@ -509,7 +517,7 @@ class TracksBrowser < Gtk::TreeView
 
     def on_download_trk
         selection.selected_each { |model, path, iter|
-            if iter[TTV_DATA].audio_status == AudioStatus::ON_SERVER
+            if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
         }
@@ -518,7 +526,7 @@ class TracksBrowser < Gtk::TreeView
     def download_tracks(use_selection)
         meth = use_selection ? selection.method(:selected_each) : model.method(:each)
         meth.call { |model, path, iter|
-            if iter[TTV_DATA].audio_status == AudioStatus::ON_SERVER
+            if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
         }

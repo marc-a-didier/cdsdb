@@ -87,7 +87,8 @@ class MusicServer
         block_size = session.gets.chomp.to_i
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
-        file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).file_name
+#         file = Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).file_name
+        file = AudioLink.new.set_track_ref(rtrack).setup_audio_file.file
         LOG.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
         if file.empty?
             session.puts("0")
@@ -107,32 +108,35 @@ class MusicServer
     def check_single_audio(session)
         session.puts("OK")
         rtrack = session.gets.chomp.to_i
-        session.puts(Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).status.to_s)
+#         session.puts(Utils::audio_file_exists(TrackInfos.new.get_track_infos(rtrack)).status.to_s)
+        session.puts(AudioLink.new.set_track_ref(rtrack).setup_audio_file.status.to_s)
     end
 
     def check_multiple_audio(session)
         session.puts("OK")
-        track_mgr = TrackInfos.new
+#         track_mgr = TrackInfos.new
+        audio_link = AudioLink.new
         rs = ""
         session.gets.chomp.split(" ").each { |track|
-            rs << Utils::audio_file_exists(track_mgr.get_track_infos(track.to_i)).status.to_s+" "
+#             rs << Utils::audio_file_exists(track_mgr.get_track_infos(track.to_i)).status.to_s+" "
+            rs << audio_link.set_track_ref(rtrack).setup_audio_file.status.to_s+" "
         }
         session.puts(rs)
     end
 
     def update_stats(session)
         session.puts("OK")
-        DBUtils::update_track_stats(session.gets.chomp.to_i, hostname(session))
+        DBUtils.update_track_stats(session.gets.chomp.to_i, hostname(session))
     end
 
     def exec_sql(session)
         session.puts("OK")
-        DBUtils::log_exec(session.gets.chomp, hostname(session))
+        DBUtils.log_exec(session.gets.chomp, hostname(session))
     end
 
     def exec_batch(session)
         session.puts("OK")
-        DBUtils::exec_batch(session.gets.chomp.gsub(/\\n/, "\n"), hostname(session))
+        DBUtils.exec_batch(session.gets.chomp.gsub(/\\n/, "\n"), hostname(session))
     end
 
     def synchronize_resources(session)
@@ -140,7 +144,7 @@ class MusicServer
         [:covers, :icons, :flags].each { |type|
             Find::find(CFG.dir(type)) { |file|
                 session.puts(type.to_s+Cfg::FILE_INFO_SEP+file.sub(CFG.dir(type), "")+
-                                       Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
+                                       Cfg::FILE_INFO_SEP+File.mtime(file).to_i.to_s) unless File.directory?(file)
             }
         }
         session.puts(Cfg::MSG_EOL)
@@ -151,7 +155,7 @@ class MusicServer
         Find::find(CFG.sources_dir) { |file|
             next if file.match(/.*\.bzr/) # Skip hidden dir (.bzr for example...)
             session.puts("src"+Cfg::FILE_INFO_SEP+file.sub(CFG.sources_dir, "")+
-                               Cfg::FILE_INFO_SEP+File::mtime(file).to_i.to_s) unless File.directory?(file)
+                               Cfg::FILE_INFO_SEP+File.mtime(file).to_i.to_s) unless File.directory?(file)
         }
         session.puts(Cfg::MSG_EOL)
     end
@@ -160,10 +164,10 @@ class MusicServer
         session.puts("OK")
         block_size = session.gets.chomp.to_i
         session.puts(block_size.to_s)
-        file_name = Utils::replace_dir_name(session.gets.chomp)
+        file_name = Utils.replace_dir_name(session.gets.chomp)
         if file_name.match(/.dwl$/)
             file_name.sub!(/.dwl$/, "") # Remove temp ext from client if downloading the database
-            file_name = File::expand_path(CFG.database_dir+File::basename(file_name))
+            file_name = File.expand_path(CFG.database_dir+File.basename(file_name))
         elsif file_name.index("/Music/").nil? && file_name.index(CFG.rsrc_dir).nil?
             LOG.warn("Attempt to download file #{file_name} from #{ip_address(session)}")
             session.puts("Fucked up...")
@@ -181,15 +185,20 @@ class MusicServer
 
     def rename_audio(session)
         session.puts("OK")
-        track_infos = TrackInfos.new.get_track_infos(session.gets.chomp.to_i)
-        new_title   = session.gets.chomp
-        file_name   = Utils::audio_file_exists(track_infos).file_name
-        if file_name.empty?
-            LOG.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")
-        else
-            track_infos.track.stitle = new_title
+#         track_infos = TrackInfos.new.get_track_infos(session.gets.chomp.to_i)
+        audio_link = AudioLink.new.set_track_ref(session.gets.chomp.to_i)
+        new_title  = session.gets.chomp
+#         file_name  = Utils::audio_file_exists(track_infos).file_name
+        file_name  = audio_link.setup_audio_file.file
+#         if file_name.empty?
+        if file_name
+#             track_infos.track.stitle = new_title
+            audio_link.track.stitle = new_title
             LOG.info("Track renaming [#{hostname(session)}]")
-            Utils::tag_and_move_file(file_name, track_infos.build_access_infos)
+#             Utils::tag_and_move_file(file_name, track_infos.build_access_infos)
+            audio_link.tag_and_move_file(file_name)
+        else
+            LOG.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")
         end
     end
 
@@ -200,7 +209,7 @@ class MusicServer
 
     def renumber_play_list(session)
         session.puts("OK")
-        DBUtils::renumber_play_list(session.gets.chomp.to_i)
+        DBUtils.renumber_play_list(session.gets.chomp.to_i)
     end
 
 end

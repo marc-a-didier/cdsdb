@@ -9,7 +9,7 @@ module PListExporter
         tracklist = xdoc.root.add_element("trackList")
 
         list_store.each do |model, path, iter|
-            next if iter[PListsWindow::TT_DATA].setup_audio_file == AudioStatus::NOT_FOUND
+            next if iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
             track = REXML::Element.new("track")
             # In xspf specs, file name must be URI style formatted.
             track.add_element("location").text = URI::escape("file://"+iter[PListsWindow::TT_DATA].audio_file)
@@ -24,7 +24,7 @@ module PListExporter
         file = File.new(CFG.music_dir+"Playlists/#{plist_name}.cdsdb.m3u", "w")
         file << "#EXTM3U\n"
         list_store.each { |model, path, iter|
-            file << iter[PListsWindow::TT_DATA].audio_file+"\n" unless iter[PListsWindow::TT_DATA].setup_audio_file == AudioStatus::NOT_FOUND
+            file << iter[PListsWindow::TT_DATA].audio_file+"\n" unless iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
         }
         file.close
     end
@@ -34,7 +34,7 @@ module PListExporter
         file = File.new(CFG.music_dir+"Playlists/#{plist_name}.cdsdb.pls", "w")
         file << "[playlist]\n\n"
         list_store.each { |model, path, iter|
-            next if iter[PListsWindow::TT_DATA].setup_audio_file == AudioStatus::NOT_FOUND
+            next if iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
             counter += 1
             file << "File#{counter}=#{URI::escape("file://"+iter[PListsWindow::TT_DATA].audio_file)}\n" <<
                     "Title#{counter}=#{iter[PListsWindow::TT_DATA].track.stitle}\n" <<
@@ -50,7 +50,7 @@ module PListExporter
         return if dlg.run(exp) == Gtk::Dialog::RESPONSE_CANCEL # Run is auto-destroying
 
         list_store.each do |model, path, iter|
-            next if iter[PListsWindow::TT_DATA].setup_audio_file == AudioStatus::NOT_FOUND
+            next if iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
 
             audio_file = iter[PListsWindow::TT_DATA].audio_file
 

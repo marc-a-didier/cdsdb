@@ -209,11 +209,13 @@ class Stats
     end
 
     def ripped_stats(genre)
-        track_infos = TrackInfos.new
+#         track_infos = TrackInfos.new
+        audio_link = AudioLink.new
         DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
             Gtk.main_iteration while Gtk.events_pending?
             rtrack = DBIntf.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
-            if Utils::record_on_disk?(track_infos.get_track_infos(rtrack))
+            if audio_link.set_track_ref(rtrack).record_on_disk?
+#             if Utils::record_on_disk?(track_infos.get_track_infos(rtrack))
                 genre.ripped += 1
                 genre.riptime += DBIntf.get_first_value("SELECT iplaytime FROM records WHERE rrecord=#{record[0]};").to_i
             end
@@ -317,31 +319,40 @@ class Stats
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    WHERE iplayed > 0 AND records.rgenre=#{genre.ref} ORDER BY iplayed DESC;"
         end
-        track_infos = TrackInfos.new
+#         track_infos = TrackInfos.new
+        audio_link = AudioLink.new
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            track_infos.load_track(row[0].to_i)
-            new_row([@altr.counter+1, row[2], row[1], track_infos.seg_art.sname,
-                     track_infos.record.stitle, track_infos.segment.stitle])
+#             track_infos.load_track(row[0].to_i)
+            audio_link.set_track_ref(row[0].to_i)
+#             new_row([@altr.counter+1, row[2], row[1], track_infos.seg_art.sname,
+#                      track_infos.record.stitle, track_infos.segment.stitle])
+            new_row([@altr.counter+1, row[2], row[1], audio_link.segment_artist.sname,
+                     audio_link.record.stitle, audio_link.segment.stitle])
         end
         end_table
     end
 
     def top_rated_tracks
-        track_infos = TrackInfos.new
+#         track_infos = TrackInfos.new
+        audio_link = AudioLink.new
         new_table("Most rated tracks", ["Rank:R", "Rating", "Track", "Artist", "Record", "Segment"])
         DBIntf.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            track_infos.load_track(row[0])
-            new_row([@altr.counter+1, Qualifiers::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
-                     track_infos.record.stitle, track_infos.segment.stitle])
+#             track_infos.load_track(row[0])
+            audio_link.set_track_ref(row[0])
+#             new_row([@altr.counter+1, Qualifiers::RATINGS[row[2]], row[1], track_infos.seg_art.sname,
+#                      track_infos.record.stitle, track_infos.segment.stitle])
+            new_row([@altr.counter+1, Qualifiers::RATINGS[row[2]], row[1], audio_link.segment_artist.sname,
+                     audio_link.record.stitle, audio_link.segment.stitle])
         end
         end_table
     end
 
     def gen_play_history
         limit = 1000
-        track_infos = TrackInfos.new
+#         track_infos = TrackInfos.new
+        audio_link = AudioLink.new
         new_table("Last #{limit} played tracks", ["Order:R", "When", "Where", "Track", "Artist", "Record", "Segment"])
         sql = %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
                  INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname
@@ -353,9 +364,12 @@ class Stats
                  ORDER BY logtracks.idateplayed DESC LIMIT #{limit};}
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            track_infos.load_track(row[0])
-            new_row([@altr.counter+1, Time.at(row[1].to_i), row[2], track_infos.track.stitle,
-                     track_infos.seg_art.sname, track_infos.record.stitle, track_infos.segment.stitle])
+#             track_infos.load_track(row[0])
+            audio_link.set_track_ref(row[0])
+#             new_row([@altr.counter+1, Time.at(row[1].to_i), row[2], track_infos.track.stitle,
+#                      track_infos.seg_art.sname, track_infos.record.stitle, track_infos.segment.stitle])
+            new_row([@altr.counter+1, Time.at(row[1].to_i), row[2], audio_link.track.stitle,
+                     audio_link.segment_artist.sname, audio_link.record.stitle, audio_link.segment.stitle])
         end
         end_table
     end

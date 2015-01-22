@@ -203,7 +203,7 @@ class PQueueWindow < TopWindow
             # TRACE.debug("enq before: audiostatus=#{uilink.audio_status}")
             uilink.get_audio_file(self, @mc.tasks) unless uilink.playable?
             # TRACE.debug("enq after : audiostatus=#{uilink.audio_status}")
-            unless uilink.audio_status == AudioStatus::NOT_FOUND
+            unless uilink.audio_status == Audio::Status::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
 
@@ -215,7 +215,7 @@ class PQueueWindow < TopWindow
 
                 # When in slow client mode, pqueue was not refreshed while it didn't have
                 # all responses when tracks are on server.
-                if uilink.audio_status == AudioStatus::ON_SERVER
+                if uilink.audio_status == Audio::Status::ON_SERVER
                     Gtk.main_iteration while Gtk.events_pending?
                 end
             end
@@ -287,7 +287,7 @@ class PQueueWindow < TopWindow
         @plq.each { |model, path, iter|
             # Must check for every track if it's already in the queue. It may have been moved or something else.
             in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
-            if !in_queue && iter[4].uilink.audio_status != AudioStatus::ON_SERVER
+            if !in_queue && iter[4].uilink.audio_status != Audio::Status::ON_SERVER
                 queue << PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
                 break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
@@ -297,7 +297,7 @@ class PQueueWindow < TopWindow
     def get_track(player_data, direction)
         if direction == :start
             @plq.each { |model, path, iter|
-                unless iter[4].uilink.audio_status == AudioStatus::ON_SERVER
+                unless iter[4].uilink.audio_status == Audio::Status::ON_SERVER
                     return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
                 end
             }

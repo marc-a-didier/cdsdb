@@ -7,11 +7,12 @@
 # It automatically load rows from DB when the refered row is not already in cache.
 #
 
-AudioInfos = Struct.new(:status, :file)
 
 class DBCache
 
     include Singleton
+
+    TrackState = Struct.new(:status, :file)
 
     TRACE_CACHE = false
 
@@ -65,7 +66,7 @@ class DBCache
     def track(rtrack)
         if @tracks[rtrack].nil?
             @tracks[rtrack] = TrackDBClass.new.ref_load(rtrack)
-            @audio[rtrack] = AudioInfos.new(AudioStatus::UNKNOWN, nil)
+            @audio[rtrack] = TrackState.new(Audio::Status::UNKNOWN, nil)
             TRACE.debug("Track cache MISS for key #{rtrack}, size=#{@tracks.size}") if TRACE_CACHE
         else
             TRACE.debug("Track cache HIT for key #{rtrack}, size=#{@tracks.size}") if TRACE_CACHE
@@ -112,8 +113,13 @@ class DBCache
 
     def audio_status(rtrack)
         track(rtrack) unless @audio[rtrack]
-        @audio[rtrack].status = AudioStatus::UNKNOWN unless @audio[rtrack] # Unknown status if not in cache
+        @audio[rtrack].status = Audio::Status::UNKNOWN unless @audio[rtrack] # Unknown status if not in cache
         return @audio[rtrack].status
+    end
+
+    def reset_audio(rtrack)
+        @audio[rtrack].status = Audio::Status::NOT_FOUND
+        @audio[rtrack].file   = nil
     end
 
     def clear
@@ -250,6 +256,10 @@ class DBCacheLink
         return self
     end
 
+    def set_audio_state(status, file)
+        self.set_audio_status(status).set_audio_file(file)
+    end
+
     def audio_status
         return DBCACHE.audio_status(@rtrack)
     end
@@ -260,6 +270,11 @@ class DBCacheLink
 
     def audio
         return DBCACHE.audio(@rtrack)
+    end
+
+    def reset_audio
+        DBCACHE.reset_audio(@rtrack)
+        return self
     end
 
 
