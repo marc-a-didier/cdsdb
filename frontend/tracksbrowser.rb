@@ -322,18 +322,12 @@ class TracksBrowser < Gtk::TreeView
 
     #
     # Set the status of audio link to OK and update the icon if visible
-    # Warning: uilink is now cloned from the original so setting the audio file name
-    #          in the clone DOESN'T affect the original link since the file name
-    #          is not in the cache but in the link itself.
     #
     def audio_link_ok(uilink)
         uilink.set_audio_status(Audio::Status::OK)
-        uilink.setup_audio_file unless uilink.audio_file
+        uilink.setup_audio_file
         if iter = find_ref(uilink.track.rtrack)
             iter[TTV_PIX] = render_icon(@stocks[Audio::Status::OK], Gtk::IconSize::MENU)
-#             iter[TTV_DATA].audio_file = uilink.audio_file
-# p iter[TTV_DATA]
-# p uilink
         end
     end
 
@@ -358,13 +352,13 @@ class TracksBrowser < Gtk::TreeView
     def on_selection_changed(widget)
         return if selection.count_selected_rows == 0
 
-# TRACE.debug("track selection changed.".green)
+        # TRACE.debug("track selection changed.".green)
         trackui = selected_track
         if trackui
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
             return if @trklnk.valid_track_ref? && @trklnk == trackui
-# TRACE.debug("track selection changed.".brown)
+            # TRACE.debug("track selection changed.".brown)
 
             @trklnk = trackui
             @trklnk.to_widgets_with_cover
@@ -373,7 +367,7 @@ class TracksBrowser < Gtk::TreeView
             @mc.set_segment_artist(@trklnk) if @trklnk.segment.rartist != @mc.segment.rartist
         else
             # There's nothing to do... may be set artist infos to empty.
-# TRACE.debug("--- multi select ---".magenta)
+            # TRACE.debug("--- multi select ---".magenta)
         end
     end
 
@@ -384,7 +378,7 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def set_cover(url)
-        @trklnk.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @trklnk.track.valid_track_ref?
+        @trklnk.set_cover(url, @mc.artist.compile?).to_widgets_with_cover if @trklnk.valid_track_ref?
     end
 
     def on_trk_add
@@ -404,12 +398,7 @@ class TracksBrowser < Gtk::TreeView
     def on_del_from_fs
         msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
         if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
-            selection.selected_each { |model, path, iter|
-                iter[TTV_DATA].remove_from_fs
-#                 Utils.remove_file(iter[TTV_REF])
-#                 iter[TTV_DATA].set_audio_status(Audio::Status::UNKNOWN)
-            }
-#             load_entries_select_first
+            selection.selected_each { |model, path, iter| iter[TTV_DATA].remove_from_fs }
             check_for_audio_file
         end
     end
@@ -421,7 +410,8 @@ class TracksBrowser < Gtk::TreeView
         file = GtkUtils.select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
         unless file.empty?
             trackui.set_artist_ref(@mc.segment.rartist)
-            trackui.tag_and_move_file(file) { |param| self.audio_link_ok(param) }
+            trackui.tag_and_move_file(file)
+            audio_link_ok(trackui)
         end
     end
 

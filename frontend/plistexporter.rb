@@ -1,4 +1,14 @@
 
+class MyFormatter < REXML::Formatters::Pretty
+
+    def initialize
+        super
+        @compact = true
+        @width = 2048
+    end
+
+end
+
 module PListExporter
 
     def self.export_to_xspf(list_store, plist_name)

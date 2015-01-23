@@ -2,12 +2,6 @@
 # Default random numbers file name
 RANDOM_FILE = ENV['HOME']+"/Downloads/randomorg.bin"
 
-#
-# Structure returned by check_audio_file
-#
-AudioFileStatus = Struct.new(:status, :file_name)
-
-
 # Instatiate global Logger object
 LOG = Logger.new(CFG.log_file, 100, 2097152)
 
@@ -15,173 +9,7 @@ LOG = Logger.new(CFG.log_file, 100, 2097152)
 # Instatiate global Trace object
 TRACE = Logger.new(STDOUT)
 
-
-# Add some very useful methods to the String class
-class String
-    def to_sql
-        return "'"+self.gsub(/'/, "''")+"'"
-    end
-
-    def check_plural(quantity)
-        return quantity < 2 ? self : self+"s"
-    end
-
-    def to_ms_length
-        m, s, ms = self.split(/[:,\.]/)
-        return m.to_i*60*1000+s.to_i*1000+ms.to_i
-    end
-
-    # Replaces \n in string with true lf to display in memo
-    def to_memo
-        return self.gsub(/\\n/, "\n")
-    end
-
-    # Replaces lf in string with litteral \n to store in the db
-    def to_dbstring
-        return self.gsub(/\n/, '\n')
-    end
-
-    # Not a good idea to introduce a dep on CGI...
-    def to_html
-        return CGI::escapeHTML(self)
-    end
-
-    def to_html_bold
-        return "<b>"+self.to_html+"</b>"
-    end
-
-    def to_html_italic
-        return "<i>"+self.to_html+"</i>"
-    end
-
-    def clean_path
-        return self.gsub(/\//, "_")
-    end
-
-    def make_fat_compliant
-        return self.gsub(/[\*|\?|\\|\:|\<|\>|\"|\|]/, "_")
-    end
-
-#     def make_fat_compliant!
-#         self = make_fat_compliant
-#     end
-
-    def to_date_from_utc
-        begin
-            dt = Time.at(DateTime.parse(self).to_time)
-            return (dt-dt.utc_offset).to_i
-        rescue ArgumentError
-            return 0
-        end
-    end
-
-    def to_date
-        begin
-            return Time.at(Date.parse(self).to_time).to_i
-        rescue ArgumentError
-            return 0
-        end
-    end
-
-
-    # Colorization of ANSI console
-    def colorize(color_code)
-        "\e[#{color_code}m#{self}\e[0m"
-    end
-
-    def black;   colorize(30); end
-    def red;     colorize(31); end
-    def green;   colorize(32); end
-    def brown;   colorize(33); end
-    def blue;    colorize(34); end
-    def magenta; colorize(35); end
-    def cyan;    colorize(36); end
-    def gray;    colorize(37); end
-
-    def bold;    colorize(1);  end
-    def blink;   colorize(5);  end
-    def reverse; colorize(7);  end
-end
-
-
-class Fixnum
-    def to_sql
-        return self.to_s
-    end
-end
-
-class Float
-    def to_sql
-        return self.to_s
-    end
-end
-
-
-SEC_MS_LENGTH  = 1000
-MIN_MS_LENGTH  = 60*SEC_MS_LENGTH
-HOUR_MS_LENGTH = 60*MIN_MS_LENGTH
-
-class Numeric
-    def to_ms_length
-        m  = self/MIN_MS_LENGTH
-        s  = (self-m*MIN_MS_LENGTH)/SEC_MS_LENGTH
-        ms = self % SEC_MS_LENGTH
-        return sprintf("%02d:%02d.%03d", m, s, ms)
-    end
-
-    def to_hr_length
-        h = self/HOUR_MS_LENGTH
-        m = (self-h*HOUR_MS_LENGTH)/MIN_MS_LENGTH
-        s = (self-h*HOUR_MS_LENGTH-m*MIN_MS_LENGTH)/SEC_MS_LENGTH
-        return sprintf("%02d:%02d:%02d", h, m, s)
-    end
-
-    def to_day_length
-        h = self/HOUR_MS_LENGTH
-        d = h/24
-        h = h-(d*24)
-        r = self - d*24*HOUR_MS_LENGTH - h*HOUR_MS_LENGTH
-        m = r / MIN_MS_LENGTH
-        s = (r - m*MIN_MS_LENGTH)/SEC_MS_LENGTH
-        return sprintf("%d %s, %02d:%02d:%02d", d, "day".check_plural(d), h, m, s)
-    end
-
-    def to_sec_length
-        m  = self/60
-        s  = self%60
-        return sprintf("%02d:%02d", m, s)
-    end
-
-    def to_std_date(zero_msg = "Unknown")
-        return self == 0 ? zero_msg : Time.at(self).strftime("%a %b %d %Y %H:%M:%S")
-    end
-end
-
-
-class MyFormatter < REXML::Formatters::Pretty
-
-    def initialize
-        super
-        @compact = true
-        @width = 2048
-    end
-
-end
-
-
 class Utils
-
-    # Returned values by audio_file_exists
-#     FILE_NOT_FOUND = 0
-#     FILE_OK        = 1
-#     FILE_MISPLACED = 2
-#     FILE_ON_SERVER = 3
-#     FILE_UNKNOWN   = 4
-
-    # The order matters if the same track is ripped in various format, prefered format first
-#     AUDIO_EXTS = [".flac", ".ogg", ".mp3"]
-
-#     DOWNLOADING = "downloading"
 
     #
     # Methods intended to deal with the fact that files may now be anywhere on disk rather than just ../
@@ -205,20 +33,6 @@ class Utils
     def self.get_file_name(file_info)
         return file_info.split(Cfg::FILE_INFO_SEP)[1]
     end
-
-    #
-    # Build a track name from its title and optionally segment name and order
-    #
-#     def Utils::make_track_title(trk_order, trk_title, seg_order, seg_title, add_segment)
-#         title = ""
-#         title += trk_order.to_s+". " unless trk_order == 0
-#         if add_segment == true
-#             title += seg_title+" - " unless seg_title.empty?
-#             title += seg_order.to_s+". " unless seg_order == 0
-#         end
-#         return title+trk_title
-#     end
-
 
     # Misc methods to try to get some randomness as by experience every
     # random based run is almost predictible...
@@ -314,169 +128,45 @@ p rseed
         return value
     end
 
-    #
-    # Tags a music file with data provided by the track_info class
-    #
-#     def Utils::tag_file(fname, track_infos)
-#         tags = TagLib::File.new(fname)
-#         tags.artist = track_infos.seg_art.sname
-#         tags.album = track_infos.record.stitle
-#         #tags.title = track_infos.segment.stitle.empty? ? track_infos.title : track_infos.segment.stitle+" - "+track_infos.title
-#         tags.title = Utils::make_track_title(0, track_infos.track.stitle, track_infos.track.isegorder, track_infos.segment.stitle, true)
-#         tags.track = track_infos.track.iorder
-#         tags.year = track_infos.record.iyear
-#         tags.genre = track_infos.genre
-#         tags.save
-#         tags.close
-#     end
-
 
     #
     # Remove dirs from dir up to first non empty directory
     #
-#     def Utils::remove_dirs(dir)
-#         while Dir.entries(dir).size < 3 # Remove dir if entries only contains . & ..
-#             Dir.rmdir(dir)
-#             LOG.info("Source dir #{dir} removed.")
-#             dir.sub!(/(\/[^\/]+)$/, "")
-#         end
-#     end
+    def Utils::remove_dirs(dir)
+        while Dir.entries(dir).size < 3 # Remove dir if entries only contains . & ..
+            Dir.rmdir(dir)
+            LOG.info("Source dir #{dir} removed.")
+            dir.sub!(/(\/[^\/]+)$/, "")
+        end
+    end
 
 
     #
-    # Gets track info from the given track, tags the source file and
-    # cp/mv source file to the appropriated location
+    # Recursively get music files from a directory,
+    # add a leading 0 if it's not a 2 digits numbering, rename the file it changed
+    # and return them in a sorted array of strings
     #
-#     def Utils::tag_and_move_file(fname, track_infos)
-#         tag_file(fname, track_infos)
-#
-#         root_dir = CFG.music_dir+track_infos.genre+File::SEPARATOR
-#         FileUtils.mkpath(root_dir+track_infos.dir)
-#         FileUtils.mv(fname, root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
-#         LOG.info("Source #{fname} tagged and moved to "+root_dir+track_infos.dir+File::SEPARATOR+track_infos.fname+File.extname(fname))
-#         Utils::remove_dirs(File.dirname(fname))
-#     end
+    def self.get_files_to_tag(dir)
+        files = []
+        Find.find(dir) { |file| files << file if Audio::FILE_EXTS.include?(File.extname(file).downcase) }
 
+        # Check if track numbers contain a leading 0. If not rename the file with a leading 0.
+        files.each_with_index do |file, index|
+            File.basename(file).match(/([^0-9]*)([0-9]+)(.*)/) do |match|
+                if match[2].length < 2
+                    new_file = File.join(File.dirname(file), match[1]+"0"+match[2]+match[3])
+                    FileUtils.mv(file, new_file)
+                    TRACE.debug("File #{file[0]} renamed to #{nfile}")
+                    files[index] = new_file
+                end
+            end
+        end
 
+        files.sort!
 
-    #
-    # Applies a full tag and move file on a directory
-    #
-    # Primarily intended for use after ripping a disc
-    # May also used to retag and move existing tracks
-    #
-    # Also checks if ripped file names contains a leading 0 on the track number
-    # to get file names correctly sorted (thanks sound-juicer for removing it!!!)
-    #
-#     def Utils::tag_and_move_dir(dir, rrecord)
-#         # Get track count
-#         trk_count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{rrecord}")
-#
-#         # Get recursivelly all music files from the selected dir
-#         files = []
-#         Find::find(dir) { |file|
-#             #puts file;
-#             files.push([File::basename(file), File::dirname(file)]) if Audio::FILE_EXTS.include?(File.extname(file).downcase)
-#         }
-#
-#         # Check if track numbers contain a leading 0. If not rename the file with a leading 0.
-#         files.each { |file|
-#             if file[0] =~ /([^0-9]*)([0-9]+)(.*)/
-#                 next if $2.length > 1
-#                 nfile = $1+"0"+$2+$3
-#                 FileUtils.mv(file[1]+File::SEPARATOR+file[0], file[1]+File::SEPARATOR+nfile)
-#                 puts "File #{file[0]} renamed to #{nfile}"
-#                 file[0] = nfile
-#             end
-#         }
-#         # It looks like the sort method sorts on the first array keeping the second one synchronized with it.
-#         files.sort! #.each { |file| puts "sorted -> file="+file[1]+" --- "+file[0] }
-#
-#         # Checks if the track count matches both the database and the directory
-#         return [trk_count, files.size] if trk_count != files.size
-#
-#         # Loops through each track
-#         track_infos = TrackInfos.new
-#         i = 0
-#         DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{rrecord} ORDER BY iorder") do |row|
-# #             yield
-#             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], track_infos.get_track_infos(row[0]))
-#             i += 1
-#         end
-#         return [trk_count, files.size]
-#     end
+        return files
+    end
 
-    #
-    # Search for an audio file that matches the data given by the TrackInfos class
-    # Search is limited to only ONE subdirectory of the root dir, ~/Music for instance
-    #
-    # Returns the file name if found, an empty string otherwise
-    #
-#     def Utils::search_and_get_audio_file(emitter, tasks, track_infos)
-#         # If client mode and no local store, download any way in the mfiles directory
-#         if CFG.remote? && !CFG.local_store?
-#              tasks.new_track_download(emitter, track_info.track.stitle, track_info.track.rtrack)
-#              return DOWNLOADING
-#         end
-#
-#         fname = Utils::audio_file_exists(track_infos).file_name
-#
-#         # If client mode with local store download file from server if not found on disk
-#         if fname.empty? && CFG.remote? && CFG.local_store?
-#             tasks.new_track_download(emitter, track_infos.track.stitle, track_infos.track.rtrack)
-#             return DOWNLOADING
-#         end
-#         return fname
-#     end
-
-
-    #
-    # Check the existence of a file match for a given track.
-    #
-    # Returns an AudioFileStatus: status (FILE_OK|FILE_MISPLACED|FILE_NOT_FOUND)
-    #                             file name (empty if status is FILE_NOT_FOUND)
-    #
-    #
-#     def Utils::audio_file_exists(track_infos)
-#         file = track_infos.get_full_dir+File::SEPARATOR+track_infos.fname
-#         Audio::FILE_EXTS.each { |ext| return AudioFileStatus.new(Audio::Status::OK, file+ext) if File::exists?(file+ext) }
-#
-#         file = File::SEPARATOR+track_infos.dir+File::SEPARATOR+track_infos.fname
-#         Dir[CFG.music_dir+"*"].each { |entry|
-#             next if entry[0] == "." || !FileTest::directory?(entry)
-#             Audio::FILE_EXTS.each { |ext| return AudioFileStatus.new(Audio::Status::MISPLACED, entry+file+ext) if File::exists?(entry+file+ext) }
-#         }
-#         return AudioFileStatus.new(Audio::Status::NOT_FOUND, "")
-#     end
-
-
-    #
-    # Remove the file name associated with rtrack from the file system if found.
-    #
-#     def Utils::remove_file(rtrack)
-#         track_infos = TrackInfos.new.get_track_infos(rtrack)
-#         fname = audio_file_exists(track_infos).file_name;
-#         unless fname.empty?
-#             File.unlink(fname)
-#             LOG.info("File #{fname} removed from file system.")
-#             Utils.remove_dirs(File.dirname(fname))
-#         end
-#     end
-
-
-    #
-    # Returns true if the dir corresponding to the record data is found on disc.
-    # Made to speed up search in stats by not checking every track of the record.
-    #
-#     def Utils::record_on_disk?(track_infos)
-#         Dir[CFG.music_dir+"*"].each do |entry|
-#             if FileTest::directory?(entry)
-#                 return true if FileTest::exists?(entry+File::SEPARATOR+track_infos.dir)
-#             end
-#         end
-#         return false
-#     end
-#
     #
     # Recursively tags all files from a specified directory with given genre
     #
@@ -566,49 +256,6 @@ print "Checking #{file}\n"
             end
         end
     end
-
-    #
-    # Returns the cover image for the given record and a default image if none found.
-    # If rtrack is not 0, search for a directory named rrecord and a file rtrack.*, allowing to set
-    # covers for individual tracks (primary use for compilations).
-    #
-
-#     def Utils::get_cover_file_name(rrecord, rtrack, irecsymlink)
-#         # Can't assign irecsymlink to rrecord because if there's a track cover it won't find it
-#         files = []
-#         dir = CFG.covers_dir+rrecord.to_s
-#         files = Dir[dir+"/"+rtrack.to_s+".*"] if rtrack != 0 && File::directory?(dir)
-#         files = Dir[dir+".*"] if files.size == 0
-#         files = Dir[CFG.covers_dir+irecsymlink.to_s+".*"] if irecsymlink != 0 && files.size == 0
-#         return files.size > 0 ? files[0] : ""
-#     end
-
-#     def Utils::set_cover(url, rartist, recrartist, rrecord, rtrack)
-#         fname = URI::unescape(url)
-#         return false unless fname.match(/^file:\/\//) # We may get http urls...
-#
-#         fname.sub!(/^file:\/\//, "")
-#         if recrartist == 0 && rartist != 0
-#             # We're on a track of a compilation but not on the Compilations
-#             # so we assign the file to the track rather than the record
-#             cover_file = CFG.covers_dir+rrecord.to_s
-#             File::mkpath(cover_file)
-#             cover_file += File::SEPARATOR+rtrack.to_s+File::extname(fname)
-#             ex_name = cover_file+File::SEPARATOR+"ex"+rtrack.to_s+File::extname(fname)
-#         else
-#             # Assign file to record
-#             cover_file = CFG.covers_dir+rrecord.to_s+File::extname(fname)
-#             ex_name = CFG.covers_dir+"ex"+rrecord.to_s+File::extname(fname)
-#         end
-#         if File::exists?(cover_file)
-#             File::unlink(ex_name) if File::exists?(ex_name)
-#             FileUtils::mv(cover_file, ex_name)
-#         end
-#         #File::unlink(cover_file) if File::exists?(cover_file)
-#         FileUtils::mv(fname, cover_file)
-#
-#         return true
-#     end
 
 
     #

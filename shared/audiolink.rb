@@ -136,7 +136,7 @@ class AudioLink < DBCacheLink
         tags.close
     end
 
-    def tag_and_move_file(file_name, &call_back)
+    def tag_and_move_file(file_name)
         # Re-tags the original file
         tag_file(file_name)
 
@@ -149,49 +149,47 @@ class AudioLink < DBCacheLink
         FileUtils.mv(file_name, audio.file)
         LOG.info("Source #{file_name} tagged and moved to "+audio.file)
         Utils.remove_dirs(File.dirname(file_name))
-
-        call_back.call(self) if block_given?
     end
 
-    def tag_and_move_dir(dir, &call_back)
-        # Get track count
-        trk_count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
-
-        # Get recursivelly all music files from the selected dir
-        files = []
-        Find::find(dir) { |file|
-            #puts file;
-            files << [File::basename(file), File::dirname(file)] if Audio::FILE_EXTS.include?(File.extname(file).downcase)
-        }
-
-        # Check if track numbers contain a leading 0. If not rename the file with a leading 0.
-        files.each { |file|
-            if file[0] =~ /([^0-9]*)([0-9]+)(.*)/
-                next if $2.length > 1
-                nfile = $1+"0"+$2+$3
-                FileUtils.mv(file[1]+File::SEPARATOR+file[0], file[1]+File::SEPARATOR+nfile)
-                puts "File #{file[0]} renamed to #{nfile}"
-                file[0] = nfile
-            end
-        }
-        # It looks like the sort method sorts on the first array keeping the second one synchronized with it.
-        files.sort! #.each { |file| puts "sorted -> file="+file[1]+" --- "+file[0] }
-
-        # Checks if the track count matches both the database and the directory
-        return [trk_count, files.size] if trk_count != files.size
-
-        # Loops through each track
-        i = 0
-        DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
-            # Force to reset the link so it must update it's artist/segment in case of compilation
-            reset.set_track_ref(row[0])
-            # set_segment_ref(track.rsegment)
-            # set_artist_ref(segment.rartist)
-            tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], &call_back)
-            i += 1
-        end
-        return [trk_count, files.size]
-    end
+#     def tag_and_move_dir(dir, &call_back)
+#         # Get track count
+#         trk_count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{record.rrecord}")
+#
+#         # Get recursivelly all music files from the selected dir
+#         files = []
+#         Find::find(dir) { |file|
+#             #puts file;
+#             files << [File::basename(file), File::dirname(file)] if Audio::FILE_EXTS.include?(File.extname(file).downcase)
+#         }
+#
+#         # Check if track numbers contain a leading 0. If not rename the file with a leading 0.
+#         files.each { |file|
+#             if file[0] =~ /([^0-9]*)([0-9]+)(.*)/
+#                 next if $2.length > 1
+#                 nfile = $1+"0"+$2+$3
+#                 FileUtils.mv(file[1]+File::SEPARATOR+file[0], file[1]+File::SEPARATOR+nfile)
+#                 puts "File #{file[0]} renamed to #{nfile}"
+#                 file[0] = nfile
+#             end
+#         }
+#         # It looks like the sort method sorts on the first array keeping the second one synchronized with it.
+#         files.sort! #.each { |file| puts "sorted -> file="+file[1]+" --- "+file[0] }
+#
+#         # Checks if the track count matches both the database and the directory
+#         return [trk_count, files.size] if trk_count != files.size
+#
+#         # Loops through each track
+#         i = 0
+#         DBIntf.execute("SELECT rtrack FROM tracks WHERE rrecord=#{record.rrecord} ORDER BY iorder") do |row|
+#             # Force to reset the link so it must update it's artist/segment in case of compilation
+#             reset.set_track_ref(row[0])
+#             # set_segment_ref(track.rsegment)
+#             # set_artist_ref(segment.rartist)
+#             tag_and_move_file(files[i][1]+File::SEPARATOR+files[i][0], &call_back)
+#             i += 1
+#         end
+#         return [trk_count, files.size]
+#     end
 
     def remove_from_fs
         setup_audio_file unless audio.file

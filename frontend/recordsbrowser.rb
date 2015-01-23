@@ -312,22 +312,22 @@ p row
     end
 
     def on_tag_dir
-        # TODO: Urgence: y'a bug!!! uilink is set to the last track. Replace it with a new instance of AudioLink!!
-        uilink = @mc.get_track_uilink(0) #.clone
-        return if !uilink || uilink.audio_status == Audio::Status::UNKNOWN
+        tracks = @mc.get_tracks_list
 
-# p uilink.full_dir
-        default_dir = uilink.playable? ? uilink.full_dir : CFG.rip_dir
+        default_dir = tracks.first.playable? ? tracks.first.full_dir : CFG.rip_dir
 
         dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
-            expected, found = uilink.tag_and_move_dir(dir) { |param| @mc.audio_link_ok(param) }
-            if expected != found
-                GtkUtils.show_message("File count mismatch (#{found} found, #{expected} expected).", Gtk::MessageDialog::ERROR)
-            elsif dir.match(CFG.rip_dir[0..-2]) # Remove last / if files are not in rip sub dir
-                # Set the ripped date only if processing files from the rip directory.
-                @reclnk.record.idateripped = Time::now.to_i
+            files = Utils.get_files_to_tag(dir)
+            if tracks.size == files.size
+                tracks.each_with_index do |track, index|
+                    track.tag_and_move_file(files[index])
+                    @mc.audio_link_ok(track)
+                end
+                @reclnk.record.idateripped = Time.now.to_i
                 @reclnk.record.sql_update
+            else
+                GtkUtils.show_message("File count mismatch (#{files.size} found, #{tracks.size} expected).", Gtk::MessageDialog::ERROR)
             end
         end
     end
@@ -343,6 +343,8 @@ p row
         end
 
         Utils.compute_replay_gain(tracks)
+        @reclnk.to_widgets(true)
+        @mc.track_uilink.to_widgets
     end
 
 end #179-063

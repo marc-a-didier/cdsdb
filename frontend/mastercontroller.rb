@@ -48,11 +48,12 @@ class MasterController
     #
     def clean_up
         @player.terminate
+
         [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.save_menu_state(GtkUI[menu]) }
-#         [@mw, @plists, @player, @pqueue, @charts, @filters, @tasks, @memos].each { |tw| tw.hide if tw.window.visible? }
+
         PREFS.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,
                             CHARTS_WINDOW, FILTER_WINDOW, TASKS_WINDOW, MEMOS_WINDOW])
-        #system("rm -f ../mfiles/*")
+
         CFG.save
     end
 
@@ -214,11 +215,11 @@ class MasterController
             MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?
         }
 
-#         if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
-#             if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
-#                 @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
-#             end
-#         end
+        # if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
+        #     if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
+        #         @art_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)
+        #     end
+        # end
     end
 
 
