@@ -2,7 +2,7 @@
 #
 # GStreamer player
 #
-# New instances must be provided with a client that has to respond to 3 messages:
+# New instances must be provided with a subscriber that has to respond to 3 messages:
 #   - gstplayer_eos() received when a stream has ended
 #   - gstplayer_timer() received each half second
 #   - gstplayer_level(stucture) received 25 times a second with the current rms and peak for each channel
@@ -17,8 +17,8 @@ class GstPlayer
     RIGHT_CHANNEL = 1
     CHANNELS      = [LEFT_CHANNEL, RIGHT_CHANNEL]
 
-    def initialize(client)
-        @client = client
+    def initialize(subscriber)
+        @subscriber = subscriber
         @level_before_rg = true
     end
 
@@ -35,10 +35,10 @@ class GstPlayer
         @gstbin.bus.add_watch do |bus, message|
             case message.type
                 when Gst::Message::Type::ELEMENT
-                    @client.gstplayer_level(message.structure) if message.source.is_a?(Gst::ElementLevel)
+                    @subscriber.gstplayer_level(message.structure) if message.source.is_a?(Gst::ElementLevel)
                 when Gst::Message::EOS
                     stop
-                    @client.gstplayer_eos
+                    @subscriber.gstplayer_eos
                 when Gst::Message::ERROR
                     stop
             end
@@ -107,7 +107,7 @@ class GstPlayer
         @gstbin.query(@track_len)
 
         @timer = Gtk::timeout_add(500) do
-            @client.gstplayer_timer
+            @subscriber.gstplayer_timer
             true
         end
     end

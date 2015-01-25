@@ -324,8 +324,10 @@ p row
                     track.tag_and_move_file(files[index])
                     @mc.audio_link_ok(track)
                 end
-                @reclnk.record.idateripped = Time.now.to_i
-                @reclnk.record.sql_update
+                if dir.match(/\/rip\//)
+                    @reclnk.record.idateripped = Time.now.to_i
+                    @reclnk.record.sql_update
+                end
             else
                 GtkUtils.show_message("File count mismatch (#{files.size} found, #{tracks.size} expected).", Gtk::MessageDialog::ERROR)
             end
@@ -334,18 +336,30 @@ p row
 
     def get_replay_gain
         tracks = @mc.get_tracks_list
-        tracks.each do |trackui|
-            trackui.setup_audio_file if trackui.audio_file.empty?
-            unless trackui.playable?
-                GtkUtils.show_message("All tracks must be available on disk.",  Gtk::MessageDialog::ERROR)
-                return
-            end
+
+        files = Array.new(tracks.size).fill { |index| tracks[index].setup_audio_file.file }
+
+        gains = GstReplayGain.analyze(files)
+        tracks.each_with_index do |track, index|
+            tracks[index].track.fgain = gains[index][0]
+            tracks[index].track.fpeak = gains[index][1]
         end
 
-        Utils.compute_replay_gain(tracks)
+        @reclnk.record.fgain = gains.last[0]
+        @reclnk.record.fpeak = gains.last[1]
+
+        sql = ""
+        tracks.each do |track|
+            statement = track.track.generate_update
+            sql += statement+"\n" unless statement.empty?
+        end
+        statement = @reclnk.record.generate_update
+        sql += statement unless statement.empty?
+
+        DBUtils.exec_batch(sql, "localhost") unless sql.empty?
+
         @reclnk.to_widgets(true)
         @mc.track_uilink.to_widgets
     end
 
-end #179-063
-
+end

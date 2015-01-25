@@ -191,3 +191,7 @@ class Cfg
 end
 
 CFG = Cfg.instance.load
+
+LOG = Logger.new(CFG.log_file, 100, 2*1024*1024)
+
+TRACE = Logger.new(STDOUT)

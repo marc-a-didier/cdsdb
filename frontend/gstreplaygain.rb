@@ -2,11 +2,11 @@
 module GstReplayGain
 
     #
-    # Compute the replay gain for an array of files.
+    # Computes the replay gain for an array of files.
     #
-    # Returns an array of array containing peak & gain + 1 additional entry for the record peak & gain
+    # Returns an array of array containing gain & peak + 1 additional entry for the record gain & peak
     #
-    def self.compute(files)
+    def self.analyze(files)
 
         TRACE.debug("Starting gain evaluation".green)
 

@@ -26,7 +26,6 @@ require 'thread' # For mutex in tasks window
 
 require 'logger'
 require 'yaml'
-# require 'xml'
 require 'rexml/document'
 require 'uri'
 require 'cgi'
@@ -42,6 +41,7 @@ require '../shared/dbutils'
 require '../shared/audiolink'
 
 require './gstplayer'
+require './gstreplaygain'
 
 require './qualifiers'
 require './gtkbuilderintf'
@@ -60,7 +60,6 @@ require './plistexporter'
 require './plistswindow'
 require './stats'
 require './discanalyzer'
-# require './sqlgenerator'
 
 require './prefs'
 require './filterwindow'

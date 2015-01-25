@@ -1,15 +1,8 @@
 
-# Default random numbers file name
-RANDOM_FILE = ENV['HOME']+"/Downloads/randomorg.bin"
-
-# Instatiate global Logger object
-LOG = Logger.new(CFG.log_file, 100, 2097152)
-
-
-# Instatiate global Trace object
-TRACE = Logger.new(STDOUT)
-
 class Utils
+
+    # Default random numbers file name
+    RANDOM_FILE = ENV['HOME']+"/Downloads/randomorg.bin"
 
     #
     # Methods intended to deal with the fact that files may now be anywhere on disk rather than just ../
@@ -44,7 +37,7 @@ class Utils
         sysrand = `head -c 8 /dev/random`
         i = rseed = 0
         sysrand.each_byte { |c| rseed |= c << i*8; i += 1 }
-p rseed
+        TRACE.debug("rseed=#{rseed}")
         srand(rseed)
     end
 
@@ -90,10 +83,6 @@ p rseed
             TRACE.debug("Random file too short, will use /dev/random".red)
             return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value, wsize, debug_file)
         else
-#             str = String.new.force_encoding(Encoding::ASCII_8BIT)
-#             str = IO.binread(file_name, nbytes, size-nbytes)
-#             File.truncate(file_name, size-nbytes)
-#             return self.gen_from_str(str, max_value, wsize, debug_file)
             return self.gen_from_str(self.str_from_rnd_file(nbytes), max_value, wsize, debug_file)
         end
     end
@@ -132,7 +121,7 @@ p rseed
     #
     # Remove dirs from dir up to first non empty directory
     #
-    def Utils::remove_dirs(dir)
+    def self.remove_dirs(dir)
         while Dir.entries(dir).size < 3 # Remove dir if entries only contains . & ..
             Dir.rmdir(dir)
             LOG.info("Source dir #{dir} removed.")
@@ -170,7 +159,7 @@ p rseed
     #
     # Recursively tags all files from a specified directory with given genre
     #
-    def Utils::tag_full_dir_to_genre(genre, dir)
+    def self.tag_full_dir_to_genre(genre, dir)
         Find::find(dir) { |file|
             if Audio::FILE_EXTS.inlcude?(File.extname(file).downcase)
                 print "Tagging #{file} with genre #{genre}\n"
@@ -187,7 +176,7 @@ p rseed
     # Assigns tracks order inside their segment for a given record
     # if it's segmented (new from v4 database)
     #
-    def Utils::assign_track_seg_order(rrecord)
+    def self.assign_track_seg_order(rrecord)
         record = RecordDBClass.new.ref_load(rrecord)
         return if record.iissegmented == 0
 
@@ -206,7 +195,7 @@ p rseed
     # Try to find a corresponding entry in the db from files tags
     #
     #
-    def Utils::search_for_orphans(dir)
+    def self.search_for_orphans(dir)
         return if dir.empty?
 
         stats = [0, 0]
@@ -242,7 +231,7 @@ print "Checking #{file}\n"
     # Scan the entire tracks table and search for a corresponding audio file.
     # Sets the track audioinfo field to the matching file if found
     #
-    def Utils::scan_for_audio_files(mw)
+    def self.scan_for_audio_files(mw)
         print "No more supported!!!\n"
         return
 
@@ -261,9 +250,9 @@ print "Checking #{file}\n"
     #
     #
     #
-    def Utils::export_to_xml
+    def self.export_to_xml
 
-        def Utils.new_node(name, row)
+        def self.new_node(name, row)
             node = XML::Node.new(name)
             row.each_with_index { |field, i|
                 tag = XML::Node.new(row.fields[i])
@@ -273,7 +262,7 @@ print "Checking #{file}\n"
             return node
         end
 
-        def Utils.dump_table(xdoc, table)
+        def self.dump_table(xdoc, table)
             DBIntf.execute("SELECT * FROM #{table}") { |row|
                 xdoc.root << new_node(table, row)
             }
@@ -306,7 +295,7 @@ print "Checking #{file}\n"
         xdoc.save(CFG.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
     end
 
-    def Utils::test_ratings
+    def self.test_ratings
         lnmax_played = Math.log(DBIntf.get_first_value("SELECT MAX(iplayed) FROM tracks").to_f)
         sql = "SELECT tracks.stitle, tracks.iplayed, tracks.irating, records.stitle, artists.sname FROM tracks " \
               "INNER JOIN records ON tracks.rrecord = records.rrecord " \
@@ -327,115 +316,8 @@ print "Checking #{file}\n"
         }
     end
 
-    # tracks is an array of all tracks of a record.
-    # replay gain is set for each track and for the record
-    def self.compute_replay_gain(tracks, use_thread = true)
-#         if tracks[0].record.fpeak != 0.0 || tracks[0].record.fgain != 0.0
-#             LOG.info("Already gained: skipped #{tracks[0].record.stitle}")
-# TRACE.debug("Already gained: skipped #{tracks[0].record.stitle}".red)
-#             return
-#         end
-
-        tracks.each do |trackui|
-            unless trackui.playable?
-                LOG.info("Not playable: skipped #{trackui.record.stitle}")
-TRACE.debug("Missing tracks: skipped #{trackui.record.stitle}".red)
-                return
-            end
-        end
-
-TRACE.debug("Started gain evaluation for #{tracks.first.record.stitle}".green)
-        tpeak = tgain = rpeak = rgain = 0.0
-        done = error = false
-
-        pipe = Gst::Pipeline.new("getgain")
-
-        pipe.bus.add_watch do |bus, message|
-            case message.type
-#                 when Gst::Message::Type::ELEMENT
-#                     p message
-                when Gst::Message::Type::TAG
-                    tpeak = message.structure['replaygain-track-peak'] if message.structure['replaygain-track-peak']
-                    tgain = message.structure['replaygain-track-gain'] if message.structure['replaygain-track-gain']
-                    rpeak = message.structure['replaygain-album-peak'] if message.structure['replaygain-album-peak']
-                    rgain = message.structure['replaygain-album-gain'] if message.structure['replaygain-album-gain']
-#                     p message.structure
-                when Gst::Message::Type::EOS
-#                     p message
-                    done = true
-                when Gst::Message::Type::ERROR
-                    p message
-                    done = true
-                    error = true
-            end
-            true
-        end
-
-        convertor = Gst::ElementFactory.make("audioconvert")
-        resample = Gst::ElementFactory.make("audioresample")
-        rgana = Gst::ElementFactory.make("rganalysis")
-        sink = Gst::ElementFactory.make("fakesink")
-
-        decoder = Gst::ElementFactory.make("decodebin")
-        decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
-            pad.link(convertor.get_pad("sink"))
-            convertor >> resample >> rgana >> sink
-        }
-
-        source = Gst::ElementFactory.make("filesrc")
-
-        rgana.num_tracks = tracks.size
-
-        tracks.each do |trackui|
-            done = false
-
-            pipe.clear
-            pipe.add(source, decoder, convertor, resample, rgana, sink)
-
-            source >> decoder
-
-            # audio file may be nil because of the status cache of the track browser!!!
-            trackui.setup_audio_file unless trackui.audio.file
-
-            source.location = trackui.audio.file
-            begin
-                pipe.play
-                while !done
-                    Gtk.main_iteration while Gtk.events_pending?
-                    sleep(0.01)
-                end
-            rescue Interrupt
-            ensure
-                rgana.set_locked_state(true)
-                pipe.stop
-            end
-            trackui.track.fpeak = tpeak
-            trackui.track.fgain = tgain
-
-            puts("track gain=#{tgain}, peak=#{tpeak}".cyan)
-            puts("rec gain=#{rgain}, peak=#{rpeak}".brown)
-        end
-        rgana.set_state(Gst::STATE_NULL)
-
-        unless error
-            tracks.first.record.fpeak = rpeak
-            tracks.first.record.fgain = rgain
-
-            sql = ""
-            tracks.each { |trackui|
-                statement = trackui.track.generate_update
-                sql += statement+"\n" unless statement.empty?
-            }
-            statement = tracks.first.record.generate_update
-            sql += statement unless statement.empty?
-
-            DBUtils.exec_batch(sql, "localhost") unless sql.empty?
-#             use_thread ? Thread.new { DBUtils.exec_batch(sql, "localhost") } : DBUtils.exec_batch(sql, "localhost")
-        end
-    end
-
     def self.replay_gain_for_genre
-TRACE.debug("Start gaining".bold)
+        TRACE.debug("Start gaining".bold)
         DBIntf.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=10 LIMIT 50").each do |rec|
             tracks = []
             DBIntf.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
@@ -444,6 +326,6 @@ TRACE.debug("Start gaining".bold)
             end
             self.compute_replay_gain(tracks, false)
         end
-TRACE.debug("Finished gaining".bold)
+        TRACE.debug("Finished gaining".bold)
     end
 end
