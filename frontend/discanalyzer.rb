@@ -92,6 +92,7 @@ module DiscAnalyzer
         record.iplaytime = disc.length
         record.icddbid = disc.cddbid.to_i
         record.rmedia = disc.medium
+        record.idateadded = Time.now.to_i
         record.iissegmented = is_segmented ? 1 : 0
         f.puts(record.generate_insert)
 
