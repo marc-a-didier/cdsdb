@@ -19,17 +19,15 @@ class HistoryDialog
 
         GtkUI.load_window(GtkIDs::DLG_HISTORY)
 
-        @dlg = GtkUI[GtkIDs::DLG_HISTORY]
+        dlg = GtkUI[GtkIDs::DLG_HISTORY]
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
-        @dlg.add_events( Gdk::Event::FOCUS_CHANGE)
-        @dlg.signal_connect(:focus_in_event) { |widget, event| @mc.filter_receiver = self; false }
-        @dlg.signal_connect(:show)           { PREFS.restore_window(GtkIDs::DLG_HISTORY) }
-        @dlg.signal_connect(:delete_event)   { notify_and_close; false }
+        dlg.add_events( Gdk::Event::FOCUS_CHANGE)
+        dlg.signal_connect(:focus_in_event) { |widget, event| @mc.filter_receiver = self; false }
+        dlg.signal_connect(:show)           { PREFS.restore_window(GtkIDs::DLG_HISTORY) }
+        dlg.signal_connect(:delete_event)   { notify_and_close; false }
 
         # J'aimerais bien piger une fois comment on envoie un delete_event a la fenetre!!!
-        #GtkUI["recrec_btn_close"].signal_connect(:clicked) { @dlg.delete } # @dlg.signal_emit(:delete_event, Gdk::Event.new(Gdk::Event::DESTROY)) }
-#         GtkUI[GtkIDs::RCTITM_BTN_CLOSE].signal_connect(:clicked) { puts "closing"; @mc.reset_filter_receiver; @dlg.destroy }
         GtkUI[GtkIDs::HISTORY_BTN_CLOSE].signal_connect(:clicked) { notify_and_close }
 
         GtkUI[GtkIDs::HISTORY_BTN_SHOW].signal_connect(:clicked) {
@@ -71,14 +69,14 @@ class HistoryDialog
     end
 
     def present
-        @dlg.present
+        GtkUI[GtkIDs::DLG_HISTORY].present
     end
 
     def notify_and_close
         @mc.reset_filter_receiver
         @mc.history_closed(self)
         PREFS.save_window(GtkIDs::DLG_HISTORY)
-        @dlg.destroy
+        GtkUI[GtkIDs::DLG_HISTORY].destroy
     end
 
     def get_selection
@@ -157,7 +155,7 @@ class HistoryDialog
     end
 
     def run
-        @dlg.show
+        GtkUI[GtkIDs::DLG_HISTORY].show
         return self
     end
 end

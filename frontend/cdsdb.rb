@@ -84,6 +84,7 @@ require './taskswindow'
 
 require './controlshandler'
 require './dbuiclass'
+require './dbeditors'
 
 require './dbreorderer'
 
