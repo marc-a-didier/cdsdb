@@ -24,7 +24,7 @@ class HistoryDialog
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         dlg.add_events( Gdk::Event::FOCUS_CHANGE)
         dlg.signal_connect(:focus_in_event) { |widget, event| @mc.filter_receiver = self; false }
-        dlg.signal_connect(:show)           { PREFS.restore_window(GtkIDs::DLG_HISTORY) }
+        dlg.signal_connect(:show)           { Prefs.restore_window(GtkIDs::DLG_HISTORY) }
         dlg.signal_connect(:delete_event)   { notify_and_close; false }
 
         # J'aimerais bien piger une fois comment on envoie un delete_event a la fenetre!!!
@@ -42,7 +42,7 @@ class HistoryDialog
 
         srenderer = Gtk::CellRendererText.new()
 
-        # Columns: Entry, cover, title, date, UILink (hidden)
+        # Columns: Entry, cover, title, date, XIntf::Link (hidden)
         @tv.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
 
         pix = Gtk::CellRendererPixbuf.new
@@ -75,7 +75,7 @@ class HistoryDialog
     def notify_and_close
         @mc.reset_filter_receiver
         @mc.history_closed(self)
-        PREFS.save_window(GtkIDs::DLG_HISTORY)
+        Prefs.save_window(GtkIDs::DLG_HISTORY)
         GtkUI[GtkIDs::DLG_HISTORY].destroy
     end
 
@@ -85,7 +85,7 @@ class HistoryDialog
             links << @tv.selection.selected[COL_DATA] #.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{@tv.selection.selected[COL_DATA].record.rrecord};"
-            DBIntf.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }
+            DBIntf.execute(sql) { |row| links << XIntf::Link.new.set_track_ref(row[0]).set_use_of_record_gain }
         end
         return links
     end
@@ -138,7 +138,7 @@ class HistoryDialog
             i += 1
             iter = @tv.model.append
             iter[COL_ENTRY] = i
-            iter[COL_DATA] = UILink.new
+            iter[COL_DATA] = XIntf::Link.new
 
             if @view_type == VIEW_PLAYED || @view_type == VIEW_DATES
                 iter[COL_DATA].set_track_ref(row[0])

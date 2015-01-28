@@ -12,7 +12,7 @@ class RecordsBrowser < Gtk::TreeView
 
     def initialize
         super
-        @reclnk = RecordUI.new # Lost instance but setting to nil is not possible
+        @reclnk = XIntf::Record.new # Lost instance but setting to nil is not possible
     end
 
     def setup(mc)
@@ -111,7 +111,7 @@ class RecordsBrowser < Gtk::TreeView
         DBIntf.execute(generate_rec_sql) do |row|
             iter = model.append(nil)
 
-            dblink = RecordUI.new.set_record_ref(row[2]).set_segment_ref(row[0])
+            dblink = XIntf::Record.new.set_record_ref(row[2]).set_segment_ref(row[0])
             iter[RTV_REF]   = dblink.record.rrecord
             iter[RTV_TITLE] = dblink.record.stitle
             iter[RTV_PTIME] = row[1].to_ms_length
@@ -200,12 +200,12 @@ class RecordsBrowser < Gtk::TreeView
     # Returns true if we should check if we can remove the artist from the never played sub tree.
     # WARNING: The only case where we're sure that it should not be removed is when there are still tracks,
     #          in this case when row is not nil.
-    def update_never_played(uilink)
+    def update_never_played(xlink)
         return true unless @mc.is_on_never_played?
-        iter = find_ref(uilink.record.rrecord)
+        iter = find_ref(xlink.record.rrecord)
         return true if iter.nil?
 
-        row = DBIntf.get_first_row(generate_rec_sql(uilink.record.rrecord))
+        row = DBIntf.get_first_row(generate_rec_sql(xlink.record.rrecord))
 p row
         if row
             map_rec_row_to_entry(row, iter)
@@ -250,7 +250,7 @@ p row
         DBIntf.execute(generate_seg_sql(iter[RTV_REF])) { |row|
             child = model.append(iter)
 
-            dblink = RecordUI.new.set_segment_ref(row[0])
+            dblink = XIntf::Record.new.set_segment_ref(row[0])
             dblink.set_record_ref(dblink.segment.rrecord)
 
             child[RTV_REF] = dblink.segment.rsegment
@@ -268,7 +268,7 @@ p row
 
     def on_rec_edit
         rgenre = @reclnk.record.rgenre
-        if DBEditor.new(@mc, @reclnk, selection.selected.parent ? DBEditor::SEGMENT_PAGE : DBEditor::RECORD_PAGE).run == Gtk::Dialog::RESPONSE_OK
+        if XEditors::Main.new(@mc, @reclnk, selection.selected.parent ? XEditors::SEGMENT_PAGE : XEditors::RECORD_PAGE).run == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
             @reclnk.to_widgets(!selection.selected.parent)
             # If genre changed in editor, reset the audio status to unknown to force reload
@@ -282,14 +282,14 @@ p row
     def on_rec_add
         @reclnk.record.add_new(@mc.artist.rartist)
         @reclnk.segment.add_new(@mc.artist.rartist, @reclnk.record.rrecord)
-        TrackDBClass.new.add_new(@reclnk.record.rrecord, @reclnk.segment.rsegment)
+        DBClass::Track.new.add_new(@reclnk.record.rrecord, @reclnk.segment.rsegment)
         load_entries.position_to(@reclnk.record.rrecord, 0)
         @mc.record_changed
     end
 
     def on_seg_add
         @segment.add_new(@mc.artist.rartist, @reclnk.rrecord)
-        TrackDBClass.new.add_new(@reclnk.rrecord, @segment.rsegment)
+        DBClass::Track.new.add_new(@reclnk.rrecord, @segment.rsegment)
         #rsegment = @segment.rsegment
         load_entries.position_to(@reclnk.rrecord, @segment.rsegment)
         #iter = @tv.selection.selected
@@ -339,7 +339,7 @@ p row
 
         files = Array.new(tracks.size).fill { |index| tracks[index].setup_audio_file.file }
 
-        gains = GstReplayGain.analyze(files)
+        gains = GStreamer.analyze(files)
         tracks.each_with_index do |track, index|
             tracks[index].track.fgain = gains[index][0]
             tracks[index].track.fpeak = gains[index][1]
@@ -359,7 +359,7 @@ p row
         DBUtils.exec_batch(sql, "localhost") unless sql.empty?
 
         @reclnk.to_widgets(true)
-        @mc.track_uilink.to_widgets
+        @mc.track_xlink.to_widgets
     end
 
 end

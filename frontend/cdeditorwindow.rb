@@ -15,8 +15,8 @@ class CDEditorWindow
         @window = GtkUI[GtkIDs::CD_EDITOR_WINDOW]
         @tv = GtkUI[GtkIDs::CDED_TV]
 
-        @window.signal_connect(:show)         { PREFS.restore_window(GtkIDs::CD_EDITOR_WINDOW) }
-        @window.signal_connect(:delete_event) { PREFS.save_window(GtkIDs::CD_EDITOR_WINDOW); false }
+        @window.signal_connect(:show)         { Prefs.restore_window(GtkIDs::CD_EDITOR_WINDOW) }
+        @window.signal_connect(:delete_event) { Prefs.save_window(GtkIDs::CD_EDITOR_WINDOW); false }
 
 
         @tv.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time| on_drag_received(widget, context, x, y, data, info, time) }
@@ -30,7 +30,7 @@ class CDEditorWindow
         GtkUI[GtkIDs::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
         GtkUI["cded_btn_rip"].signal_connect(:clicked)               { rip_tracks }
         GtkUI[GtkIDs::CDED_BTN_CLOSE].signal_connect(:clicked)     {
-            PREFS.save_window(GtkIDs::CD_EDITOR_WINDOW)
+            Prefs.save_window(GtkIDs::CD_EDITOR_WINDOW)
             @window.destroy
         }
 

@@ -56,7 +56,7 @@ module PListExporter
 
     def self.export_to_device(mc, list_store)
         dlg = ExportDialog.new
-        exp = ExportParams.new
+        exp = ExportDialog::Params.new
         return if dlg.run(exp) == Gtk::Dialog::RESPONSE_CANCEL # Run is auto-destroying
 
         list_store.each do |model, path, iter|

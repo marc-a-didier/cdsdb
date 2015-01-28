@@ -111,7 +111,7 @@ class PListsWindow < TopWindow
         @tvpt.model = @pts
         @tvpt.selection.mode = Gtk::SELECTION_MULTIPLE
 
-        @last_tool_tip = TooltipCache.new(nil, nil)
+        @last_tool_tip = XIntf::TooltipCache.new(nil, nil)
 
         @tvpt.set_has_tooltip(true)
         @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
@@ -232,8 +232,8 @@ class PListsWindow < TopWindow
                 renumber_tracks_list_store
             end
         else
-            @mc.send(call_back).each { |uilink|
-                add_to_plist(@current_pl.rplist, uilink.track.rtrack)
+            @mc.send(call_back).each { |xlink|
+                add_to_plist(@current_pl.rplist, xlink.track.rtrack)
             }
         end
 
@@ -313,8 +313,8 @@ class PListsWindow < TopWindow
         update_ptime_label(@remaining_time)
     end
 
-    def dwl_file_name_notification(uilink, file_name)
-        @mc.audio_link_ok(uilink)
+    def dwl_file_name_notification(xlink, file_name)
+        @mc.audio_link_ok(xlink)
         notify_player_if_provider
     end
 
@@ -451,13 +451,13 @@ class PListsWindow < TopWindow
     def show_infos(is_popup)
         if is_popup
             if GtkUI[GtkIDs::PM_PL_ADD].sensitive?
-                PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected
+                XEditors::PList.new(@current_pl.rplist).run if @tvpl.selection.selected
             else
                 iter = @tvpt.selection.count_selected_rows > 0 ? @pts.get_iter(@tvpt.selection.selected_rows[0]) : nil
-                DBEditor.new(@mc, iter[TT_DATA], DBEditor::TRACK_PAGE).run if iter
+                XEditors::Main.new(@mc, iter[TT_DATA], XEditors::TRACK_PAGE).run if iter
             end
         else
-            PListDialog.new(@current_pl.rplist).run if @tvpl.selection.selected
+            XEditors::PList.new(@current_pl.rplist).run if @tvpl.selection.selected
         end
     end
 
@@ -491,7 +491,7 @@ class PListsWindow < TopWindow
                 iter[TT_REF]   = row[TDB_RPLTRACK]
                 iter[TT_ORDER] = iter.path.to_s.to_i+1
                 iter[TT_IORDER] = row[TDB_IORDER]
-                iter[TT_DATA]  = UILink.new.set_track_ref(row[TDB_RTRACK])
+                iter[TT_DATA]  = XIntf::Link.new.set_track_ref(row[TDB_RTRACK])
                 iter[TT_TRACK] = iter[TT_DATA].track.iorder
                 if iter[TT_DATA].segment.stitle.empty?
                     iter[TT_TITLE] = iter[TT_DATA].track.stitle.to_html_bold

@@ -1,13 +1,11 @@
 
-class Prefs
-
-    include Singleton
+module Prefs
 
     #
     # Fills the array 'object_list' of objects of 'object_types' type by recursively scanning the
     # object 'object'
     #
-    def child_controls(object, object_types, object_list)
+    def self.child_controls(object, object_types, object_list)
         object_list << object if object_types.include?(object.class)
         object.children.each { |child| child_controls(child, object_types, object_list) } if object.respond_to?(:children)
         return object_list
@@ -18,7 +16,7 @@ class Prefs
     #
     #
 
-    def restore_window(gtk_id)
+    def self.restore_window(gtk_id)
         return if CFG.windows[gtk_id].nil?
         CFG.windows[gtk_id].each do |obj, msg|
             msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
@@ -26,7 +24,7 @@ class Prefs
     end
 
 
-    def save_window(gtk_id)
+    def self.save_window(gtk_id)
         window = GtkUI[gtk_id]
 
         CFG.windows[window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
@@ -44,7 +42,7 @@ class Prefs
         end
     end
 
-    def save_windows(gtk_ids)
+    def self.save_windows(gtk_ids)
         gtk_ids.each { |gtk_id| save_window(gtk_id) if GtkUI[gtk_id].visible? }
     end
 
@@ -53,7 +51,7 @@ class Prefs
     # Windows content related funcs (only used by the preferences and export dialog, as far as i remember...)
     #
 
-    def save_window_objects(gtk_id)
+    def self.save_window_objects(gtk_id)
         window = GtkUI[gtk_id]
         CFG.windows[window.builder_name] = {}
 
@@ -70,14 +68,14 @@ class Prefs
     # Menu config (waiting to find how to discover menus when looping through a window's children
     #
 
-    def save_menu_state(menu)
+    def self.save_menu_state(menu)
         CFG.menus[menu.builder_name] = {}
         menu.each { |child|
             CFG.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.is_a?(Gtk::CheckMenuItem) || child.is_a?(Gtk::RadioMenuItem)
         }
     end
 
-    def load_menu_state(menu)
+    def self.load_menu_state(menu)
         return if CFG.menus[menu.builder_name].nil?
         CFG.menus[menu.builder_name].each do |obj, msg|
             msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
@@ -91,7 +89,7 @@ class Prefs
 
     FILTER = "filter"
 
-    def yaml_from_content(gtk_object)
+    def self.yaml_from_content(gtk_object)
         yml = { FILTER => {} }
 
         objs = []
@@ -116,7 +114,7 @@ class Prefs
         return yml.to_yaml.gsub(/\n/, '\n')
     end
 
-    def content_from_yaml(yaml_str)
+    def self.content_from_yaml(yaml_str)
         yml = YAML.load(yaml_str)
         yml[FILTER].each do |obj, msg|
             msg.each do |method, params|
@@ -129,5 +127,3 @@ class Prefs
         end
     end
 end
-
-PREFS = Prefs.instance

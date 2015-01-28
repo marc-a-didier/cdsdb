@@ -3,7 +3,7 @@ class PQueueWindow < TopWindow
 
     include PlayerIntf
 
-    PQData = Struct.new(:internal_ref, :uilink)
+    PQData = Struct.new(:internal_ref, :xlink)
 
     def initialize(mc)
         super(mc, GtkIDs::PQUEUE_WINDOW)
@@ -13,10 +13,10 @@ class PQueueWindow < TopWindow
         GtkUI[GtkIDs::PM_PQ_CLEAR].signal_connect(:activate)      { clear }
         GtkUI[GtkIDs::PM_PQ_SHUFFLE].signal_connect(:activate)    { shuffle }
         GtkUI[GtkIDs::PM_PQ_SHOWINBROWSER].signal_connect(:activate) {
-            @mc.select_track(@tvpq.selection.selected[4].uilink) #if @tvpq.selection.selected
+            @mc.select_track(@tvpq.selection.selected[4].xlink) #if @tvpq.selection.selected
         }
         GtkUI[GtkIDs::PM_PQ_INFOS].signal_connect(:activate) {
-            DBEditor.new(@mc, @tvpq.selection.selected[4].uilink, DBEditor::TRACK_PAGE).run
+            XEditors::Main.new(@mc, @tvpq.selection.selected[4].xlink, XEditors::TRACK_PAGE).run
         }
 
         srenderer = Gtk::CellRendererText.new()
@@ -60,13 +60,13 @@ class PQueueWindow < TopWindow
             selection_data.set(Gdk::Selection::TYPE_STRING, "pqueue:message:get_pqueue_selection")
         }
 
-        @last_tool_tip = TooltipCache.new(nil, nil)
+        @last_tool_tip = XIntf::TooltipCache.new(nil, nil)
 
         @tvpq.set_has_tooltip(true)
         @tvpq.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
             row = @tvpq.get_dest_row(x, y) # Returns: [path, position] or nil
             if row && tool_tip && tool_tip.is_a?(Gtk::Tooltip)
-                link = @plq.get_iter(row[0])[4].uilink
+                link = @plq.get_iter(row[0])[4].xlink
                 unless @last_tool_tip.link == link
                     @last_tool_tip.link = link
                     @last_tool_tip.text = link.markup_tooltip
@@ -125,7 +125,7 @@ class PQueueWindow < TopWindow
             GtkUI[GtkIDs::PM_PQ_REMOVE].sensitive = has_sel
             GtkUI[GtkIDs::PM_PQ_RMFROMHERE].sensitive = has_sel
             GtkUI[GtkIDs::PM_PQ_SHOWINBROWSER].sensitive = has_sel
-            GtkUI[GtkIDs::PM_PQ_INFOS].sensitive = has_sel && @tvpq.selection.selected[4].uilink.tags == nil
+            GtkUI[GtkIDs::PM_PQ_INFOS].sensitive = has_sel && @tvpq.selection.selected[4].xlink.tags == nil
             GtkUI[GtkIDs::PM_PQ].popup(nil, nil, event.button, event.time)
         end
     end
@@ -142,7 +142,7 @@ class PQueueWindow < TopWindow
 
     # Play queue is not in multi-select mode
     def get_selection
-        return [@tvpq.selection.selected[4].uilink]
+        return [@tvpq.selection.selected[4].xlink]
     end
 
     def on_drag_received(widget, context, x, y, data, info, time)
@@ -174,7 +174,7 @@ class PQueueWindow < TopWindow
                         # When a full record or segment is dropped, set the use of record gain
                         # rather than track gain. But if the use of record gain is not enabled in the
                         # player menu, the player will use the track gain or no gain at all.
-                        tracks.each { |uilink| uilink.set_use_of_record_gain } if sender == "records"
+                        tracks.each { |xlink| xlink.set_use_of_record_gain } if sender == "records"
                         enqueue(tracks)
                     end
                 end
@@ -183,12 +183,12 @@ class PQueueWindow < TopWindow
                 data.uris.each { |uri|
                     @internal_ref += 1
                     iter = @plq.append
-                    data = PQData.new(@internal_ref, UILink.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
+                    data = PQData.new(@internal_ref, XIntf::Link.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
 
                     iter[0] = iter.path.to_s.to_i+1
-                    iter[1] = data.uilink.small_track_cover
-                    iter[2] = data.uilink.html_track_title(@mc.show_segment_title?)
-                    iter[3] = (data.uilink.tags.length/1000).to_sec_length
+                    iter[1] = data.xlink.small_track_cover
+                    iter[2] = data.xlink.html_track_title(@mc.show_segment_title?)
+                    iter[3] = (data.xlink.tags.length/1000).to_sec_length
                     iter[4] = data
                 }
                 @mc.track_list_changed(self)
@@ -198,24 +198,24 @@ class PQueueWindow < TopWindow
         return true
     end
 
-    def enqueue(uilinks)
-        uilinks.each { |uilink|
-            # TRACE.debug("enq before: audiostatus=#{uilink.audio_status}")
-            uilink.get_audio_file(self, @mc.tasks) unless uilink.playable?
-            # TRACE.debug("enq after : audiostatus=#{uilink.audio_status}")
-            unless uilink.audio_status == Audio::Status::NOT_FOUND
+    def enqueue(xlinks)
+        xlinks.each { |xlink|
+            # TRACE.debug("enq before: audiostatus=#{xlink.audio_status}")
+            xlink.get_audio_file(self, @mc.tasks) unless xlink.playable?
+            # TRACE.debug("enq after : audiostatus=#{xlink.audio_status}")
+            unless xlink.audio_status == Audio::Status::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append
 
                 iter[0] = iter.path.to_s.to_i+1
-                iter[1] = uilink.small_track_cover
-                iter[2] = uilink.html_track_title(@mc.show_segment_title?)
-                iter[3] = (uilink.track.iplaytime/1000).to_sec_length
-                iter[4] = PQData.new(@internal_ref, uilink)
+                iter[1] = xlink.small_track_cover
+                iter[2] = xlink.html_track_title(@mc.show_segment_title?)
+                iter[3] = (xlink.track.iplaytime/1000).to_sec_length
+                iter[4] = PQData.new(@internal_ref, xlink)
 
                 # When in slow client mode, pqueue was not refreshed while it didn't have
                 # all responses when tracks are on server.
-                if uilink.audio_status == Audio::Status::ON_SERVER
+                if xlink.audio_status == Audio::Status::ON_SERVER
                     Gtk.main_iteration while Gtk.events_pending?
                 end
             end
@@ -224,8 +224,8 @@ class PQueueWindow < TopWindow
         @mc.track_list_changed(self)
     end
 
-    def dwl_file_name_notification(uilink, file_name)
-        @mc.audio_link_ok(uilink)
+    def dwl_file_name_notification(xlink, file_name)
+        @mc.audio_link_ok(xlink)
         @mc.track_list_changed(self)
     end
 
@@ -233,7 +233,7 @@ class PQueueWindow < TopWindow
         @play_time = @ntracks = 0
         @plq.each { |model, path, iter|
             @ntracks += 1
-            @play_time += iter[4].uilink.tags.nil? ? iter[4].uilink.track.iplaytime : iter[4].uilink.tags.length
+            @play_time += iter[4].xlink.tags.nil? ? iter[4].xlink.track.iplaytime : iter[4].xlink.tags.length
         }
         update_tracks_label
         update_ptime_label(@play_time)
@@ -287,8 +287,8 @@ class PQueueWindow < TopWindow
         @plq.each { |model, path, iter|
             # Must check for every track if it's already in the queue. It may have been moved or something else.
             in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
-            if !in_queue && iter[4].uilink.audio_status != Audio::Status::ON_SERVER
-                queue << PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
+            if !in_queue && iter[4].xlink.audio_status != Audio::Status::ON_SERVER
+                queue << PlayerData.new(self, iter[4].internal_ref, iter[4].xlink)
                 break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
         }
@@ -297,8 +297,8 @@ class PQueueWindow < TopWindow
     def get_track(player_data, direction)
         if direction == :start
             @plq.each { |model, path, iter|
-                unless iter[4].uilink.audio_status == Audio::Status::ON_SERVER
-                    return PlayerData.new(self, iter[4].internal_ref, iter[4].uilink)
+                unless iter[4].xlink.audio_status == Audio::Status::ON_SERVER
+                    return PlayerData.new(self, iter[4].internal_ref, iter[4].xlink)
                 end
             }
         end

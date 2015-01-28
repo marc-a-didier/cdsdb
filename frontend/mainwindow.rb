@@ -96,7 +96,7 @@ class MainWindow < TopWindow
         GtkUI[MW_MEMO_SAVE_ACTION].signal_connect(:activate) { on_save_item  }
 
         # Load view menu before instantiating windows (plists case)
-        PREFS.load_menu_state(GtkUI[VIEW_MENU])
+        Prefs.load_menu_state(GtkUI[VIEW_MENU])
 
         # Set windows icons
         @mc.pqueue.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"pqueue.png")
@@ -112,7 +112,7 @@ class MainWindow < TopWindow
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
-        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.load_menu_state(GtkUI[menu]) }
+        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| Prefs.load_menu_state(GtkUI[menu]) }
 
 
         #
@@ -300,9 +300,9 @@ class MainWindow < TopWindow
     end
 
     def change_view_mode
-        uilink = @trk_browser.trklnk
+        xlink = @trk_browser.trklnk
         @art_browser.reload
-        @mc.select_track(uilink) if uilink && uilink.valid_track_ref?
+        @mc.select_track(xlink) if xlink && xlink.valid_track_ref?
     end
 
     def set_dbrefs_visibility
@@ -316,10 +316,10 @@ class MainWindow < TopWindow
     #
     def set_filter(where_clause, must_join_logtracks)
         if (where_clause != @mc.main_filter)
-            uilink = @trk_browser.trklnk
+            xlink = @trk_browser.trklnk
             @mc.main_filter = where_clause
             art_browser.reload
-            @mc.select_track(uilink) if uilink && uilink.valid_track_ref?
+            @mc.select_track(xlink) if xlink && xlink.valid_track_ref?
         end
     end
 
@@ -328,7 +328,7 @@ class MainWindow < TopWindow
         IO.foreach(DiscAnalyzer::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils.exec_batch(batch, Socket.gethostname)
         @art_browser.reload
-        @mc.select_record(UILink.new.set_record_ref(RecordDBClass.new.get_last_id)) # The best guess to find the imported record
+        @mc.select_record(XIntf::Link.new.set_record_ref(DBClass::Record.new.get_last_id)) # The best guess to find the imported record
     end
 
 
@@ -355,7 +355,7 @@ class MainWindow < TopWindow
 
 
     def zoom_rec_image
-        cover_name = @mc.track_uilink ? @mc.track_uilink.cover_file_name : nil
+        cover_name = @mc.track_xlink ? @mc.track_xlink.cover_file_name : nil
         return unless cover_name
         dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
         dlg.vbox.add(Gtk::Image.new(cover_name))

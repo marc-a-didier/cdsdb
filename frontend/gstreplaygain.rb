@@ -1,5 +1,5 @@
 
-module GstReplayGain
+module GStreamer
 
     #
     # Computes the replay gain for an array of files.

@@ -177,10 +177,10 @@ class Utils
     # if it's segmented (new from v4 database)
     #
     def self.assign_track_seg_order(rrecord)
-        record = RecordDBClass.new.ref_load(rrecord)
+        record = DBClass::Record.new.ref_load(rrecord)
         return if record.iissegmented == 0
 
-        segment = SegmentDBClass.new
+        segment = DBClass::Segment.new
         DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
             segment.load_from_row(seg_row)
             seg_order = 1
@@ -321,7 +321,7 @@ print "Checking #{file}\n"
         DBIntf.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=10 LIMIT 50").each do |rec|
             tracks = []
             DBIntf.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
-                tracks << AudioLink.new.set_record_ref(rec[0]).set_track_ref(track[0])
+                tracks << Audio::Link.new.set_record_ref(rec[0]).set_track_ref(track[0])
                 tracks.last.setup_audio_file
             end
             self.compute_replay_gain(tracks, false)

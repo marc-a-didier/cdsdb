@@ -148,7 +148,7 @@ TRACE.debug("task thread stopped".brown)
 
     def track_in_download?(dblink)
         @tv.model.each { |model, path, iter|
-            return true if iter[COL_REF].user_ref.kind_of?(AudioLink) &&
+            return true if iter[COL_REF].user_ref.kind_of?(Audio::Link) &&
                            iter[COL_REF].user_ref.track.rtrack == dblink.track.rtrack &&
                            in_downloads?(iter)
         }
@@ -165,8 +165,8 @@ TRACE.debug("task thread stopped".brown)
         return iter
     end
 
-    def new_track_download(emitter, uilink)
-        new_task(TASK_AUDIO_DL, emitter, uilink.track.stitle, uilink, "")
+    def new_track_download(emitter, xlink)
+        new_task(TASK_AUDIO_DL, emitter, xlink.track.stitle, xlink, "")
     end
 
     def new_file_download(emitter, file_info, user_ref)
@@ -187,7 +187,7 @@ TRACE.debug("task thread stopped".brown)
         else
             iter[COL_PROGRESS] = 100
             iter[COL_STATUS]   = STAT_DONE
-            iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_REF].user_ref.kind_of?(AudioLink)
+            iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_REF].user_ref.kind_of?(Audio::Link)
             iter[COL_REF].emitter.dwl_file_name_notification(iter[COL_REF].user_ref, file_name) if iter[COL_REF].emitter
         end
     end

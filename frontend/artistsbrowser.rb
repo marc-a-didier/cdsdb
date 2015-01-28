@@ -454,8 +454,8 @@ class ArtistsBrowser < Gtk::TreeView
 
     def initialize
         super
-        @artlnk = ArtistUI.new # Cache link for the current artist
-        @seg_art = ArtistUI.new # Cache link used to update data when browsing a compilation
+        @artlnk = XIntf::Artist.new # Cache link for the current artist
+        @seg_art = XIntf::Artist.new # Cache link used to update data when browsing a compilation
     end
 
     def setup(mc)
@@ -549,7 +549,7 @@ class ArtistsBrowser < Gtk::TreeView
     end
 
     def edit_artist
-        @artlnk.to_widgets if @artlnk.valid_artist_ref? && DBEditor.new(@mc, @artlnk, DBEditor::ARTIST_PAGE).run == Gtk::Dialog::RESPONSE_OK
+        @artlnk.to_widgets if @artlnk.valid_artist_ref? && XEditors::Main.new(@mc, @artlnk, XEditors::ARTIST_PAGE).run == Gtk::Dialog::RESPONSE_OK
     end
 
     # Recursively search for rartist from iter. If iter is nil, search from tree root.
@@ -712,13 +712,13 @@ class ArtistsBrowser < Gtk::TreeView
         # thus appears in both compilations and artists list.
         if @mc.view_compile?
             # Check if we can remove compilations or the artist from the list
-            rartist = is_on_compile? ? 0 : RecordDBClass.new.ref_load(rrecord).rartist
+            rartist = is_on_compile? ? 0 : DBClass::Record.new.ref_load(rrecord).rartist
             sql = "SELECT COUNT(tracks.rtrack) FROM tracks " \
                     "INNER JOIN records ON records.rrecord=tracks.rrecord " \
                     "WHERE records.rartist=#{rartist}"
         else
             # Get artist from segment, we may be on a compile only artist
-            rartist = SegmentDBClass.new.ref_load(rsegment).rartist
+            rartist = DBClass::Segment.new.ref_load(rsegment).rartist
             sql = "SELECT COUNT(tracks.rtrack) FROM tracks " \
                     "INNER JOIN segments ON segments.rsegment=tracks.rsegment " \
                     "WHERE segments.rartist=#{rartist}"

@@ -35,7 +35,7 @@ class ChartsWindow < TopWindow
     COL_PLAYED = 4
     COL_REF    = 5
 
-    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :uilink)
+    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :xlink)
 
     def initialize(mc)
         super(mc, CHARTS_WINDOW)
@@ -70,8 +70,8 @@ class ChartsWindow < TopWindow
         GtkUI[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
         GtkUI[CHARTS_PM_SHOWINDB].signal_connect(:activate) {
             case @view_type
-                when VIEW_TRACKS  then @mc.select_track(entry_from_selection.uilink)
-                when VIEW_RECORDS then @mc.select_record(entry_from_selection.uilink)
+                when VIEW_TRACKS  then @mc.select_track(entry_from_selection.xlink)
+                when VIEW_RECORDS then @mc.select_record(entry_from_selection.xlink)
                 when VIEW_ARTISTS then @mc.select_artist(@tvc.selection.selected[COL_REF])
             end
         }
@@ -137,10 +137,10 @@ class ChartsWindow < TopWindow
         links = []
         ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-            links << @entries[@tvc.selection.selected[COL_ENTRY]-1].uilink #.clone
+            links << @entries[@tvc.selection.selected[COL_ENTRY]-1].xlink #.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
-            DBIntf.execute(sql) { |row| links << UILink.new.set_track_ref(row[0]).set_use_of_record_gain }
+            DBIntf.execute(sql) { |row| links << XIntf::Link.new.set_track_ref(row[0]).set_use_of_record_gain }
         end
         return links
     end
@@ -160,30 +160,30 @@ class ChartsWindow < TopWindow
         links = []
         selection = @tvc.selection.selected[COL_ENTRY]-1
         @entries.each { |entry|
-            links << entry.uilink if entry.entry >= selection
+            links << entry.xlink if entry.entry >= selection
             break if entry.entry >= CFG.max_items
         }
         @mc.pqueue.enqueue(links)
     end
 
-    def live_update(uilink)
+    def live_update(xlink)
         # Get the appropriate (track, record or artist) reference from the track reference
         ref = case @view_type
             when VIEW_TRACKS
-                uilink.track.rtrack
+                xlink.track.rtrack
             when VIEW_RECORDS
-                uilink.track.rrecord
+                xlink.track.rrecord
             when VIEW_ARTISTS
-                uilink.segment.rartist
+                xlink.segment.rartist
             when VIEW_COUNTRIES
-                uilink.artist.rorigin
+                xlink.artist.rorigin
             when VIEW_MTYPES
-                uilink.record.rgenre
+                xlink.record.rgenre
             when VIEW_LABELS
-                uilink.record.rlabel
+                xlink.record.rlabel
         end
 
-        lazy_update(@view_type, ref, uilink.track)
+        lazy_update(@view_type, ref, xlink.track)
 
         # Cannot use the if as a modifier, iter is considered as undeclared...
         if iter = @tvc.find_ref(ref, COL_REF)
@@ -312,13 +312,13 @@ class ChartsWindow < TopWindow
         # the result set of the query greatly speeds the things down...
         @entries.each { |entry|
             if @view_type == VIEW_TRACKS
-                entry.uilink = UILink.new.set_track_ref(entry.ref)
-                entry.pix     = entry.uilink.small_track_cover
-                entry.title   = entry.uilink.html_track_title_no_track_num(@mc.show_segment_title?)
+                entry.xlink = XIntf::Link.new.set_track_ref(entry.ref)
+                entry.pix   = entry.xlink.small_track_cover
+                entry.title = entry.xlink.html_track_title_no_track_num(@mc.show_segment_title?)
             else
-                entry.uilink = UILink.new.set_record_ref(entry.ref)
-                entry.pix     = entry.uilink.small_record_cover
-                entry.title   = entry.uilink.html_record_title
+                entry.xlink = XIntf::Link.new.set_record_ref(entry.ref)
+                entry.pix   = entry.xlink.small_record_cover
+                entry.title = entry.xlink.html_record_title
             end
         }
     end
@@ -365,7 +365,7 @@ class ChartsWindow < TopWindow
         display_charts(false)
 
         @tvc.columns_autosize
-TRACE.debug("Charts full load done".red)
+        TRACE.debug("Charts full load done".red)
         return
 #RubyProf.start
 #result = RubyProf.stop
@@ -400,7 +400,7 @@ TRACE.debug("Charts full load done".red)
             pos = entry.entry if entry.ref == ref
         }
         display_charts(true) if pos < CFG.max_items
-TRACE.debug("Charts lazy update done".green)
+        TRACE.debug("Charts lazy update done".green)
     end
 
     def show

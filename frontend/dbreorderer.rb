@@ -166,10 +166,10 @@ class DBReorderer
         @trk_map = []
         @new_trk = 0
 
-        @artist  = ArtistDBClass.new
-        @record  = RecordDBClass.new
-        @segment = SegmentDBClass.new
-        @track   = TrackDBClass.new
+        @artist  = DBClass::Artist.new
+        @record  = DBClass::Record.new
+        @segment = DBClass::Segement.new
+        @track   = DBClass::Track.new
 
         i = 0
         @artist.ref_load(0)

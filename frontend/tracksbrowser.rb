@@ -32,7 +32,7 @@ class TracksBrowser < Gtk::TreeView
 
     def initialize
         super
-        @trklnk = TrackUI.new # Lost instance but setting to nil is not possible
+        @trklnk = XIntf::Track.new # Lost instance but setting to nil is not possible
 
         @stocks = [Gtk::Stock::NO, Gtk::Stock::YES, Gtk::Stock::DIALOG_WARNING,
                    Gtk::Stock::NETWORK, Gtk::Stock::DIALOG_QUESTION]
@@ -209,7 +209,7 @@ class TracksBrowser < Gtk::TreeView
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-        iter[TTV_DATA] = TrackUI.new.set_track_ref(iter[TTV_REF])
+        iter[TTV_DATA] = XIntf::Track.new.set_track_ref(iter[TTV_REF])
     end
 
     def load_entries
@@ -282,8 +282,8 @@ class TracksBrowser < Gtk::TreeView
         @trklnk.to_widgets if @trklnk.valid_track_ref? # @trklnk is invalid if multiple selection was made
     end
 
-    # Returns the uilink for the track at position track_index in the view
-    def get_track_uilink(track_index)
+    # Returns the xlink for the track at position track_index in the view
+    def get_track_xlink(track_index)
         itr = model.get_iter(track_index.to_s)
         return itr ? itr[TTV_DATA] : nil
     end
@@ -323,15 +323,15 @@ class TracksBrowser < Gtk::TreeView
     #
     # Set the status of audio link to OK and update the icon if visible
     #
-    def audio_link_ok(uilink)
-        uilink.set_audio_status(Audio::Status::OK)
-        uilink.setup_audio_file
-        if iter = find_ref(uilink.track.rtrack)
+    def audio_link_ok(xlink)
+        xlink.set_audio_status(Audio::Status::OK)
+        xlink.setup_audio_file
+        if iter = find_ref(xlink.track.rtrack)
             iter[TTV_PIX] = render_icon(@stocks[Audio::Status::OK], Gtk::IconSize::MENU)
         end
     end
 
-    # Returns the TrackUI for the currently selected track in the browser.
+    # Returns the XIntf::Track for the currently selected track in the browser.
     # Returns nil if no selection or multi-selection.
     def selected_track
         return selection.count_selected_rows == 1 ? model.get_iter(selection.selected_rows[0])[TTV_DATA] : nil
@@ -353,14 +353,14 @@ class TracksBrowser < Gtk::TreeView
         return if selection.count_selected_rows == 0
 
         # TRACE.debug("track selection changed.".green)
-        trackui = selected_track
-        if trackui
+        xtrack = selected_track
+        if xtrack
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
-            return if @trklnk.valid_track_ref? && @trklnk == trackui
+            return if @trklnk.valid_track_ref? && @trklnk == xtrack
             # TRACE.debug("track selection changed.".brown)
 
-            @trklnk = trackui
+            @trklnk = xtrack
             @trklnk.to_widgets_with_cover
 
             # Reload artist if artist changed from segment
@@ -404,20 +404,20 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_tag_file
-        trackui = selected_track
-        return if !trackui || !trackui.playable?
+        xtrack = selected_track
+        return if !xtrack || !xtrack.playable?
 
-        file = GtkUtils.select_source(Gtk::FileChooser::ACTION_OPEN, trackui.full_dir)
+        file = GtkUtils.select_source(Gtk::FileChooser::ACTION_OPEN, xtrack.full_dir)
         unless file.empty?
-            trackui.set_artist_ref(@mc.segment.rartist)
-            trackui.tag_and_move_file(file)
-            audio_link_ok(trackui)
+            xtrack.set_artist_ref(@mc.segment.rartist)
+            xtrack.tag_and_move_file(file)
+            audio_link_ok(xtrack)
         end
     end
 
     def on_update_playtime
-        trackui = selected_track
-        return if !trackui || !trackui.playable?
+        xtrack = selected_track
+        return if !xtrack || !xtrack.playable?
 #         return unless selection.count_selected_rows == 1
 #         track_infos = TrackInfos.new.get_track_infos(@track.rtrack)
 #         fname = Utils::audio_file_exists(track_infos).file_name
@@ -425,7 +425,7 @@ class TracksBrowser < Gtk::TreeView
 #         tags_infos = TrackInfos.new.from_tags(fname)
 #         @track.iplaytime = tags_infos.track.iplaytime
 #         @track.iplaytime = file.tags.iplaytime
-        @track.iplaytime = AudioLink.new.load_from_tags(trackui.audio_file).tags.iplaytime
+        @track.iplaytime = Audio::Link.new.load_from_tags(xtrack.audio_file).tags.iplaytime
         @track.sql_update.to_widgets
 
         DBUtils.update_segment_playtime(@track.rsegment)
@@ -436,18 +436,18 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_trk_name_edited(widget, path, new_text)
-        trackui = selected_track
-        if trackui.track.stitle != new_text
+        xtrack = selected_track
+        if xtrack.track.stitle != new_text
             # WARNING It may happen that the file name has no extension
             #         under exceptional and unclear circumstances
 
             # Must rename on server BEFORE the sql update is done because it needs the old name to find the track!!
-            MusicClient.new.rename_audio(trackui.track.rtrack, new_text) if CFG.remote?
+            MusicClient.new.rename_audio(xtrack.track.rtrack, new_text) if CFG.remote?
 
-            trackui.track.stitle = new_text
-            trackui.track.sql_update
+            xtrack.track.stitle = new_text
+            xtrack.track.sql_update
 
-            trackui.tag_and_move_file(trackui.audio_file) if trackui.playable?
+            xtrack.tag_and_move_file(xtrack.audio_file) if xtrack.playable?
         end
     end
 
@@ -489,7 +489,7 @@ class TracksBrowser < Gtk::TreeView
         # Voire si c'est vraiment utile de traiter des cas plus qu'exceptionnels...:
         # s'en fout si on a change qqch dans les db refs et qu'on se repositionne pas automatiquement
         # TODO: faire le rename/retag local/remote si le titre/genre a change
-        if DBEditor.new(@mc, @trklnk, DBEditor::TRACK_PAGE).run == Gtk::Dialog::RESPONSE_OK
+        if XEditors::Main.new(@mc, @trklnk, XEditors::TRACK_PAGE).run == Gtk::Dialog::RESPONSE_OK
             # TODO: review this code. It's useless or poorly coded
 #             load_entries
 #             @trklnk.track.sql_load
@@ -500,8 +500,8 @@ class TracksBrowser < Gtk::TreeView
     end
 
 
-    def dwl_file_name_notification(uilink, file_name)
-        audio_link_ok(uilink)
+    def dwl_file_name_notification(xlink, file_name)
+        audio_link_ok(xlink)
         @mc.track_list_changed(self)
     end
 

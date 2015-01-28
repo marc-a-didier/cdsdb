@@ -119,7 +119,7 @@ class FilterWindow < TopWindow
 
     def on_filter_changed(widget)
         # @ftv.selection.selected may be nil when a new filter is created
-        PREFS.content_from_yaml(@ftv.selection.selected[2]) if @ftv.selection.selected
+        Prefs.content_from_yaml(@ftv.selection.selected[2]) if @ftv.selection.selected
     end
 
     def new_filter
@@ -135,7 +135,7 @@ class FilterWindow < TopWindow
     end
 
     def save_filter
-        yml_data = PREFS.yaml_from_content(GtkUI[FLT_VBOX_EXPANDERS]).to_sql
+        yml_data = Prefs.yaml_from_content(GtkUI[FLT_VBOX_EXPANDERS]).to_sql
         DBUtils.client_sql("UPDATE filters SET sxmldata=#{yml_data} WHERE rfilter=#{@ftv.selection.selected[0]}")
         @ftv.selection.selected[2] = yml_data
     end
@@ -245,7 +245,7 @@ class FilterWindow < TopWindow
 
         max_played = 0
         tracks = []
-        dblink = AudioLink.new
+        dblink = Audio::Link.new
         DBIntf.execute(sql) do |row|
             # Skip tracks which aren't ripped
             dblink.reset.set_track_ref(row[0])
@@ -346,7 +346,7 @@ class FilterWindow < TopWindow
             if destination == DEST_PLIST
                 DBIntf.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{(i+1)*1024});")
             else
-                links << UILink.new.set_track_ref(track.rtrack)
+                links << XIntf::Link.new.set_track_ref(track.rtrack)
             end
         }
         f.close

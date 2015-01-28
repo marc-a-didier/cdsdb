@@ -6,14 +6,14 @@ class SearchDialog
 
         GtkUI.load_window(GtkIDs::SEARCH_DIALOG)
 
-        GtkUI[GtkIDs::SEARCH_DIALOG].signal_connect(:show) { PREFS.restore_window(GtkIDs::SEARCH_DIALOG) }
+        GtkUI[GtkIDs::SEARCH_DIALOG].signal_connect(:show) { Prefs.restore_window(GtkIDs::SEARCH_DIALOG) }
         GtkUI[GtkIDs::SEARCH_DIALOG].signal_connect(:delete_event) do
-            PREFS.save_window(GtkIDs::SEARCH_DIALOG)
+            Prefs.save_window(GtkIDs::SEARCH_DIALOG)
             GtkUI[GtkIDs::SEARCH_DIALOG].destroy
             false
         end
         GtkUI[GtkIDs::SRCH_DLG_BTN_CLOSE].signal_connect(:clicked) do
-            PREFS.save_window(GtkIDs::SEARCH_DIALOG)
+            Prefs.save_window(GtkIDs::SEARCH_DIALOG)
             GtkUI[GtkIDs::SEARCH_DIALOG].destroy
         end
 
@@ -110,18 +110,18 @@ class SearchDialog
             else
                 iter[1] = row[0].to_html_bold+" from "+row[1].to_html_italic+" by "+row[2].to_html_italic
             end
-            iter[2] = UILink.new.set_track_ref(row[3]) if search_track?
-            iter[2] = UILink.new.set_segment_ref(row[3]) if search_segment?
-            iter[2] = UILink.new.set_record_ref(row[3]) if search_record?
+            iter[2] = XIntf::Link.new.set_track_ref(row[3]) if search_track?
+            iter[2] = XIntf::Link.new.set_segment_ref(row[3]) if search_segment?
+            iter[2] = XIntf::Link.new.set_record_ref(row[3]) if search_record?
         end
     end
 
     def show
         return unless @tv.selection.count_selected_rows > 0
-        uilink = @tv.model.get_iter(@tv.selection.selected_rows[0])[2]
-        @mc.select_segment(uilink) if search_segment?
-        @mc.select_record(uilink) if search_record?
-        @mc.select_track(uilink) if search_track?
+        xlink = @tv.model.get_iter(@tv.selection.selected_rows[0])[2]
+        @mc.select_segment(xlink) if search_segment?
+        @mc.select_record(xlink) if search_record?
+        @mc.select_track(xlink) if search_track?
     end
 
     def run

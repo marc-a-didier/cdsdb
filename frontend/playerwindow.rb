@@ -1,5 +1,5 @@
 
-PlayerData = Struct.new(:owner, :internal_ref, :uilink, :rplist)
+PlayerData = Struct.new(:owner, :internal_ref, :xlink, :rplist)
 
 class PlayerWindow < TopWindow
 
@@ -61,12 +61,12 @@ class PlayerWindow < TopWindow
         # Tooltip cache. Inited when a new track starts.
         @tip_pix = nil
 
-        # Two instances of GstPlayer are created, playbin being the actual player
+        # Two instances of GStreamerPlayer are created, playbin being the actual player
         # while readybin is in charge of prefecthing the next track to be played.
         # When playbin finishes its track, readybin becomes the playbin and
         # the playbin becomes the readybin.
-        @playbin  = GstPlayer.new(self).setup
-        @readybin = GstPlayer.new(self).setup
+        @playbin  = GStreamer::Player.new(self).setup
+        @readybin = GStreamer::Player.new(self).setup
 
         # Handling of slider button draging
         @was_playing = false # Only used to remember the state of the player when seeking
@@ -260,33 +260,33 @@ class PlayerWindow < TopWindow
     def set_ready(player_data)
         # audio_file may only be nil if the cache has been cleared
         # while there were ready to play tracks in the queue.
-        unless player_data.uilink.audio_file
-            player_data.uilink.setup_audio_file
+        unless player_data.xlink.audio_file
+            player_data.xlink.setup_audio_file
             TRACE.debug("Player audio file was empty!".red)
         end
 
         # Check if the ready bin already has the same audio file
         # If the file is the same we also have to check that the ready bin is in paused state
-        if player_data.uilink.audio_file != @readybin.audio_file || !@readybin.paused?
-            TRACE.debug("Readying #{player_data.uilink.audio_file}".brown)
+        if player_data.xlink.audio_file != @readybin.audio_file || !@readybin.paused?
+            TRACE.debug("Readying #{player_data.xlink.audio_file}".brown)
 
             # Can't use replay gain if track has been dropped.
             # Replay gain should work if tags are set in the audio file
             replay_gain = 0.0
-            if player_data.uilink.tags.nil?
-                if player_data.uilink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
-                    replay_gain = player_data.uilink.record.fgain
-                    TRACE.debug("RECORD gain: #{player_data.uilink.record.fgain}".brown)
+            if player_data.xlink.tags.nil?
+                if player_data.xlink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
+                    replay_gain = player_data.xlink.record.fgain
+                    TRACE.debug("RECORD gain: #{player_data.xlink.record.fgain}".brown)
                 elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
-                    replay_gain = player_data.uilink.track.fgain
-                    TRACE.debug("TRACK gain #{player_data.uilink.track.fgain}".brown)
+                    replay_gain = player_data.xlink.track.fgain
+                    TRACE.debug("TRACK gain #{player_data.xlink.track.fgain}".brown)
                 end
             end
 
             # It may happen that we have to wait for a track being downloaded from server
-            sleep(0.1) while not player_data.uilink.playable?
+            sleep(0.1) while not player_data.xlink.playable?
 
-            @readybin.set_ready(player_data.uilink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
+            @readybin.set_ready(player_data.xlink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
         end
     end
 
@@ -299,8 +299,8 @@ class PlayerWindow < TopWindow
         @playbin.start_track
 
         # Debug info
-        info = player_data.uilink.tags.nil? ? "[#{player_data.uilink.track.rtrack}" : "[dropped"
-        TRACE.debug((info+", #{player_data.uilink.audio_file}]").cyan)
+        info = player_data.xlink.tags.nil? ? "[#{player_data.xlink.track.rtrack}" : "[dropped"
+        TRACE.debug((info+", #{player_data.xlink.audio_file}]").cyan)
 
         # Delayed UI operations start now
         @tip_pix = nil
@@ -314,14 +314,14 @@ class PlayerWindow < TopWindow
 
         player_data.owner.started_playing(player_data)
 
-        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = player_data.uilink.html_track_title_no_track_num(false, " ")
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = player_data.xlink.html_track_title_no_track_num(false, " ")
         GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
         GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = false
         GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = true
         GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
         if CFG.notifications?
-            file_name = player_data.uilink.cover_file_name
-            system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDsDB now playing' \"#{player_data.uilink.html_track_title(true)}\"")
+            file_name = player_data.xlink.cover_file_name
+            system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDsDB now playing' \"#{player_data.xlink.html_track_title(true)}\"")
         end
     end
 
@@ -390,7 +390,7 @@ class PlayerWindow < TopWindow
 
 
     ###########################################################################
-    # GstPlayer messages implementation
+    # GStreamerPlayer messages implementation
     ###########################################################################
 
     def gstplayer_eos
@@ -400,7 +400,7 @@ class PlayerWindow < TopWindow
 
         # If next provider is different from current, notify current provider it has finished
         @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)
-        @mc.notify_played(@queue[0].uilink)
+        @mc.notify_played(@queue[0].xlink)
         @queue.shift # Remove first entry, no more needed
 
         prepare_next_track
@@ -411,7 +411,7 @@ class PlayerWindow < TopWindow
     end
 
     def gstplayer_level(msg_struct)
-        GstPlayer::CHANNELS.each do |channel|
+        GStreamer::Player::CHANNELS.each do |channel|
             rms  = msg_struct["rms"][channel]
             peak = msg_struct["decay"][channel]
 
@@ -483,9 +483,9 @@ class PlayerWindow < TopWindow
 
     def show_tooltip(si, tool_tip)
         if @playbin.playing?
-            @tip_pix = @queue[0].uilink.large_track_cover if @tip_pix.nil?
+            @tip_pix = @queue[0].xlink.large_track_cover if @tip_pix.nil?
             tool_tip.set_icon(@tip_pix)
-            text = @queue[0].uilink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
+            text = @queue[0].xlink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
         else
             text = "\n<b>CDsDB: waiting for tracks to play...</b>\n"
         end
@@ -494,6 +494,6 @@ class PlayerWindow < TopWindow
 
     def debug_queue
         puts("Queue: #{@queue.size} entries:")
-        @queue.each { |entry| puts("  #{entry.uilink.track.stitle} <- #{entry.owner.class.name}") }
+        @queue.each { |entry| puts("  #{entry.xlink.track.stitle} <- #{entry.owner.class.name}") }
     end
 end

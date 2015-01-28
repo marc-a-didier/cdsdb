@@ -209,7 +209,7 @@ class Stats
     end
 
     def ripped_stats(genre)
-        audio_link = AudioLink.new
+        audio_link = Audio::Link.new
         DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
             Gtk.main_iteration while Gtk.events_pending?
             rtrack = DBIntf.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
@@ -317,7 +317,7 @@ class Stats
                    INNER JOIN records ON records.rrecord=segments.rrecord
                    WHERE iplayed > 0 AND records.rgenre=#{genre.ref} ORDER BY iplayed DESC;"
         end
-        audio_link = AudioLink.new
+        audio_link = Audio::Link.new
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
             audio_link.reset.set_track_ref(row[0].to_i)
@@ -328,7 +328,7 @@ class Stats
     end
 
     def top_rated_tracks
-        audio_link = AudioLink.new
+        audio_link = Audio::Link.new
         new_table("Most rated tracks", ["Rank:R", "Rating", "Track", "Artist", "Record", "Segment"])
         DBIntf.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
             Gtk.main_iteration while Gtk.events_pending?
@@ -341,7 +341,7 @@ class Stats
 
     def gen_play_history
         limit = 1000
-        audio_link = AudioLink.new
+        audio_link = Audio::Link.new
         new_table("Last #{limit} played tracks", ["Order:R", "When", "Where", "Track", "Artist", "Record", "Segment"])
         sql = %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
                  INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname

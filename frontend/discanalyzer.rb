@@ -37,8 +37,8 @@ module DiscAnalyzer
     end
 
     def self.analyze(disc, f)
-        genre = self.get_reference(GenreDBClass.new, disc.genre, f)
-        label = self.get_reference(LabelDBClass.new, disc.label, f)
+        genre = self.get_reference(DBClass::Genre.new, disc.genre, f)
+        label = self.get_reference(DBClass::Label.new, disc.label, f)
 
         # Builds a structure that groups tracks into segments and segements into artists
         seg_order = 0
@@ -48,14 +48,14 @@ module DiscAnalyzer
             name = self.format_artist(track.artist)
 
             # Add new artist if doesn't exist
-            artists[name] = ArtistStruct.new(Hash.new, ArtistDBClass.new) unless artists[name]
+            artists[name] = ArtistStruct.new(Hash.new, DBClass::Artist.new) unless artists[name]
 
             # Set segment name to empty if it has the name as the record
             segment = disc.title == track.segment ? "" : track.segment
 
             # Add a new segment to the current artist if it doesn't already exist
             unless artists[name].segments[segment]
-                artists[name].segments[segment] = SegmentStruct.new(Array.new, SegmentDBClass.new)
+                artists[name].segments[segment] = SegmentStruct.new(Array.new, DBClass::Segment.new)
                 # Already set segment order in db class cause can't find it again since it's a hash
                 seg_order += 1
                 artists[name].segments[segment].db_class.iorder = seg_order
@@ -81,7 +81,7 @@ module DiscAnalyzer
         end
 
         # Setup the record entry and generate the insert statement
-        record = RecordDBClass.new
+        record = DBClass::Record.new
         record.rartist = artists.size > 1 ? 0 : artists[artists.keys[0]].db_class.rartist
         record.rrecord = record.get_last_id+1
         record.stitle = disc.title
@@ -112,7 +112,7 @@ module DiscAnalyzer
 
         # Generate the insert statement for each track.
         # Getting back the segment reference and segment order is a bit tricky!!!
-        track = TrackDBClass.new
+        track = DBClass::Track.new
         last_id = track.get_last_id+1
         disc.tracks.each_with_index do |dtrack, track_index|
             track.isegorder = 0

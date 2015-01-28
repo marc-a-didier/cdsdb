@@ -8,9 +8,9 @@ require 'singleton'
 require 'logger'
 
 require 'sqlite3'
-require 'taglib2'
+# require 'taglib2'
 require 'yaml'
-require 'rexml/document'
+# require 'rexml/document'
 
 require '../shared/cfg'
 require '../shared/dbintf'
@@ -18,7 +18,8 @@ require '../shared/dbclassintf'
 require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/audio'
-require '../shared/dbcachemgr'
+require '../shared/dbcache'
+require '../shared/dbcachelink'
 require '../shared/audiolink'
 # require '../shared/trackinfos'
 
@@ -92,7 +93,7 @@ class MusicServer
         block_size = session.gets.chomp.to_i
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
-        file = AudioLink.new.set_track_ref(rtrack).setup_audio_file.file
+        file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file
         LOG.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
         if file
             session.puts(File.size(file).to_s)
@@ -112,12 +113,12 @@ class MusicServer
     def check_single_audio(session)
         session.puts("OK")
         rtrack = session.gets.chomp.to_i
-        session.puts(AudioLink.new.set_track_ref(rtrack).setup_audio_file.status.to_s)
+        session.puts(Audio::Link.new.set_track_ref(rtrack).setup_audio_file.status.to_s)
     end
 
     def check_multiple_audio(session)
         session.puts("OK")
-        audio_link = AudioLink.new
+        audio_link = Audio::Link.new
         rs = ""
         session.gets.chomp.split(" ").each { |track|
             rs << audio_link.reset.set_track_ref(track.to_i).setup_audio_file.status.to_s+" "
@@ -186,7 +187,7 @@ class MusicServer
 
     def rename_audio(session)
         session.puts("OK")
-        audio_link = AudioLink.new.set_track_ref(session.gets.chomp.to_i)
+        audio_link = Audio::Link.new.set_track_ref(session.gets.chomp.to_i)
         new_title  = session.gets.chomp
         file_name  = audio_link.setup_audio_file.file
         if file_name

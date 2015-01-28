@@ -49,9 +49,9 @@ class MasterController
     def clean_up
         @player.terminate
 
-        [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| PREFS.save_menu_state(GtkUI[menu]) }
+        [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| Prefs.save_menu_state(GtkUI[menu]) }
 
-        PREFS.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,
+        Prefs.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,
                             CHARTS_WINDOW, FILTER_WINDOW, TASKS_WINDOW, MEMOS_WINDOW])
 
         CFG.save
@@ -103,7 +103,7 @@ class MasterController
     def is_on_never_played?; @mw.art_browser.is_on_never_played?       end
     def is_on_compilations?; @mw.art_browser.is_on_compile?            end
 
-    def track_uilink;       @mw.trk_browser.trklnk;                     end
+    def track_xlink;         @mw.trk_browser.trklnk;                   end
 
 
     def invalidate_tabs
@@ -137,8 +137,8 @@ class MasterController
         @mw.rec_browser.clear
     end
 
-    def audio_link_ok(uilink)
-        @mw.trk_browser.audio_link_ok(uilink)
+    def audio_link_ok(xlink)
+        @mw.trk_browser.audio_link_ok(xlink)
     end
 
 
@@ -190,29 +190,29 @@ class MasterController
         return @mw.search_dlg.get_selection
     end
 
-    def get_track_uilink(track_index)
-        return @mw.trk_browser.get_track_uilink(track_index)
+    def get_track_xlink(track_index)
+        return @mw.trk_browser.get_track_xlink(track_index)
     end
 
-    def notify_played(uilink, host = "")
+    def notify_played(xlink, host = "")
         # If rtrack is -1 the track has been dropped into the pq from the file system
-        return if uilink.track.rtrack == -1 # || uilink.track.banned?
+        return if xlink.track.rtrack == -1 # || xlink.track.banned?
 
         host = Socket.gethostname if host.empty?
 
-        DBUtils.update_track_stats(uilink.track.rtrack, host)
+        DBUtils.update_track_stats(xlink.track.rtrack, host)
 
         # Update gui if the played track is currently selected.
         # Dangerous if user is modifying the track panel!!!
-        uilink.reload_track_cache
+        xlink.reload_track_cache
         @mw.trk_browser.update_infos
 
         Thread.new {
             @mw.set_window_title
 
-            @charts.live_update(uilink) if CFG.live_charts_update? && @charts.window.visible?
+            @charts.live_update(xlink) if CFG.live_charts_update? && @charts.window.visible?
 
-            MusicClient.new.update_stats(uilink.track.rtrack) if CFG.remote?
+            MusicClient.new.update_stats(xlink.track.rtrack) if CFG.remote?
         }
 
         # if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
@@ -229,29 +229,29 @@ class MasterController
         end
     end
 
-    def select_record(uilink, force_reload = false)
+    def select_record(xlink, force_reload = false)
         # Check if show the compilations artist if grouped
-        if uilink.record.rartist == 0 && !view_compile? && uilink.valid_segment_ref?
-            rartist = uilink.segment.rartist
+        if xlink.record.rartist == 0 && !view_compile? && xlink.valid_segment_ref?
+            rartist = xlink.segment.rartist
         else
-            rartist = uilink.record.rartist
+            rartist = xlink.record.rartist
         end
         select_artist(rartist)
-        if !@mw.rec_browser.reclnk.valid_record_ref? || self.record.rrecord != uilink.record.rrecord || force_reload
-            @mw.rec_browser.select_record(uilink.record.rrecord)
+        if !@mw.rec_browser.reclnk.valid_record_ref? || self.record.rrecord != xlink.record.rrecord || force_reload
+            @mw.rec_browser.select_record(xlink.record.rrecord)
         end
     end
 
-    def select_segment(uilink, force_reload = false)
-        uilink.set_record_ref(uilink.segment.rrecord)
-        select_record(uilink)
-        @mw.rec_browser.select_segment_from_record_selection(uilink.segment.rsegment) # if self.segment.rsegment != rsegment || force_reload
+    def select_segment(xlink, force_reload = false)
+        xlink.set_record_ref(xlink.segment.rrecord)
+        select_record(xlink)
+        @mw.rec_browser.select_segment_from_record_selection(xlink.segment.rsegment) # if self.segment.rsegment != rsegment || force_reload
     end
 
-    def select_track(uilink, force_reload = false)
-        select_record(uilink)
-        if !@mw.trk_browser.trklnk.valid_track_ref? || self.track.rtrack != uilink.track.rtrack || force_reload
-            @mw.trk_browser.position_to(uilink.track.rtrack)
+    def select_track(xlink, force_reload = false)
+        select_record(xlink)
+        if !@mw.trk_browser.trklnk.valid_track_ref? || self.track.rtrack != xlink.track.rtrack || force_reload
+            @mw.trk_browser.position_to(xlink.track.rtrack)
         end
     end
 
