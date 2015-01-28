@@ -40,7 +40,7 @@ class MasterController
 
         @mw = MainWindow.new(self)
 
-        IMG_CACHE.preload_tracks_cover
+        XIntf::Image::Cache.preload_tracks_cover
     end
 
     #
@@ -54,7 +54,7 @@ class MasterController
         Prefs.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,
                             CHARTS_WINDOW, FILTER_WINDOW, TASKS_WINDOW, MEMOS_WINDOW])
 
-        CFG.save
+        Cfg.save
     end
 
     #
@@ -210,9 +210,9 @@ class MasterController
         Thread.new {
             @mw.set_window_title
 
-            @charts.live_update(xlink) if CFG.live_charts_update? && @charts.window.visible?
+            @charts.live_update(xlink) if Cfg.live_charts_update? && @charts.window.visible?
 
-            MusicClient.new.update_stats(xlink.track.rtrack) if CFG.remote?
+            MusicClient.new.update_stats(xlink.track.rtrack) if Cfg.remote?
         }
 
         # if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?

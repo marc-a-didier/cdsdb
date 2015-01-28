@@ -14,12 +14,12 @@ class Utils
     #
     def self.replace_dir_name(file_info)
         type, name, mtime = file_info.split(Cfg::FILE_INFO_SEP)
-        return CFG.dir(type.to_sym)+name
+        return Cfg.dir(type.to_sym)+name
     end
 
     def self.has_matching_file?(file_info)
         type, name, mdtime = file_info.split(Cfg::FILE_INFO_SEP)
-        local_file = CFG.dir(type.to_sym)+name
+        local_file = Cfg.dir(type.to_sym)+name
         return File::exists?(local_file) && File::mtime(local_file).to_i >= mdtime.to_i
     end
 
@@ -37,7 +37,7 @@ class Utils
         sysrand = `head -c 8 /dev/random`
         i = rseed = 0
         sysrand.each_byte { |c| rseed |= c << i*8; i += 1 }
-        TRACE.debug("rseed=#{rseed}")
+        Trace.debug("rseed=#{rseed}")
         srand(rseed)
     end
 
@@ -75,12 +75,12 @@ class Utils
         nbytes = how_many*wsize
         file_name = ENV['HOME']+"/Downloads/randomorg.bin"
         unless File.exists?(file_name)
-            TRACE.debug("Random file doesn't exist, will use /dev/random".red)
+            Trace.debug("Random file doesn't exist, will use /dev/random".red)
             return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value, wsize, debug_file)
         end
         size = File.size(file_name)
         if size < nbytes
-            TRACE.debug("Random file too short, will use /dev/random".red)
+            Trace.debug("Random file too short, will use /dev/random".red)
             return self.gen_from_str(`head -c #{nbytes} /dev/random`, max_value, wsize, debug_file)
         else
             return self.gen_from_str(self.str_from_rnd_file(nbytes), max_value, wsize, debug_file)
@@ -124,7 +124,7 @@ class Utils
     def self.remove_dirs(dir)
         while Dir.entries(dir).size < 3 # Remove dir if entries only contains . & ..
             Dir.rmdir(dir)
-            LOG.info("Source dir #{dir} removed.")
+            Log.info("Source dir #{dir} removed.")
             dir.sub!(/(\/[^\/]+)$/, "")
         end
     end
@@ -145,7 +145,7 @@ class Utils
                 if match[2].length < 2
                     new_file = File.join(File.dirname(file), match[1]+"0"+match[2]+match[3])
                     FileUtils.mv(file, new_file)
-                    TRACE.debug("File #{file[0]} renamed to #{nfile}")
+                    Trace.debug("File #{file[0]} renamed to #{nfile}")
                     files[index] = new_file
                 end
             end
@@ -169,7 +169,7 @@ class Utils
                 tags.close
             end
         }
-        LOG.info("Directory #{dir} tagged with genre #{genre}")
+        Log.info("Directory #{dir} tagged with genre #{genre}")
     end
 
     #
@@ -199,7 +199,7 @@ class Utils
         return if dir.empty?
 
         stats = [0, 0]
-        res = File.new(CFG.rsrc_dir+"orphans.txt", "w")
+        res = File.new(Cfg.rsrc_dir+"orphans.txt", "w")
         Find::find(dir) { |file|
             if Audio::FILE_EXTS.include?(File.extname(file).downcase)
 print "Checking #{file}\n"
@@ -240,7 +240,7 @@ print "Checking #{file}\n"
         DBIntf.execute("SELECT * FROM tracks") do |row|
             file = Utils::audio_file_exists(get_track_info(row[FLD_RTRACK]))[1]
             unless file.empty?
-                file.gsub!(CFG.music_dir, "")
+                file.gsub!(Cfg.music_dir, "")
                 DBIntf.execute("UPDATE tracks SET saudioinfo=#{file.to_sql} WHERE rtrack=#{row[FLD_RTRACK]};")
             end
         end
@@ -292,7 +292,7 @@ print "Checking #{file}\n"
             end
         end
         ["plists", "pltracks", "hostnames", "logtracks"].each { |table| dump_table(xdoc, table) }
-        xdoc.save(CFG.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
+        xdoc.save(Cfg.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
     end
 
     def self.test_ratings
@@ -311,13 +311,13 @@ print "Checking #{file}\n"
             #rt << row[0]+" by "+row[4]+" from "+row[3]+"==> "+rating.to_s
         }
         rt.sort! { |t1, t2| t2 <=> t1 }
-        File.open(CFG.rsrc_dir+"ratings.txt", "w") { |file|
+        File.open(Cfg.rsrc_dir+"ratings.txt", "w") { |file|
             rt.each { |s| file.puts s[0].to_s+": "+s[1] }
         }
     end
 
     def self.replay_gain_for_genre
-        TRACE.debug("Start gaining".bold)
+        Trace.debug("Start gaining".bold)
         DBIntf.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=10 LIMIT 50").each do |rec|
             tracks = []
             DBIntf.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
@@ -326,6 +326,6 @@ print "Checking #{file}\n"
             end
             self.compute_replay_gain(tracks, false)
         end
-        TRACE.debug("Finished gaining".bold)
+        Trace.debug("Finished gaining".bold)
     end
 end

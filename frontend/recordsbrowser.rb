@@ -138,7 +138,7 @@ class RecordsBrowser < Gtk::TreeView
     def on_selection_changed(widget)
         # @tv.selection.selected == nil probably means the previous selection is deselected...
         return if selection.selected.nil?
-# TRACE.debug("record selection changed")
+# Trace.debug("record selection changed")
         update_ui_handlers(selection.selected)
 
         if @reclnk.valid_record_ref?
@@ -268,7 +268,7 @@ p row
 
     def on_rec_edit
         rgenre = @reclnk.record.rgenre
-        if XEditors::Main.new(@mc, @reclnk, selection.selected.parent ? XEditors::SEGMENT_PAGE : XEditors::RECORD_PAGE).run == Gtk::Dialog::RESPONSE_OK
+        if XIntf::Editors::Main.new(@mc, @reclnk, selection.selected.parent ? XIntf::Editors::SEGMENT_PAGE : XIntf::Editors::RECORD_PAGE).run == Gtk::Dialog::RESPONSE_OK
             # Won't work if pk changed in the editor...
             @reclnk.to_widgets(!selection.selected.parent)
             # If genre changed in editor, reset the audio status to unknown to force reload
@@ -314,7 +314,7 @@ p row
     def on_tag_dir
         tracks = @mc.get_tracks_list
 
-        default_dir = tracks.first.playable? ? tracks.first.full_dir : CFG.rip_dir
+        default_dir = tracks.first.playable? ? tracks.first.full_dir : Cfg.rip_dir
 
         dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?

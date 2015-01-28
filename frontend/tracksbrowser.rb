@@ -44,7 +44,7 @@ class TracksBrowser < Gtk::TreeView
         self.visible = true
 
         renderer = Gtk::CellRendererText.new
-        if CFG.admin?
+        if Cfg.admin?
             renderer.editable = true
             # Reset the text to the true title of the track to remove segment index if any.
             renderer.signal_connect(:editing_started) { |cell, editable, path| editable.text = @trklnk.track.stitle }
@@ -116,7 +116,7 @@ class TracksBrowser < Gtk::TreeView
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the track tree view except in admin mode (to add track)
-            return if selection.count_selected_rows < 1 && !CFG.admin?
+            return if selection.count_selected_rows < 1 && !Cfg.admin?
             # Add segments of the current record to the segment association submenu
             sub_menu = GtkUI[GtkIDs::TRK_POPUP_SEGASS].submenu
             GtkUI[GtkIDs::TRK_POPUP_SEGASS].remove_submenu
@@ -303,7 +303,7 @@ class TracksBrowser < Gtk::TreeView
         }
 
         # If client mode and some or all files not found, ask if present on the server
-        if CFG.remote? && check_on_server
+        if Cfg.remote? && check_on_server
             # Save track list to avoid threading problems
             tracks = ""
             model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
@@ -352,13 +352,13 @@ class TracksBrowser < Gtk::TreeView
     def on_selection_changed(widget)
         return if selection.count_selected_rows == 0
 
-        # TRACE.debug("track selection changed.".green)
+        # Trace.debug("track selection changed.".green)
         xtrack = selected_track
         if xtrack
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
             return if @trklnk.valid_track_ref? && @trklnk == xtrack
-            # TRACE.debug("track selection changed.".brown)
+            # Trace.debug("track selection changed.".brown)
 
             @trklnk = xtrack
             @trklnk.to_widgets_with_cover
@@ -367,13 +367,13 @@ class TracksBrowser < Gtk::TreeView
             @mc.set_segment_artist(@trklnk) if @trklnk.segment.rartist != @mc.segment.rartist
         else
             # There's nothing to do... may be set artist infos to empty.
-            # TRACE.debug("--- multi select ---".magenta)
+            # Trace.debug("--- multi select ---".magenta)
         end
     end
 
     def invalidate
         model.clear
-        GtkUI[GtkIDs::REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
+        GtkUI[GtkIDs::REC_IMAGE].pixbuf = XIntf::Image::Cache.default_large_record
         @trklnk.reset.to_widgets if @trklnk.valid_track_ref?
     end
 
@@ -442,7 +442,7 @@ class TracksBrowser < Gtk::TreeView
             #         under exceptional and unclear circumstances
 
             # Must rename on server BEFORE the sql update is done because it needs the old name to find the track!!
-            MusicClient.new.rename_audio(xtrack.track.rtrack, new_text) if CFG.remote?
+            MusicClient.new.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
 
             xtrack.track.stitle = new_text
             xtrack.track.sql_update
@@ -489,7 +489,7 @@ class TracksBrowser < Gtk::TreeView
         # Voire si c'est vraiment utile de traiter des cas plus qu'exceptionnels...:
         # s'en fout si on a change qqch dans les db refs et qu'on se repositionne pas automatiquement
         # TODO: faire le rename/retag local/remote si le titre/genre a change
-        if XEditors::Main.new(@mc, @trklnk, XEditors::TRACK_PAGE).run == Gtk::Dialog::RESPONSE_OK
+        if XIntf::Editors::Main.new(@mc, @trklnk, XIntf::Editors::TRACK_PAGE).run == Gtk::Dialog::RESPONSE_OK
             # TODO: review this code. It's useless or poorly coded
 #             load_entries
 #             @trklnk.track.sql_load

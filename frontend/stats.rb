@@ -503,7 +503,7 @@ class Stats
             return
         end
 
-        init_globals(CFG.rsrc_dir+"dbstats.html", "DB Statistics")
+        init_globals(Cfg.rsrc_dir+"dbstats.html", "DB Statistics")
         db_general_infos
 
         # Check to see if a selection needs the ripped records data

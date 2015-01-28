@@ -12,7 +12,9 @@ require 'sqlite3'
 require 'yaml'
 # require 'rexml/document'
 
+require '../shared/extenders'
 require '../shared/cfg'
+require '../shared/tracelog'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
 require '../shared/utils'
@@ -27,24 +29,24 @@ require '../shared/audiolink'
 class MusicServer
 
     def initialize
-        CFG.load
-        CFG.server_mode = true
-        CFG.set_local_mode # On va pas cascader les serveurs...
+        Cfg.load
+        Cfg.server_mode = true
+        Cfg.set_local_mode # On va pas cascader les serveurs...
 
         Thread.abort_on_exception = true
 
-        LOG.info("Server started")
-        LOG.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
-        LOG.info("    SQLite3 #{`sqlite3 --version`.chomp}")
-        LOG.info("    Database #{CFG.db_version}")
-        LOG.info("Server listening on host #{CFG.server} port #{CFG.port}.")
+        Log.info("Server started")
+        Log.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
+        Log.info("    SQLite3 #{`sqlite3 --version`.chomp}")
+        Log.info("    Database #{Cfg.db_version}")
+        Log.info("Server listening on host #{Cfg.server} port #{Cfg.port}.")
 
         # A bit of security...
         @allowed_hosts = []
         IO.foreach("/etc/hosts") { |line| @allowed_hosts << line.split(" ")[0] if line.match('^[0-9]') }
         hosts = "Allowed hosts :"
         @allowed_hosts.each { |host| hosts += " "+host }
-        LOG.info(hosts)
+        Log.info(hosts)
     end
 
     # Returned array of peeraddr: ["AF_INET", 46515, "jukebox", "192.168.1.123"]
@@ -59,12 +61,12 @@ class MusicServer
 
     def listen
         Signal.trap("TERM") {
-            LOG.info("Server shutdown on TERM signal.")
+            Log.info("Server shutdown on TERM signal.")
             exit(0)
         }
-        Signal.trap("HUP") { LOG.info("SIGHUP trapped and ignored.") }
+        Signal.trap("HUP") { Log.info("SIGHUP trapped and ignored.") }
 
-        server = TCPServer.new('0.0.0.0', CFG.port)
+        server = TCPServer.new('0.0.0.0', Cfg.port)
         begin
             loop do #while (session = server.accept)
                 Thread.start(server.accept) { |session|
@@ -74,17 +76,17 @@ class MusicServer
                         begin
                             self.send(req.gsub(/ /, "_").to_sym, session)
                         rescue NoMethodError => ex
-                            LOG.warn("Unknown request received (#{ex.class} : #{ex}).")
+                            Log.warn("Unknown request received (#{ex.class} : #{ex}).")
                         end
                     else
-                        LOG.warn("Connection refused from #{ip_address(session)}")
+                        Log.warn("Connection refused from #{ip_address(session)}")
                         session.puts("Fucked up...")
                     end
                     session.close
                 }
             end
         rescue Interrupt
-            LOG.info("Server shutdown.")
+            Log.info("Server shutdown.")
         end
     end
 
@@ -94,10 +96,10 @@ class MusicServer
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
         file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file
-        LOG.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
+        Log.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
         if file
             session.puts(File.size(file).to_s)
-            session.puts(file.sub(CFG.music_dir, ""))
+            session.puts(file.sub(Cfg.music_dir, ""))
             File.open(file, "rb") { |f|
                 while data = f.read(block_size)
                     session.write(data)
@@ -144,8 +146,8 @@ class MusicServer
     def synchronize_resources(session)
         session.puts("OK")
         [:covers, :icons, :flags].each { |type|
-            Find::find(CFG.dir(type)) { |file|
-                session.puts(type.to_s+Cfg::FILE_INFO_SEP+file.sub(CFG.dir(type), "")+
+            Find::find(Cfg.dir(type)) { |file|
+                session.puts(type.to_s+Cfg::FILE_INFO_SEP+file.sub(Cfg.dir(type), "")+
                                        Cfg::FILE_INFO_SEP+File.mtime(file).to_i.to_s) unless File.directory?(file)
             }
         }
@@ -154,9 +156,9 @@ class MusicServer
 
     def synchronize_sources(session)
         session.puts("OK")
-        Find::find(CFG.sources_dir) { |file|
+        Find::find(Cfg.sources_dir) { |file|
             next if file.match(/.*\.bzr/) # Skip hidden dir (.bzr for example...)
-            session.puts("src"+Cfg::FILE_INFO_SEP+file.sub(CFG.sources_dir, "")+
+            session.puts("src"+Cfg::FILE_INFO_SEP+file.sub(Cfg.sources_dir, "")+
                                Cfg::FILE_INFO_SEP+File.mtime(file).to_i.to_s) unless File.directory?(file)
         }
         session.puts(Cfg::MSG_EOL)
@@ -169,13 +171,13 @@ class MusicServer
         file_name = Utils.replace_dir_name(session.gets.chomp)
         if file_name.match(/.dwl$/)
             file_name.sub!(/.dwl$/, "") # Remove temp ext from client if downloading the database
-            file_name = File.expand_path(CFG.database_dir+File.basename(file_name))
-        elsif file_name.index("/Music/").nil? && file_name.index(CFG.rsrc_dir).nil?
-            LOG.warn("Attempt to download file #{file_name} from #{ip_address(session)}")
+            file_name = File.expand_path(Cfg.database_dir+File.basename(file_name))
+        elsif file_name.index("/Music/").nil? && file_name.index(Cfg.rsrc_dir).nil?
+            Log.warn("Attempt to download file #{file_name} from #{ip_address(session)}")
             session.puts("Fucked up...")
             return
         end
-        LOG.info("Sending file #{file_name} in #{block_size} bytes chunks to #{hostname(session)}")
+        Log.info("Sending file #{file_name} in #{block_size} bytes chunks to #{hostname(session)}")
         session.puts(File.size(file_name).to_s)
         File.open(file_name, "rb") { |f|
             while data = f.read(block_size)
@@ -192,16 +194,16 @@ class MusicServer
         file_name  = audio_link.setup_audio_file.file
         if file_name
             audio_link.track.stitle = new_title
-            LOG.info("Track renaming [#{hostname(session)}]")
+            Log.info("Track renaming [#{hostname(session)}]")
             audio_link.tag_and_move_file(file_name)
         else
-            LOG.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")
+            Log.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")
         end
     end
 
     def get_db_version(session)
         session.puts("OK")
-        session.puts(CFG.db_version)
+        session.puts(Cfg.db_version)
     end
 
     def renumber_play_list(session)

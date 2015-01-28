@@ -9,7 +9,7 @@ class PrefsDialog
     def run
         if GtkUI[GtkIDs::PREFS_DIALOG].run == Gtk::Dialog::RESPONSE_OK
             Prefs.save_window_objects(GtkIDs::PREFS_DIALOG)
-            CFG.save
+            Cfg.save
         end
         GtkUI[GtkIDs::PREFS_DIALOG].destroy
     end

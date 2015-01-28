@@ -7,7 +7,7 @@ class DBReorderer
 
     def initialize
         #newdb = SQLite3::Database.new("../db/cds.neworder.db")
-        @outfile = File.new(CFG.database_dir+"reorder.sql", "w")
+        @outfile = File.new(Cfg.database_dir+"reorder.sql", "w")
     end
 
     def dup_table(table) # Copy table as it, that is there are no change
@@ -23,12 +23,12 @@ class DBReorderer
     end
 
     def process_covers
-        Dir[CFG.covers_dir+"*"].each { |entry|
+        Dir[Cfg.covers_dir+"*"].each { |entry|
             next if entry == '.' || entry == '..'
             if File::directory?(entry)
                 dname = File::basename(entry)
                 if dname.to_i > 0
-                    cmd = "mkdir #{CFG.rsrc_dir}newcovers/#{@rec_map[dname.to_i]}"
+                    cmd = "mkdir #{Cfg.rsrc_dir}newcovers/#{@rec_map[dname.to_i]}"
                     #@outfile.puts(cmd)
                     system(cmd)
                 end
@@ -36,7 +36,7 @@ class DBReorderer
                     next if subent == '.' || subent == '..'
                     name = File::basename(subent).sub(/\.*$/, "")
                     if name.to_i > 0
-                        cmd = "cp #{subent} #{CFG.rsrc_dir}newcovers/#{@rec_map[dname.to_i]}/#{@trk_map[name.to_i]}#{File::extname(subent)}"
+                        cmd = "cp #{subent} #{Cfg.rsrc_dir}newcovers/#{@rec_map[dname.to_i]}/#{@trk_map[name.to_i]}#{File::extname(subent)}"
                         #@outfile.puts(cmd)
                         system(cmd)
                     end
@@ -44,7 +44,7 @@ class DBReorderer
             else
                 name = File::basename(entry).sub(/\.*$/, "")
                 if name.to_i > 0
-                    cmd = "cp #{entry} #{CFG.rsrc_dir}newcovers/#{@rec_map[name.to_i]}#{File::extname(entry)}"
+                    cmd = "cp #{entry} #{Cfg.rsrc_dir}newcovers/#{@rec_map[name.to_i]}#{File::extname(entry)}"
                     #@outfile.puts(cmd)
                     system(cmd)
                 end

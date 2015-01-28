@@ -66,7 +66,7 @@ class PListsWindow < TopWindow
 
         @tvpl = GtkUI[GtkIDs::TV_PLISTS]
         @pls = Gtk::ListStore.new(Integer, String)
-        @current_pl = PListDBClass.new
+        @current_pl = DBClass::PList.new
 
         @tvpl.append_column(Gtk::TreeViewColumn.new("Ref.", srenderer, :text => 0))
         @tvpl.append_column(Gtk::TreeViewColumn.new("Play lists", edrenderer, :text => 1))
@@ -214,7 +214,7 @@ class PListsWindow < TopWindow
                 if r.nil?
                     iter = @pts.append
                     new_iorder = @pts.get_iter((iter.path.to_s.to_i-1).to_s)[TT_IORDER]+1024
-                    TRACE.debug("new order=#{new_iorder}")
+                    Trace.debug("new order=#{new_iorder}")
                 else
                     pos = r[0].to_s.to_i
                     pos += 1 if r[1] == Gtk::TreeView::DROP_AFTER || r[1] == Gtk::TreeView::DROP_INTO_OR_AFTER
@@ -222,7 +222,7 @@ class PListsWindow < TopWindow
                     prev = pos == 0 ? nil : @pts.get_iter((pos-1).to_s)
                     succ = @pts.get_iter((pos+1).to_s) # succ can't be nil, handled by r.nil? test
                     new_iorder = prev.nil? ? succ[TT_IORDER]/2 : (succ[TT_IORDER]+prev[TT_IORDER])/2
-                    TRACE.debug("new order=#{new_iorder}")
+                    Trace.debug("new order=#{new_iorder}")
                 end
                 @pts.n_columns.times { |i| iter[i] = itr[i] }
                 @pts.remove(itr)
@@ -437,7 +437,7 @@ class PListsWindow < TopWindow
     def do_renumber
         return if @tvpl.selection.selected.nil?
         DBUtils::renumber_play_list(@current_pl.rplist)
-        MusicClient.new.renumber_play_list(@current_pl.rplist) if !local? && CFG.remote?
+        MusicClient.new.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
     end
 
     def enqueue_track
@@ -451,13 +451,13 @@ class PListsWindow < TopWindow
     def show_infos(is_popup)
         if is_popup
             if GtkUI[GtkIDs::PM_PL_ADD].sensitive?
-                XEditors::PList.new(@current_pl.rplist).run if @tvpl.selection.selected
+                XIntf::Editors::PList.new(@current_pl.rplist).run if @tvpl.selection.selected
             else
                 iter = @tvpt.selection.count_selected_rows > 0 ? @pts.get_iter(@tvpt.selection.selected_rows[0]) : nil
-                XEditors::Main.new(@mc, iter[TT_DATA], XEditors::TRACK_PAGE).run if iter
+                XIntf::Editors::Main.new(@mc, iter[TT_DATA], XIntf::Editors::TRACK_PAGE).run if iter
             end
         else
-            XEditors::PList.new(@current_pl.rplist).run if @tvpl.selection.selected
+            XIntf::Editors::PList.new(@current_pl.rplist).run if @tvpl.selection.selected
         end
     end
 

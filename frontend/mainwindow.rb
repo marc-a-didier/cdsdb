@@ -51,21 +51,21 @@ class MainWindow < TopWindow
 
 
         # Set cd image to default image
-        GtkUI[REC_IMAGE].pixbuf = IMG_CACHE.default_large_record
+        GtkUI[REC_IMAGE].pixbuf = XIntf::Image::Cache.default_large_record
 
-        Gtk::IconTheme.add_builtin_icon("player_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"player.png"))
-        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"pqueue.png"))
-        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"plists.png"))
-        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"charts.png"))
+        Gtk::IconTheme.add_builtin_icon("player_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"player.png"))
+        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"pqueue.png"))
+        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"plists.png"))
+        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"charts.png"))
         GtkUI[MW_TBBTN_PLAYER].icon_name = "player_icon"
         GtkUI[MW_TBBTN_PQUEUE].icon_name = "pqueue_icon"
         GtkUI[MW_TBBTN_PLISTS].icon_name = "plists_icon"
         GtkUI[MW_TBBTN_CHARTS].icon_name = "charts_icon"
 
-        Gtk::IconTheme.add_builtin_icon("server_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"network-server.png"))
-        Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, GtkUtils.get_btn_icon(CFG.icons_dir+"tasks.png"))
-        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, GtkUtils.get_btn_icon(CFG.icons_dir+"filter.png"))
-        Gtk::IconTheme.add_builtin_icon("memos_icon",  22, GtkUtils.get_btn_icon(CFG.icons_dir+"document-edit.png"))
+        Gtk::IconTheme.add_builtin_icon("server_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"network-server.png"))
+        Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, GtkUtils.get_btn_icon(Cfg.icons_dir+"tasks.png"))
+        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"filter.png"))
+        Gtk::IconTheme.add_builtin_icon("memos_icon",  22, GtkUtils.get_btn_icon(Cfg.icons_dir+"document-edit.png"))
 
         GtkUI[MW_TBBTN_SERVER].icon_name = "server_icon"
         GtkUI[MW_TBBTN_TASKS].icon_name  = "tasks_icon"
@@ -82,7 +82,7 @@ class MainWindow < TopWindow
         GtkUI[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filters) }
         GtkUI[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
         GtkUI[MW_SERVER_ACTION].signal_connect(:activate) {
-            CFG.set_remote(GtkUI[MW_SERVER_ACTION].active?)
+            Cfg.set_remote(GtkUI[MW_SERVER_ACTION].active?)
             @mc.tasks.check_config
             @trk_browser.check_for_audio_file if @trk_browser
         }
@@ -99,13 +99,13 @@ class MainWindow < TopWindow
         Prefs.load_menu_state(GtkUI[VIEW_MENU])
 
         # Set windows icons
-        @mc.pqueue.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"pqueue.png")
-        @mc.player.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"player.png")
-        @mc.plists.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"plists.png")
-        @mc.charts.window.icon  = Gdk::Pixbuf.new(CFG.icons_dir+"charts.png")
-        @mc.tasks.window.icon   = Gdk::Pixbuf.new(CFG.icons_dir+"tasks.png")
-        @mc.filters.window.icon = Gdk::Pixbuf.new(CFG.icons_dir+"filter.png")
-        @mc.memos.window.icon   = Gdk::Pixbuf.new(CFG.icons_dir+"document-edit.png")
+        @mc.pqueue.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"pqueue.png")
+        @mc.player.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"player.png")
+        @mc.plists.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"plists.png")
+        @mc.charts.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"charts.png")
+        @mc.tasks.window.icon   = Gdk::Pixbuf.new(Cfg.icons_dir+"tasks.png")
+        @mc.filters.window.icon = Gdk::Pixbuf.new(Cfg.icons_dir+"filter.png")
+        @mc.memos.window.icon   = Gdk::Pixbuf.new(Cfg.icons_dir+"document-edit.png")
 
         # Stores the history window object
         @history = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
@@ -210,9 +210,9 @@ class MainWindow < TopWindow
         tags_sm.show_all
 
         # Disable sensible controls if not in admin mode
-        ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless CFG.admin?
+        ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless Cfg.admin?
 
-        GtkUI[MAIN_WINDOW].icon = Gdk::Pixbuf.new(CFG.icons_dir+"audio-cd.png")
+        GtkUI[MAIN_WINDOW].icon = Gdk::Pixbuf.new(Cfg.icons_dir+"audio-cd.png")
         GtkUI[MAIN_WINDOW].show
 
         #
@@ -246,9 +246,7 @@ class MainWindow < TopWindow
             @history[item].present
         else
             if item == VIEW_BY_DATES
-                dlg = DateChooser.new.run
-                dates = dlg.dates
-                dlg.close
+                dates = DateChooser.new.run
                 @history[item] = HistoryDialog.new(@mc, item, dates).run if dates
             else
                 @history[item] = HistoryDialog.new(@mc, item, nil).run
@@ -336,7 +334,7 @@ class MainWindow < TopWindow
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
         # Segment is handled in record class
-        TRACE.debug("*** save memos called")
+        Trace.debug("*** save memos called")
         [@art_browser.artlnk, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
     end
 
@@ -365,8 +363,8 @@ class MainWindow < TopWindow
     end
 
     def dump_cacheinfo
-        DBCACHE.dump_infos
-        IMG_CACHE.dump_infos
+        DBCache::Cache.dump_infos
+        XIntf::Image::Cache.dump_infos
     end
 
     #
@@ -374,7 +372,7 @@ class MainWindow < TopWindow
     #
     #
     def on_update_db
-        if Socket.gethostname.match("madD510|192.168.1.14") || !CFG.remote?
+        if Socket.gethostname.match("madD510|192.168.1.14") || !Cfg.remote?
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
@@ -390,15 +388,15 @@ class MainWindow < TopWindow
             file = DBIntf.build_db_name
             File.unlink(file+".back") if File.exists?(file+".back")
             srv_db_version = MusicClient.new.get_server_db_version
-TRACE.debug("new db version=#{srv_db_version}")
+            Trace.debug("new db version=#{srv_db_version}")
             DBIntf.disconnect
-            if srv_db_version == CFG.db_version
+            if srv_db_version == Cfg.db_version
                 FileUtils.mv(file, file+".back")
             else
-                CFG.set_db_version(srv_db_version)
+                Cfg.set_db_version(srv_db_version)
             end
             FileUtils.mv(file_name, DBIntf::build_db_name)
-            DBCACHE.clear
+            DBCache::Cache.clear
             @mc.reload_plists.reload_filters
             set_window_title
         end
@@ -406,10 +404,10 @@ TRACE.debug("new db version=#{srv_db_version}")
 
     #
     def on_update_resources
-        MusicClient.new.synchronize_resources.each { |file| @mc.tasks.new_file_download(self, file, 0) } if CFG.remote?
+        MusicClient.new.synchronize_resources.each { |file| @mc.tasks.new_file_download(self, file, 0) } if Cfg.remote?
     end
 
     def on_update_sources
-        MusicClient.new.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if CFG.remote?
+        MusicClient.new.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
     end
 end

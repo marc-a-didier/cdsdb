@@ -32,6 +32,7 @@ require 'cgi'
 
 require '../shared/extenders'
 require '../shared/cfg'
+require '../shared/tracelog'
 require '../shared/dbintf'
 require '../shared/dbclassintf'
 require '../shared/audio'
@@ -84,9 +85,9 @@ require './musicclient'
 
 require './taskswindow'
 
-require './controlshandler'
-require './dbuiclass'
-require './dbeditors'
+require './widgetscontroller'
+require './dbxintf'
+require './dbxeditors'
 
 require './dbreorderer'
 
@@ -297,7 +298,7 @@ class Cdsdb
     end
 
     def initialize
-        CFG.set_admin_mode(has_arg("--admin"))
+        Cfg.set_admin_mode(has_arg("--admin"))
 
         DBIntf.execute("PRAGMA synchronous=OFF;")
 

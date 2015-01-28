@@ -11,8 +11,8 @@ class DBUtils
     end
 
     def self.log_exec(sql, host = "localhost")
-        TRACE.debug(sql) unless CFG.server_mode
-        LOG.info(sql+" [#{host}]")
+        Trace.debug(sql) unless Cfg.server_mode
+        Log.info(sql+" [#{host}]")
         DBIntf.execute(sql)
     end
 
@@ -22,27 +22,27 @@ class DBUtils
     #
     def self.client_sql(sql, want_log = true)
         want_log ? self.log_exec(sql) : DBIntf.execute(sql)
-        MusicClient.new.exec_sql(sql) if CFG.remote?
+        MusicClient.new.exec_sql(sql) if Cfg.remote?
     end
 
     def self.threaded_client_sql(sql)
         self.log_exec(sql)
-        Thread.new { MusicClient.new.exec_sql(sql) } if CFG.remote?
+        Thread.new { MusicClient.new.exec_sql(sql) } if Cfg.remote?
     end
 
     def self.exec_local_batch(sql, host)
         DBIntf.transaction { |db|
-            LOG.info(sql+" [#{host}]")
+            Log.info(sql+" [#{host}]")
             db.execute_batch(sql)
         }
     end
 
     def self.exec_batch(sql, host)
         self.exec_local_batch(sql, host)
-        MusicClient.new.exec_batch(sql) if CFG.remote?
+        MusicClient.new.exec_batch(sql) if Cfg.remote?
         # May be dangerous to spawn a thread... if request made on the record being inserted,
         # don't know what happen...
-#         Thread.new { MusicClient.new.exec_batch(sql) } if CFG.remote?
+#         Thread.new { MusicClient.new.exec_batch(sql) } if Cfg.remote?
     end
 
     def self.get_last_id(short_tbl_name)
@@ -119,21 +119,21 @@ class DBUtils
     # Should not exist and never be used.
     #
     def self.check_log_vs_played
-        TRACE.debug("Starting log integrity check...")
+        Trace.debug("Starting log integrity check...")
         tracks = []
         DBIntf.execute("SELECT COUNT(rtrack) FROM logtracks WHERE rtrack <= 0") do |log|
             if log[0] > 0
-                TRACE.debug("#{log[0]} bad rtrack id(s) found in db.")
+                Trace.debug("#{log[0]} bad rtrack id(s) found in db.")
                 DBIntf.execute("DELETE FROM logtracks WHERE rtrack <= 0")
-                TRACE.debug("Bad tracks id(s) deleted.")
+                Trace.debug("Bad tracks id(s) deleted.")
             else
-                TRACE.debug("No bad rtrack ids found in db.")
+                Trace.debug("No bad rtrack ids found in db.")
             end
         end
         DBIntf.execute("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks") do |log|
             DBIntf.execute("SELECT COUNT(rtrack) FROM tracks WHERE iplayed > 0") do |track|
                 if log[0] != track[0]
-                    TRACE.debug("Size mismatch, #{log[0]} in log, #{track[0]} in tracks")
+                    Trace.debug("Size mismatch, #{log[0]} in log, #{track[0]} in tracks")
                 end
             end
         end
@@ -152,27 +152,27 @@ class DBUtils
                 end
             end
         end
-        TRACE.debug("Check integrity ended with #{tracks.size} mismatches.")
+        Trace.debug("Check integrity ended with #{tracks.size} mismatches.")
         return
 
-        if tracks.size > 0 && CFG.admin?
-            TRACE.debug("Starting tracks update.")
+        if tracks.size > 0 && Cfg.admin?
+            Trace.debug("Starting tracks update.")
             tracks.each do |track|
                 sql = "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]}"
                 puts sql
                 DBIntf.execute(sql)
             end
-            TRACE.debug("End tracks update.")
+            Trace.debug("End tracks update.")
         end
     end
 
     def self.update_log_time
-        TRACE.debug("Starting check log time.")
+        Trace.debug("Starting check log time.")
         DBIntf.execute("SELECT * FROM logtracks WHERE idateplayed=0") do |row|
             last = DBIntf.get_first_value("SELECT ilastplayed FROM tracks WHERE rtrack=#{row[0]}")
             puts "Track #{row[0]} last played on #{last.to_std_date}"
 #             DBIntf.execute("UPDATE logtracks SET idateplayed=#{last} WHERE rtrack=#{row[0]} AND idateplayed=0")
         end
-        TRACE.debug("End check log time.")
+        Trace.debug("End check log time.")
     end
 end

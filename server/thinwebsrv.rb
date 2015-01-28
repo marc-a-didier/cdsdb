@@ -130,7 +130,7 @@ class Navigator
         DBIntf.execute(sql) { |segment|
             record.ref_load(segment[0])
             image_file = Utils::get_cover_file_name(record.rrecord, 0, record.irecsymlink)
-            image_file = CFG.covers_dir+"default.png" if image_file.empty?
+            image_file = Cfg.covers_dir+"default.png" if image_file.empty?
             page += "<tr>"
 #             page += %Q{<td><img src="/image?ref=#{URI::escape(image_file)}" width="128" height="128" /></td>}
             page += %Q{<td><img src="/covers/#{File::basename(image_file)}" width="128" height="128" /></td>}
@@ -166,7 +166,7 @@ class Navigator
             page += "<tr>"
             page += "<td>#{@track.iorder} - #{CGI::escapeHTML(@track.stitle)}</td>"
             unless file_name.empty?
-                file_name.gsub!(CFG.music_dir, "")
+                file_name.gsub!(Cfg.music_dir, "")
                 page += %{<td><a href="/file?track=#{@track.rtrack}">Download</a></td>}
 #             page += %{<audio src="/audio?track=#{@track.rtrack}" controls>Ca dejante...</audio><br/>}
 #                 page += %{<td><audio src="/Music/#{URI::escape(file_name)}" controls width="300" height="42">Ca dejante...</audio><td/>}
@@ -230,10 +230,10 @@ class PageProvider
   end
 end
 
-# app = Rack::Directory.new(CFG.music_dir)
+# app = Rack::Directory.new(Cfg.music_dir)
 # Thin::Server.start('0.0.0.0', 7125, app)# do
 
-CFG.load
+Cfg.load
 
 Thin::Server.start('0.0.0.0', 7125) do
   use(Rack::CommonLogger)
@@ -242,5 +242,5 @@ Thin::Server.start('0.0.0.0', 7125) do
   map('/muse')  { run(PageProvider.new) }
 #   map('/image') { run(ImageProvider.new) }
 #   map('/audio') { run(AudioProvider.new) }
-  map('/files') { run(Rack::Directory.new(CFG.music_dir)) }
+  map('/files') { run(Rack::Directory.new(Cfg.music_dir)) }
 end

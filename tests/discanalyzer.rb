@@ -20,7 +20,7 @@ require '../frontend/cdeditorwindow'
 require '../frontend/discanalyzer'
 
 disc = CDEditorWindow::DiscInfo.new
-f = File.open(CFG.rsrc_dir+'testanalyzer.sql', "w")
+f = File.open(Cfg.rsrc_dir+'testanalyzer.sql', "w")
 
 disc.title = "Disc standard"
 disc.artist = "Artist standard"

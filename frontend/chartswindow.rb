@@ -161,7 +161,7 @@ class ChartsWindow < TopWindow
         selection = @tvc.selection.selected[COL_ENTRY]-1
         @entries.each { |entry|
             links << entry.xlink if entry.entry >= selection
-            break if entry.entry >= CFG.max_items
+            break if entry.entry >= Cfg.max_items
         }
         @mc.pqueue.enqueue(links)
     end
@@ -271,7 +271,7 @@ class ChartsWindow < TopWindow
                 group_by = "records.rlabel"
         end
         sql += @filter unless @filter.empty?
-        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{CFG.max_items+50};"
+        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{Cfg.max_items+50};"
 # p sql
         return  sql
     end
@@ -298,8 +298,8 @@ class ChartsWindow < TopWindow
             # If view is other than tracks or record, the entry is fully loaded in this loop
             if ![VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
                 entry.title = row[2].to_html_bold
-                entry.pix   = IMG_CACHE.get_flag(row[3]) if @view_type == VIEW_ARTISTS
-                entry.pix   = IMG_CACHE.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
+                entry.pix   = XIntf::Image::Cache.get_flag(row[3]) if @view_type == VIEW_ARTISTS
+                entry.pix   = XIntf::Image::Cache.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
             end
 
             @entries << entry
@@ -329,7 +329,7 @@ class ChartsWindow < TopWindow
     #
     def display_charts(is_reload)
         @entries.each_with_index { |entry, i|
-            break if i == CFG.max_items
+            break if i == Cfg.max_items
             iter = is_reload ? @lsc.get_iter(i.to_s) : @lsc.append
             iter[COL_ENTRY] = entry.entry+1
             iter[COL_RANK]  = entry.rank.to_s
@@ -365,7 +365,7 @@ class ChartsWindow < TopWindow
         display_charts(false)
 
         @tvc.columns_autosize
-        TRACE.debug("Charts full load done".red)
+        Trace.debug("Charts full load done".red)
         return
 #RubyProf.start
 #result = RubyProf.stop
@@ -399,12 +399,12 @@ class ChartsWindow < TopWindow
             entry.rank = rank
             pos = entry.entry if entry.ref == ref
         }
-        display_charts(true) if pos < CFG.max_items
-        TRACE.debug("Charts lazy update done".green)
+        display_charts(true) if pos < Cfg.max_items
+        Trace.debug("Charts lazy update done".green)
     end
 
     def show
-        load_view(@view_type) #if !CFG.live_charts_update? || @lsc.iter_first.nil?
+        load_view(@view_type) #if !Cfg.live_charts_update? || @lsc.iter_first.nil?
         super
     end
 end

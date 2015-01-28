@@ -240,7 +240,7 @@ class FilterWindow < TopWindow
         sql = "SELECT tracks.rtrack FROM tracks " \
               "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
 
-        f = File.new(CFG.rsrc_dir+"genpl.txt", "w")
+        f = File.new(Cfg.rsrc_dir+"genpl.txt", "w")
         f.puts("SQL: #{sql}\n\n")
 
         max_played = 0

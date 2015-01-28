@@ -10,12 +10,12 @@ module XIntf
 
         def record_in_cache?(rrecord, irecsymlink)
             @pix_key = irecsymlink == 0 ? "r"+rrecord.to_s : "r"+irecsymlink.to_s
-            return IMG_CACHE.has_key(@pix_key)
+            return Image::Cache.has_key(@pix_key)
         end
 
         def get_cover_file_name
-            files = Dir[CFG.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
-            # TRACE.debug "CoverMgr search key #{@pix_key} - disk access".red
+            files = Dir[Cfg.covers_dir+@pix_key[1..-1]+".*"] # Skip 'r'.
+            # Trace.debug "CoverMgr search key #{@pix_key} - disk access".red
             return files.size > 0 ? File::basename(files[0]) : Image::Cache::DEF_RECORD_FILE
         end
 
@@ -23,9 +23,9 @@ module XIntf
         def load_record_cover(rrecord, irecsymlink, size)
             file = get_cover_file_name
             if file == Image::Cache::DEF_RECORD_FILE
-                return IMG_CACHE.set_default_pix(@pix_key, size)
+                return Image::Cache.set_default_pix(@pix_key, size)
             else
-                return IMG_CACHE.load_cover(@pix_key, size, file)
+                return Image::Cache.load_cover(@pix_key, size, file)
             end
         end
 
@@ -38,8 +38,8 @@ module XIntf
         #
         def track_pix(rtrack, rrecord, irecsymlink, size)
             @pix_key = "t"+rtrack.to_s
-            if IMG_CACHE.has_key(@pix_key)
-                return IMG_CACHE.pix(@pix_key, size)
+            if Image::Cache.has_key(@pix_key)
+                return Image::Cache.pix(@pix_key, size)
             else
                 return record_pix(rrecord, irecsymlink, size)
             end
@@ -47,7 +47,7 @@ module XIntf
 
         def record_pix(rrecord, irecsymlink, size)
             if record_in_cache?(rrecord, irecsymlink)
-                return IMG_CACHE.pix(@pix_key, size)
+                return Image::Cache.pix(@pix_key, size)
             else
                 return load_record_cover(rrecord, irecsymlink, size)
             end
@@ -56,10 +56,10 @@ module XIntf
         # Returns the full file name for the cover to display.
         def file_name(rtrack, rrecord, irecsymlink)
             @pix_key = "t"+rtrack.to_s
-            if !IMG_CACHE.has_key(@pix_key) && !record_in_cache?(rrecord, irecsymlink)
-                IMG_CACHE.set_file_name(@pix_key, get_cover_file_name)
+            if !Image::Cache.has_key(@pix_key) && !record_in_cache?(rrecord, irecsymlink)
+                Image::Cache.set_file_name(@pix_key, get_cover_file_name)
             end
-            return IMG_CACHE.full_name(@pix_key)
+            return Image::Cache.full_name(@pix_key)
         end
     end
 end

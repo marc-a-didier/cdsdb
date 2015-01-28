@@ -1,3 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
 
 module ConfigFields
     PREFS_DIALOG                = "prefs_dialog"
@@ -61,6 +64,16 @@ module Cfg
                     },
                     "menus" => {}
                     }
+
+#         def initialize
+#             dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
+#             @config_dir = File.join(dir, 'cdsdb/')
+#             FileUtils::mkpath(@config_dir) unless File::exists?(@config_dir)
+#
+#             @remote = false
+#             @admin_mode = false
+#             @server_mode = false
+#         end
 
         def load
             dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
@@ -190,3 +203,7 @@ module Cfg
 end
 
 Cfg.load
+p Cfg.db_version
+p Cfg.prefs_file
+p Cfg.sources_dir
+p Cfg.notif_duration

@@ -58,7 +58,7 @@ class CDEditorWindow
     end
 
     def swap_artists_titles
-#         @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
+        # @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
         @tv.model.each { |model, path, iter|
             artist, title = iter[1].split(" / ")
             iter[1] = title
@@ -145,8 +145,8 @@ class CDEditorWindow
     end
 
     def edit_record()
-        @ripper = RipperClient.new(CFG.cd_device)
-        disc = @ripper.settings['cd'] #Disc.new(CFG.cd_device) # ("/dev/sr0")
+        @ripper = RipperClient.new(Cfg.cd_device)
+        disc = @ripper.settings['cd'] #Disc.new(Cfg.cd_device) # ("/dev/sr0")
         if disc.md.nil?
             GtkUtils.show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL

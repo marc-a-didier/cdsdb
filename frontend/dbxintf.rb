@@ -14,7 +14,7 @@ module XIntf
     class Artist < DBCache::Link
 
         def to_widgets
-            GtkUI[GtkIDs::MW_INFLBL_ARTIST].text = build_infos_string
+            GtkUI[GtkIDs::MW_INFLBL_ARTIST].text = info_string
             GtkUI[GtkIDs::MEMO_ARTIST].buffer.text = valid_artist_ref? ? artist.mnotes.to_memo : ""
         end
 
@@ -24,9 +24,9 @@ module XIntf
             return self
         end
 
-        def build_infos_string
+        def info_string
             return "" if !valid_artist_ref? || artist.rorigin == 0
-            return DBCACHE.origin(artist.rorigin).sname
+            return DBCache::Cache.origin(artist.rorigin).sname
         end
     end
 
@@ -34,7 +34,7 @@ module XIntf
     class Record < DBCache::Link
 
         def to_widgets(is_record)
-            GtkUI[GtkIDs::MW_INFLBL_RECORD].text = is_record ? build_rec_infos_string : build_seg_infos_string
+            GtkUI[GtkIDs::MW_INFLBL_RECORD].text = is_record ? rec_info_string : seg_info_string
             GtkUI[GtkIDs::MEMO_RECORD].buffer.text  = valid_record_ref?  ? record.mnotes.to_memo  : ""
             GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text = valid_segment_ref? ? segment.mnotes.to_memo : ""
             return self
@@ -48,21 +48,21 @@ module XIntf
             return self
         end
 
-        def build_rec_infos_string
+        def rec_info_string
             return "" unless valid_record_ref?
-            rec = DBCACHE.record(@rrecord) # Cache of the cache!!!
-            str  = DBCACHE.media(rec.rmedia).sname
+            rec = DBCache::Cache.record(@rrecord) # Cache of the cache!!!
+            str  = DBCache::Cache.media(rec.rmedia).sname
             str += rec.iyear == 0 ? ", Unknown" : ", "+rec.iyear.to_s
-            str += ", "+DBCACHE.label(record.rlabel).sname
+            str += ", "+DBCache::Cache.label(record.rlabel).sname
             str += ", "+rec.scatalog unless rec.scatalog.empty?
             str += ", "+genre.sname
             str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
-            str += ", "+DBCACHE.collection(rec.rcollection).sname if rec.rcollection != 0
+            str += ", "+DBCache::Cache.collection(rec.rcollection).sname if rec.rcollection != 0
             str += ", "+rec.iplaytime.to_ms_length
             str += " [%.4f | %.4f]" % [rec.fgain, rec.fpeak]
         end
 
-        def build_seg_infos_string
+        def seg_info_string
             return "" unless valid_segment_ref?
             str  = "Segment "+segment.iorder.to_s
             str += " "+segment.stitle unless segment.stitle.empty?
@@ -74,7 +74,7 @@ module XIntf
     class Track < XIntf::Link
 
         def to_widgets
-            GtkUI[GtkIDs::MW_INFLBL_TRACK].text   = build_infos_string
+            GtkUI[GtkIDs::MW_INFLBL_TRACK].text   = info_string
             GtkUI[GtkIDs::MEMO_TRACK].buffer.text = valid_track_ref? ? track.mnotes.to_memo : ""
             return self
         end
@@ -91,9 +91,9 @@ module XIntf
             return self
         end
 
-        def build_infos_string
+        def info_string
             return "" unless valid_track_ref?
-            trk = DBCACHE.track(@rtrack) # Cache of the cache!!!
+            trk = DBCache::Cache.track(@rtrack) # Cache of the cache!!!
             str  = Qualifiers::RATINGS[trk.irating]+", "
             str += trk.iplayed > 0 ? "played "+trk.iplayed.to_s+" time".check_plural(trk.iplayed)+" " : "never played, "
             str += "(Last: "+trk.ilastplayed.to_std_date+"), " if trk.ilastplayed != 0

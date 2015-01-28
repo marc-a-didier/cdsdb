@@ -29,7 +29,7 @@ module DBCache
         # Tries to feed the artist primary key from record or segment if possible
         #
         def track
-            return @rtrack ? DBCACHE.track(@rtrack) : nil
+            return @rtrack ? DBCache::Cache.track(@rtrack) : nil
         end
 
         def segment
@@ -40,7 +40,7 @@ module DBCache
                     return nil
                 end
             end
-            return DBCACHE.segment(@rsegment)
+            return DBCache::Cache.segment(@rsegment)
         end
 
         def record
@@ -55,7 +55,7 @@ module DBCache
                     end
                 end
             end
-            return DBCACHE.record(@rrecord)
+            return DBCache::Cache.record(@rrecord)
         end
 
         def artist
@@ -64,7 +64,7 @@ module DBCache
                 record_artist unless @rartist
                 return nil unless @rartist
             end
-            return DBCACHE.artist(@rartist)
+            return DBCache::Cache.artist(@rartist)
         end
 
         def segment_artist
@@ -73,7 +73,7 @@ module DBCache
             else
                 return nil unless @rartist
             end
-            return DBCACHE.artist(@rartist)
+            return DBCache::Cache.artist(@rartist)
         end
 
         def record_artist
@@ -82,7 +82,7 @@ module DBCache
             else
                 return nil unless @rartist
             end
-            return DBCACHE.artist(@rartist)
+            return DBCache::Cache.artist(@rartist)
         end
 
         def genre
@@ -91,16 +91,16 @@ module DBCache
             else
                 return nil unless @rgenre
             end
-            return DBCACHE.genre(@rgenre)
+            return DBCache::Cache.genre(@rgenre)
         end
 
         def set_audio_file(file_name)
-            DBCACHE.set_audio_file(@rtrack, file_name)
+            DBCache::Cache.set_audio_file(@rtrack, file_name)
             return self
         end
 
         def set_audio_status(status)
-            DBCACHE.set_audio_status(@rtrack, status)
+            DBCache::Cache.set_audio_status(@rtrack, status)
             return self
         end
 
@@ -109,19 +109,19 @@ module DBCache
         end
 
         def audio_status
-            return DBCACHE.audio_status(@rtrack)
+            return DBCache::Cache.audio_status(@rtrack)
         end
 
         def audio_file
-            return DBCACHE.audio(@rtrack).file
+            return DBCache::Cache.audio(@rtrack).file
         end
 
         def audio
-            return DBCACHE.audio(@rtrack)
+            return DBCache::Cache.audio(@rtrack)
         end
 
         def reset_audio
-            DBCACHE.reset_audio(@rtrack)
+            DBCache::Cache.reset_audio(@rtrack)
             return self
         end
 
@@ -180,33 +180,33 @@ module DBCache
         # Methods to keep the cache in sync with the db in case of modifications
         #
         def reload_track_cache
-            DBCACHE.track(@rtrack).sql_load
+            DBCache::Cache.track(@rtrack).sql_load
             return self
         end
 
         def reload_record_cache
-            DBCACHE.record(@rrecord).sql_load
+            DBCache::Cache.record(@rrecord).sql_load
             return self
         end
 
         def reload_segment_cache
-            DBCACHE.segment(@rsegment).sql_load
+            DBCache::Cache.segment(@rsegment).sql_load
             return self
         end
 
         def reload_artist_cache
-            DBCACHE.artist(@rartist).sql_load
+            DBCache::Cache.artist(@rartist).sql_load
             return self
         end
 
         def flush_main_tables
-            DBCACHE.artist(@rartist).sql_update if valid_artist_ref?
-            DBCACHE.record(@rrecord).sql_update if valid_record_ref?
-            DBCACHE.segment(@rsegment).sql_update if valid_segment_ref?
-            DBCACHE.track(@rtrack).sql_update if valid_track_ref?
+            DBCache::Cache.artist(@rartist).sql_update if valid_artist_ref?
+            DBCache::Cache.record(@rrecord).sql_update if valid_record_ref?
+            DBCache::Cache.segment(@rsegment).sql_update if valid_segment_ref?
+            DBCache::Cache.track(@rtrack).sql_update if valid_track_ref?
 
-            # [DBCACHE.track(@rtrack), DBCACHE.record(@rrecord),
-            #  DBCACHE.segment(@rsegment), DBCACHE.artist(@rartist)].each { |dbclass| dbclass.sql_update }
+            # [DBCache::Cache.track(@rtrack), DBCache::Cache.record(@rrecord),
+            #  DBCache::Cache.segment(@rsegment), DBCache::Cache.artist(@rartist)].each { |dbclass| dbclass.sql_update }
         end
     end
 end

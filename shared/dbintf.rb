@@ -42,8 +42,8 @@ module DBIntf
         end
 
         # Build the database name from the config resource(client)/database(server) dir and the db version
-        def build_db_name(db_version = CFG.db_version)
-            return CFG.database_dir+"cds"+db_version+".db"
+        def build_db_name(db_version = Cfg.db_version)
+            return Cfg.database_dir+"cds"+db_version+".db"
         end
     end
 end

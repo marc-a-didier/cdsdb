@@ -58,7 +58,7 @@ module Audio
             fname = sprintf("%02d - %s", track.iorder, title.clean_path)
             dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
 
-            return CFG.music_dir+genre.sname+"/"+dir+"/"+fname
+            return Cfg.music_dir+genre.sname+"/"+dir+"/"+fname
         end
 
         def setup_audio_file
@@ -69,7 +69,7 @@ module Audio
 
         # Returns the file name without the music dir and genre
         def track_dir(file_name)
-            file = file_name.sub(CFG.music_dir, "")
+            file = file_name.sub(Cfg.music_dir, "")
             return file.sub(file.split("/")[0], "")
         end
 
@@ -86,7 +86,7 @@ module Audio
         # Returns the status of for the file.
         # If a matching file is found, set the full name to the match.
         def search_audio_file(file_name)
-            # TRACE.debug("Search audio for track #{@rtrack.to_s.brown}")
+            # Trace.debug("Search audio for track #{@rtrack.to_s.brown}")
             FILE_EXTS.each do |ext|
                 if File.exists?(file_name+ext)
                     set_audio_state(Status::OK, file_name+ext)
@@ -96,7 +96,7 @@ module Audio
 
             # Remove the root dir & genre dir to get the appropriate sub dir
             file = track_dir(file_name)
-            Dir[CFG.music_dir+"*"].each do |entry|
+            Dir[Cfg.music_dir+"*"].each do |entry|
                 next unless File.directory?(entry)
                 FILE_EXTS.each do |ext|
                     if File.exists?(entry+file+ext)
@@ -146,10 +146,10 @@ module Audio
             set_audio_state(Status::OK, build_audio_file_name+File.extname(file_name))
 
             # Move the original file to it's new location
-            root_dir = CFG.music_dir+genre.sname+File::SEPARATOR
+            root_dir = Cfg.music_dir+genre.sname+File::SEPARATOR
             FileUtils.mkpath(root_dir+File.dirname(track_dir(audio.file)))
             FileUtils.mv(file_name, audio.file)
-            LOG.info("Source #{file_name} tagged and moved to "+audio.file)
+            Log.info("Source #{file_name} tagged and moved to "+audio.file)
             Utils.remove_dirs(File.dirname(file_name))
         end
 

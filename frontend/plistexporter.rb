@@ -26,12 +26,12 @@ module PListExporter
             tracklist << track
         end
 
-        fname = CFG.music_dir+"Playlists/#{plist_name}.cdsdb.xspf"
+        fname = Cfg.music_dir+"Playlists/#{plist_name}.cdsdb.xspf"
         File.open(fname, "w") { |file| MyFormatter.new.write(xdoc, file) }
     end
 
     def self.do_export_to_m3u(list_store, plist_name)
-        file = File.new(CFG.music_dir+"Playlists/#{plist_name}.cdsdb.m3u", "w")
+        file = File.new(Cfg.music_dir+"Playlists/#{plist_name}.cdsdb.m3u", "w")
         file << "#EXTM3U\n"
         list_store.each { |model, path, iter|
             file << iter[PListsWindow::TT_DATA].audio_file+"\n" unless iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
@@ -41,7 +41,7 @@ module PListExporter
 
     def self.export_to_pls(list_store, plist_name)
         counter = 0
-        file = File.new(CFG.music_dir+"Playlists/#{plist_name}.cdsdb.pls", "w")
+        file = File.new(Cfg.music_dir+"Playlists/#{plist_name}.cdsdb.pls", "w")
         file << "[playlist]\n\n"
         list_store.each { |model, path, iter|
             next if iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND

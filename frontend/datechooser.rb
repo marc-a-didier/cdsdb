@@ -8,8 +8,6 @@ class DateChooser
 
         GtkUI[DTDLG_BTN_FROMDATE].signal_connect(:clicked) { set_date(GtkUI[DTDLG_ENTRY_FROMDATE]) }
         GtkUI[DTDLG_BTN_TODATE].signal_connect(:clicked)   { set_date(GtkUI[DTDLG_ENTRY_TODATE])   }
-
-        @dates = nil
    end
 
     def set_date(control)
@@ -23,31 +21,25 @@ class DateChooser
     end
 
     def run
-        GtkUI[DLG_DATE_CHOOSER].run { |response|
+        dates = nil
+        GtkUI[DLG_DATE_CHOOSER].run do |response|
             if response == Gtk::Dialog::RESPONSE_OK
-                @dates = [GtkUI[DTDLG_ENTRY_FROMDATE].text.to_date, GtkUI[DTDLG_ENTRY_TODATE].text.to_date]
+                dates = [GtkUI[DTDLG_ENTRY_FROMDATE].text.to_date, GtkUI[DTDLG_ENTRY_TODATE].text.to_date]
 
                 # Switch dates if only until date is filled
-                (@dates[0], @dates[1] = @dates[1], @dates[0]) if @dates[0] == 0
+                (dates[0], dates[1] = dates[1], dates[0]) if dates[0] == 0
 
                 # Do nothing if no dates given or no from date
-                if @dates[0] != 0
+                if dates[0] != 0
                     # If no until date, set it to the same day
-                    @dates[1] = @dates[0] if @dates[1] == 0
+                    dates[1] = dates[0] if dates[1] == 0
                     # Set until date to next day at 0:00
-                    @dates[1] += 60*60*24
+                    dates[1] += 60*60*24
                 end
-                @dates = nil if @dates[0] == 0
+                dates = nil if dates[0] == 0
             end
-        }
-        return self
-    end
-
-    def close
+        end
         GtkUI[DLG_DATE_CHOOSER].destroy
-    end
-
-    def dates
-        return @dates
+        return dates
     end
 end

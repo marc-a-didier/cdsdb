@@ -17,8 +17,8 @@ module Prefs
     #
 
     def self.restore_window(gtk_id)
-        return if CFG.windows[gtk_id].nil?
-        CFG.windows[gtk_id].each do |obj, msg|
+        return if Cfg.windows[gtk_id].nil?
+        Cfg.windows[gtk_id].each do |obj, msg|
             msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end
@@ -27,17 +27,17 @@ module Prefs
     def self.save_window(gtk_id)
         window = GtkUI[gtk_id]
 
-        CFG.windows[window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
+        Cfg.windows[window.builder_name] = { window.builder_name => { "move" => window.position, "resize" => window.size } }
 
         objs = []
         child_controls(window, [Gtk::HPaned, Gtk::VPaned], objs).each { |obj|
-            CFG.windows[window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
+            Cfg.windows[window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
         }
 
         unless window.class == FilterWindow
             objs = []
             child_controls(window, [Gtk::Expander], objs).each { |obj|
-                CFG.windows[window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
+                Cfg.windows[window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
             }
         end
     end
@@ -53,13 +53,13 @@ module Prefs
 
     def self.save_window_objects(gtk_id)
         window = GtkUI[gtk_id]
-        CFG.windows[window.builder_name] = {}
+        Cfg.windows[window.builder_name] = {}
 
         object_list = []
         child_controls(window, [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton], object_list).each do |obj|
-            CFG.windows[window.builder_name][obj.builder_name] = { "active=" => [obj.active?] } if [Gtk::RadioButton, Gtk::CheckButton].include?(obj.class)
-            CFG.windows[window.builder_name][obj.builder_name] = { "text=" => [obj.text] }  if obj.class == Gtk::Entry
-            CFG.windows[window.builder_name][obj.builder_name] = { "current_folder=" => [obj.current_folder] } if obj.class == Gtk::FileChooserButton
+            Cfg.windows[window.builder_name][obj.builder_name] = { "active=" => [obj.active?] } if [Gtk::RadioButton, Gtk::CheckButton].include?(obj.class)
+            Cfg.windows[window.builder_name][obj.builder_name] = { "text=" => [obj.text] }  if obj.class == Gtk::Entry
+            Cfg.windows[window.builder_name][obj.builder_name] = { "current_folder=" => [obj.current_folder] } if obj.class == Gtk::FileChooserButton
         end
     end
 
@@ -69,15 +69,15 @@ module Prefs
     #
 
     def self.save_menu_state(menu)
-        CFG.menus[menu.builder_name] = {}
+        Cfg.menus[menu.builder_name] = {}
         menu.each { |child|
-            CFG.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.is_a?(Gtk::CheckMenuItem) || child.is_a?(Gtk::RadioMenuItem)
+            Cfg.menus[menu.builder_name][child.builder_name] = { "active=" => [child.active?] } if child.is_a?(Gtk::CheckMenuItem) || child.is_a?(Gtk::RadioMenuItem)
         }
     end
 
     def self.load_menu_state(menu)
-        return if CFG.menus[menu.builder_name].nil?
-        CFG.menus[menu.builder_name].each do |obj, msg|
+        return if Cfg.menus[menu.builder_name].nil?
+        Cfg.menus[menu.builder_name].each do |obj, msg|
             msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
         end
     end

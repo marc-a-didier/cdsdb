@@ -31,7 +31,7 @@ module GtkUtils
         dialog = Gtk::FileChooserDialog.new(title, nil, action, nil,
                                             [Gtk::Stock::CANCEL, Gtk::Dialog::RESPONSE_CANCEL],
                                             [Gtk::Stock::OPEN, Gtk::Dialog::RESPONSE_ACCEPT])
-        dialog.current_folder = default_dir.empty? ? CFG.music_dir : default_dir
+        dialog.current_folder = default_dir.empty? ? Cfg.music_dir : default_dir
         file = dialog.filename if dialog.run == Gtk::Dialog::RESPONSE_ACCEPT
         dialog.destroy
         return file
@@ -74,37 +74,37 @@ module GtkUtils
     # Pix maps generator for button icons
     #
     def self.get_btn_icon(fname)
-#         return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(CFG.icons_dir+"default.svg", 22, 22)
-        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(CFG.icons_dir+"default.svg", 22, 22)
+#         return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+"default.svg", 22, 22)
+        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+"default.svg", 22, 22)
     end
 
     #
     # Builds a track name to be displayed in an html context (lists, player, ...)
     # title is expected to be complete, with track number, title, seg order and seg title if any
     #
-    def self.full_html_track_title(title, artist, record, separator = "\n")
-        return title.to_html_bold+separator+"by "+artist.to_html_italic+separator+"from "+record.to_html_italic
-    end
-
-    # Builds an html track title from a DB track_infos, NOT tags track_infos
-    def self.html_track_title(track_infos, add_segment)
-        return self.full_html_track_title(
-                    self.make_track_title(track_infos.track.iorder, track_infos.track.stitle,
-                                            track_infos.track.isegorder, track_infos.segment.stitle,
-                                            add_segment),
-                    track_infos.seg_art.sname,
-                    track_infos.record.stitle)
-    end
-
-    # Builds an html track title from a TAGS track_infos, NOT DB track_infos
-    # At this time, only called from the player window for title and tooltip infos
-    def self.tags_html_track_title(track_infos, separator)
-        return self.full_html_track_title(
-                    self.make_track_title(track_infos.track.iorder, track_infos.title, 0, "", false),
-                    track_infos.seg_art.sname,
-                    track_infos.record.stitle,
-                    separator)
-    end
+#     def self.full_html_track_title(title, artist, record, separator = "\n")
+#         return title.to_html_bold+separator+"by "+artist.to_html_italic+separator+"from "+record.to_html_italic
+#     end
+#
+#     # Builds an html track title from a DB track_infos, NOT tags track_infos
+#     def self.html_track_title(track_infos, add_segment)
+#         return self.full_html_track_title(
+#                     self.make_track_title(track_infos.track.iorder, track_infos.track.stitle,
+#                                             track_infos.track.isegorder, track_infos.segment.stitle,
+#                                             add_segment),
+#                     track_infos.seg_art.sname,
+#                     track_infos.record.stitle)
+#     end
+#
+#     # Builds an html track title from a TAGS track_infos, NOT DB track_infos
+#     # At this time, only called from the player window for title and tooltip infos
+#     def self.tags_html_track_title(track_infos, separator)
+#         return self.full_html_track_title(
+#                     self.make_track_title(track_infos.track.iorder, track_infos.title, 0, "", false),
+#                     track_infos.seg_art.sname,
+#                     track_infos.record.stitle,
+#                     separator)
+#     end
 
 
     #
@@ -114,7 +114,7 @@ module GtkUtils
     def self.import_played_tracks
         return if self.get_response("OK to import tracks from playedtracks.sql?") != Gtk::Dialog::RESPONSE_OK
         rlogtrack = DBUtils.get_last_id("logtrack")
-        IO.foreach(CFG.rsrc_dir+"playedtracks.sql") { |line|
+        IO.foreach(Cfg.rsrc_dir+"playedtracks.sql") { |line|
             line = line.chomp
             if line.match(/^INSERT/)
                 rlogtrack += 1

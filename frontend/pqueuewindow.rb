@@ -16,7 +16,7 @@ class PQueueWindow < TopWindow
             @mc.select_track(@tvpq.selection.selected[4].xlink) #if @tvpq.selection.selected
         }
         GtkUI[GtkIDs::PM_PQ_INFOS].signal_connect(:activate) {
-            XEditors::Main.new(@mc, @tvpq.selection.selected[4].xlink, XEditors::TRACK_PAGE).run
+            XIntf::Editors::Main.new(@mc, @tvpq.selection.selected[4].xlink, XIntf::Editors::TRACK_PAGE).run
         }
 
         srenderer = Gtk::CellRendererText.new()
@@ -169,7 +169,7 @@ class PQueueWindow < TopWindow
                     end
                 else
                     if type == "message"
-                        # TRACE.debug("message received, calling back #{call_back}")
+                        # Trace.debug("message received, calling back #{call_back}")
                         tracks = param ? @mc.send(call_back, param.to_i) : @mc.send(call_back)
                         # When a full record or segment is dropped, set the use of record gain
                         # rather than track gain. But if the use of record gain is not enabled in the
@@ -200,9 +200,9 @@ class PQueueWindow < TopWindow
 
     def enqueue(xlinks)
         xlinks.each { |xlink|
-            # TRACE.debug("enq before: audiostatus=#{xlink.audio_status}")
+            # Trace.debug("enq before: audiostatus=#{xlink.audio_status}")
             xlink.get_audio_file(self, @mc.tasks) unless xlink.playable?
-            # TRACE.debug("enq after : audiostatus=#{xlink.audio_status}")
+            # Trace.debug("enq after : audiostatus=#{xlink.audio_status}")
             unless xlink.audio_status == Audio::Status::NOT_FOUND
                 @internal_ref += 1
                 iter = @plq.append

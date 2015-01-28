@@ -101,7 +101,7 @@ class Credits
 
         canvas = ScrollingText.new([
             "/bSources version: #{Cdsdb::VERSION}",
-            "/bDatabase version: #{CFG.db_version}",
+            "/bDatabase version: #{Cfg.db_version}",
             "/bSQLite3 version: #{`sqlite3 --version`.split(" ")[0]}",
             "/bRuby version: #{`ruby -v`.split(" ")[1]}",
             '',

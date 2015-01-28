@@ -38,27 +38,27 @@ module XIntf
 
         def cover_file_name
             @pix_key.empty? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :
-                            IMG_CACHE.full_name(@pix_key)
+                            Image::Cache.full_name(@pix_key)
         end
 
         def large_track_cover
             @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
-                            IMG_CACHE.pix(@pix_key, Image::Cache::LARGE_SIZE)
+                            Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
         end
 
         def small_track_cover
             @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
-                            IMG_CACHE.pix(@pix_key, Image::Cache::SMALL_SIZE)
+                            Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
         end
 
         def large_record_cover
             @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
-                            IMG_CACHE.pix(@pix_key, Image::Cache::LARGE_SIZE)
+                            Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
         end
 
         def small_record_cover
             @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
-                            IMG_CACHE.pix(@pix_key, Image::Cache::SMALL_SIZE)
+                            Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
         end
 
         def cover_key
@@ -66,7 +66,7 @@ module XIntf
         end
 
         def available_on_server?
-            if audio_status == Audio::Status::NOT_FOUND && CFG.remote?
+            if audio_status == Audio::Status::NOT_FOUND && Cfg.remote?
                 if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0].to_i != Audio::Status::NOT_FOUND
                     set_audio_status(Audio::Status::ON_SERVER)
                 end
@@ -85,7 +85,7 @@ module XIntf
         end
 
         def get_remote_audio_file(emitter, tasks)
-            if CFG.remote? && CFG.local_store?
+            if Cfg.remote? && Cfg.local_store?
                 unless tasks.track_in_download?(self)
                     tasks.new_track_download(emitter, self)
                     set_audio_status(Audio::Status::ON_SERVER)
@@ -105,14 +105,14 @@ module XIntf
             if record.rartist == 0 && !is_compile
                 # We're on a track of a compilation but not on the Compilations
                 # so we assign the file to the track rather than the record
-                cover_file = CFG.covers_dir+record.rrecord.to_s
+                cover_file = Cfg.covers_dir+record.rrecord.to_s
                 FileUtils::mkpath(cover_file)
                 cover_file += File::SEPARATOR+track.rtrack.to_s+File::extname(fname)
                 ex_name = cover_file+File::SEPARATOR+"ex"+track.rtrack.to_s+File::extname(fname)
             else
                 # Assign file to record
-                cover_file = CFG.covers_dir+record.rrecord.to_s+File::extname(fname)
-                ex_name = CFG.covers_dir+"ex"+record.rrecord.to_s+File::extname(fname)
+                cover_file = Cfg.covers_dir+record.rrecord.to_s+File::extname(fname)
+                ex_name = Cfg.covers_dir+"ex"+record.rrecord.to_s+File::extname(fname)
             end
             if File::exists?(cover_file)
                 File::unlink(ex_name) if File::exists?(ex_name)

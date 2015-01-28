@@ -107,9 +107,9 @@ class PlayerWindow < TopWindow
         @gc = Gdk::GC.new(@meter.window)
 
         # Get the meter image, unlit and lit images from their files
-        scale   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-scaleH.png")
-        @dark   = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH0.png")
-        @bright = Gdk::Pixbuf.new(CFG.icons_dir+"k14-meterH1.png")
+        scale   = Gdk::Pixbuf.new(Cfg.icons_dir+"k14-scaleH.png")
+        @dark   = Gdk::Pixbuf.new(Cfg.icons_dir+"k14-meterH0.png")
+        @bright = Gdk::Pixbuf.new(Cfg.icons_dir+"k14-meterH1.png")
 
         # Start splitting the meter image to build the definitive bitmap as the scale image
         # is not the final image onto which we draw
@@ -133,10 +133,10 @@ class PlayerWindow < TopWindow
         @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
 
         @digits = []
-        10.times { |i| @digits[i] = Gdk::Pixbuf.new(CFG.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
-        @digits[10] = Gdk::Pixbuf.new(CFG.icons_dir+"unlitdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[11] = Gdk::Pixbuf.new(CFG.icons_dir+"colondigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[12] = Gdk::Pixbuf.new(CFG.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        10.times { |i| @digits[i] = Gdk::Pixbuf.new(Cfg.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
+        @digits[10] = Gdk::Pixbuf.new(Cfg.icons_dir+"unlitdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[11] = Gdk::Pixbuf.new(Cfg.icons_dir+"colondigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[12] = Gdk::Pixbuf.new(Cfg.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
 
         reset_counter
     end
@@ -221,9 +221,9 @@ class PlayerWindow < TopWindow
         @tip_pix = nil
 
         if notify
-            TRACE.debug("[nil]".red)
-            if CFG.notifications?
-                system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{IMG_CACHE.default_record_file} 'CDsDB' 'End of play list'")
+            Trace.debug("[nil]".red)
+            if Cfg.notifications?
+                system("notify-send -t #{(Cfg.notif_duration*1000).to_s} -i #{XIntf::Image::Cache.default_record_file} 'CDsDB' 'End of play list'")
             end
         end
 
@@ -262,13 +262,13 @@ class PlayerWindow < TopWindow
         # while there were ready to play tracks in the queue.
         unless player_data.xlink.audio_file
             player_data.xlink.setup_audio_file
-            TRACE.debug("Player audio file was empty!".red)
+            Trace.debug("Player audio file was empty!".red)
         end
 
         # Check if the ready bin already has the same audio file
         # If the file is the same we also have to check that the ready bin is in paused state
         if player_data.xlink.audio_file != @readybin.audio_file || !@readybin.paused?
-            TRACE.debug("Readying #{player_data.xlink.audio_file}".brown)
+            Trace.debug("Readying #{player_data.xlink.audio_file}".brown)
 
             # Can't use replay gain if track has been dropped.
             # Replay gain should work if tags are set in the audio file
@@ -276,10 +276,10 @@ class PlayerWindow < TopWindow
             if player_data.xlink.tags.nil?
                 if player_data.xlink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
                     replay_gain = player_data.xlink.record.fgain
-                    TRACE.debug("RECORD gain: #{player_data.xlink.record.fgain}".brown)
+                    Trace.debug("RECORD gain: #{player_data.xlink.record.fgain}".brown)
                 elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
                     replay_gain = player_data.xlink.track.fgain
-                    TRACE.debug("TRACK gain #{player_data.xlink.track.fgain}".brown)
+                    Trace.debug("TRACK gain #{player_data.xlink.track.fgain}".brown)
                 end
             end
 
@@ -300,7 +300,7 @@ class PlayerWindow < TopWindow
 
         # Debug info
         info = player_data.xlink.tags.nil? ? "[#{player_data.xlink.track.rtrack}" : "[dropped"
-        TRACE.debug((info+", #{player_data.xlink.audio_file}]").cyan)
+        Trace.debug((info+", #{player_data.xlink.audio_file}]").cyan)
 
         # Delayed UI operations start now
         @tip_pix = nil
@@ -319,9 +319,9 @@ class PlayerWindow < TopWindow
         GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = false
         GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = true
         GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
-        if CFG.notifications?
+        if Cfg.notifications?
             file_name = player_data.xlink.cover_file_name
-            system("notify-send -t #{(CFG.notif_duration*1000).to_s} -i #{file_name} 'CDsDB now playing' \"#{player_data.xlink.html_track_title(true)}\"")
+            system("notify-send -t #{(Cfg.notif_duration*1000).to_s} -i #{file_name} 'CDsDB now playing' \"#{player_data.xlink.html_track_title(true)}\"")
         end
     end
 
@@ -369,7 +369,7 @@ class PlayerWindow < TopWindow
     # not the current provider as selected in the source menu
     def refetch(track_provider)
         if @queue[0] && @mc.track_provider == track_provider
-            # TRACE.debug("player refetched by #{track_provider.class.name}".red)
+            # Trace.debug("player refetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
             set_ready(@queue[1]) if @queue[1]
@@ -382,7 +382,7 @@ class PlayerWindow < TopWindow
     # Also called by mc when source changed to remove the tracks from previous provider
     def unfetch(track_provider)
         if @queue[0] && @queue[1] && @queue[1].owner == track_provider
-            # TRACE.debug("player unfetched by #{track_provider.class.name}".red)
+            # Trace.debug("player unfetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             # debug_queue
         end
@@ -396,7 +396,7 @@ class PlayerWindow < TopWindow
     def gstplayer_eos
         start = Time.now.to_f
         @queue[1] ? play_track(@queue[1]) : reset_player(true)
-        TRACE.debug("Elapsed: #{Time.now.to_f-start}")
+        Trace.debug("Elapsed: #{Time.now.to_f-start}")
 
         # If next provider is different from current, notify current provider it has finished
         @queue[0].owner.notify_played(@queue[0], @queue[1].nil? || @queue[1].owner != @queue[0].owner ? :finish : :next)

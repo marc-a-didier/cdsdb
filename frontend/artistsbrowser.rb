@@ -468,7 +468,7 @@ class ArtistsBrowser < Gtk::TreeView
         selection.mode = Gtk::SELECTION_SINGLE
 
         name_renderer = Gtk::CellRendererText.new
-#         if CFG.admin?
+#         if Cfg.admin?
 #             name_renderer.editable = true
 #             name_renderer.signal_connect(:edited) { |widget, path, new_text| on_artist_edited(widget, path, new_text) }
 #         end
@@ -549,7 +549,7 @@ class ArtistsBrowser < Gtk::TreeView
     end
 
     def edit_artist
-        @artlnk.to_widgets if @artlnk.valid_artist_ref? && XEditors::Main.new(@mc, @artlnk, XEditors::ARTIST_PAGE).run == Gtk::Dialog::RESPONSE_OK
+        @artlnk.to_widgets if @artlnk.valid_artist_ref? && XIntf::Editors::Main.new(@mc, @artlnk, XIntf::Editors::ARTIST_PAGE).run == Gtk::Dialog::RESPONSE_OK
     end
 
     # Recursively search for rartist from iter. If iter is nil, search from tree root.
@@ -600,7 +600,7 @@ class ArtistsBrowser < Gtk::TreeView
 
         return if iter.first_child && iter.first_child[0] != GenRowProp::FAKE_ID && !force_reload
 
-        # TRACE.debug("*** load new sub tree ***")
+        # Trace.debug("*** load new sub tree ***")
         # Making the first column the sort column greatly speeds up things AND makes sure that the
         # fake item is first in the store.
         model.set_sort_column_id(0)
@@ -632,7 +632,7 @@ class ArtistsBrowser < Gtk::TreeView
     def on_selection_changed(widget)
         @tvs = selection.selected
         return if @tvs.nil?
-        # TRACE.debug("artists selection changed".cyan)
+        # Trace.debug("artists selection changed".cyan)
         if @tvs.nil? || model.iter_depth(@tvs) < @tvs[2].max_level
             @artlnk.reset
         else

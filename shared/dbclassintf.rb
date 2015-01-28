@@ -70,7 +70,7 @@ module DBClass
             sql = generate_update
             unless sql.empty?
                 DBUtils.client_sql(sql)
-                TRACE.debug("DB update : #{sql}".red)
+                Trace.debug("DB update : #{sql}".red)
             end
             return self
         end
