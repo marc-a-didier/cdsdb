@@ -19,6 +19,16 @@ end
 
 module Cfg
 
+    # Client/Server transmission block size
+    TX_BLOCK_SIZE = 128*1024
+    MSG_EOL       = "EOL"
+    FILE_INFO_SEP = "@:@"
+
+    MSG_CONTINUE   = "CONTINUE"
+    MSG_CANCELLED  = "CANCELLED"
+    STAT_CONTINUE  = 1
+    STAT_CANCELLED = 0
+
     class << self
 
         include ConfigFields
@@ -26,17 +36,6 @@ module Cfg
 
         attr_accessor :server_mode
 
-        # Client/Server transmission block size
-        TX_BLOCK_SIZE = 128*1024
-        MSG_EOL       = "EOL"
-        FILE_INFO_SEP = "@:@"
-
-        MSG_CONTINUE   = "CONTINUE"
-        MSG_CANCELLED  = "CANCELLED"
-        STAT_CONTINUE  = 1
-        STAT_CANCELLED = 0
-
-        DIRS            = [:covers, :icons, :flags, :src, :db]
         SERVER_RSRC_DIR = "../../"
         PREFS_FILE      = "prefs.yml"
         LOG_FILE        = "cdsdb.log"
