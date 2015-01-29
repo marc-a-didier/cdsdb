@@ -91,6 +91,7 @@ require './dbxeditors'
 
 require './dbreorderer'
 
+require './treeprovider'
 require './artistsbrowser'
 require './recordsbrowser'
 require './tracksbrowser'
