@@ -8,9 +8,7 @@ require 'singleton'
 require 'logger'
 
 require 'sqlite3'
-# require 'taglib2'
 require 'yaml'
-# require 'rexml/document'
 
 require '../shared/extenders'
 require '../shared/cfg'
@@ -23,13 +21,11 @@ require '../shared/audio'
 require '../shared/dbcache'
 require '../shared/dbcachelink'
 require '../shared/audiolink'
-# require '../shared/trackinfos'
 
 
 class MusicServer
 
     def initialize
-#         Cfg.load
         Cfg.server_mode = true
         Cfg.set_local_mode # On va pas cascader les serveurs...
 
@@ -96,6 +92,7 @@ class MusicServer
 
     def reload_hosts(session)
         session.puts("OK")
+        Log.info("Reloading hosts, request from #{hostname(session)}")
         load_hosts
     end
 

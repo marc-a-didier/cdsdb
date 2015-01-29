@@ -308,7 +308,7 @@ class TracksBrowser < Gtk::TreeView
             tracks = ""
             model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
             # Replace each file not found state with server state
-            MusicClient.new.check_multiple_audio(tracks).each_with_index { |found, i|
+            MusicClient.check_multiple_audio(tracks).each_with_index { |found, i|
                 iter = model.get_iter(i.to_s)
                 iter[TTV_DATA].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_DATA].audio_status == Audio::Status::NOT_FOUND) && found != '0'
             }
@@ -442,7 +442,7 @@ class TracksBrowser < Gtk::TreeView
             #         under exceptional and unclear circumstances
 
             # Must rename on server BEFORE the sql update is done because it needs the old name to find the track!!
-            MusicClient.new.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
+            MusicClient.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
 
             xtrack.track.stitle = new_text
             xtrack.track.sql_update

@@ -24,7 +24,7 @@ module TreeProvider
     #            plus anything that may be needed to obtain a correct order (see Records, Ripped).
     #
     #
-    
+
     FAKE_ID = -10
 
     SELECT_ARTISTS = -1
@@ -68,7 +68,7 @@ module TreeProvider
         #
         def default_filter(iter)
             iter.parent[0] < 0 ? " #{@where_fields}=#{iter.parent.parent[0]} " :
-                                " #{@where_fields}=#{iter.parent[0]} "
+                                 " #{@where_fields}=#{iter.parent[0]} "
 
         end
 
@@ -308,7 +308,7 @@ module TreeProvider
                     child[0] = row[1]
                     child[1] = Time.at(row[0]).strftime("%d.%m.%Y")+" - "+
                             row[4].to_html_bold+"\nby "+row[2].to_html_italic
-    #                 child[1] += CGI::escapeHTML(row[row[1] == 0 ? 4 : 2])
+                    # child[1] += CGI::escapeHTML(row[row[1] == 0 ? 4 : 2])
                     child[2] = iter[2]
                     child[3] = ("%03d" % count)+row[3].to_s
                     count += 1
@@ -389,8 +389,8 @@ module TreeProvider
         end
 
         def default_filter(iter)
-            return " #@where_fields > #{iter.parent.parent[0]-TINC} AND \
-                    #@where_fields <= #{iter.parent.parent[0]} "
+            return " #@where_fields >  #{iter.parent.parent[0]-TINC} AND \
+                     #@where_fields <= #{iter.parent.parent[0]} "
         end
     end
 
@@ -409,12 +409,12 @@ module TreeProvider
             if level == 0
                 sql = %Q{SELECT records.stitle, artists.rartist, artists.sname, records.rrecord FROM records
                         INNER JOIN artists ON records.rartist = artists.rartist;}
-    #                      ORDER BY LOWER(records.stitle);}
+                        # ORDER BY LOWER(records.stitle);}
                 DBIntf.execute(sql) { |row|
                     child = model.append(iter)
                     child[0] = row[1]
-    #                 child[1] = '<span color="green">'+CGI::escapeHTML(row[0])+"</span>\n<i>"+CGI::escapeHTML(row[2])+"</i>"
-    #                 child[1] = "<b>"+CGI::escapeHTML(row[0])+"</b>\nby <i>"+CGI::escapeHTML(row[2])+"</i>"
+                    # child[1] = '<span color="green">'+CGI::escapeHTML(row[0])+"</span>\n<i>"+CGI::escapeHTML(row[2])+"</i>"
+                    # child[1] = "<b>"+CGI::escapeHTML(row[0])+"</b>\nby <i>"+CGI::escapeHTML(row[2])+"</i>"
                     child[1] = row[0].to_html_bold+"\nby "+row[2].to_html_italic
                     child[2] = iter[2]
                     child[3] = row[0]+"@@@"+row[3].to_s # Magouille magouille...

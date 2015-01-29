@@ -111,9 +111,9 @@ class TasksWindow < TopWindow
                     @tv.set_cursor(iter.path, nil, false)
                     iter[COL_STATUS] = STAT_DOWNLOAD
                     if iter[COL_TASK] == TASK_FILE_DL
-                        MusicClient.new.get_file(iter[COL_REF].file_info, self, iter)
+                        MusicClient.get_file(iter[COL_REF].file_info, self, iter)
                     else
-                        MusicClient.new.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
+                        MusicClient.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
                     end
                 end
             }

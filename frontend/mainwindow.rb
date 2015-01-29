@@ -376,7 +376,7 @@ class MainWindow < TopWindow
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
-        srv_db_version = MusicClient.new.get_server_db_version
+        srv_db_version = MusicClient.get_server_db_version
         file = File.basename(DBIntf.build_db_name(srv_db_version)+".dwl")
         @mc.tasks.new_file_download(self, "db"+Cfg::FILE_INFO_SEP+file+Cfg::FILE_INFO_SEP+"0", -1)
     end
@@ -387,7 +387,7 @@ class MainWindow < TopWindow
         if user_ref == -1
             file = DBIntf.build_db_name
             File.unlink(file+".back") if File.exists?(file+".back")
-            srv_db_version = MusicClient.new.get_server_db_version
+            srv_db_version = MusicClient.get_server_db_version
             Trace.debug("new db version=#{srv_db_version}")
             DBIntf.disconnect
             if srv_db_version == Cfg.db_version
@@ -404,10 +404,10 @@ class MainWindow < TopWindow
 
     #
     def on_update_resources
-        MusicClient.new.synchronize_resources.each { |file| @mc.tasks.new_file_download(self, file, 0) } if Cfg.remote?
+        MusicClient.synchronize_resources.each { |file| @mc.tasks.new_file_download(self, file, 0) } if Cfg.remote?
     end
 
     def on_update_sources
-        MusicClient.new.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
+        MusicClient.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
     end
 end

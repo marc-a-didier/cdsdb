@@ -8,11 +8,13 @@ module ConfigFields
     PREFS_ENTRY_BLKSIZE         = "prefs_entry_blksize"
     PREFS_FC_MUSICDIR           = "prefs_fc_musicdir"
     PREFS_FC_RSRCDIR            = "prefs_fc_rsrcdir"
-    PREFS_CHKBTN_LOCALSTORE     = "prefs_chkbtn_localstore"
+    PREFS_CB_TRACEDBCACHE       = "prefs_cb_tracedbcache"
+    PREFS_CB_TRACEGST           = "prefs_cb_tracegst"
+    PREFS_CB_TRACEGSTQUEUE      = "prefs_cb_tracegstqueue"
+    PREFS_CB_TRACENETWORK       = "prefs_cb_tracenetwork"
     PREFS_CB_SHOWNOTIFICATIONS  = "prefs_cb_shownotifications"
     PREFS_ENTRY_NOTIFDURATION   = "prefs_entry_notifduration"
     PREFS_CB_LIVEUPDATE         = "prefs_cb_liveupdate"
-    PREFS_CB_LOGTRACKFILE       = "prefs_cb_logtrackfile"
     PREFS_ENTRY_MAXITEMS        = "prefs_entry_maxitems"
     PREFS_CD_DEVICE             = "prefs_entry_cddevice"
 end
@@ -33,6 +35,19 @@ module Cfg
 
         include ConfigFields
 
+#         TraceCache = Struct.new(:remote, :server, :port, :blksize, :musicdir, :rsrcdir,
+#                                 :tracedbcache, :tracegst, :tracegstqueue, :tracenetwork,
+#                                 :shownotif, :notifduration, :liveupdate, :maxitems, :cddevice) do
+        TraceCache = Struct.new(:trace_db_cache, :trace_gst, :trace_gstqueue, :trace_network) do
+            def reload(cfg)
+                self.trace_db_cache = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="][0]
+                self.trace_gst      = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="][0]
+                self.trace_gstqueue = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="][0]
+                self.trace_network  = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="][0]
+                return self
+            end
+        end
+
 
         attr_accessor :server_mode
 
@@ -41,8 +56,8 @@ module Cfg
         LOG_FILE        = "cdsdb.log"
 
 
-        DEF_CONFIG = { "dbversion" => "6.0",
-                    "windows" => {
+        DEF_CONFIG = {  "dbversion" => "6.0",
+                        "windows" => {
                             PREFS_DIALOG => {
                                 PREFS_CB_SHOWNOTIFICATIONS => { "active=" => [true] },
                                 PREFS_ENTRY_NOTIFDURATION  => { "text=" => ["4"] },
@@ -52,14 +67,16 @@ module Cfg
                                 PREFS_ENTRY_SERVER         => { "text=" => ["madd510"] },
                                 PREFS_ENTRY_PORT           => { "text=" => ["32666"] },
                                 PREFS_ENTRY_BLKSIZE        => { "text=" => ["262144"] },
-                                PREFS_CHKBTN_LOCALSTORE    => { "active=" => [true] },
-                                PREFS_CB_LIVEUPDATE        => { "active=" => [true] },
-                                PREFS_CB_LOGTRACKFILE      => { "active=" => [false] },
+                                PREFS_CB_TRACEDBCACHE      => { "active=" => [false] },
+                                PREFS_CB_TRACEGST          => { "active=" => [true]  },
+                                PREFS_CB_TRACEGSTQUEUE     => { "active=" => [false] },
+                                PREFS_CB_TRACENETWORK      => { "active=" => [true]  },
+                                PREFS_CB_LIVEUPDATE        => { "active=" => [true]  },
                                 PREFS_ENTRY_MAXITEMS       => { "text=" => ["100"] }
                             }
-                    },
-                    "menus" => {}
-                    }
+                        },
+                        "menus" => {}
+                     }
 
         def load
             dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
@@ -70,11 +87,16 @@ module Cfg
             @admin_mode = false
             @server_mode = false
 
-            @cfg = File.exists?(prefs_file) ? YAML.load_file(prefs_file) : DEF_CONFIG.clone
+            @cfg = DEF_CONFIG
+            @cfg.merge!(YAML.load_file(prefs_file)) if File.exists?(prefs_file)
+            @trace_cache = TraceCache.new.reload(@cfg)
+p @trace_cache
+#             @cfg = File.exists?(prefs_file) ? YAML.load_file(prefs_file) : DEF_CONFIG
             return self
         end
 
         def save
+            @trace_cache.reload(@cfg)
             File.open(prefs_file, "w") { |file| file.puts(@cfg.to_yaml) }
         end
 
@@ -95,13 +117,21 @@ module Cfg
         def port;               return conf[PREFS_ENTRY_PORT]["text="][0].to_i;           end
         def music_dir;          return conf[PREFS_FC_MUSICDIR]["current_folder="][0]+"/"; end
         def rsrc_dir;           return conf[PREFS_FC_RSRCDIR]["current_folder="][0]+"/";  end
-        def local_store;        return conf[PREFS_CHKBTN_LOCALSTORE]["active="][0];       end
         def notifications;      return conf[PREFS_CB_SHOWNOTIFICATIONS]["active="][0];    end
         def notif_duration;     return conf[PREFS_ENTRY_NOTIFDURATION]["text="][0].to_i;  end
         def live_charts_update; return conf[PREFS_CB_LIVEUPDATE]["active="][0];           end
-        def log_played_tracks;  return conf[PREFS_CB_LOGTRACKFILE]["active="][0];         end
         def max_items;          return conf[PREFS_ENTRY_MAXITEMS]["text="][0].to_i;       end
         def cd_device;          return conf[PREFS_CD_DEVICE]["text="][0];                 end
+
+#         def trace_db_cache;     return conf[PREFS_CB_TRACEDBCACHE]["active="][0];         end
+#         def trace_gst;          return conf[PREFS_CB_TRACEGST]["active="][0];             end
+#         def trace_gstqueue;     return conf[PREFS_CB_TRACEGSTQUEUE]["active="][0];        end
+#         def trace_network;      return conf[PREFS_CB_TRACENETWORK]["active="][0];         end
+
+        def trace_db_cache;     return @trace_cache.trace_db_cache  end
+        def trace_gst;          return @trace_cache.trace_gst       end
+        def trace_gstqueue;     return @trace_cache.trace_gstqueue  end
+        def trace_network;      return @trace_cache.trace_network   end
 
         def set_local_mode
             @remote = false

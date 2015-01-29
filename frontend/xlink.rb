@@ -67,7 +67,7 @@ module XIntf
 
         def available_on_server?
             if audio_status == Audio::Status::NOT_FOUND && Cfg.remote?
-                if MusicClient.new.check_multiple_audio(track.rtrack.to_s+" ")[0].to_i != Audio::Status::NOT_FOUND
+                if MusicClient.check_multiple_audio(track.rtrack.to_s+" ")[0].to_i != Audio::Status::NOT_FOUND
                     set_audio_status(Audio::Status::ON_SERVER)
                 end
             end
@@ -85,7 +85,7 @@ module XIntf
         end
 
         def get_remote_audio_file(emitter, tasks)
-            if Cfg.remote? && Cfg.local_store?
+            if Cfg.remote?
                 unless tasks.track_in_download?(self)
                     tasks.new_track_download(emitter, self)
                     set_audio_status(Audio::Status::ON_SERVER)

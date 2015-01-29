@@ -19,7 +19,7 @@ module Prefs
     def self.restore_window(gtk_id)
         return if Cfg.windows[gtk_id].nil?
         Cfg.windows[gtk_id].each do |obj, msg|
-            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
+            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) if GtkUI[obj] }
         end
     end
 

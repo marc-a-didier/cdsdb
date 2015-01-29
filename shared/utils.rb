@@ -1,5 +1,5 @@
 
-class Utils
+module Utils
 
     # Default random numbers file name
     RANDOM_FILE = ENV['HOME']+"/Downloads/randomorg.bin"

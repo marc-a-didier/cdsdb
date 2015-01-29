@@ -1,5 +1,5 @@
 
-class DBUtils
+module DBUtils
 
     def self.name_from_id(field_val, tbl_name)
         return "" if field_val.nil?
@@ -22,12 +22,12 @@ class DBUtils
     #
     def self.client_sql(sql, want_log = true)
         want_log ? self.log_exec(sql) : DBIntf.execute(sql)
-        MusicClient.new.exec_sql(sql) if Cfg.remote?
+        MusicClient.exec_sql(sql) if Cfg.remote?
     end
 
     def self.threaded_client_sql(sql)
         self.log_exec(sql)
-        Thread.new { MusicClient.new.exec_sql(sql) } if Cfg.remote?
+        Thread.new { MusicClient.exec_sql(sql) } if Cfg.remote?
     end
 
     def self.exec_local_batch(sql, host)
@@ -39,10 +39,10 @@ class DBUtils
 
     def self.exec_batch(sql, host)
         self.exec_local_batch(sql, host)
-        MusicClient.new.exec_batch(sql) if Cfg.remote?
+        MusicClient.exec_batch(sql) if Cfg.remote?
         # May be dangerous to spawn a thread... if request made on the record being inserted,
         # don't know what happen...
-#         Thread.new { MusicClient.new.exec_batch(sql) } if Cfg.remote?
+#         Thread.new { MusicClient.exec_batch(sql) } if Cfg.remote?
     end
 
     def self.get_last_id(short_tbl_name)

@@ -212,7 +212,7 @@ class MasterController
 
             @charts.live_update(xlink) if Cfg.live_charts_update? && @charts.window.visible?
 
-            MusicClient.new.update_stats(xlink.track.rtrack) if Cfg.remote?
+            MusicClient.update_stats(xlink.track.rtrack) if Cfg.remote?
         }
 
         # if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
