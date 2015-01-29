@@ -29,7 +29,7 @@ require '../shared/audiolink'
 class MusicServer
 
     def initialize
-        Cfg.load
+#         Cfg.load
         Cfg.server_mode = true
         Cfg.set_local_mode # On va pas cascader les serveurs...
 
@@ -41,6 +41,10 @@ class MusicServer
         Log.info("    Database #{Cfg.db_version}")
         Log.info("Server listening on host #{Cfg.server} port #{Cfg.port}.")
 
+        load_hosts
+    end
+
+    def load_hosts
         # A bit of security...
         @allowed_hosts = []
         IO.foreach("/etc/hosts") { |line| @allowed_hosts << line.split(" ")[0] if line.match('^[0-9]') }
@@ -88,6 +92,11 @@ class MusicServer
         rescue Interrupt
             Log.info("Server shutdown.")
         end
+    end
+
+    def reload_hosts(session)
+        session.puts("OK")
+        load_hosts
     end
 
     def send_audio(session)
