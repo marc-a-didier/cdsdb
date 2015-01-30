@@ -9,7 +9,7 @@ module MusicClient
             socket = TCPSocket.new(Cfg.server, Cfg.port)
         rescue Errno::ECONNREFUSED => ex
             puts "Connection error (#{ex.class} : #{ex})."
-            Cfg.set_local_mode
+            Cfg.remote = false
             GtkUtils.show_message("Can't connect to server #{Cfg.server} on port #{Cfg.port}.\n
                                    Config reset to local browsing mode.", Gtk::MessageDialog::ERROR)
             return nil
@@ -91,7 +91,7 @@ module MusicClient
             Trace.debug("<--> Sync resources OK".green) if Cfg.trace_network
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
-                resources << str unless Utils::has_matching_file?(str) #File.exists?(str)
+                resources << str unless Utils.has_matching_file?(str) #File.exists?(str)
                 str = socket.gets.chomp
             end
         end
@@ -109,7 +109,7 @@ module MusicClient
             Trace.debug("<--> Sync sources OK".green) if Cfg.trace_network
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
-                files << str unless Utils::has_matching_file?(str)
+                files << str unless Utils.has_matching_file?(str)
                 str = socket.gets.chomp
             end
         end
@@ -166,7 +166,7 @@ module MusicClient
                 Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
                 socket.puts(file_name)
                 size = socket.gets.chomp.to_i
-                download_file(tasks, task_id, Utils::replace_dir_name(file_name), size, socket) unless size == 0
+                download_file(tasks, task_id, Utils.replace_dir_name(file_name), size, socket) unless size == 0
             end
         end
         socket.close

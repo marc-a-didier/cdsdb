@@ -1,9 +1,8 @@
 
-LogTrackDBS = Struct.new(:rlogtrack, :rtrack, :idateplayed, :shostname)
-#PListDBS = Struct.new(:rplist, :sname, :iislocal, :idatecreated, :idatemodified)
-PLTrackDBS = Struct.new(:rpltrack, :rplist, :rtrack, :iorder)
-
 class DBReorderer
+
+    LogTrackDBS = Struct.new(:rlogtrack, :rtrack, :idateplayed, :shostname)
+    PLTrackDBS  = Struct.new(:rpltrack, :rplist, :rtrack, :iorder)
 
     def initialize
         #newdb = SQLite3::Database.new("../db/cds.neworder.db")

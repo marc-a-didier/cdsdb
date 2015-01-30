@@ -34,25 +34,27 @@ module Cfg
 
         include ConfigFields
 
+        WINDOWS = 'windows'
+
         CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
                                 :server, :port, :tx_block_size, :music_dir, :rsrc_dir,
                                 :trace_db_cache, :trace_gst, :trace_gstqueue, :trace_network,
                                 :notifications, :notif_duration, :live_charts_update, :max_items, :cd_device) do
             def reload(cfg)
-                self.trace_db_cache     = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="][0]
-                self.trace_gst          = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="][0]
-                self.trace_gstqueue     = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="][0]
-                self.trace_network      = cfg["windows"][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="][0]
-                self.tx_block_size      = cfg["windows"][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]["text="][0].to_i
-                self.server             = cfg["windows"][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="][0]
-                self.port               = cfg["windows"][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="][0].to_i
-                self.music_dir          = cfg["windows"][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="][0]+"/"
-                self.rsrc_dir           = cfg["windows"][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="][0]+"/"
-                self.notifications      = cfg["windows"][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]["active="][0]
-                self.notif_duration     = cfg["windows"][PREFS_DIALOG][PREFS_ENTRY_NOTIFDURATION]["text="][0].to_i
-                self.live_charts_update = cfg["windows"][PREFS_DIALOG][PREFS_CB_LIVEUPDATE]["active="][0]
-                self.max_items          = cfg["windows"][PREFS_DIALOG][PREFS_ENTRY_MAXITEMS]["text="][0].to_i
-                self.cd_device          = cfg["windows"][PREFS_DIALOG][PREFS_CD_DEVICE]["text="][0]
+                self.trace_db_cache     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="][0]
+                self.trace_gst          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="][0]
+                self.trace_gstqueue     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="][0]
+                self.trace_network      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="][0]
+                self.tx_block_size      = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]["text="][0].to_i
+                self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="][0]
+                self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="][0].to_i
+                self.music_dir          = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="][0]+"/"
+                self.rsrc_dir           = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="][0]+"/"
+                self.notifications      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]["active="][0]
+                self.notif_duration     = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_NOTIFDURATION]["text="][0].to_i
+                self.live_charts_update = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_LIVEUPDATE]["active="][0]
+                self.max_items          = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_MAXITEMS]["text="][0].to_i
+                self.cd_device          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CD_DEVICE]["text="][0]
                 return self
             end
         end
@@ -64,7 +66,7 @@ module Cfg
 
 
         DEF_CONFIG = {  "dbversion" => "6.0",
-                        "windows" => {
+                        WINDOWS => {
                             PREFS_DIALOG => {
                                 PREFS_CB_SHOWNOTIFICATIONS => { "active=" => [true] },
                                 PREFS_ENTRY_NOTIFDURATION  => { "text=" => ["4"] },
@@ -90,18 +92,19 @@ module Cfg
 
             dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
             @cfg_store.config_dir = File.join(dir, 'cdsdb/')
-            FileUtils::mkpath(@cfg_store.config_dir) unless File::exists?(@cfg_store.config_dir)
+            FileUtils::mkpath(@cfg_store.config_dir) unless Dir.exists?(@cfg_store.config_dir)
 
+            # Start with default prefs
             @cfg = DEF_CONFIG
+            # Merge default with prefs file if present
             @cfg.merge!(YAML.load_file(prefs_file)) if File.exists?(prefs_file)
-            @cfg_store = CfgStorage.new.reload(@cfg)
+
+            # Set store fields from prefs
+            @cfg_store.reload(@cfg)
 
             @cfg_store.remote = false
             @cfg_store.admin  = false
             @cfg_store.server_mode = false
-p @cfg_store
-#             @cfg = File.exists?(prefs_file) ? YAML.load_file(prefs_file) : DEF_CONFIG
-            return self
         end
 
         def save
@@ -109,51 +112,40 @@ p @cfg_store
             File.open(prefs_file, "w") { |file| file.puts(@cfg.to_yaml) }
         end
 
+        def prefs_file
+            return @cfg_store.config_dir+PREFS_FILE
+        end
+
+        #
+        # Helpers for Prefs module
+        #
         def windows
-            return @cfg["windows"]
+            return @cfg[WINDOWS]
         end
 
         def menus
             return @cfg["menus"]
         end
-#
-#         def conf
-#             return @cfg["windows"][PREFS_DIALOG]
-#         end
-#
-#         def tx_block_size;      return conf[PREFS_ENTRY_BLKSIZE]["text="][0].to_i;        end
-#         def server;             return conf[PREFS_ENTRY_SERVER]["text="][0];              end
-#         def port;               return conf[PREFS_ENTRY_PORT]["text="][0].to_i;           end
-#         def music_dir;          return conf[PREFS_FC_MUSICDIR]["current_folder="][0]+"/"; end
-#         def rsrc_dir;           return conf[PREFS_FC_RSRCDIR]["current_folder="][0]+"/";  end
-#         def notifications;      return conf[PREFS_CB_SHOWNOTIFICATIONS]["active="][0];    end
-#         def notif_duration;     return conf[PREFS_ENTRY_NOTIFDURATION]["text="][0].to_i;  end
-#         def live_charts_update; return conf[PREFS_CB_LIVEUPDATE]["active="][0];           end
-#         def max_items;          return conf[PREFS_ENTRY_MAXITEMS]["text="][0].to_i;       end
-#         def cd_device;          return conf[PREFS_CD_DEVICE]["text="][0];                 end
 
-#         def trace_db_cache;     return conf[PREFS_CB_TRACEDBCACHE]["active="][0];         end
-#         def trace_gst;          return conf[PREFS_CB_TRACEGST]["active="][0];             end
-#         def trace_gstqueue;     return conf[PREFS_CB_TRACEGSTQUEUE]["active="][0];        end
-#         def trace_network;      return conf[PREFS_CB_TRACENETWORK]["active="][0];         end
+        #
+        # If we get a method_missing exception, redirect it to
+        # the config store as it probably has the requested method
+        #
+        def method_missing(method, *args, &block)
+            @cfg_store.send(method, *args, &block)
+        end
 
+        #
+        # Shortcuts to avoid the method missing mechanism and improve perfs
+        #
         def trace_db_cache;     return @cfg_store.trace_db_cache  end
         def trace_gst;          return @cfg_store.trace_gst       end
         def trace_gstqueue;     return @cfg_store.trace_gstqueue  end
         def trace_network;      return @cfg_store.trace_network   end
 
-        def method_missing(method, *args, &block)
-            @cfg_store.send(method, *args, &block)
-        end
-
-        def set_local_mode
-            @cfg_store.remote = false
-        end
-
-        def set_remote(is_remote)
-            @cfg_store.remote = is_remote
-        end
-
+        #
+        # Misc utilities
+        #
         def remote?
             return @cfg_store.remote
         end
@@ -164,10 +156,6 @@ p @cfg_store
         def flags_dir;   return dir(:flags)            end
         def sources_dir; return dir(:src)              end
         def rip_dir;     return ENV["HOME"]+"/rip/"    end
-
-        def prefs_file
-            return @cfg_store.config_dir+PREFS_FILE
-        end
 
         def db_version
             return @cfg["dbversion"]
@@ -181,11 +169,11 @@ p @cfg_store
         # Special cases for the server: db & log are forced to specific directories
         #
         def database_dir
-            return $0.match(/server\.rb$/) ? SERVER_RSRC_DIR+"db/" : dir(:db)
+            return @cfg_store.server_mode ? SERVER_RSRC_DIR+"db/" : dir(:db)
         end
 
         def log_file
-            return $0.match(/server\.rb$/) ? SERVER_RSRC_DIR+LOG_FILE : rsrc_dir+LOG_FILE
+            return @cfg_store.server_mode ? SERVER_RSRC_DIR+LOG_FILE : rsrc_dir+LOG_FILE
         end
     end
 end

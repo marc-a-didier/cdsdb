@@ -60,6 +60,7 @@ module XIntf
             str += ", "+DBCache::Cache.collection(rec.rcollection).sname if rec.rcollection != 0
             str += ", "+rec.iplaytime.to_ms_length
             str += " [%.4f | %.4f]" % [rec.fgain, rec.fpeak]
+            return str
         end
 
         def seg_info_string
@@ -67,6 +68,7 @@ module XIntf
             str  = "Segment "+segment.iorder.to_s
             str += " "+segment.stitle unless segment.stitle.empty?
             str += " by "+segment_artist.sname+" "+segment.iplaytime.to_ms_length
+            return str
         end
     end
 

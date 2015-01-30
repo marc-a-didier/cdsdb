@@ -2,8 +2,7 @@
 
 class TracksBrowser < Gtk::TreeView
 
-    include PlayerIntf
-    include BrowserPlayerIntf
+    include PlayerIntf::Browser
 
     TTV_REF         = 0
     TTV_PIX         = 1
@@ -95,16 +94,16 @@ class TracksBrowser < Gtk::TreeView
 
         GtkUI[GtkIDs::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
             if @trklnk.valid_track_ref? && @trklnk.playable?
-                AudioDialog.new.show(@trklnk.audio_file)
+                SimpleDialogs::Audio.show(@trklnk.audio_file)
             else
                 GtkUtils.show_message("File not found!", Gtk::MessageDialog::ERROR)
             end
         }
         GtkUI[GtkIDs::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
-            PlayHistoryDialog.new.show_track(@trklnk.track.rtrack)
+            SimpleDialogs::PlayHistory.show_track(@trklnk.track.rtrack)
         }
         GtkUI[GtkIDs::TRK_POPUP_CONTPL].signal_connect(:activate) {
-            TrkPListsDialog.new(@mc, @trklnk.track.rtrack).run
+            SimpleDialogs::TrackPLists.run(@mc, @trklnk.track.rtrack)
         }
 
         # Current track index in browser when it's the player provider

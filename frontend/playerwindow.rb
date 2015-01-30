@@ -1,6 +1,4 @@
 
-PlayerData = Struct.new(:owner, :internal_ref, :xlink, :rplist)
-
 class PlayerWindow < TopWindow
 
     MIN_LEVEL     = -80.0  # The scale range will be from this value to 0 dB, has to be negative
@@ -50,7 +48,7 @@ class PlayerWindow < TopWindow
 
         GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
 
-        # Intended to be a PlayerData array to pre-fetch tracks to play
+        # TrackRefs array: [0] is the current track, [1..PREFETCH_SIZE-1] are the next tracks to play
         @queue = []
 
         @slider = GtkUI[GtkIDs::PLAYER_HSCALE]

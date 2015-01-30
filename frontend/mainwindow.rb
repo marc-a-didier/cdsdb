@@ -82,7 +82,7 @@ class MainWindow < TopWindow
         GtkUI[MW_FILTER_ACTION].signal_connect(:activate) { toggle_window_visibility(@mc.filters) }
         GtkUI[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
         GtkUI[MW_SERVER_ACTION].signal_connect(:activate) {
-            Cfg.set_remote(GtkUI[MW_SERVER_ACTION].active?)
+            Cfg.remote = GtkUI[MW_SERVER_ACTION].active?
             @mc.tasks.check_config
             @trk_browser.check_for_audio_file if @trk_browser
         }
@@ -125,7 +125,7 @@ class MainWindow < TopWindow
         GtkUI[MM_FILE_QUIT].signal_connect(:activate)        { @mc.clean_up; Gtk.main_quit }
 
         GtkUI[MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = SearchDialog.new(@mc).run }
-        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { PrefsDialog.new.run; @mc.tasks.check_config }
+        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { SimpleDialogs::Preferences.run; @mc.tasks.check_config }
 
 
         GtkUI[MM_VIEW_BYRATING].signal_connect(:activate) { record_changed   }
@@ -246,7 +246,7 @@ class MainWindow < TopWindow
             @history[item].present
         else
             if item == VIEW_BY_DATES
-                dates = DateChooser.new.run
+                dates = SimpleDialogs::DateChooser.run
                 @history[item] = HistoryDialog.new(@mc, item, dates).run if dates
             else
                 @history[item] = HistoryDialog.new(@mc, item, nil).run

@@ -112,6 +112,13 @@ module DBClass
             row.nil? ? reset : load_from_row(row)
             return valid?
         end
+
+        def select_all
+            DBIntf.execute("SELECT * FROM #{tbl_name}") do |row|
+                load_from_row(row)
+                yield #if block_given?
+            end
+        end
     end
 
     Artist = Struct.new(:rartist, :sname, :swebsite, :rorigin, :mnotes) do

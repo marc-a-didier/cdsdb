@@ -1,8 +1,7 @@
 
 class PListsWindow < TopWindow
 
-    include PlayerIntf
-    include BrowserPlayerIntf
+    include PlayerIntf::Browser
 
     TT_REF    = 0
     TT_ORDER  = 1
@@ -31,10 +30,10 @@ class PListsWindow < TopWindow
         GtkUI[GtkIDs::PM_PL_ADD].signal_connect(:activate)           { do_add }
         GtkUI[GtkIDs::PM_PL_DELETE].signal_connect(:activate)        { |widget| do_del(widget) }
         GtkUI[GtkIDs::PM_PL_INFOS].signal_connect(:activate)         { show_infos(true) }
-        GtkUI[GtkIDs::PM_PL_EXPORT_XSPF].signal_connect(:activate)   { do_export_xspf }
-        GtkUI[GtkIDs::PM_PL_EXPORT_M3U].signal_connect(:activate)    { do_export_m3u }
-        GtkUI[GtkIDs::PM_PL_EXPORT_PLS].signal_connect(:activate)    { do_export_pls }
-        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { do_export_to_device }
+        GtkUI[GtkIDs::PM_PL_EXPORT_XSPF].signal_connect(:activate)   { PListExporter.export_to_xspf(@pts, @current_pl.sname) }
+        GtkUI[GtkIDs::PM_PL_EXPORT_M3U].signal_connect(:activate)    { PListExporter.export_to_m3u(@pts, @current_pl.sname)  }
+        GtkUI[GtkIDs::PM_PL_EXPORT_PLS].signal_connect(:activate)    { PListExporter.export_to_pls(@pts, @current_pl.sname)  }
+        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
         GtkUI[GtkIDs::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
         GtkUI[GtkIDs::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
         GtkUI[GtkIDs::PM_PL_SHOWINBROWSER].signal_connect(:activate) {

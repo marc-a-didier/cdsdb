@@ -51,9 +51,9 @@ class RecordsBrowser < Gtk::TreeView
         GtkUI[GtkIDs::REC_POPUP_TAGDIR].signal_connect(:activate)   { on_tag_dir }
         GtkUI[GtkIDs::REC_POPUP_ENQUEUE].signal_connect(:activate)  { @mc.enqueue_record }
         GtkUI[GtkIDs::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
-        GtkUI[GtkIDs::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils::assign_track_seg_order(@reclnk.record.rrecord) }
+        GtkUI[GtkIDs::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils.assign_track_seg_order(@reclnk.record.rrecord) }
         GtkUI[GtkIDs::REC_POPUP_PHISTORY].signal_connect(:activate) {
-            PlayHistoryDialog.new.show_record(@reclnk.record.rrecord)
+            SimpleDialogs::PlayHistory.show_record(@reclnk.record.rrecord)
         }
 
         GtkUI[GtkIDs::REC_POPUP_GETRPGAIN].signal_connect(:activate) { get_replay_gain }
@@ -308,7 +308,7 @@ p row
     end
 
     def on_cp_title_to_segs
-        DBUtils::log_exec("UPDATE segments SET stitle=#{@reclnk.stitle.to_sql} WHERE rrecord=#{@reclnk.rrecord}")
+        DBUtils.log_exec("UPDATE segments SET stitle=#{@reclnk.stitle.to_sql} WHERE rrecord=#{@reclnk.rrecord}")
     end
 
     def on_tag_dir

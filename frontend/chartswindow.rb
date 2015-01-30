@@ -62,9 +62,9 @@ class ChartsWindow < TopWindow
         GtkUI[CHARTS_PM_ENQUEUEFROM].signal_connect(:activate) { enqueue_multiple_tracks }
         GtkUI[CHARTS_PM_PLAYHISTORY].signal_connect(:activate) {
             if @view_type == VIEW_TRACKS
-                PlayHistoryDialog.new.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+                SimpleDialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             else
-                PlayHistoryDialog.new.show_record(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+                SimpleDialogs::PlayHistory.show_record(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             end
         }
         GtkUI[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
@@ -128,7 +128,7 @@ class ChartsWindow < TopWindow
     end
 
     def show_history
-        PlayHistoryDialog.new(self).show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+        SimpleDialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
     end
 
     def get_selection

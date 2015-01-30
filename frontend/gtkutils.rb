@@ -49,9 +49,9 @@ module GtkUtils
         arenderer.activatable = true
         arenderer.signal_connect(:toggled) { |w, path|
             iter = tvt.model.get_iter(path)
-            iter[0] = !iter[0] if (iter)
+            iter[0] = !iter[0] if iter
         }
-        srenderer = Gtk::CellRendererText.new()
+        srenderer = Gtk::CellRendererText.new
 
         tvt.append_column(Gtk::TreeViewColumn.new("Match", arenderer, :active => 0))
         tvt.append_column(Gtk::TreeViewColumn.new("Tag", srenderer, :text => 1))
@@ -77,34 +77,6 @@ module GtkUtils
 #         return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+"default.svg", 22, 22)
         return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+"default.svg", 22, 22)
     end
-
-    #
-    # Builds a track name to be displayed in an html context (lists, player, ...)
-    # title is expected to be complete, with track number, title, seg order and seg title if any
-    #
-#     def self.full_html_track_title(title, artist, record, separator = "\n")
-#         return title.to_html_bold+separator+"by "+artist.to_html_italic+separator+"from "+record.to_html_italic
-#     end
-#
-#     # Builds an html track title from a DB track_infos, NOT tags track_infos
-#     def self.html_track_title(track_infos, add_segment)
-#         return self.full_html_track_title(
-#                     self.make_track_title(track_infos.track.iorder, track_infos.track.stitle,
-#                                             track_infos.track.isegorder, track_infos.segment.stitle,
-#                                             add_segment),
-#                     track_infos.seg_art.sname,
-#                     track_infos.record.stitle)
-#     end
-#
-#     # Builds an html track title from a TAGS track_infos, NOT DB track_infos
-#     # At this time, only called from the player window for title and tooltip infos
-#     def self.tags_html_track_title(track_infos, separator)
-#         return self.full_html_track_title(
-#                     self.make_track_title(track_infos.track.iorder, track_infos.title, 0, "", false),
-#                     track_infos.seg_art.sname,
-#                     track_infos.record.stitle,
-#                     separator)
-#     end
 
 
     #

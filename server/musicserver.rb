@@ -27,7 +27,7 @@ class MusicServer
 
     def initialize
         Cfg.server_mode = true
-        Cfg.set_local_mode # On va pas cascader les serveurs...
+        Cfg.remote = false # On va pas cascader les serveurs...
 
         Thread.abort_on_exception = true
 

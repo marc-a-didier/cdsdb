@@ -280,7 +280,7 @@ class PQueueWindow < TopWindow
     end
 
 
-    # Return an array of PlayerData that's max_entries in size and contain the next
+    # Return an array of TrackRefs that's max_entries in size and contain the next
     # tracks to play.
     # player_data is the current top of stack track of the player
     def prefetch_tracks(queue, max_entries)
@@ -288,7 +288,7 @@ class PQueueWindow < TopWindow
             # Must check for every track if it's already in the queue. It may have been moved or something else.
             in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
             if !in_queue && iter[4].xlink.audio_status != Audio::Status::ON_SERVER
-                queue << PlayerData.new(self, iter[4].internal_ref, iter[4].xlink)
+                queue << TrackRefs.new(self, iter[4].internal_ref, iter[4].xlink)
                 break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
         }
@@ -298,7 +298,7 @@ class PQueueWindow < TopWindow
         if direction == :start
             @plq.each { |model, path, iter|
                 unless iter[4].xlink.audio_status == Audio::Status::ON_SERVER
-                    return PlayerData.new(self, iter[4].internal_ref, iter[4].xlink)
+                    return TrackRefs.new(self, iter[4].internal_ref, iter[4].xlink)
                 end
             }
         end
