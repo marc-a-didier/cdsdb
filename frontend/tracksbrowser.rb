@@ -44,7 +44,7 @@ class TracksBrowser < Gtk::TreeView
         self.visible = true
 
         renderer = Gtk::CellRendererText.new
-        if Cfg.admin?
+        if Cfg.admin
             renderer.editable = true
             # Reset the text to the true title of the track to remove segment index if any.
             renderer.signal_connect(:editing_started) { |cell, editable, path| editable.text = @trklnk.track.stitle }
@@ -116,7 +116,7 @@ class TracksBrowser < Gtk::TreeView
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the track tree view except in admin mode (to add track)
-            return if selection.count_selected_rows < 1 && !Cfg.admin?
+            return if selection.count_selected_rows < 1 && !Cfg.admin
             # Add segments of the current record to the segment association submenu
             sub_menu = GtkUI[GtkIDs::TRK_POPUP_SEGASS].submenu
             GtkUI[GtkIDs::TRK_POPUP_SEGASS].remove_submenu

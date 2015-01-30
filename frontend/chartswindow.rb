@@ -404,7 +404,7 @@ class ChartsWindow < TopWindow
     end
 
     def show
-        load_view(@view_type) #if !Cfg.live_charts_update? || @lsc.iter_first.nil?
+        load_view(@view_type) #if !Cfg.live_charts_update || @lsc.iter_first.nil?
         super
     end
 end

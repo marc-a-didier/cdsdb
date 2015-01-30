@@ -210,7 +210,7 @@ class MasterController
         Thread.new {
             @mw.set_window_title
 
-            @charts.live_update(xlink) if Cfg.live_charts_update? && @charts.window.visible?
+            @charts.live_update(xlink) if Cfg.live_charts_update && @charts.window.visible?
 
             MusicClient.update_stats(xlink.track.rtrack) if Cfg.remote?
         }

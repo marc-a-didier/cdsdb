@@ -48,7 +48,7 @@ module XIntf
                 GtkUI[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
 
                 [RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
-                    GtkUI[ctrl].sensitive = Cfg.admin?
+                    GtkUI[ctrl].sensitive = Cfg.admin
                 }
             end
 
@@ -73,7 +73,7 @@ module XIntf
                 GtkUI[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
 
                 [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
-                    GtkUI[ctrl].sensitive = Cfg.admin?
+                    GtkUI[ctrl].sensitive = Cfg.admin
                 }
             end
 
@@ -135,7 +135,7 @@ module XIntf
             end
 
             def run
-                GtkUI[DBED_BTN_OK].sensitive = Cfg.admin?
+                GtkUI[DBED_BTN_OK].sensitive = Cfg.admin
 
                 response = GtkUI[DLG_DB_EDITOR].run
                 if response == Gtk::Dialog::RESPONSE_OK

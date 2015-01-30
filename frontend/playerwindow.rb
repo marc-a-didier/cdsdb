@@ -222,7 +222,7 @@ class PlayerWindow < TopWindow
 
         if notify
             Trace.debug("[nil]".red) if Cfg.trace_gst
-            if Cfg.notifications?
+            if Cfg.notifications
                 system("notify-send -t #{(Cfg.notif_duration*1000).to_s} -i #{XIntf::Image::Cache.default_record_file} 'CDsDB' 'End of play list'")
             end
         end
@@ -319,7 +319,7 @@ class PlayerWindow < TopWindow
         GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = false
         GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = true
         GtkUI[GtkIDs::TTPM_ITEM_STOP].sensitive = true
-        if Cfg.notifications?
+        if Cfg.notifications
             file_name = player_data.xlink.cover_file_name
             system("notify-send -t #{(Cfg.notif_duration*1000).to_s} -i #{file_name} 'CDsDB now playing' \"#{player_data.xlink.html_track_title(true)}\"")
         end

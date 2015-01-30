@@ -299,7 +299,7 @@ class Cdsdb
     end
 
     def initialize
-        Cfg.set_admin_mode(has_arg("--admin"))
+        Cfg.admin = has_arg("--admin")
 
         DBIntf.execute("PRAGMA synchronous=OFF;")
 

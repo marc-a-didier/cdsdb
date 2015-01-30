@@ -155,7 +155,7 @@ module DBUtils
         Trace.debug("Check integrity ended with #{tracks.size} mismatches.")
         return
 
-        if tracks.size > 0 && Cfg.admin?
+        if tracks.size > 0 && Cfg.admin
             Trace.debug("Starting tracks update.")
             tracks.each do |track|
                 sql = "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]}"

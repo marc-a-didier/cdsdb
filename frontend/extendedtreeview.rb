@@ -73,7 +73,7 @@ class Gtk::TreeView
     def show_popup(widget, event, menu_name)
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view except in admin mode
-            return if selection.selected.nil? && !Cfg.admin?
+            return if selection.selected.nil? && !Cfg.admin
             @mc.update_tags_menu(self, GtkUI[GtkIDs::REC_POPUP_TAGS]) if self.instance_of?(RecordsBrowser)
             GtkUI[menu_name].popup(nil, nil, event.button, event.time)
         end

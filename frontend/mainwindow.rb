@@ -210,7 +210,7 @@ class MainWindow < TopWindow
         tags_sm.show_all
 
         # Disable sensible controls if not in admin mode
-        ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless Cfg.admin?
+        ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless Cfg.admin
 
         GtkUI[MAIN_WINDOW].icon = Gdk::Pixbuf.new(Cfg.icons_dir+"audio-cd.png")
         GtkUI[MAIN_WINDOW].show

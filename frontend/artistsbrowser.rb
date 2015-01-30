@@ -39,7 +39,7 @@ class ArtistsBrowser < Gtk::TreeView
         selection.mode = Gtk::SELECTION_SINGLE
 
         name_renderer = Gtk::CellRendererText.new
-#         if Cfg.admin?
+#         if Cfg.admin
 #             name_renderer.editable = true
 #             name_renderer.signal_connect(:edited) { |widget, path, new_text| on_artist_edited(widget, path, new_text) }
 #         end
