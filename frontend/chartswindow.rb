@@ -62,9 +62,9 @@ class ChartsWindow < TopWindow
         GtkUI[CHARTS_PM_ENQUEUEFROM].signal_connect(:activate) { enqueue_multiple_tracks }
         GtkUI[CHARTS_PM_PLAYHISTORY].signal_connect(:activate) {
             if @view_type == VIEW_TRACKS
-                SimpleDialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+                Dialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             else
-                SimpleDialogs::PlayHistory.show_record(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+                Dialogs::PlayHistory.show_record(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             end
         }
         GtkUI[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
@@ -128,7 +128,7 @@ class ChartsWindow < TopWindow
     end
 
     def show_history
-        SimpleDialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
+        Dialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
     end
 
     def get_selection
@@ -201,9 +201,9 @@ class ChartsWindow < TopWindow
     # Generates a play plist from the current chart.
     #
     def generate_play_list
-        rplist = DBUtils::get_last_id("plist")+1
+        rplist = DBUtils.get_last_id("plist")+1
         DBIntf.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
-        rpltrack = DBUtils::get_last_id("pltrack")
+        rpltrack = DBUtils.get_last_id("pltrack")
         count = 1
         @lsc.each { |model, path, iter|
             DBIntf.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count*1024});")
@@ -306,7 +306,7 @@ class ChartsWindow < TopWindow
         end
 
         # Done if not tracks or records charts
-        return if ![VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+        return unless [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
 
         # Pix and title loading are in another loop because making db accesses while reading
         # the result set of the query greatly speeds the things down...

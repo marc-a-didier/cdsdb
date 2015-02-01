@@ -160,9 +160,9 @@ module Utils
     # Recursively tags all files from a specified directory with given genre
     #
     def self.tag_full_dir_to_genre(genre, dir)
-        Find::find(dir) { |file|
+        Find.find(dir) { |file|
             if Audio::FILE_EXTS.inlcude?(File.extname(file).downcase)
-                print "Tagging #{file} with genre #{genre}\n"
+                Trace.debug("Tagging #{file} with genre #{genre}")
                 tags = TagLib::File.new(file)
                 tags.genre = genre
                 tags.save

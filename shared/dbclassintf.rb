@@ -37,8 +37,12 @@ module DBClass
             return self.members[0][1..-1]+"s"
         end
 
+        def primary_key
+            return self.members[0].to_s
+        end
+
         def generate_where_on_pk
-            return "WHERE #{self.members[0].to_s}=#{self[0]}"
+            return "WHERE #{primary_key}=#{self[0]}"
         end
 
         def generate_insert
@@ -118,6 +122,10 @@ module DBClass
                 load_from_row(row)
                 yield #if block_given?
             end
+        end
+
+        def count_references(from_table)
+            return DBIntf.get_first_value("SELECT COUNT(#{primary_key}) FROM #{from_table} WHERE #{primary_key}=#{self[0]}")
         end
     end
 
@@ -222,4 +230,9 @@ module DBClass
     Origin = Struct.new(:rorigin, :sname) { include SQLintf }
 
     Filter = Struct.new(:rfilter, :sname, :sxmldata) { include SQLintf }
+
+
+    KEY_NAME_TO_CLASS_MAP = { 'rartist' => Artist, 'rrecord' => Record, 'rsegment' => Segment, 'rtrack' => Track,
+                              'rplist' => PList, 'rgenre' => Genre, 'rlabel' => Label, 'rmedia' => Media,
+                              'rcollection' => Collection, 'rorigin' => Origin }
 end

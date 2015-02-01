@@ -55,8 +55,8 @@ module PListExporter
     end
 
     def self.export_to_device(mc, list_store)
-        exp = SimpleDialogs::Export::Params.new
-        return if SimpleDialogs::Export.run(exp) == Gtk::Dialog::RESPONSE_CANCEL # Run is auto-destroying
+        exp = Dialogs::Export::Params.new
+        return if Dialogs::Export.run(exp) == Gtk::Dialog::RESPONSE_CANCEL # Run is auto-destroying
 
         list_store.each do |model, path, iter|
             next if iter[PListsWindow::TT_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND

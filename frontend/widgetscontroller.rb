@@ -117,7 +117,7 @@ module XIntf
         end
 
         def select_dialog(dbfield)
-            value = DBSelectorDialog.new.run(dbfield[1..-1])
+            value = Dialogs::DBSelector.new(dbfield).run
             unless value == -1
                 @dbs[dbfield] = value
                 self.field_to_widget(dbfield)

@@ -17,85 +17,98 @@ module MusicClient
         return socket
     end
 
+    def self.close_connection(socket)
+        status = socket.gets.chomp
+        Trace.debug("<--> Server response is: #{status.green}") if Cfg.trace_network
+        socket.close
+    end
+
+    def self.is_server_alive?
+        return false unless socket = get_connection
+        socket.puts("is alive")
+        Trace.debug("<--> Server alive request: #{socket.gets.chomp.green}") if Cfg.trace_network
+        close_connection(socket)
+        return true
+    end
 
     def self.get_server_db_version
         return "" unless socket = get_connection
         Trace.debug("get db version") if Cfg.trace_network
         db_version = ""
         socket.puts("get db version")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> DB version OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> DB version #{Cfg::MSG_OK.green}") if Cfg.trace_network
             db_version = socket.gets.chomp
         end
-        socket.close
+        close_connection(socket)
         return db_version
     end
 
     def self.check_multiple_audio(tracks)
         return [] unless socket = get_connection
         socket.puts("check multiple audio")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Check audio OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Check audio #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(tracks)
             rs = socket.gets.chomp.split(" ")
         end
-        socket.close
+        close_connection(socket)
         return rs
     end
 
     def self.update_stats(rtrack)
         return unless socket = get_connection
         socket.puts("update stats")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Update stats OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Update stats #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(rtrack.to_s)
         end
-        socket.close
+        close_connection(socket)
     end
 
     def self.exec_sql(sql)
         return unless socket = get_connection
         socket.puts("exec sql")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Exec SQL OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Exec SQL #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(sql)
         end
-        socket.close
+        close_connection(socket)
     end
 
     def self.exec_batch(sql)
         return unless socket = get_connection
         socket.puts("exec batch")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Exec batch OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Exec batch #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(sql.gsub(/\n/, '\n'))
         end
-        socket.close
+        close_connection(socket)
     end
 
     def self.renumber_play_list(rplist)
         return unless socket = get_connection
         socket.puts("renumber play list")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Renumber play list OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Renumber play list #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(rplist.to_s)
         end
-        socket.close
+        close_connection(socket)
     end
 
     def self.synchronize_resources
         return unless socket = get_connection
         resources = []
         socket.puts("synchronize resources")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Sync resources OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Sync resources #{Cfg::MSG_OK.green}") if Cfg.trace_network
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
                 resources << str unless Utils.has_matching_file?(str) #File.exists?(str)
                 str = socket.gets.chomp
             end
         end
-        socket.close
+        close_connection(socket)
         Trace.debug("<--> Resources list received.".green) if Cfg.trace_network
         p resources
         return resources
@@ -105,15 +118,15 @@ module MusicClient
         return unless socket = get_connection
         files = []
         socket.puts("synchronize sources")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Sync sources OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Sync sources #{Cfg::MSG_OK.green}") if Cfg.trace_network
             str = socket.gets.chomp
             until str == Cfg::MSG_EOL
                 files << str unless Utils.has_matching_file?(str)
                 str = socket.gets.chomp
             end
         end
-        socket.close
+        close_connection(socket)
         Trace.debug("<--> Sources list received.".green) if Cfg.trace_network
         return files
     end
@@ -122,12 +135,12 @@ module MusicClient
         return "" unless socket = get_connection
         Trace.debug("rename audio") if Cfg.trace_network
         socket.puts("rename audio")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Rename audio OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Rename audio #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(rtrack.to_s)
             socket.puts(new_title)
         end
-        socket.close
+        close_connection(socket)
     end
 
     def self.get_audio_file(tasks, task_id, rtrack)
@@ -135,8 +148,8 @@ module MusicClient
         Trace.debug("send audio") if Cfg.trace_network
         socket.puts("send audio")
         file = ""
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Send audio OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Send audio #{Cfg::MSG_OK.green}") if Cfg.trace_network
             Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
             socket.puts(Cfg.tx_block_size.to_s)
             if socket.gets.chomp.to_i == Cfg.tx_block_size
@@ -150,7 +163,7 @@ module MusicClient
                 end
             end
         end
-        socket.close
+        close_connection(socket)
         return file
     end
 
@@ -159,8 +172,8 @@ module MusicClient
         size = 0
         Trace.debug("send file") if Cfg.trace_network
         socket.puts("send file")
-        if socket.gets.chomp == "OK"
-            Trace.debug("<--> Send file OK".green) if Cfg.trace_network
+        if socket.gets.chomp == Cfg::MSG_OK
+            Trace.debug("<--> Send file #{Cfg::MSG_OK.green}") if Cfg.trace_network
             socket.puts(Cfg.tx_block_size.to_s)
             if socket.gets.chomp.to_i == Cfg.tx_block_size
                 Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
@@ -169,7 +182,7 @@ module MusicClient
                 download_file(tasks, task_id, Utils.replace_dir_name(file_name), size, socket) unless size == 0
             end
         end
-        socket.close
+        close_connection(socket)
         return size > 0
     end
 

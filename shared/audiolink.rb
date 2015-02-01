@@ -78,7 +78,7 @@ module Audio
         end
 
         def playable?
-            return (audio_status == Status::OK || audio_status == Status::MISPLACED) && audio.file
+            return (audio_status == Status::OK || audio_status == Status::MISPLACED) && audio_file
         end
 
         # Search the Music directory for a file matching the theoretical file name.

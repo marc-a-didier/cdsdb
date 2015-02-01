@@ -53,7 +53,7 @@ class RecordsBrowser < Gtk::TreeView
         GtkUI[GtkIDs::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
         GtkUI[GtkIDs::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils.assign_track_seg_order(@reclnk.record.rrecord) }
         GtkUI[GtkIDs::REC_POPUP_PHISTORY].signal_connect(:activate) {
-            SimpleDialogs::PlayHistory.show_record(@reclnk.record.rrecord)
+            Dialogs::PlayHistory.show_record(@reclnk.record.rrecord)
         }
 
         GtkUI[GtkIDs::REC_POPUP_GETRPGAIN].signal_connect(:activate) { get_replay_gain }

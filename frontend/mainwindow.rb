@@ -124,8 +124,8 @@ class MainWindow < TopWindow
         #GtkUI[MM_FILE_SAVE].signal_connect(:activate)        { on_save_item }
         GtkUI[MM_FILE_QUIT].signal_connect(:activate)        { @mc.clean_up; Gtk.main_quit }
 
-        GtkUI[MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = SearchDialog.new(@mc).run }
-        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { SimpleDialogs::Preferences.run; @mc.tasks.check_config }
+        GtkUI[MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = Dialogs::Search.new(@mc).run }
+        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { Dialogs::Preferences.run; @mc.tasks.check_config }
 
 
         GtkUI[MM_VIEW_BYRATING].signal_connect(:activate) { record_changed   }
@@ -246,10 +246,10 @@ class MainWindow < TopWindow
             @history[item].present
         else
             if item == VIEW_BY_DATES
-                dates = SimpleDialogs::DateChooser.run
-                @history[item] = HistoryDialog.new(@mc, item, dates).run if dates
+                dates = Dialogs::DateChooser.run
+                @history[item] = Dialogs::History.new(@mc, item, dates).run if dates
             else
-                @history[item] = HistoryDialog.new(@mc, item, nil).run
+                @history[item] = Dialogs::History.new(@mc, item, nil).run
             end
         end
     end
@@ -344,7 +344,7 @@ class MainWindow < TopWindow
     end
 
     def on_tag_dir_genre
-        value = DBSelectorDialog.new.run(DBIntf::TBL_GENRES)
+        value = Dialogs::DBSelector.new.run('rgenre')
         unless value == -1
             dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
             Utils.tag_full_dir_to_genre(DBUtils.name_from_id(value, DBIntf::TBL_GENRES), dir) unless dir.empty?

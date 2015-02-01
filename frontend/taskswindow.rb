@@ -123,7 +123,8 @@ class TasksWindow < TopWindow
     def check_config
         if Cfg.remote?
             if @chk_thread.nil?
-Trace.debug("task thread started...".green)
+                Trace.debug("task thread started...".green) if Cfg.trace_network
+                MusicClient.is_server_alive?
                 DBCache::Cache.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
 #                 GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
                 @chk_thread = Thread.new {
@@ -138,7 +139,7 @@ Trace.debug("task thread started...".green)
             @chk_thread.exit
             @chk_thread = nil
 #             GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
-Trace.debug("task thread stopped".brown)
+            Trace.debug("task thread stopped".brown) if Cfg.trace_network
         end
     end
 

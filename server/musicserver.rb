@@ -91,19 +91,26 @@ class MusicServer
     end
 
     def reload_hosts(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         Log.info("Reloading hosts, request from #{hostname(session)}")
         load_hosts
+        session.puts(Cfg::MSG_DONE)
     end
 
+    def is_alive(session)
+        session.puts("Yo man, i'm still alive...")
+        session.puts(Cfg::MSG_DONE)
+    end
+
+
     def send_audio(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         block_size = session.gets.chomp.to_i
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
         file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file
-        Log.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
         if file
+            Log.info("Sending #{file} in #{block_size} bytes chunks to #{hostname(session)}")
             session.puts(File.size(file).to_s)
             session.puts(file.sub(Cfg.music_dir, ""))
             File.open(file, "rb") { |f|
@@ -113,65 +120,74 @@ class MusicServer
                 end
             }
         else
+            Log.warn("Requested file for track #{rtrack} not found")
             session.puts("0")
         end
+        session.puts(Cfg::MSG_DONE)
     end
 
     # No more used... again...
     def check_single_audio(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         rtrack = session.gets.chomp.to_i
         session.puts(Audio::Link.new.set_track_ref(rtrack).setup_audio_file.status.to_s)
+        session.puts(Cfg::MSG_DONE)
     end
 
     def check_multiple_audio(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         audio_link = Audio::Link.new
         rs = ""
         session.gets.chomp.split(" ").each { |track|
             rs << audio_link.reset.set_track_ref(track.to_i).setup_audio_file.status.to_s+" "
         }
         session.puts(rs)
+        session.puts(Cfg::MSG_DONE)
     end
 
     def update_stats(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         DBUtils.update_track_stats(session.gets.chomp.to_i, hostname(session))
+        session.puts(Cfg::MSG_DONE)
     end
 
     def exec_sql(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         DBUtils.log_exec(session.gets.chomp, hostname(session))
+        session.puts(Cfg::MSG_DONE)
     end
 
     def exec_batch(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         DBUtils.exec_batch(session.gets.chomp.gsub(/\\n/, "\n"), hostname(session))
+        session.puts(Cfg::MSG_DONE)
     end
 
     def synchronize_resources(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         [:covers, :icons, :flags].each { |type|
-            Find::find(Cfg.dir(type)) { |file|
+            Find.find(Cfg.dir(type)) { |file|
                 session.puts(type.to_s+Cfg::FILE_INFO_SEP+file.sub(Cfg.dir(type), "")+
                                        Cfg::FILE_INFO_SEP+File.mtime(file).to_i.to_s) unless File.directory?(file)
             }
         }
         session.puts(Cfg::MSG_EOL)
+        session.puts(Cfg::MSG_DONE)
     end
 
     def synchronize_sources(session)
-        session.puts("OK")
-        Find::find(Cfg.sources_dir) { |file|
+        session.puts(Cfg::MSG_OK)
+        Find.find(Cfg.sources_dir) { |file|
             next if file.match(/.*\.bzr/) # Skip hidden dir (.bzr for example...)
             session.puts("src"+Cfg::FILE_INFO_SEP+file.sub(Cfg.sources_dir, "")+
                                Cfg::FILE_INFO_SEP+File.mtime(file).to_i.to_s) unless File.directory?(file)
         }
         session.puts(Cfg::MSG_EOL)
+        session.puts(Cfg::MSG_DONE)
     end
 
     def send_file(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         block_size = session.gets.chomp.to_i
         session.puts(block_size.to_s)
         file_name = Utils.replace_dir_name(session.gets.chomp)
@@ -191,10 +207,11 @@ class MusicServer
                 break if session.gets.chomp == Cfg::MSG_CANCELLED unless f.eof?
             end
         }
+        session.puts(Cfg::MSG_DONE)
     end
 
     def rename_audio(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         audio_link = Audio::Link.new.set_track_ref(session.gets.chomp.to_i)
         new_title  = session.gets.chomp
         file_name  = audio_link.setup_audio_file.file
@@ -205,16 +222,19 @@ class MusicServer
         else
             Log.info("Attempt to rename inexisting track to #{new_title} [#{hostname(session)}]")
         end
+        session.puts(Cfg::MSG_DONE)
     end
 
     def get_db_version(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         session.puts(Cfg.db_version)
+        session.puts(Cfg::MSG_DONE)
     end
 
     def renumber_play_list(session)
-        session.puts("OK")
+        session.puts(Cfg::MSG_OK)
         DBUtils.renumber_play_list(session.gets.chomp.to_i)
+        session.puts(Cfg::MSG_DONE)
     end
 
 end

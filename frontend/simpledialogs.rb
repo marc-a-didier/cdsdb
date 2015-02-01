@@ -1,9 +1,9 @@
 
-module SimpleDialogs
+module Dialogs
 
     module Audio
 
-        def self.show(file_name)
+        def self.run(file_name)
             GtkUI.load_window(GtkIDs::AUDIO_DIALOG)
 
             tags = TagLib::File.new(file_name)
@@ -238,7 +238,7 @@ module SimpleDialogs
 
         def self.show_record(rrecord)
             GtkUI.load_window(GtkIDs::PLAY_HISTORY_DIALOG)
-            sef.show_record_history(rrecord)
+            self.show_record_history(rrecord)
             GtkUI[GtkIDs::PLAY_HISTORY_DIALOG].run
             GtkUI[GtkIDs::PLAY_HISTORY_DIALOG].destroy
         end

@@ -8,6 +8,7 @@ module ConfigFields
     PREFS_FC_MUSICDIR           = "prefs_fc_musicdir"
     PREFS_FC_RSRCDIR            = "prefs_fc_rsrcdir"
     PREFS_CB_TRACEDBCACHE       = "prefs_cb_tracedbcache"
+    PREFS_CB_IMAGECACHE         = "prefs_cb_traceimagecache"
     PREFS_CB_TRACEGST           = "prefs_cb_tracegst"
     PREFS_CB_TRACEGSTQUEUE      = "prefs_cb_tracegstqueue"
     PREFS_CB_TRACENETWORK       = "prefs_cb_tracenetwork"
@@ -25,8 +26,10 @@ module Cfg
     MSG_EOL       = "EOL"
     FILE_INFO_SEP = "@:@"
 
-    MSG_CONTINUE   = "CONTINUE"
-    MSG_CANCELLED  = "CANCELLED"
+    MSG_CONTINUE   = 'CONTINUE'
+    MSG_CANCELLED  = 'CANCELLED'
+    MSG_OK         = 'OK'
+    MSG_DONE       = 'DONE'
     STAT_CONTINUE  = 1
     STAT_CANCELLED = 0
 
@@ -38,10 +41,11 @@ module Cfg
 
         CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
                                 :server, :port, :tx_block_size, :music_dir, :rsrc_dir,
-                                :trace_db_cache, :trace_gst, :trace_gstqueue, :trace_network,
+                                :trace_db_cache, :trace_image_cache, :trace_gst, :trace_gstqueue, :trace_network,
                                 :notifications, :notif_duration, :live_charts_update, :max_items, :cd_device) do
             def reload(cfg)
                 self.trace_db_cache     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="][0]
+                self.trace_image_cache  = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_IMAGECACHE]["active="][0]
                 self.trace_gst          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="][0]
                 self.trace_gstqueue     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="][0]
                 self.trace_network      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="][0]
@@ -77,6 +81,7 @@ module Cfg
                                 PREFS_ENTRY_PORT           => { "text=" => ["32666"] },
                                 PREFS_ENTRY_BLKSIZE        => { "text=" => ["262144"] },
                                 PREFS_CB_TRACEDBCACHE      => { "active=" => [false] },
+                                PREFS_CB_IMAGECACHE        => { "active=" => [false] },
                                 PREFS_CB_TRACEGST          => { "active=" => [true]  },
                                 PREFS_CB_TRACEGSTQUEUE     => { "active=" => [false] },
                                 PREFS_CB_TRACENETWORK      => { "active=" => [true]  },
@@ -92,12 +97,17 @@ module Cfg
 
             dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
             @cfg_store.config_dir = File.join(dir, 'cdsdb/')
-            FileUtils::mkpath(@cfg_store.config_dir) unless Dir.exists?(@cfg_store.config_dir)
+            FileUtils.mkpath(@cfg_store.config_dir) unless Dir.exists?(@cfg_store.config_dir)
 
-            # Start with default prefs
-            @cfg = DEF_CONFIG
-            # Merge default with prefs file if present
-            @cfg.merge!(YAML.load_file(prefs_file)) if File.exists?(prefs_file)
+            # Load preferences file
+            @cfg = YAML.load_file(prefs_file) if File.exists?(prefs_file)
+            if @cfg
+                # If exists, add new fields from default if any
+                @cfg[WINDOWS][PREFS_DIALOG].merge!(DEF_CONFIG[WINDOWS][PREFS_DIALOG]) { |key, oldval, newval| oldval ? oldval : newval }
+            else
+                # Start with default prefs
+                @cfg = DEF_CONFIG
+            end
 
             # Set store fields from prefs
             @cfg_store.reload(@cfg)
@@ -138,10 +148,11 @@ module Cfg
         #
         # Shortcuts to avoid the method missing mechanism and improve perfs
         #
-        def trace_db_cache;     return @cfg_store.trace_db_cache  end
-        def trace_gst;          return @cfg_store.trace_gst       end
-        def trace_gstqueue;     return @cfg_store.trace_gstqueue  end
-        def trace_network;      return @cfg_store.trace_network   end
+        def trace_db_cache;     return @cfg_store.trace_db_cache     end
+        def trace_image_cache;  return @cfg_store.trace_image_cache  end
+        def trace_gst;          return @cfg_store.trace_gst          end
+        def trace_gstqueue;     return @cfg_store.trace_gstqueue     end
+        def trace_network;      return @cfg_store.trace_network      end
 
         #
         # Misc utilities
