@@ -5,6 +5,7 @@ module ConfigFields
     PREFS_ENTRY_SERVER          = "prefs_entry_server"
     PREFS_ENTRY_PORT            = "prefs_entry_port"
     PREFS_ENTRY_BLKSIZE         = "prefs_entry_blksize"
+    PREFS_CB_SYNCCOMMS          = "prefs_cb_synccomms"
     PREFS_FC_MUSICDIR           = "prefs_fc_musicdir"
     PREFS_FC_RSRCDIR            = "prefs_fc_rsrcdir"
     PREFS_CB_TRACEDBCACHE       = "prefs_cb_tracedbcache"
@@ -33,6 +34,9 @@ module Cfg
     STAT_CONTINUE  = 1
     STAT_CANCELLED = 0
 
+    SYNC_HDR  = "-"
+    SYNC_MODE = { false => "0", true => "1" }
+
     class << self
 
         include ConfigFields
@@ -40,7 +44,7 @@ module Cfg
         WINDOWS = 'windows'
 
         CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
-                                :server, :port, :tx_block_size, :music_dir, :rsrc_dir,
+                                :server, :port, :sync_comms, :tx_block_size, :music_dir, :rsrc_dir,
                                 :trace_db_cache, :trace_image_cache, :trace_gst, :trace_gstqueue, :trace_network,
                                 :notifications, :notif_duration, :live_charts_update, :max_items, :cd_device) do
             def reload(cfg)
@@ -52,6 +56,7 @@ module Cfg
                 self.tx_block_size      = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]["text="][0].to_i
                 self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="][0]
                 self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="][0].to_i
+                self.sync_comms         = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SYNCCOMMS]["active="][0]
                 self.music_dir          = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="][0]+"/"
                 self.rsrc_dir           = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="][0]+"/"
                 self.notifications      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]["active="][0]
@@ -80,6 +85,7 @@ module Cfg
                                 PREFS_ENTRY_SERVER         => { "text=" => ["madd510"] },
                                 PREFS_ENTRY_PORT           => { "text=" => ["32666"] },
                                 PREFS_ENTRY_BLKSIZE        => { "text=" => ["262144"] },
+                                PREFS_CB_SYNCCOMMS         => { "active=" => [false] },
                                 PREFS_CB_TRACEDBCACHE      => { "active=" => [false] },
                                 PREFS_CB_IMAGECACHE        => { "active=" => [false] },
                                 PREFS_CB_TRACEGST          => { "active=" => [true]  },
