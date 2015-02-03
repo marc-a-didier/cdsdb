@@ -1,7 +1,7 @@
 
-TaskData = Struct.new(:user_ref, :emitter, :file_info)
-
 class TasksWindow < TopWindow
+
+    TaskData = Struct.new(:user_ref, :emitter, :file_info)
 
     STATUS = ["Waiting", "Downloading...", "Done", "Uploading...", "Running...", "Cancelled"]
 
@@ -35,7 +35,7 @@ class TasksWindow < TopWindow
         progress_renderer.sensitive = false
         progress_column = Gtk::TreeViewColumn.new("Progress", progress_renderer)
         progress_column.min_width = 150
-        progress_column.set_cell_data_func(progress_renderer) { |column, cell, model, iter|
+        progress_column.set_cell_data_func(progress_renderer) do |column, cell, model, iter|
             if iter[COL_TASK] == TASK_PROGRESS
                 if iter[COL_PROGRESS] == -1
                     #cell.value = 1.0
@@ -49,7 +49,7 @@ class TasksWindow < TopWindow
                 cell.value = iter[COL_PROGRESS]
                 cell.text  = iter[COL_PROGRESS].to_s+"%"
             end
-        }
+        end
 
         task_renderer = Gtk::CellRendererText.new
         task_column = Gtk::TreeViewColumn.new("Task", task_renderer)
@@ -66,15 +66,15 @@ class TasksWindow < TopWindow
 
         @tv.model = Gtk::ListStore.new(Integer, String, Integer, Integer, Class)
 
-        @tv.signal_connect(:button_press_event) { |widget, event|
+        @tv.signal_connect(:button_press_event) do |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
                 GtkUI[GtkIDs::TASKS_POPUP_MENU].popup(nil, nil, event.button, event.time)
             end
-        }
+        end
 
         GtkUI[GtkIDs::TKPM_CLOSE].signal_connect(:activate) { GtkUI[GtkIDs::MM_WIN_TASKS].signal_emit(:activate) }
-        GtkUI[GtkIDs::TKPM_CLEAR].signal_connect(:activate) {
-            @mutex.synchronize {
+        GtkUI[GtkIDs::TKPM_CLEAR].signal_connect(:activate) do
+            @mutex.synchronize do
                 index = 0
                 while iter = @tv.model.get_iter(index.to_s)
                     if iter[COL_STATUS] == STAT_DONE || iter[COL_STATUS] == STAT_CANCELLED
@@ -84,16 +84,16 @@ class TasksWindow < TopWindow
                     end
                 end
                 @tv.columns_autosize
-            }
-        }
+            end
+        end
 
         # Check if there is at least one download in progress before setting the cancel flag
-        GtkUI[GtkIDs::TKPM_CANCEL].signal_connect(:activate) {
-            @tv.model.each { |model, path, iter|
+        GtkUI[GtkIDs::TKPM_CANCEL].signal_connect(:activate) do
+            @tv.model.each do |model, path, iter|
                 @has_cancelled = true if in_downloads?(iter)
                 break if @has_cancelled
-            }
-        }
+            end
+        end
 
         @chk_thread = nil
         @has_cancelled = false
@@ -103,8 +103,8 @@ class TasksWindow < TopWindow
     end
 
     def check_waiting_tasks
-        @mutex.synchronize {
-            @tv.model.each { |model, path, iter|
+        @mutex.synchronize do
+            @tv.model.each do |model, path, iter|
                 break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD
 
                 if (iter[COL_TASK] == TASK_FILE_DL || iter[COL_TASK] == TASK_AUDIO_DL) && iter[COL_STATUS] == STAT_WAITING
@@ -116,30 +116,30 @@ class TasksWindow < TopWindow
                         MusicClient.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
                     end
                 end
-            }
-        }
+            end
+        end
     end
 
     def check_config
         if Cfg.remote?
             if @chk_thread.nil?
-                Trace.debug("task thread started...".green) if Cfg.trace_network
-                MusicClient.is_server_alive?
+                Trace.debug("Task thread started...".green) if Cfg.trace_network
+#                 MusicClient.is_server_alive?
                 DBCache::Cache.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
 #                 GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
-                @chk_thread = Thread.new {
+                @chk_thread = Thread.new do
                     loop do
                         check_waiting_tasks
                         sleep(1.0)
                     end
-                }
+                end
             end
         elsif !@chk_thread.nil?
             DBCache::Cache.set_audio_status_from_to(Audio::Status::ON_SERVER, Audio::Status::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
 #             GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
-            Trace.debug("task thread stopped".brown) if Cfg.trace_network
+            Trace.debug("Task thread stopped".brown) if Cfg.trace_network
         end
     end
 
@@ -148,11 +148,11 @@ class TasksWindow < TopWindow
     end
 
     def track_in_download?(dblink)
-        @tv.model.each { |model, path, iter|
+        @tv.model.each do |model, path, iter|
             return true if iter[COL_REF].user_ref.kind_of?(Audio::Link) &&
                            iter[COL_REF].user_ref.track.rtrack == dblink.track.rtrack &&
                            in_downloads?(iter)
-        }
+        end
         return false
     end
 
@@ -181,9 +181,9 @@ class TasksWindow < TopWindow
 
     def end_file_op(iter, file_name, status)
         if status == Cfg::STAT_CANCELLED && @has_cancelled
-            @mutex.synchronize {
+            @mutex.synchronize do
                 @tv.model.each { |model, path, iter| iter[COL_STATUS] = STAT_CANCELLED if in_downloads?(iter) }
-            }
+            end
             @has_cancelled = false
         else
             iter[COL_PROGRESS] = 100

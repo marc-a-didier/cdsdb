@@ -37,8 +37,11 @@ module MusicClient
 
         return socket if response == Cfg::MSG_OK
 
-        # If response is not OK, we're fucked...
-        Cfg.remote = false
+        # If response is not OK, we're fucked... or it's a bad metod
+#         Cfg.remote = false if response == Cfg::MSG_FUCKED
+        # If were here, the server mode is active. Deactivate it if fucked...
+        GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate) if response == Cfg::MSG_FUCKED
+
         socket.close
         return nil
     end
@@ -117,14 +120,9 @@ module MusicClient
     end
 
     def self.rename_audio(rtrack, new_title)
-        return "" unless socket = get_connection
-        Trace.debug("rename audio") if Cfg.trace_network
-        socket.puts("rename audio")
-        if socket.gets.chomp == Cfg::MSG_OK
-            Trace.debug("<--> Rename audio #{Cfg::MSG_OK.green}") if Cfg.trace_network
-            socket.puts(rtrack.to_s)
-            socket.puts(new_title)
-        end
+        return unless socket = check_server_response("rename audio")
+        socket.puts(rtrack.to_s)
+        socket.puts(new_title)
         close_connection(socket)
     end
 

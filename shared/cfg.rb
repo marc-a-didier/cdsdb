@@ -29,8 +29,12 @@ module Cfg
 
     MSG_CONTINUE   = 'CONTINUE'
     MSG_CANCELLED  = 'CANCELLED'
+
     MSG_OK         = 'OK'
     MSG_DONE       = 'DONE'
+    MSG_ERROR      = 'NO_METHOD'
+    MSG_FUCKED     = 'Fucked up...'
+
     STAT_CONTINUE  = 1
     STAT_CANCELLED = 0
 
