@@ -1,6 +1,3 @@
-# !/usr/bin/env ruby
-
-require 'socket'
 
 module MusicClient
 
@@ -9,7 +6,7 @@ module MusicClient
             socket = TCPSocket.new(Cfg.server, Cfg.port)
         rescue Errno::ECONNREFUSED => ex
             puts "Connection error (#{ex.class} : #{ex})."
-            Cfg.remote = false
+            GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate)
             GtkUtils.show_message("Can't connect to server #{Cfg.server} on port #{Cfg.port}.\n
                                    Config reset to local browsing mode.", Gtk::MessageDialog::ERROR)
             return nil
@@ -20,12 +17,12 @@ module MusicClient
     def self.close_connection(socket)
         if Cfg.sync_comms
             status = socket.gets.chomp
-            Trace.debug("<--> Server confirms: #{status.green}") if Cfg.trace_network
+            Trace.debug("<--> Server transaction: #{status.green}") if Cfg.trace_network
         end
         socket.close
     end
 
-    def self.check_server_response(msg)
+    def self.hand_shake(msg)
         socket = get_connection
         return nil unless socket
 
@@ -47,21 +44,21 @@ module MusicClient
     end
 
     def self.is_server_alive?
-        return false unless socket = check_server_response("is alive")
+        return false unless socket = hand_shake("is alive")
         Trace.debug("<--> Server alive request: #{socket.gets.chomp.green}") if Cfg.trace_network
         close_connection(socket)
         return true
     end
 
     def self.get_server_db_version
-        return "" unless socket = check_server_response("get db version")
+        return "" unless socket = hand_shake("get db version")
         db_version = socket.gets.chomp
         close_connection(socket)
         return db_version
     end
 
     def self.check_multiple_audio(tracks)
-        return [] unless socket = check_server_response("check multiple audio")
+        return [] unless socket = hand_shake("check multiple audio")
         socket.puts(tracks)
         rs = socket.gets.chomp.split(" ")
         close_connection(socket)
@@ -69,31 +66,31 @@ module MusicClient
     end
 
     def self.update_stats(rtrack)
-        return unless socket = check_server_response("update stats")
+        return unless socket = hand_shake("update stats")
         socket.puts(rtrack.to_s)
         close_connection(socket)
     end
 
     def self.exec_sql(sql)
-        return unless socket = check_server_response("exec sql")
+        return unless socket = hand_shake("exec sql")
         socket.puts(sql)
         close_connection(socket)
     end
 
     def self.exec_batch(sql)
-        return unless socket = check_server_response("exec batch")
+        return unless socket = hand_shake("exec batch")
         socket.puts(sql.gsub(/\n/, '\n'))
         close_connection(socket)
     end
 
     def self.renumber_play_list(rplist)
-        return unless socket = check_server_response("renumber play list")
+        return unless socket = hand_shake("renumber play list")
         socket.puts(rplist.to_s)
         close_connection(socket)
     end
 
     def self.synchronize_resources
-        return [] unless socket = check_server_response("synchronize resources")
+        return [] unless socket = hand_shake("synchronize resources")
         resources = []
         str = socket.gets.chomp
         until str == Cfg::MSG_EOL
@@ -107,7 +104,7 @@ module MusicClient
     end
 
     def self.synchronize_sources
-        return [] unless socket = check_server_response("synchronize sources")
+        return [] unless socket = hand_shake("synchronize sources")
         files = []
         str = socket.gets.chomp
         until str == Cfg::MSG_EOL
@@ -120,14 +117,14 @@ module MusicClient
     end
 
     def self.rename_audio(rtrack, new_title)
-        return unless socket = check_server_response("rename audio")
+        return unless socket = hand_shake("rename audio")
         socket.puts(rtrack.to_s)
         socket.puts(new_title)
         close_connection(socket)
     end
 
     def self.get_audio_file(tasks, task_id, rtrack)
-        return "" unless socket = check_server_response("send audio")
+        return "" unless socket = hand_shake("send audio")
         file = ""
         socket.puts(Cfg.tx_block_size.to_s)
         if socket.gets.chomp.to_i == Cfg.tx_block_size
@@ -146,7 +143,7 @@ module MusicClient
     end
 
     def self.get_file(file_name, tasks, task_id)
-        return false unless socket = check_server_response("send file")
+        return false unless socket = hand_shake("send file")
         size = 0
         socket.puts(Cfg.tx_block_size.to_s)
         if socket.gets.chomp.to_i == Cfg.tx_block_size

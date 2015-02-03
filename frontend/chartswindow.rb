@@ -60,21 +60,21 @@ class ChartsWindow < TopWindow
 
         GtkUI[CHARTS_PM_ENQUEUE].signal_connect(:activate)     { enqueue }
         GtkUI[CHARTS_PM_ENQUEUEFROM].signal_connect(:activate) { enqueue_multiple_tracks }
-        GtkUI[CHARTS_PM_PLAYHISTORY].signal_connect(:activate) {
+        GtkUI[CHARTS_PM_PLAYHISTORY].signal_connect(:activate) do
             if @view_type == VIEW_TRACKS
                 Dialogs::PlayHistory.show_track(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             else
                 Dialogs::PlayHistory.show_record(@tvc.selection.selected[COL_REF]) unless @tvc.selection.selected.nil?
             end
-        }
+        end
         GtkUI[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
-        GtkUI[CHARTS_PM_SHOWINDB].signal_connect(:activate) {
+        GtkUI[CHARTS_PM_SHOWINDB].signal_connect(:activate) do
             case @view_type
                 when VIEW_TRACKS  then @mc.select_track(entry_from_selection.xlink)
                 when VIEW_RECORDS then @mc.select_record(entry_from_selection.xlink)
                 when VIEW_ARTISTS then @mc.select_artist(@tvc.selection.selected[COL_REF])
             end
-        }
+        end
 
         GtkUI[CHARTS_TV].signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
 
@@ -99,11 +99,11 @@ class ChartsWindow < TopWindow
         @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
 
         @tvc.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
-        @tvc.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
+        @tvc.signal_connect(:drag_data_get) do |widget, drag_context, selection_data, info, time|
             if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
                 selection_data.set(Gdk::Selection::TYPE_STRING, "charts:message:get_charts_selection")
             end
-        }
+        end
 
         @tvc.columns[COL_TEXT].resizable = true
 
@@ -156,13 +156,13 @@ class ChartsWindow < TopWindow
         # the mc that the pq has changed which in turn tells the player that
         # it needs to be refetched.
         # By calling enqueue only once with all links it reduce all the
-        # nessaging system to only one call.
+        # messaging system to only one call.
         links = []
         selection = @tvc.selection.selected[COL_ENTRY]-1
-        @entries.each { |entry|
+        @entries.each do |entry|
             links << entry.xlink if entry.entry >= selection
             break if entry.entry >= Cfg.max_items
-        }
+        end
         @mc.pqueue.enqueue(links)
     end
 
@@ -205,10 +205,10 @@ class ChartsWindow < TopWindow
         DBIntf.execute("INSERT INTO plists VALUES (#{rplist}, 'Charts generated', 1, #{Time.now.to_i}, 0);")
         rpltrack = DBUtils.get_last_id("pltrack")
         count = 1
-        @lsc.each { |model, path, iter|
+        @lsc.each do |model, path, iter|
             DBIntf.execute("INSERT INTO pltracks VALUES (#{rpltrack+count}, #{rplist}, #{iter[COL_REF]}, #{count*1024});")
             count += 1
-        }
+        end
     end
 
     def generate_sql
@@ -310,7 +310,7 @@ class ChartsWindow < TopWindow
 
         # Pix and title loading are in another loop because making db accesses while reading
         # the result set of the query greatly speeds the things down...
-        @entries.each { |entry|
+        @entries.each do |entry|
             if @view_type == VIEW_TRACKS
                 entry.xlink = XIntf::Link.new.set_track_ref(entry.ref)
                 entry.pix   = entry.xlink.small_track_cover
@@ -320,7 +320,7 @@ class ChartsWindow < TopWindow
                 entry.pix   = entry.xlink.small_record_cover
                 entry.title = entry.xlink.html_record_title
             end
-        }
+        end
     end
 
     #
@@ -328,7 +328,7 @@ class ChartsWindow < TopWindow
     # If is_reload is true, iters are updated otherwise they're added.
     #
     def display_charts(is_reload)
-        @entries.each_with_index { |entry, i|
+        @entries.each_with_index do |entry, i|
             break if i == Cfg.max_items
             iter = is_reload ? @lsc.get_iter(i.to_s) : @lsc.append
             iter[COL_ENTRY] = entry.entry+1
@@ -345,7 +345,7 @@ class ChartsWindow < TopWindow
             iter[COL_REF]  = entry.ref
             iter[COL_PIX]  = entry.pix
             iter[COL_TEXT] = entry.title
-        }
+        end
     end
 
     #
@@ -390,7 +390,7 @@ class ChartsWindow < TopWindow
 
         rank = pos = 0
         last_played = -1
-        @entries.each_with_index { |entry, i|
+        @entries.each_with_index do |entry, i|
             entry.entry = i
             if entry.played != last_played
                 rank = i+1
@@ -398,7 +398,7 @@ class ChartsWindow < TopWindow
             end
             entry.rank = rank
             pos = entry.entry if entry.ref == ref
-        }
+        end
         display_charts(true) if pos < Cfg.max_items
         Trace.debug("Charts lazy update done".green)
     end

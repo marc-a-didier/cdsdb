@@ -11,7 +11,7 @@ module GStreamer
         Trace.debug("Starting gain evaluation".green) if Cfg.trace_gst
 
         tpeak = tgain = rpeak = rgain = 0.0
-        done  = error = false
+        done  = false
         gains = []
 
         pipe = Gst::Pipeline.new("getgain")
@@ -30,7 +30,6 @@ module GStreamer
                 when Gst::Message::Type::ERROR
                     p message
                     done = true
-                    error = true
             end
             true
         end
@@ -41,10 +40,10 @@ module GStreamer
         sink      = Gst::ElementFactory.make("fakesink")
 
         decoder   = Gst::ElementFactory.make("decodebin")
-        decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
+        decoder.signal_connect(:new_decoded_pad) do |dbin, pad, is_last|
             pad.link(convertor.get_pad("sink"))
             convertor >> resample >> rgana >> sink
-        }
+        end
 
         source = Gst::ElementFactory.make("filesrc")
 
