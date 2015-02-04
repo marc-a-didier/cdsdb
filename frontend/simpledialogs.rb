@@ -65,7 +65,7 @@ module Dialogs
         end
     end
 
-    class DateChooser
+    module DateChooser
 
         include GtkIDs
 
@@ -119,12 +119,12 @@ module Dialogs
 
             tv = GtkUI[GtkIDs::TRK_PLISTS_TV]
 
-            GtkUI[GtkIDs::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) {
+            GtkUI[GtkIDs::TRK_PLISTS_BTN_SHOW].signal_connect(:clicked) do
                 if tv.selection.selected
                     GtkUI[GtkIDs::MM_WIN_PLAYLISTS].send(:activate) unless mc.plists.window.visible?
                     mc.plists.position_browser(tv.selection.selected[COL_REF])
                 end
-            }
+            end
 
             srenderer = Gtk::CellRendererText.new()
 
@@ -134,14 +134,15 @@ module Dialogs
             tv.append_column(Gtk::TreeViewColumn.new("Play list", srenderer, :text => COL_PLIST))
             tv.append_column(Gtk::TreeViewColumn.new("Entry", srenderer, :text => COL_ENTRY))
 
-            sql = %Q{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack, plists.rplist FROM pltracks
-                     INNER JOIN plists ON plists.rplist = pltracks.rplist
-                     WHERE pltracks.rtrack=#{rtrack};}
-            DBIntf.execute(sql) { |row|
+            sql = %{SELECT plists.sname, pltracks.iorder, pltracks.rpltrack, plists.rplist FROM pltracks
+                      INNER JOIN plists ON plists.rplist = pltracks.rplist
+                    WHERE pltracks.rtrack=#{rtrack};}
+            DBIntf.execute(sql) do |row|
                 iter = tv.model.append
-                row[1] = DBIntf.get_first_value("SELECT COUNT(rpltrack)+1 FROM pltracks WHERE rplist=#{row[3]} AND iorder<#{row[1]};")
+                row[1] = DBIntf.get_first_value(%{SELECT COUNT(rpltrack)+1 FROM pltracks
+                                                  WHERE rplist=#{row[3]} AND iorder<#{row[1]};})
                 row.each_with_index { |val, i| iter[i] = val if i < 3 }
-            }
+            end
 
             GtkUI[GtkIDs::TRK_PLISTS_DIALOG].run
             GtkUI[GtkIDs::TRK_PLISTS_DIALOG].destroy
@@ -152,7 +153,7 @@ module Dialogs
 
         def self.show_ranking(sql, ref)
             n = prev = rank = pos = 0
-            DBIntf.execute(sql) { |row|
+            DBIntf.execute(sql) do |row|
                 n += 1
                 rank = n if prev != row[0]
                 if row[1] == ref
@@ -160,7 +161,7 @@ module Dialogs
                     break
                 end
                 prev = row[0]
-            }
+            end
 
             GtkUI[GtkIDs::PH_CHARTS_LBL].text = pos == 0 ? "---" : rank.to_s
         end
@@ -177,9 +178,9 @@ module Dialogs
             tv.model = Gtk::ListStore.new(Integer, String, String)
             count = 0
             DBIntf.execute(
-                %Q{SELECT logtracks.idateplayed, hostnames.sname FROM logtracks
-                INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
-                WHERE rtrack=#{rtrack} ORDER BY idateplayed DESC;}) do |row|
+                %{SELECT logtracks.idateplayed, hostnames.sname FROM logtracks
+                    INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
+                  WHERE rtrack=#{rtrack} ORDER BY idateplayed DESC;}) do |row|
                 count += 1
                 iter = tv.model.append
                 iter[0] = count
@@ -187,8 +188,8 @@ module Dialogs
                 iter[2] = row[1]
             end
 
-            sql = %Q{SELECT COUNT(logtracks.rtrack) AS totplayed, tracks.rtrack FROM tracks
-                    INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+            sql = %{SELECT COUNT(logtracks.rtrack) AS totplayed, tracks.rtrack FROM tracks
+                      INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
                     WHERE tracks.iplayed > 0
                     GROUP BY tracks.rtrack ORDER BY totplayed DESC;}
             show_ranking(sql, rtrack)
@@ -209,21 +210,21 @@ module Dialogs
 
             count = 0
             DBIntf.execute(
-                %Q{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hostnames.sname FROM tracks
-                INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
-                INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
-                WHERE tracks.rrecord=#{rrecord}
-                ORDER BY logtracks.idateplayed DESC;}) do |row|
+                %{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hostnames.sname FROM tracks
+                    INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                    INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
+                  WHERE tracks.rrecord=#{rrecord}
+                  ORDER BY logtracks.idateplayed DESC;}) do |row|
                 count += 1
                 iter = tv.model.append
                 iter[0] = count
                 row.each_with_index { |col, i| iter[i+1] = i == 2 ?  Time.at(row[2]).ctime : col.to_s }
             end
 
-            sql = %Q{SELECT COUNT(logtracks.rtrack) AS totplayed, records.rrecord FROM tracks
-                    INNER JOIN records ON tracks.rrecord=records.rrecord
-                    INNER JOIN artists ON artists.rartist=records.rartist
-                    INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+            sql = %{SELECT COUNT(logtracks.rtrack) AS totplayed, records.rrecord FROM tracks
+                      INNER JOIN records ON tracks.rrecord=records.rrecord
+                      INNER JOIN artists ON artists.rartist=records.rartist
+                      INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
                     WHERE tracks.iplayed > 0
                     GROUP BY records.rrecord ORDER BY totplayed DESC;}
             show_ranking(sql, rrecord)

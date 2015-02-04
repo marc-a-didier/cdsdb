@@ -34,7 +34,8 @@ module Prefs
             Cfg.windows[window.builder_name][obj.builder_name] = { "position=" => [obj.position] }
         }
 
-        unless window.class == FilterWindow
+        # Don't save the expanders in filter window since they are set by the filter selection
+        unless gtk_id == GtkIDs::FILTER_WINDOW
             objs = []
             child_controls(window, [Gtk::Expander], objs).each { |obj|
                 Cfg.windows[window.builder_name][obj.builder_name] = { "expanded=" => [obj.expanded?] }
