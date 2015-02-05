@@ -4,7 +4,7 @@ module MusicClient
     def self.get_connection
         begin
             socket = TCPSocket.new(Cfg.server, Cfg.port)
-        rescue Errno::ECONNREFUSED => ex
+        rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT => ex
             puts "Connection error (#{ex.class} : #{ex})."
             GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate)
             GtkUtils.show_message("Can't connect to server #{Cfg.server} on port #{Cfg.port}.\n
@@ -35,8 +35,7 @@ module MusicClient
         return socket if response == Cfg::MSG_OK
 
         # If response is not OK, we're fucked... or it's a bad metod
-#         Cfg.remote = false if response == Cfg::MSG_FUCKED
-        # If were here, the server mode is active. Deactivate it if fucked...
+        # If were here, the remote mode is active. Deactivate it if fucked...
         GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate) if response == Cfg::MSG_FUCKED
 
         socket.close

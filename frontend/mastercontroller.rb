@@ -190,10 +190,6 @@ class MasterController
         return @mw.search_dlg.get_selection
     end
 
-    def get_track_xlink(track_index)
-        return @mw.trk_browser.get_track_xlink(track_index)
-    end
-
     def notify_played(xlink, host = "")
         # If tags isn't nil the track has been dropped into the pq from the file system
         return if xlink.tags #|| xlink.track.banned?
@@ -229,29 +225,29 @@ class MasterController
         end
     end
 
-    def select_record(xlink, force_reload = false)
+    def select_record(dblink, force_reload = false)
         # Check if show the compilations artist if grouped
-        if xlink.record.rartist == 0 && !view_compile? && xlink.valid_segment_ref?
-            rartist = xlink.segment.rartist
+        if dblink.record.rartist == 0 && !view_compile? && dblink.valid_segment_ref?
+            rartist = dblink.segment.rartist
         else
-            rartist = xlink.record.rartist
+            rartist = dblink.record.rartist
         end
         select_artist(rartist)
-        if !@mw.rec_browser.reclnk.valid_record_ref? || self.record.rrecord != xlink.record.rrecord || force_reload
-            @mw.rec_browser.select_record(xlink.record.rrecord)
+        if !@mw.rec_browser.reclnk.valid_record_ref? || self.record.rrecord != dblink.record.rrecord || force_reload
+            @mw.rec_browser.select_record(dblink.record.rrecord)
         end
     end
 
-    def select_segment(xlink, force_reload = false)
-        xlink.set_record_ref(xlink.segment.rrecord)
-        select_record(xlink)
-        @mw.rec_browser.select_segment_from_record_selection(xlink.segment.rsegment) # if self.segment.rsegment != rsegment || force_reload
+    def select_segment(dblink, force_reload = false)
+        dblink.set_record_ref(dblink.segment.rrecord)
+        select_record(dblink)
+        @mw.rec_browser.select_segment_from_record_selection(dblink.segment.rsegment) # if self.segment.rsegment != rsegment || force_reload
     end
 
-    def select_track(xlink, force_reload = false)
-        select_record(xlink)
-        if !@mw.trk_browser.trklnk.valid_track_ref? || self.track.rtrack != xlink.track.rtrack || force_reload
-            @mw.trk_browser.position_to(xlink.track.rtrack)
+    def select_track(dblink, force_reload = false)
+        select_record(dblink)
+        if !@mw.trk_browser.trklnk.valid_track_ref? || self.track.rtrack != dblink.track.rtrack || force_reload
+            @mw.trk_browser.position_to(dblink.track.rtrack)
         end
     end
 

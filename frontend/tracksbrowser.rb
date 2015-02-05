@@ -273,20 +273,13 @@ class TracksBrowser < Gtk::TreeView
         meth.call { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
         sql[-1] = ")"
 
-        DBUtils::threaded_client_sql(sql)
+        DBUtils.threaded_client_sql(sql)
 
         # Refresh the cache
         meth.call { |model, path, iter| iter[TTV_DATA].track.sql_load }
 
         @trklnk.to_widgets if @trklnk.valid_track_ref? # @trklnk is invalid if multiple selection was made
     end
-
-    # Returns the xlink for the track at position track_index in the view
-    def get_track_xlink(track_index)
-        itr = model.get_iter(track_index.to_s)
-        return itr ? itr[TTV_DATA] : nil
-    end
-
 
     def check_for_audio_file
         # If client mode, it's much too slow to check track by track if it exists on server
@@ -455,13 +448,13 @@ class TracksBrowser < Gtk::TreeView
             rsegment = DBIntf.get_first_value(
                                "SELECT rsegment FROM segments " \
                                "WHERE rrecord=#{@track.rrecord} AND stitle=#{widget.child.label.to_sql}")
-            DBUtils::client_sql("UPDATE tracks SET rsegment=#{rsegment} WHERE rtrack=#{iter[TTV_REF]}")
+            DBUtils.client_sql("UPDATE tracks SET rsegment=#{rsegment} WHERE rtrack=#{iter[TTV_REF]}")
         }
     end
 
     def on_trk_assign_first_segment(widget)
         selection.selected_each { |model, path, iter|
-            DBUtils::client_sql("UPDATE tracks SET rsegment=#{@mc.segment.rsegment} WHERE rtrack=#{iter[TTV_REF]}")
+            DBUtils.client_sql("UPDATE tracks SET rsegment=#{@mc.segment.rsegment} WHERE rtrack=#{iter[TTV_REF]}")
         }
     end
 

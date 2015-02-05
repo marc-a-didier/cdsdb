@@ -21,7 +21,9 @@ class FilterWindow < TopWindow
     def initialize(mc)
         super(mc, FILTER_WINDOW)
 
-        GtkUI[FLT_BTN_APPLY].signal_connect(:clicked) { @mc.filter_receiver.set_filter(generate_filter, @must_join_logtracks) }
+        GtkUI[FLT_BTN_APPLY].signal_connect(:clicked) {
+            @mc.filter_receiver.set_filter(generate_filter, GtkUI[FLT_EXP_PLAYDATES].expanded?)
+        }
         GtkUI[FLT_BTN_CLEAR].signal_connect(:clicked) { @mc.filter_receiver.set_filter("", false) }
         GtkUI[FLT_BTN_SAVE].signal_connect(:clicked)  { save_filter }
         GtkUI[FLT_BTN_PLGEN].signal_connect(:clicked) { generate_play_list(DEST_PLIST) }
@@ -65,8 +67,6 @@ class FilterWindow < TopWindow
         @ftv.selection.signal_connect(:changed)  { |widget| on_filter_changed(widget) }
         @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, FLT_POP_ACTIONS) }
         load_ftv
-
-        @must_join_logtracks = false
     end
 
     def setup_tv(table_name)
@@ -107,10 +107,10 @@ class FilterWindow < TopWindow
 
     def load_ftv
         @ftv.model.clear
-        DBIntf.execute("SELECT * FROM filters") { |row|
+        DBClass::Filter.new.select_all do |filter|
             iter = @ftv.model.append
-            row.each_index { |column| iter[column] = column == 2 ? row[column].gsub(/\\n/, "\n") : row[column] }
-        }
+            filter.size.times { |index| iter[index] = filter[index] }
+        end
     end
 
     def set_ref_column_visibility(is_visible)
@@ -119,29 +119,28 @@ class FilterWindow < TopWindow
 
     def on_filter_changed(widget)
         # @ftv.selection.selected may be nil when a new filter is created
-        Prefs.content_from_yaml(@ftv.selection.selected[2]) if @ftv.selection.selected
+        Prefs.content_from_json(@ftv.selection.selected[2]) if @ftv.selection.selected
     end
 
     def new_filter
-        max_id = 0
-        @ftv.model.each { |model, path, iter| max_id = iter[0] if iter[0] > max_id }
-        DBUtils.client_sql("INSERT INTO filters VALUES (#{max_id+1}, 'New filter', '---\nfilter: {}\n')")
+        DBClass::Filter.new.add_new
         load_ftv
     end
 
     def delete_filter
-        DBUtils.client_sql("DELETE FROM filters WHERE rfilter=#{@ftv.selection.selected[0]}")
+        DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_del
         load_ftv
     end
 
     def save_filter
-        yml_data = Prefs.yaml_from_content(GtkUI[FLT_VBOX_EXPANDERS]).to_sql
-        DBUtils.client_sql("UPDATE filters SET sxmldata=#{yml_data} WHERE rfilter=#{@ftv.selection.selected[0]}")
-        @ftv.selection.selected[2] = yml_data
+        DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load \
+                       .set_fields(:sxmldata => Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])) \
+                       .sql_update
+        @ftv.selection.selected[2] = Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])
     end
 
     def ftv_name_edited(widget, path, new_text)
-        DBUtils.client_sql("UPDATE filters SET sname=#{new_text.to_sql} WHERE rfilter=#{@ftv.selection.selected[0]}")
+        DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load.set_fields(:sname => new_text).sql_update
         @ftv.selection.selected[1] = new_text
     end
 
@@ -157,7 +156,6 @@ class FilterWindow < TopWindow
 
     def generate_filter()
         is_for_charts = @mc.filter_receiver == @mc.charts
-        @must_join_logtracks = GtkUI[FLT_EXP_PLAYDATES].expanded?
 
         wc = ""
         if GtkUI[FLT_EXP_PCOUNT].expanded?

@@ -98,7 +98,7 @@ module Cfg
 
             @cfg = DEF_CONFIG
 p @cfg
-            @cfg.merge!(YAML.load_file(prefs_file)) if File.exists?(prefs_file)
+            @cfg.merge!(Psych.load_file(prefs_file)) if File.exists?(prefs_file)
 p @cfg
 
             @cfg_store.reload(@cfg)

@@ -25,7 +25,7 @@ require 'date'
 require 'thread' # For mutex in tasks window
 
 require 'logger'
-require 'yaml'
+require 'psych'
 require 'rexml/document'
 require 'uri'
 require 'cgi'

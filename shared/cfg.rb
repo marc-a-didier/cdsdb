@@ -52,22 +52,22 @@ module Cfg
                                 :trace_db_cache, :trace_image_cache, :trace_gst, :trace_gstqueue, :trace_network,
                                 :notifications, :notif_duration, :live_charts_update, :max_items, :cd_device) do
             def reload(cfg)
-                self.trace_db_cache     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="][0]
-                self.trace_image_cache  = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_IMAGECACHE]["active="][0]
-                self.trace_gst          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="][0]
-                self.trace_gstqueue     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="][0]
-                self.trace_network      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="][0]
-                self.tx_block_size      = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]["text="][0].to_i
-                self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="][0]
-                self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="][0].to_i
-                self.sync_comms         = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SYNCCOMMS]["active="][0]
-                self.music_dir          = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="][0]+"/"
-                self.rsrc_dir           = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="][0]+"/"
-                self.notifications      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]["active="][0]
-                self.notif_duration     = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_NOTIFDURATION]["text="][0].to_i
-                self.live_charts_update = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_LIVEUPDATE]["active="][0]
-                self.max_items          = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_MAXITEMS]["text="][0].to_i
-                self.cd_device          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CD_DEVICE]["text="][0]
+                self.trace_db_cache     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="]
+                self.trace_image_cache  = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_IMAGECACHE]["active="]
+                self.trace_gst          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="]
+                self.trace_gstqueue     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="]
+                self.trace_network      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="]
+                self.tx_block_size      = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]["text="].to_i
+                self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="]
+                self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="].to_i
+                self.sync_comms         = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SYNCCOMMS]["active="]
+                self.music_dir          = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="]+"/"
+                self.rsrc_dir           = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="]+"/"
+                self.notifications      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]["active="]
+                self.notif_duration     = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_NOTIFDURATION]["text="].to_i
+                self.live_charts_update = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_LIVEUPDATE]["active="]
+                self.max_items          = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_MAXITEMS]["text="].to_i
+                self.cd_device          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CD_DEVICE]["text="]
                 return self
             end
         end
@@ -81,22 +81,22 @@ module Cfg
         DEF_CONFIG = {  "dbversion" => "6.0",
                         WINDOWS => {
                             PREFS_DIALOG => {
-                                PREFS_CB_SHOWNOTIFICATIONS => { "active=" => [true] },
-                                PREFS_ENTRY_NOTIFDURATION  => { "text=" => ["4"] },
-                                PREFS_FC_MUSICDIR          => { "current_folder=" => [ENV['HOME']+"/Music/"] },
-                                PREFS_FC_RSRCDIR           => { "current_folder=" => ["./../../"] },
-                                PREFS_CD_DEVICE            => { "text=" => ["/dev/cdrom"] },
-                                PREFS_ENTRY_SERVER         => { "text=" => ["madd510"] },
-                                PREFS_ENTRY_PORT           => { "text=" => ["32666"] },
-                                PREFS_ENTRY_BLKSIZE        => { "text=" => ["262144"] },
-                                PREFS_CB_SYNCCOMMS         => { "active=" => [false] },
-                                PREFS_CB_TRACEDBCACHE      => { "active=" => [false] },
-                                PREFS_CB_IMAGECACHE        => { "active=" => [false] },
-                                PREFS_CB_TRACEGST          => { "active=" => [true]  },
-                                PREFS_CB_TRACEGSTQUEUE     => { "active=" => [false] },
-                                PREFS_CB_TRACENETWORK      => { "active=" => [true]  },
-                                PREFS_CB_LIVEUPDATE        => { "active=" => [true]  },
-                                PREFS_ENTRY_MAXITEMS       => { "text=" => ["100"] }
+                                PREFS_CB_SHOWNOTIFICATIONS => { "active=" => true },
+                                PREFS_ENTRY_NOTIFDURATION  => { "text=" => "4" },
+                                PREFS_FC_MUSICDIR          => { "current_folder=" => ENV['HOME']+"/Music/" },
+                                PREFS_FC_RSRCDIR           => { "current_folder=" => "./../../" },
+                                PREFS_CD_DEVICE            => { "text=" => "/dev/cdrom" },
+                                PREFS_ENTRY_SERVER         => { "text=" => "madd510" },
+                                PREFS_ENTRY_PORT           => { "text=" => "32666" },
+                                PREFS_ENTRY_BLKSIZE        => { "text=" => "262144" },
+                                PREFS_CB_SYNCCOMMS         => { "active=" => false },
+                                PREFS_CB_TRACEDBCACHE      => { "active=" => false },
+                                PREFS_CB_IMAGECACHE        => { "active=" => false },
+                                PREFS_CB_TRACEGST          => { "active=" => true  },
+                                PREFS_CB_TRACEGSTQUEUE     => { "active=" => false },
+                                PREFS_CB_TRACENETWORK      => { "active=" => true  },
+                                PREFS_CB_LIVEUPDATE        => { "active=" => true  },
+                                PREFS_ENTRY_MAXITEMS       => { "text=" => "100" }
                             }
                         },
                         "menus" => {}
@@ -110,7 +110,7 @@ module Cfg
             FileUtils.mkpath(@cfg_store.config_dir) unless Dir.exists?(@cfg_store.config_dir)
 
             # Load preferences file
-            @cfg = YAML.load_file(prefs_file) if File.exists?(prefs_file)
+            @cfg = Psych.load_file(prefs_file) if File.exists?(prefs_file)
             if @cfg
                 # If exists, add new fields from default if any
                 @cfg[WINDOWS][PREFS_DIALOG].merge!(DEF_CONFIG[WINDOWS][PREFS_DIALOG]) { |key, oldval, newval| oldval ? oldval : newval }

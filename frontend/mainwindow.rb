@@ -128,7 +128,7 @@ class MainWindow < TopWindow
         GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { Dialogs::Preferences.run; @mc.tasks.check_config }
 
 
-        GtkUI[MM_VIEW_BYRATING].signal_connect(:activate) { record_changed   }
+        GtkUI[MM_VIEW_BYRATING].signal_connect(:activate) { @mc.record_changed   }
         GtkUI[MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
         GtkUI[MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 
@@ -322,11 +322,12 @@ class MainWindow < TopWindow
     end
 
     def import_sql_file
-        batch = ""
-        IO.foreach(DiscAnalyzer::RESULT_SQL_FILE) { |line| batch += line }
-        DBUtils.exec_batch(batch, Socket.gethostname)
+#         batch = ""
+#         IO.foreach(DiscAnalyzer::RESULT_SQL_FILE) { |line| batch += line }
+        DBUtils.exec_batch(IO.binread(DiscAnalyzer::RESULT_SQL_FILE), Socket.gethostname)
         @art_browser.reload
-        @mc.select_record(XIntf::Link.new.set_record_ref(DBClass::Record.new.get_last_id)) # The best guess to find the imported record
+         # The best guess to find the newly imported record
+        @mc.select_record(DBCache::Link.new.set_record_ref(DBClass::Record.new.get_last_id))
     end
 
 

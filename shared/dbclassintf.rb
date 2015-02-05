@@ -9,8 +9,9 @@ module DBClass
 
     module SQLintf
 
-        def initialize
+        def initialize(params = {})
             reset
+            set_fields(params)
         end
 
         # Initialize struct members from their names: if it begins with r or i, initialize as an int
@@ -30,6 +31,11 @@ module DBClass
                     end
                 end
             }
+            return self
+        end
+
+        def set_fields(params = {})
+            params.each { |key, value| self[key] = value }
             return self
         end
 
@@ -120,7 +126,7 @@ module DBClass
         def select_all
             DBIntf.execute("SELECT * FROM #{tbl_name}") do |row|
                 load_from_row(row)
-                yield #if block_given?
+                yield(self) #if block_given?
             end
         end
 
@@ -200,11 +206,11 @@ module DBClass
 
         def add_new(rrecord, rsegment)
             reset
-            self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
-            self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.rtrack = get_last_id+1
             self.rrecord = rrecord
             self.rsegment = rsegment
+            self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
+            self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.stitle = "New track"
             self.fpeak = 0.0
             self.fgain = 0.0
@@ -216,6 +222,19 @@ module DBClass
         end
     end
 
+
+    Filter = Struct.new(:rfilter, :sname, :sxmldata) do
+
+        include SQLintf
+
+        def add_new
+            reset
+            self.rfilter = get_last_id+1
+            self.sname = 'New filter'
+            self.sxmldata = '{"filter":{}}'
+            return sql_add
+        end
+    end
 
     PList = Struct.new(:rplist, :sname, :iislocal, :idatecreated, :idatemodified) { include SQLintf }
 
@@ -229,7 +248,6 @@ module DBClass
 
     Origin = Struct.new(:rorigin, :sname) { include SQLintf }
 
-    Filter = Struct.new(:rfilter, :sname, :sxmldata) { include SQLintf }
 
 
     KEY_NAME_TO_CLASS_MAP = { 'rartist' => Artist, 'rrecord' => Record, 'rsegment' => Segment, 'rtrack' => Track,
