@@ -11,7 +11,7 @@ module DBUtils
     end
 
     def self.log_exec(sql, host = "localhost")
-        Trace.debug(sql) unless Cfg.server_mode
+        Trace.debug(sql) if !Cfg.server_mode && Cfg.trace_sql
         Log.info(sql+" [#{host}]")
         DBIntf.execute(sql)
     end
@@ -20,8 +20,8 @@ module DBUtils
     # Execute an sql statements on the local AND remote database if in client mode
     #
     #
-    def self.client_sql(sql, want_log = true)
-        want_log ? self.log_exec(sql) : DBIntf.execute(sql)
+    def self.client_sql(sql)
+        self.log_exec(sql)
         MusicClient.exec_sql(sql) if Cfg.remote?
     end
 
@@ -31,10 +31,11 @@ module DBUtils
     end
 
     def self.exec_local_batch(sql, host)
-        DBIntf.transaction { |db|
+        Trace.debug(sql) if !Cfg.server_mode && Cfg.trace_sql
+        DBIntf.transaction do |db|
             Log.info(sql+" [#{host}]")
             db.execute_batch(sql)
-        }
+        end
     end
 
     def self.exec_batch(sql, host)
@@ -54,42 +55,45 @@ module DBUtils
         return DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
     end
 
-#     def self.update_track_stats(dblink, hostname)
-#         return if dblink.track.rtrack <= 0 # Possible when files are dropped into the play queue
+    def self.update_track_stats(dblink, hostname)
+        return unless dblink.track.valid? # Possible when files are dropped into the play queue
+
+        dblink.track.iplayed += 1
+        dblink.track.ilastplayed = Time.now.to_i
+        #dblink.track.sql_update
+        sql = dblink.track.generate_update
+
+        host = DBClass::Hostname.new
+        host.add_new(:sname => hostname) unless host.select_by_field(:sname, hostname, :case_insensitive)
+
+        #DBClass::LogTracks.new.add_new(:rtrack => dblink.track.rtrack,
+        #                               :idateplayed => dblink.track.ilastplayed,
+        #                               :rhostname => host.rhostname)
+        sql += DBClass::LogTracks.new(:rtrack => dblink.track.rtrack,
+                                      :idateplayed => dblink.track.ilastplayed,
+                                      :rhostname => host.rhostname).generate_insert
+
+        self.exec_batch(sql, hostname)
+    end
+
+    # This method is also used by the server. For now, it doesn't know about db cache, link, etc...
+    # So, let's be clear: DON'T TOUCH the parameters type!!!
+#     def self.update_track_stats(rtrack, hostname)
+#         return if rtrack <= 0 # Possible when files are dropped into the play queue
 #
-#         dblink.track.iplayed += 1
-#         dblink.track.ilastplayed = Time.now.to_i
-#
-#         sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{dblink.track.ilastplayed} WHERE rtrack=#{dblink.track.rtrack};"
+#         sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
 #         DBIntf.execute(sql)
 #
 #         rhost = DBIntf.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
 #         if rhost.nil?
 #             rhost = self.get_last_id("hostname")+1
-#             self.log_exec("INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});")
+#             sql = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
+#             self.log_exec(sql)
 #         end
-#         sql = "INSERT INTO logtracks VALUES (#{dblink.track.rtrack}, #{dblink.track.ilastplayed}, #{rhost});"
+#
+#         sql = "INSERT INTO logtracks VALUES (#{rtrack}, #{Time::now.to_i}, #{rhost});"
 #         DBIntf.execute(sql)
 #     end
-
-    # This method is also used by the server. For now, it doesn't know about db cache, link, etc...
-    # So, let's be clear: DON'T TOUCH the parameters type!!!
-    def self.update_track_stats(rtrack, hostname)
-        return if rtrack <= 0 # Possible when files are dropped into the play queue
-
-        sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
-        DBIntf.execute(sql)
-
-        rhost = DBIntf.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
-        if rhost.nil?
-            rhost = self.get_last_id("hostname")+1
-            sql = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
-            self.log_exec(sql)
-        end
-
-        sql = "INSERT INTO logtracks VALUES (#{rtrack}, #{Time::now.to_i}, #{rhost});"
-        DBIntf.execute(sql)
-    end
 
     def self.update_record_playtime(rrecord)
         len = DBIntf.get_first_value("SELECT SUM(iplaytime) FROM segments WHERE rrecord=#{rrecord};")
@@ -130,6 +134,7 @@ module DBUtils
                 Trace.debug("No bad rtrack ids found in db.")
             end
         end
+
         DBIntf.execute("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks") do |log|
             DBIntf.execute("SELECT COUNT(rtrack) FROM tracks WHERE iplayed > 0") do |track|
                 if log[0] != track[0]
@@ -137,13 +142,17 @@ module DBUtils
                 end
             end
         end
+        Trace.debug("Check log track count vs track played count ended.")
+
         DBIntf.execute("SELECT DISTINCT(rtrack) FROM logtracks") do |log|
             DBIntf.execute("SELECT rtrack, stitle, iplayed FROM tracks WHERE rtrack=#{log[0]}") do |track|
                 if track[2] == 0
-                    puts("Track #{track[0]} (#{track[1]}) played=#{track[2]}")
+                    Trace.debug("Track #{track[0]} (#{track[1]}) played=#{track[2]}")
                 end
             end
         end
+        Trace.debug("Check log track existence in tracks ended.")
+
         DBIntf.execute("SELECT rtrack, iplayed FROM tracks WHERE iplayed > 0") do |row|
             DBIntf.execute("SELECT COUNT(rtrack), MAX(idateplayed) FROM logtracks WHERE rtrack=#{row[0]}") do |log|
                 if log[0] != row[1]
@@ -152,6 +161,7 @@ module DBUtils
                 end
             end
         end
+        Trace.debug("Check dates integrity between tracks and log ended.")
         Trace.debug("Check integrity ended with #{tracks.size} mismatches.")
         return
 

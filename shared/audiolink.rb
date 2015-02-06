@@ -30,7 +30,7 @@ module Audio
         def load_from_tags(file_name)
             ftags = TagLib::File.new(file_name)
             @tags = Tags.new(ftags.artist, ftags.album, ftags.title, ftags.track,
-                                    ftags.length*1000, ftags.year, ftags.genre, file_name)
+                             ftags.length*1000, ftags.year, ftags.genre, file_name)
             ftags.close
 
             return self

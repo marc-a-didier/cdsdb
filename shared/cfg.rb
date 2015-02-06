@@ -13,6 +13,7 @@ module ConfigFields
     PREFS_CB_TRACEGST           = "prefs_cb_tracegst"
     PREFS_CB_TRACEGSTQUEUE      = "prefs_cb_tracegstqueue"
     PREFS_CB_TRACENETWORK       = "prefs_cb_tracenetwork"
+    PREFS_CB_TRACESQLWRITES     = "prefs_cb_tracesqlwrites"
     PREFS_CB_SHOWNOTIFICATIONS  = "prefs_cb_shownotifications"
     PREFS_ENTRY_NOTIFDURATION   = "prefs_entry_notifduration"
     PREFS_CB_LIVEUPDATE         = "prefs_cb_liveupdate"
@@ -48,8 +49,10 @@ module Cfg
         WINDOWS = 'windows'
 
         CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
-                                :server, :port, :sync_comms, :tx_block_size, :music_dir, :rsrc_dir,
-                                :trace_db_cache, :trace_image_cache, :trace_gst, :trace_gstqueue, :trace_network,
+                                :server, :port, :sync_comms, :tx_block_size,
+                                :music_dir, :rsrc_dir,
+                                :trace_db_cache, :trace_image_cache, :trace_gst,
+                                :trace_gstqueue, :trace_network, :trace_sql,
                                 :notifications, :notif_duration, :live_charts_update, :max_items, :cd_device) do
             def reload(cfg)
                 self.trace_db_cache     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]["active="]
@@ -57,6 +60,7 @@ module Cfg
                 self.trace_gst          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGST]["active="]
                 self.trace_gstqueue     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]["active="]
                 self.trace_network      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACENETWORK]["active="]
+                self.trace_sql          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACESQLWRITES]["active="]
                 self.tx_block_size      = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]["text="].to_i
                 self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="]
                 self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="].to_i
@@ -95,6 +99,7 @@ module Cfg
                                 PREFS_CB_TRACEGST          => { "active=" => true  },
                                 PREFS_CB_TRACEGSTQUEUE     => { "active=" => false },
                                 PREFS_CB_TRACENETWORK      => { "active=" => true  },
+                                PREFS_CB_TRACESQLWRITES    => { "active=" => false },
                                 PREFS_CB_LIVEUPDATE        => { "active=" => true  },
                                 PREFS_ENTRY_MAXITEMS       => { "text=" => "100" }
                             }
@@ -163,6 +168,7 @@ module Cfg
         def trace_gst;          return @cfg_store.trace_gst          end
         def trace_gstqueue;     return @cfg_store.trace_gstqueue     end
         def trace_network;      return @cfg_store.trace_network      end
+        def trace_sql;          return @cfg_store.trace_sql          end
 
         #
         # Misc utilities

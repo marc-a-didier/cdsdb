@@ -144,10 +144,10 @@ class MusicServer
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 
-    def update_stats(session, is_sync)
-        DBUtils.update_track_stats(session.gets.chomp.to_i, hostname(session))
-        session.puts(Cfg::MSG_DONE) if is_sync
-    end
+#     def update_stats(session, is_sync)
+#         DBUtils.update_track_stats(session.gets.chomp.to_i, hostname(session))
+#         session.puts(Cfg::MSG_DONE) if is_sync
+#     end
 
     def exec_sql(session, is_sync)
         DBUtils.log_exec(session.gets.chomp, hostname(session))

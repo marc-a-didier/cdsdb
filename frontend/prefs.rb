@@ -22,12 +22,12 @@ module Prefs
     end
 
     #
-    # Fills the array 'objects' with children of 'klass' type by recursively scanning the
+    # Fills the array 'objects' with children of 'klasses' types by recursively scanning the
     # gtk object 'object'
     #
-    def self.child_controls(object, klass, objects)
-        objects << object if object.class == klass
-        object.children.each { |child| child_controls(child, klass, objects) } if object.respond_to?(:children)
+    def self.child_controls(object, klasses, objects)
+        objects << object if klasses.include?(object.class)
+        object.children.each { |child| child_controls(child, klasses, objects) } if object.respond_to?(:children)
         return objects
     end
 
@@ -52,10 +52,8 @@ module Prefs
 
         klasses = [Gtk::HPaned, Gtk::VPaned]
         klasses << Gtk::Expander unless gtk_id == GtkIDs::FILTER_WINDOW
-        klasses.each do |klass|
-            child_controls(window, klass, Array.new).each do |obj|
-                Cfg.windows[window.builder_name][obj.builder_name] = { setter(klass) => obj.send(getter(klass)) }
-            end
+        child_controls(window, klasses, Array.new).each do |obj|
+            Cfg.windows[window.builder_name][obj.builder_name] = { setter(obj.class) => obj.send(getter(obj.class)) }
         end
     end
 
@@ -73,10 +71,9 @@ module Prefs
         Cfg.windows[window.builder_name] = {}
 
 
-        [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton].each do |klass|
-            child_controls(window, klass, Array.new).each do |obj|
-                Cfg.windows[window.builder_name][obj.builder_name] = { setter(klass) => obj.send(getter(klass)) }
-            end
+        klasses = [Gtk::Entry, Gtk::RadioButton, Gtk::CheckButton, Gtk::FileChooserButton]
+        child_controls(window, klasses, Array.new).each do |obj|
+            Cfg.windows[window.builder_name][obj.builder_name] = { setter(obj.class) => obj.send(getter(obj.class)) }
         end
     end
 
@@ -111,15 +108,14 @@ module Prefs
     def self.json_from_content(gtk_object)
         hash = { FILTER => {} }
 
-        [Gtk::Expander, Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView].each do |klass|
-            child_controls(gtk_object, klass, Array.new).each do |obj|
-                if getter(klass) == nil
-                    items = ""
-                    obj.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
-                    hash[FILTER][obj.builder_name] = { setter(klass) => items }
-                else
-                    hash[FILTER][obj.builder_name] = { setter(klass) => obj.send(getter(klass)) }
-                end
+        klasses = [Gtk::Expander, Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView]
+        child_controls(gtk_object, klasses, Array.new).each do |obj|
+            if getter(obj.class) == nil
+                items = ""
+                obj.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
+                hash[FILTER][obj.builder_name] = { setter(obj.class) => items }
+            else
+                hash[FILTER][obj.builder_name] = { setter(obj.class) => obj.send(getter(obj.class)) }
             end
         end
 

@@ -80,7 +80,7 @@ module DBClass
             sql = generate_update
             unless sql.empty?
                 DBUtils.client_sql(sql)
-                Trace.debug("DB update : #{sql}".red)
+#                 Trace.debug("DB update : #{sql}".red)
             end
             return self
         end
@@ -233,6 +233,31 @@ module DBClass
             self.sname = 'New filter'
             self.sxmldata = '{"filter":{}}'
             return sql_add
+        end
+    end
+
+    Hostname = Struct.new(:rhostname, :sname) do
+
+        include SQLintf
+
+        def add_new(params = {})
+            reset.set_fields(params)
+            self.rhostname = get_last_id+1
+            return sql_add
+        end
+    end
+
+    LogTracks = Struct.new(:rtrack, :idateplayed, :rhostname) do
+
+        include SQLintf
+
+        # Must be overriden since this table has no pk
+        def tbl_name
+            return "logtracks"
+        end
+
+        def add_new(params = {})
+            return reset.set_fields(params).sql_add
         end
     end
 

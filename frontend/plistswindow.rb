@@ -173,12 +173,8 @@ class PListsWindow < TopWindow
         return @current_pl.iislocal == 1
     end
 
-    def exec_sql(sql, log_sql = true)
-        if local?
-            log_sql == true ? DBUtils::log_exec(sql) : DBIntf.execute(sql)
-        else
-            DBUtils::client_sql(sql)
-        end
+    def exec_sql(sql)
+        local? ? DBUtils.log_exec(sql) : DBUtils.client_sql(sql)
     end
 
     def add_to_plist(rplist, rtrack)

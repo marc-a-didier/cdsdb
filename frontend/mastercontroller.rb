@@ -194,22 +194,19 @@ class MasterController
         # If tags isn't nil the track has been dropped into the pq from the file system
         return if xlink.tags #|| xlink.track.banned?
 
-        host = Socket.gethostname if host.empty?
+        Thread.new do
+            host = Socket.gethostname if host.empty?
 
-        DBUtils.update_track_stats(xlink.track.rtrack, host)
+            DBUtils.update_track_stats(xlink, host)
 
-        # Update gui if the played track is currently selected.
-        # Dangerous if user is modifying the track panel!!!
-        xlink.reload_track_cache
-        @mw.trk_browser.update_infos
+            # Update gui if the played track is currently selected.
+            # Dangerous if track is being modified
+            @mw.trk_browser.update_infos
 
-        Thread.new {
             @mw.set_window_title
 
             @charts.live_update(xlink) if Cfg.live_charts_update && @charts.window.visible?
-
-            MusicClient.update_stats(xlink.track.rtrack) if Cfg.remote?
-        }
+        end
 
         # if GtkUI[UIConsts::MM_VIEW_UPDATENP].active?
         #     if @rec_browser.update_never_played(ltrack.rrecord, ltrack.rsegment)

@@ -185,7 +185,7 @@ module Utils
             segment.load_from_row(seg_row)
             seg_order = 1
             DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") { |trk_row|
-                DBUtils::log_exec("UPDATE tracks SET isegorder=#{seg_order} WHERE rtrack=#{trk_row[0]};")
+                DBUtils.log_exec("UPDATE tracks SET isegorder=#{seg_order} WHERE rtrack=#{trk_row[0]};")
                 seg_order += 1
             }
         }
