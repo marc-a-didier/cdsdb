@@ -3,8 +3,8 @@ module Dialogs
 
     class DBSelector
 
-        def initialize(pk_field)
-            @dbs = DBClass::KEY_NAME_TO_CLASS_MAP[pk_field].new
+        def initialize(dest_field)
+            @dbs = DBClass.class_from_symbol(dest_field).new
 
             GtkUI.load_window(GtkIDs::DBSEL_DIALOG)
             GtkUI[GtkIDs::DBSEL_TBBTN_ADD].signal_connect(:clicked)    { do_op_add }
@@ -78,12 +78,10 @@ module Dialogs
             # Always set the sort column AFTER feeding the tree view, it's MUCH faster!
             @tv.model.set_sort_column_id(1, Gtk::SORT_ASCENDING)
 
-            value = -1
-            GtkUI[GtkIDs::DBSEL_DIALOG].run do |response|
-                if response == Gtk::Dialog::RESPONSE_OK
-                    iter = @tv.selection.selected
-                    value = iter[0] unless iter.nil?
-                end
+            value = nil
+            if GtkUI[GtkIDs::DBSEL_DIALOG].run == Gtk::Dialog::RESPONSE_OK
+                iter = @tv.selection.selected
+                value = iter[0] unless iter.nil?
             end
             GtkUI[GtkIDs::DBSEL_DIALOG].destroy
 

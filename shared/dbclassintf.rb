@@ -44,7 +44,7 @@ module DBClass
         end
 
         def primary_key
-            return self.members[0].to_s
+            return self.members[0]
         end
 
         def generate_where_on_pk
@@ -184,11 +184,11 @@ module DBClass
 
         def add_new(rartist, rrecord)
             reset
-            self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
-            self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.rsegment = get_last_id+1
             self.rrecord = rrecord
             self.rartist = rartist
+            self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM segments WHERE rrecord=#{rrecord}")
+            self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.stitle = "New segment"
             return sql_add
         end
@@ -249,8 +249,10 @@ module DBClass
     Origin = Struct.new(:rorigin, :sname) { include SQLintf }
 
 
+    KEY_NAME_TO_CLASS_MAP = { :rartist => Artist, :rplist => PList, :rgenre => Genre, :rlabel => Label,
+                              :rmedia => Media, :rcollection => Collection, :rorigin => Origin }
 
-    KEY_NAME_TO_CLASS_MAP = { 'rartist' => Artist, 'rrecord' => Record, 'rsegment' => Segment, 'rtrack' => Track,
-                              'rplist' => PList, 'rgenre' => Genre, 'rlabel' => Label, 'rmedia' => Media,
-                              'rcollection' => Collection, 'rorigin' => Origin }
+    def self.class_from_symbol(key)
+        return KEY_NAME_TO_CLASS_MAP[key]
+    end
 end

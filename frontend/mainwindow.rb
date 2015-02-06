@@ -322,9 +322,8 @@ class MainWindow < TopWindow
     end
 
     def import_sql_file
-#         batch = ""
-#         IO.foreach(DiscAnalyzer::RESULT_SQL_FILE) { |line| batch += line }
         DBUtils.exec_batch(IO.binread(DiscAnalyzer::RESULT_SQL_FILE), Socket.gethostname)
+
         @art_browser.reload
          # The best guess to find the newly imported record
         @mc.select_record(DBCache::Link.new.set_record_ref(DBClass::Record.new.get_last_id))
@@ -345,8 +344,8 @@ class MainWindow < TopWindow
     end
 
     def on_tag_dir_genre
-        value = Dialogs::DBSelector.new.run('rgenre')
-        unless value == -1
+        value = Dialogs::DBSelector.new(:rgenre).run
+        if value
             dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
             Utils.tag_full_dir_to_genre(DBUtils.name_from_id(value, DBIntf::TBL_GENRES), dir) unless dir.empty?
         end

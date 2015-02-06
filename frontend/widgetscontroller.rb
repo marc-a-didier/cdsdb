@@ -24,7 +24,7 @@ module XIntf
                 },
             'lkentry_' =>
                 Proc.new { |control, dbs, field, is_to| # Lookup fields are automotically set when edited so there's no 'from'
-                    control.text = DBUtils::name_from_id(dbs[field], field[1..-1]) if is_to
+                    control.text = DBUtils.name_from_id(dbs[field], field[1..-1]) if is_to
                 },
             'timeentry_' =>
                 Proc.new { |control, dbs, field, is_to|
@@ -116,11 +116,11 @@ module XIntf
             return self
         end
 
-        def select_dialog(dbfield)
-            value = Dialogs::DBSelector.new(dbfield).run
-            unless value == -1
-                @dbs[dbfield] = value
-                self.field_to_widget(dbfield)
+        def select_dialog(dest_field)
+            value = Dialogs::DBSelector.new(dest_field).run
+            if value
+                @dbs[dest_field] = value
+                self.field_to_widget(dest_field)
             end
         end
     end

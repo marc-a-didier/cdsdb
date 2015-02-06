@@ -27,7 +27,7 @@ module XIntf
             def initialize(dbs)
                 setup_controls("arted_", dbs)
 
-                GtkUI[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog("rorigin") }
+                GtkUI[ARTED_BTN_ORIGIN].signal_connect(:clicked) { select_dialog(:rorigin) }
             end
         end
 
@@ -40,11 +40,11 @@ module XIntf
             def initialize(dbs)
                 setup_controls("reced_", dbs)
 
-                GtkUI[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog("rartist") }
-                GtkUI[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog("rgenre") }
-                GtkUI[RECED_BTN_LABEL].signal_connect(:clicked)      { select_dialog("rlabel") }
-                GtkUI[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog("rmedia") }
-                GtkUI[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog("rcollection") }
+                GtkUI[RECED_BTN_ARTIST].signal_connect(:clicked)     { select_dialog(:rartist) }
+                GtkUI[RECED_BTN_GENRE].signal_connect(:clicked)      { select_dialog(:rgenre) }
+                GtkUI[RECED_BTN_LABEL].signal_connect(:clicked)      { select_dialog(:rlabel) }
+                GtkUI[RECED_BTN_MEDIUM].signal_connect(:clicked)     { select_dialog(:rmedia) }
+                GtkUI[RECED_BTN_COLLECTION].signal_connect(:clicked) { select_dialog(:rcollection) }
                 GtkUI[RECED_BTN_PTIME].signal_connect(:clicked)      { update_ptime }
 
                 [RECED_BTN_ARTIST, RECED_BTN_LABEL, RECED_BTN_MEDIUM, RECED_BTN_PTIME].each { |ctrl|
@@ -69,7 +69,7 @@ module XIntf
             def initialize(dbs)
                 setup_controls("seged_", dbs)
 
-                GtkUI[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog("rartist") }
+                GtkUI[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog(:rartist) }
                 GtkUI[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
 
                 [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
