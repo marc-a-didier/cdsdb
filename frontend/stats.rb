@@ -343,8 +343,8 @@ class Stats
         limit = 1000
         audio_link = Audio::Link.new
         new_table("Last #{limit} played tracks", ["Order:R", "When", "Where", "Track", "Artist", "Record", "Segment"])
-        sql = %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hostnames.sname, records.rrecord, records.irecsymlink FROM logtracks
-                 INNER JOIN hostnames ON hostnames.rhostname=logtracks.rhostname
+        sql = %Q{SELECT logtracks.rtrack, logtracks.idateplayed, hosts.sname, records.rrecord, records.irecsymlink FROM logtracks
+                 INNER JOIN hosts ON hosts.rhost=logtracks.rhost
                  INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
                  INNER JOIN segments ON tracks.rsegment=segments.rsegment
                  INNER JOIN records ON records.rrecord=segments.rrecord
@@ -368,8 +368,8 @@ class Stats
         new_row(["Played tracks total", tot_played])
         new_row(["Never played tracks", never_played])
         new_row(["Distinct played tracks", diff_played])
-        DBIntf.execute("SELECT * FROM hostnames") { |host|
-            host_played = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhostname=#{host[0]}")
+        DBIntf.execute("SELECT * FROM hosts") { |host|
+            host_played = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhost=#{host[0]}")
             new_row(["Played on #{host[1]}", host_played])
         }
         end_table

@@ -63,15 +63,15 @@ module DBUtils
         #dblink.track.sql_update
         sql = dblink.track.generate_update
 
-        host = DBClass::Hostname.new
+        host = DBClass::Host.new
         host.add_new(:sname => hostname) unless host.select_by_field(:sname, hostname, :case_insensitive)
 
         #DBClass::LogTracks.new.add_new(:rtrack => dblink.track.rtrack,
         #                               :idateplayed => dblink.track.ilastplayed,
-        #                               :rhostname => host.rhostname)
+        #                               :rhost => host.rhost)
         sql += DBClass::LogTracks.new(:rtrack => dblink.track.rtrack,
                                       :idateplayed => dblink.track.ilastplayed,
-                                      :rhostname => host.rhostname).generate_insert
+                                      :rhost => host.rhost).generate_insert
 
         self.exec_batch(sql, hostname)
     end
@@ -84,10 +84,10 @@ module DBUtils
 #         sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
 #         DBIntf.execute(sql)
 #
-#         rhost = DBIntf.get_first_value("SELECT rhostname FROM hostnames WHERE sname=#{hostname.to_sql};")
+#         rhost = DBIntf.get_first_value("SELECT rhost FROM hosts WHERE sname=#{hostname.to_sql};")
 #         if rhost.nil?
 #             rhost = self.get_last_id("hostname")+1
-#             sql = "INSERT INTO hostnames VALUES(#{rhost}, #{hostname.to_sql});"
+#             sql = "INSERT INTO hosts VALUES(#{rhost}, #{hostname.to_sql});"
 #             self.log_exec(sql)
 #         end
 #

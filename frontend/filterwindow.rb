@@ -134,7 +134,7 @@ class FilterWindow < TopWindow
 
     def save_filter
         DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load \
-                       .set_fields(:sxmldata => Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])) \
+                       .set_fields(:sjsondata => Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])) \
                        .sql_update
         @ftv.selection.selected[2] = Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])
     end

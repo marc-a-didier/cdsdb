@@ -178,8 +178,8 @@ module Dialogs
             tv.model = Gtk::ListStore.new(Integer, String, String)
             count = 0
             DBIntf.execute(
-                %{SELECT logtracks.idateplayed, hostnames.sname FROM logtracks
-                    INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
+                %{SELECT logtracks.idateplayed, hosts.sname FROM logtracks
+                    INNER JOIN hosts ON logtracks.rhost=hosts.rhost
                   WHERE rtrack=#{rtrack} ORDER BY idateplayed DESC;}) do |row|
                 count += 1
                 iter = tv.model.append
@@ -210,9 +210,9 @@ module Dialogs
 
             count = 0
             DBIntf.execute(
-                %{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hostnames.sname FROM tracks
+                %{SELECT tracks.iorder, tracks.stitle, logtracks.idateplayed, hosts.sname FROM tracks
                     INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
-                    INNER JOIN hostnames ON logtracks.rhostname=hostnames.rhostname
+                    INNER JOIN hosts ON logtracks.rhost=hosts.rhost
                   WHERE tracks.rrecord=#{rrecord}
                   ORDER BY logtracks.idateplayed DESC;}) do |row|
                 count += 1

@@ -291,7 +291,7 @@ print "Checking #{file}\n"
                 artist << record
             end
         end
-        ["plists", "pltracks", "hostnames", "logtracks"].each { |table| dump_table(xdoc, table) }
+        ["plists", "pltracks", "hosts", "logtracks"].each { |table| dump_table(xdoc, table) }
         xdoc.save(Cfg.rsrc_dir+"dbexport.xml", :indent => true, :encoding => XML::Encoding::UTF_8)
     end
 
@@ -318,7 +318,7 @@ print "Checking #{file}\n"
 
     def self.replay_gain_for_genre
         Trace.debug("Start gaining".bold)
-        DBIntf.execute("SELECT * FROM records WHERE fpeak=0.0 AND fgain=0.0 AND rgenre=10 LIMIT 50").each do |rec|
+        DBIntf.execute("SELECT * FROM records WHERE ipeak=0 AND igain=0 AND rgenre=10 LIMIT 50").each do |rec|
             tracks = []
             DBIntf.execute("SELECT * FROM tracks WHERE rrecord=#{rec[0]}") do |track|
                 tracks << Audio::Link.new.set_record_ref(rec[0]).set_track_ref(track[0])

@@ -147,7 +147,7 @@ module DBClass
     Record = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
                         :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
                         :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink,
-                        :fpeak, :fgain) do
+                        :ipeak, :igain) do
 
         include SQLintf
 
@@ -157,8 +157,6 @@ module DBClass
             self.rartist = rartist
             self.stitle = "New record"
             self.idateadded = Time.now.to_i
-            self.fpeak = 0.0
-            self.fgain = 0.0
             return sql_add
         end
 
@@ -195,7 +193,7 @@ module DBClass
 
 
     Track = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
-                       :iplayed, :irating, :itags, :ilastplayed, :fpeak, :fgain) do
+                       :iplayed, :irating, :itags, :ilastplayed, :ipeak, :igain) do
 
         include SQLintf
 
@@ -207,8 +205,6 @@ module DBClass
             self.iorder = DBIntf.get_first_value("SELECT MAX(iorder)+1 FROM tracks WHERE rrecord=#{rrecord}")
             self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.stitle = "New track"
-            self.fpeak = 0.0
-            self.fgain = 0.0
             return sql_add
         end
 
@@ -218,7 +214,7 @@ module DBClass
     end
 
 
-    Filter = Struct.new(:rfilter, :sname, :sxmldata) do
+    Filter = Struct.new(:rfilter, :sname, :sjsondata) do
 
         include SQLintf
 
@@ -226,25 +222,25 @@ module DBClass
             reset
             self.rfilter = get_last_id+1
             self.sname = 'New filter'
-            self.sxmldata = '{"filter":{}}'
+            self.sjsondata = '{"filter":{}}'
             return sql_add
         end
     end
 
 
-    Hostname = Struct.new(:rhostname, :sname) do
+    Host = Struct.new(:rhost, :sname) do
 
         include SQLintf
 
         def add_new(params = {})
             reset.set_fields(params)
-            self.rhostname = get_last_id+1
+            self.rhost = get_last_id+1
             return sql_add
         end
     end
 
 
-    LogTracks = Struct.new(:rtrack, :idateplayed, :rhostname) do
+    LogTracks = Struct.new(:rtrack, :idateplayed, :rhost) do
 
         include SQLintf
 
