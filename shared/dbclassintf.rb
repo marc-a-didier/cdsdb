@@ -1,5 +1,5 @@
 
-module DBClass
+module DBClasses
 
     module SQLintf
 

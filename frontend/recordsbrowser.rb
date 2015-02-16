@@ -282,14 +282,14 @@ p row
     def on_rec_add
         @reclnk.record.add_new(@mc.artist.rartist)
         @reclnk.segment.add_new(@mc.artist.rartist, @reclnk.record.rrecord)
-        DBClass::Track.new.add_new(@reclnk.record.rrecord, @reclnk.segment.rsegment)
+        DBClasses::Track.new.add_new(@reclnk.record.rrecord, @reclnk.segment.rsegment)
         load_entries.position_to(@reclnk.record.rrecord, 0)
         @mc.record_changed
     end
 
     def on_seg_add
         @segment.add_new(@mc.artist.rartist, @reclnk.rrecord)
-        DBClass::Track.new.add_new(@reclnk.rrecord, @segment.rsegment)
+        DBClasses::Track.new.add_new(@reclnk.rrecord, @segment.rsegment)
         #rsegment = @segment.rsegment
         load_entries.position_to(@reclnk.rrecord, @segment.rsegment)
         #iter = @tv.selection.selected

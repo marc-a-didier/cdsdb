@@ -326,7 +326,7 @@ class MainWindow < TopWindow
 
         @art_browser.reload
          # The best guess to find the newly imported record
-        @mc.select_record(DBCache::Link.new.set_record_ref(DBClass::Record.new.get_last_id))
+        @mc.select_record(DBCache::Link.new.set_record_ref(DBClasses::Record.new.get_last_id))
     end
 
 

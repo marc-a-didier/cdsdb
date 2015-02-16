@@ -177,10 +177,10 @@ module Utils
     # if it's segmented (new from v4 database)
     #
     def self.assign_track_seg_order(rrecord)
-        record = DBClass::Record.new.ref_load(rrecord)
+        record = DBClasses::Record.new.ref_load(rrecord)
         return if record.iissegmented == 0
 
-        segment = DBClass::Segment.new
+        segment = DBClasses::Segment.new
         DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
             segment.load_from_row(seg_row)
             seg_order = 1

@@ -147,7 +147,7 @@ module XIntf
             end
         end
 
-        class PList < DBClass::PList
+        class PList < DBClasses::PList
 
             include GtkIDs
             include WidgetsController

@@ -283,13 +283,13 @@ class ArtistsBrowser < Gtk::TreeView
         # thus appears in both compilations and artists list.
         if @mc.view_compile?
             # Check if we can remove compilations or the artist from the list
-            rartist = is_on_compile? ? 0 : DBClass::Record.new.ref_load(rrecord).rartist
+            rartist = is_on_compile? ? 0 : DBClasses::Record.new.ref_load(rrecord).rartist
             sql = "SELECT COUNT(tracks.rtrack) FROM tracks " \
                     "INNER JOIN records ON records.rrecord=tracks.rrecord " \
                     "WHERE records.rartist=#{rartist}"
         else
             # Get artist from segment, we may be on a compile only artist
-            rartist = DBClass::Segment.new.ref_load(rsegment).rartist
+            rartist = DBClasses::Segment.new.ref_load(rsegment).rartist
             sql = "SELECT COUNT(tracks.rtrack) FROM tracks " \
                     "INNER JOIN segments ON segments.rsegment=tracks.rsegment " \
                     "WHERE segments.rartist=#{rartist}"

@@ -65,7 +65,7 @@ class PListsWindow < TopWindow
 
         @tvpl = GtkUI[GtkIDs::TV_PLISTS]
         @pls = Gtk::ListStore.new(Integer, String)
-        @current_pl = DBClass::PList.new
+        @current_pl = DBClasses::PList.new
 
         @tvpl.append_column(Gtk::TreeViewColumn.new("Ref.", srenderer, :text => 0))
         @tvpl.append_column(Gtk::TreeViewColumn.new("Play lists", edrenderer, :text => 1))

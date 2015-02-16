@@ -32,7 +32,7 @@ module DBCache
 
             def artist(rartist)
                 if @artists[rartist].nil?
-                    @artists[rartist] = DBClass::Artist.new.ref_load(rartist)
+                    @artists[rartist] = DBClasses::Artist.new.ref_load(rartist)
                     Trace.debug("Artist cache MISS for key #{rartist}, size=#{@artists.size}") if Cfg.trace_db_cache
                 else
                     Trace.debug("Artist cache HIT for key #{rartist}, size=#{@artists.size}") if Cfg.trace_db_cache
@@ -42,7 +42,7 @@ module DBCache
 
             def record(rrecord)
                 if @records[rrecord].nil?
-                    @records[rrecord] = DBClass::Record.new.ref_load(rrecord)
+                    @records[rrecord] = DBClasses::Record.new.ref_load(rrecord)
                     Trace.debug("Record cache MISS for key #{rrecord}, size=#{@records.size}") if Cfg.trace_db_cache
                 else
                     Trace.debug("Record cache HIT for key #{rrecord}, size=#{@records.size}") if Cfg.trace_db_cache
@@ -52,7 +52,7 @@ module DBCache
 
             def segment(rsegment)
                 if @segments[rsegment].nil?
-                    @segments[rsegment] = DBClass::Segment.new.ref_load(rsegment)
+                    @segments[rsegment] = DBClasses::Segment.new.ref_load(rsegment)
                     Trace.debug("Segment cache MISS for key #{rsegment}, size=#{@segments.size}") if Cfg.trace_db_cache
                 else
                     Trace.debug("Segment cache HIT for key #{rsegment}, size=#{@segments.size}") if Cfg.trace_db_cache
@@ -62,7 +62,7 @@ module DBCache
 
             def track(rtrack)
                 if @tracks[rtrack].nil?
-                    @tracks[rtrack] = DBClass::Track.new.ref_load(rtrack)
+                    @tracks[rtrack] = DBClasses::Track.new.ref_load(rtrack)
                     @audio[rtrack] = TrackState.new(Audio::Status::UNKNOWN, nil)
                     Trace.debug("Track cache MISS for key #{rtrack}, size=#{@tracks.size}") if Cfg.trace_db_cache
                 else
@@ -72,27 +72,27 @@ module DBCache
             end
 
             def genre(rgenre)
-                @genres[rgenre] = DBClass::Genre.new.ref_load(rgenre) if @genres[rgenre].nil?
+                @genres[rgenre] = DBClasses::Genre.new.ref_load(rgenre) if @genres[rgenre].nil?
                 return @genres[rgenre]
             end
 
             def label(rlabel)
-                @labels[rlabel] = DBClass::Label.new.ref_load(rlabel) if @labels[rlabel].nil?
+                @labels[rlabel] = DBClasses::Label.new.ref_load(rlabel) if @labels[rlabel].nil?
                 return @labels[rlabel]
             end
 
             def media(rmedia)
-                @medias[rmedia] = DBClass::Media.new.ref_load(rmedia) if @medias[rmedia].nil?
+                @medias[rmedia] = DBClasses::Media.new.ref_load(rmedia) if @medias[rmedia].nil?
                 return @medias[rmedia]
             end
 
             def collection(rcollection)
-                @collections[rcollection] = DBClass::Collection.new.ref_load(rcollection) if @collections[rcollection].nil?
+                @collections[rcollection] = DBClasses::Collection.new.ref_load(rcollection) if @collections[rcollection].nil?
                 return @collections[rcollection]
             end
 
             def origin(rorigin)
-                @origins[rorigin] = DBClass::Origin.new.ref_load(rorigin) if @origins[rorigin].nil?
+                @origins[rorigin] = DBClasses::Origin.new.ref_load(rorigin) if @origins[rorigin].nil?
                 return @origins[rorigin]
             end
 

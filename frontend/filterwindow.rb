@@ -107,7 +107,7 @@ class FilterWindow < TopWindow
 
     def load_ftv
         @ftv.model.clear
-        DBClass::Filter.new.select_all do |filter|
+        DBClasses::Filter.new.select_all do |filter|
             iter = @ftv.model.append
             filter.size.times { |index| iter[index] = filter[index] }
         end
@@ -123,24 +123,24 @@ class FilterWindow < TopWindow
     end
 
     def new_filter
-        DBClass::Filter.new.add_new
+        DBClasses::Filter.new.add_new
         load_ftv
     end
 
     def delete_filter
-        DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_del
+        DBClasses::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_del
         load_ftv
     end
 
     def save_filter
-        DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load \
-                       .set_fields(:sjsondata => Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])) \
-                       .sql_update
+        DBClasses::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load \
+                         .set_fields(:sjsondata => Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])) \
+                         .sql_update
         @ftv.selection.selected[2] = Prefs.json_from_content(GtkUI[FLT_VBOX_EXPANDERS])
     end
 
     def ftv_name_edited(widget, path, new_text)
-        DBClass::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load.set_fields(:sname => new_text).sql_update
+        DBClasses::Filter.new(:rfilter => @ftv.selection.selected[0]).sql_load.set_fields(:sname => new_text).sql_update
         @ftv.selection.selected[1] = new_text
     end
 
