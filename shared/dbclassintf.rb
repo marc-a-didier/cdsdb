@@ -1,9 +1,3 @@
-# !/usr/bin/ruby
-
-# require 'sqlite3'
-# require 'dbintf'
-# require 'dbutils'
-# require 'utils'
 
 module DBClass
 
@@ -78,10 +72,7 @@ module DBClass
 
         def sql_update
             sql = generate_update
-            unless sql.empty?
-                DBUtils.client_sql(sql)
-#                 Trace.debug("DB update : #{sql}".red)
-            end
+            DBUtils.client_sql(sql) unless sql.empty?
             return self
         end
 
@@ -135,6 +126,7 @@ module DBClass
         end
     end
 
+
     Artist = Struct.new(:rartist, :sname, :swebsite, :rorigin, :mnotes) do
 
         include SQLintf
@@ -150,6 +142,7 @@ module DBClass
             return self.rartist == 0
         end
     end
+
 
     Record = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
                         :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
@@ -178,6 +171,7 @@ module DBClass
         end
     end
 
+
     Segment = Struct.new(:rsegment, :rrecord, :rartist, :iorder, :stitle, :iplaytime, :mnotes) do
 
         include SQLintf
@@ -198,6 +192,7 @@ module DBClass
             return load_from_row(DBIntf.get_first_row("SELECT * FROM segments WHERE rrecord=#{rrecord};"))
         end
     end
+
 
     Track = Struct.new(:rtrack, :rsegment, :rrecord, :iorder, :iplaytime, :stitle, :mnotes, :isegorder,
                        :iplayed, :irating, :itags, :ilastplayed, :fpeak, :fgain) do
@@ -236,6 +231,7 @@ module DBClass
         end
     end
 
+
     Hostname = Struct.new(:rhostname, :sname) do
 
         include SQLintf
@@ -247,6 +243,7 @@ module DBClass
         end
     end
 
+
     LogTracks = Struct.new(:rtrack, :idateplayed, :rhostname) do
 
         include SQLintf
@@ -254,10 +251,6 @@ module DBClass
         # Must be overriden since this table has no pk
         def tbl_name
             return "logtracks"
-        end
-
-        def add_new(params = {})
-            return reset.set_fields(params).sql_add
         end
     end
 

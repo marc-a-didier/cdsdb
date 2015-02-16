@@ -108,7 +108,7 @@ module GStreamer
 
             @gstbin.query(@track_len)
 
-            @timer = Gtk::timeout_add(500) do
+            @timer = Gtk.timeout_add(500) do
                 @subscriber.gstplayer_timer
                 true
             end
@@ -131,7 +131,7 @@ module GStreamer
         def stop
             @gstbin.stop
             if @timer
-                Gtk::timeout_remove(@timer)
+                Gtk.timeout_remove(@timer)
                 @timer = nil
             end
         end

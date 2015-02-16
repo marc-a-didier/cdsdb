@@ -190,7 +190,7 @@ class FilterWindow < TopWindow
             mask = GtkUtils.get_tags_mask(@tv_tags)
             unless mask == 0
                 wc += GtkUI[FLT_CB_MATCHALL].active? ? " AND ((tracks.itags & #{mask}) = #{mask})" :
-                                                           " AND ((tracks.itags & #{mask}) <> 0)"
+                                                       " AND ((tracks.itags & #{mask}) <> 0)"
             end
         end
 

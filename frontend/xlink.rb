@@ -38,27 +38,27 @@ module XIntf
 
         def cover_file_name
             @pix_key.empty? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :
-                            Image::Cache.full_name(@pix_key)
+                              Image::Cache.full_name(@pix_key)
         end
 
         def large_track_cover
             @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
-                            Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
+                              Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
         end
 
         def small_track_cover
             @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
-                            Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
+                              Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
         end
 
         def large_record_cover
             @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
-                            Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
+                              Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
         end
 
         def small_record_cover
             @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
-                            Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
+                              Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
         end
 
         def cover_key

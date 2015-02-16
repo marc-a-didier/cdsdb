@@ -171,11 +171,11 @@ class TasksWindow < TopWindow
     end
 
     def new_file_download(emitter, file_info, user_ref)
-        new_task(TASK_FILE_DL, emitter, Utils::get_file_name(file_info), user_ref, file_info)
+        new_task(TASK_FILE_DL, emitter, Utils.get_file_name(file_info), user_ref, file_info)
     end
 
     def update_file_op(iter, curr_size, tot_size)
-        iter[COL_PROGRESS] = (curr_size.to_f*100.0/tot_size.to_f).to_i
+        iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i
         return @has_cancelled ? Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
     end
 
