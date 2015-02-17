@@ -227,9 +227,7 @@ class PListsWindow < TopWindow
                 renumber_tracks_list_store
             end
         else
-            @mc.send(call_back).each { |xlink|
-                add_to_plist(@current_pl.rplist, xlink.track.rtrack)
-            }
+            @mc.send(call_back).each { |xlink| add_to_plist(@current_pl.rplist, xlink.track.rtrack) }
         end
 
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
@@ -238,7 +236,6 @@ class PListsWindow < TopWindow
     end
 
     def get_selection
-#         return Array.new(@tvpt.selection.count_selected_rows).fill { @tvpt.selection.selected_each { |model, path, iter| iter[TT_DATA] } } #.clone } }
         links = []
         @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA] } #.clone }
         return links
@@ -431,8 +428,9 @@ class PListsWindow < TopWindow
 
     def do_renumber
         return if @tvpl.selection.selected.nil?
-        DBUtils::renumber_play_list(@current_pl.rplist)
-        MusicClient.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
+        DBUtils.renumber_plist(@current_pl.rplist, local?)
+        # DBUtils.renumber_play_list(@current_pl.rplist)
+        # MusicClient.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
     end
 
     def enqueue_track

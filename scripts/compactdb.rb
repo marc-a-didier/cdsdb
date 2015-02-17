@@ -28,9 +28,9 @@ end
 
 path = "../../db/"
 
-dest = path+"cds6.0.compacted.db"
+dest = path+"cds6.1.compacted.db"
 
-$src = SQLite3::Database.new(path+"cds6.0.db")
+$src = SQLite3::Database.new(path+"cds6.1.db")
 $src.execute("PRAGMA synchronous=OFF;")
 
 FileUtils.rm(dest) if File.exists?(dest)
@@ -39,7 +39,7 @@ $dst.execute('PRAGMA synchronous=OFF;')
 $dst.execute('PRAGMA encoding="UTF-8";')
 
 sql = ""
-IO.foreach("./sqlitecds6.0.sql") { |line| sql += line.chomp }
+IO.foreach("./sqlitecds6.1.sql") { |line| sql += line.chomp }
 $dst.execute_batch(sql)
 
 def dup_table(table) # Copy table as it, that is there are no change
@@ -59,4 +59,4 @@ end
 ["collections", "medias", "genres", "labels",
  "plists", "pltracks", "origins",
  "artists", "records", "segments", "tracks",
- "hostnames", "logtracks", "filters"].each { |table| dup_table(table) }
+ "hosts", "logtracks", "filters"].each { |table| dup_table(table) }

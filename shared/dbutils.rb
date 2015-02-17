@@ -76,25 +76,6 @@ module DBUtils
         self.exec_batch(sql, hostname)
     end
 
-    # This method is also used by the server. For now, it doesn't know about db cache, link, etc...
-    # So, let's be clear: DON'T TOUCH the parameters type!!!
-#     def self.update_track_stats(rtrack, hostname)
-#         return if rtrack <= 0 # Possible when files are dropped into the play queue
-#
-#         sql = "UPDATE tracks SET iplayed=iplayed+1, ilastplayed=#{Time::now.to_i} WHERE rtrack=#{rtrack};"
-#         DBIntf.execute(sql)
-#
-#         rhost = DBIntf.get_first_value("SELECT rhost FROM hosts WHERE sname=#{hostname.to_sql};")
-#         if rhost.nil?
-#             rhost = self.get_last_id("hostname")+1
-#             sql = "INSERT INTO hosts VALUES(#{rhost}, #{hostname.to_sql});"
-#             self.log_exec(sql)
-#         end
-#
-#         sql = "INSERT INTO logtracks VALUES (#{rtrack}, #{Time::now.to_i}, #{rhost});"
-#         DBIntf.execute(sql)
-#     end
-
     def self.update_record_playtime(rrecord)
         len = DBIntf.get_first_value("SELECT SUM(iplaytime) FROM segments WHERE rrecord=#{rrecord};")
         self.client_sql("UPDATE records SET iplaytime=#{len} WHERE rrecord=#{rrecord};")
@@ -105,16 +86,18 @@ module DBUtils
         self.client_sql("UPDATE segments SET iplaytime=#{len} WHERE rsegment=#{rsegment};")
     end
 
-    # This method is useful ONLY when tracks are removed, otherwise it doesn't make sense.
-    def self.renumber_play_list(rplist)
+    # Generate a sql statement to renumber all tracks from a play list from 1024 to n*1024
+    # is_local_only tells wether the statement should also be transmitted to the server or not
+    def self.renumber_plist(rplist, is_local_only)
         i = 1024
         sql = ""
-        DBIntf.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) { |row|
+        DBIntf.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) do |row|
             sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
             i += 1024
-        }
-        DBIntf.transaction { |db| db.execute_batch(sql) }
-        self.log_exec("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
+        end
+        is_local_only ? self.exec_local_batch(sql, Socket.gethostname) : self.exec_batch(sql, Socket.gethostname)
+        # DBIntf.transaction { |db| db.execute_batch(sql) }
+        # self.log_exec("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
     end
 
 
