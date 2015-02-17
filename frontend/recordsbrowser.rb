@@ -341,12 +341,12 @@ p row
 
         gains = GStreamer.analyze(files)
         tracks.each_with_index do |track, index|
-            tracks[index].track.igain = (gains[index][0]*100000.0).to_i
-            tracks[index].track.ipeak = (gains[index][1]*100000.0).to_i
+            tracks[index].track.igain = (gains[index][0]*Audio::GAIN_FACTOR).to_i
+            tracks[index].track.ipeak = (gains[index][1]*Audio::GAIN_FACTOR).to_i
         end
 
-        @reclnk.record.igain = (gains.last[0]*100000.0).to_i
-        @reclnk.record.ipeak = (gains.last[1]*100000.0).to_i
+        @reclnk.record.igain = (gains.last[0]*Audio::GAIN_FACTOR).to_i
+        @reclnk.record.ipeak = (gains.last[1]*Audio::GAIN_FACTOR).to_i
 
         sql = ""
         tracks.each do |track|

@@ -59,7 +59,7 @@ module XIntf
             str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
             str += ", "+DBCache::Cache.collection(rec.rcollection).sname if rec.rcollection != 0
             str += ", "+rec.iplaytime.to_ms_length
-            str += " [%.4f | %.4f]" % [rec.igain/100000.0, rec.ipeak/100000.0]
+            str += " [%.4f | %.4f]" % [rec.igain/Audio::GAIN_FACTOR, rec.ipeak/Audio::GAIN_FACTOR]
             return str
         end
 
@@ -105,7 +105,7 @@ module XIntf
                 str += "tagged as "
                 Qualifiers::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
             end
-            str += "[%.4f | %.4f]" % [trk.igain/100000.0, trk.ipeak/100000.0]
+            str += "[%.4f | %.4f]" % [trk.igain/Audio::GAIN_FACTOR, trk.ipeak/Audio::GAIN_FACTOR]
             return str
         end
     end

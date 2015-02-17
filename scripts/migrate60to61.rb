@@ -39,13 +39,13 @@ end
 
 def dup_table(table) # Copy table as it, that is there are no change
     dest_tbl = table == "hostnames" ? "hosts" : table
-    
+
     $dst.execute("DELETE FROM #{dest_tbl};")
     $dst.execute("BEGIN TRANSACTION;")
     $src.execute("SELECT * FROM #{table}") do |row|
         if table == "tracks" || table == "records"
-            row[row.size-1] = (row[row.size-1]*100000.0).to_i
-            row[row.size-2] = (row[row.size-2]*100000.0).to_i
+            row[row.size-1] = (row[row.size-1]*10000.0).to_i
+            row[row.size-2] = (row[row.size-2]*10000.0).to_i
         end
 
         sql = "INSERT INTO #{dest_tbl} VALUES ("

@@ -273,10 +273,10 @@ class PlayerWindow < TopWindow
             replay_gain = 0.0
             if player_data.xlink.tags.nil?
                 if player_data.xlink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
-                    replay_gain = player_data.xlink.record.igain/100000.0
+                    replay_gain = player_data.xlink.record.igain/Audio::GAIN_FACTOR
                     Trace.debug("RECORD gain: #{replay_gain}".brown) if Cfg.trace_gst
                 elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
-                    replay_gain = player_data.xlink.track.igain/100000.0
+                    replay_gain = player_data.xlink.track.igain/Audio::GAIN_FACTOR
                     Trace.debug("TRACK gain #{replay_gain}".brown) if Cfg.trace_gst
                 end
             end

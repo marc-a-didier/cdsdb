@@ -16,4 +16,5 @@ module Audio
         UNKNOWN   = 4 # Should be default value, no check has been made
     end
 
+    GAIN_FACTOR = 10000.0
 end
