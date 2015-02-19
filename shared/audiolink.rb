@@ -87,7 +87,9 @@ module Audio
         # If a matching file is found, set the full name to the match.
         def search_audio_file(file_name)
             # Trace.debug("Search audio for track #{@rtrack.to_s.brown}")
-            FILE_EXTS.each do |ext|
+            extensions = Cfg.size_over_quality ? FILE_EXTS_BY_SIZE : FILE_EXTS_BY_QUALITY
+
+            extensions.each do |ext|
                 if File.exists?(file_name+ext)
                     set_audio_state(Status::OK, file_name+ext)
                     return audio.status
@@ -98,7 +100,7 @@ module Audio
             file = track_dir(file_name)
             Dir[Cfg.music_dir+"*"].each do |entry|
                 next unless File.directory?(entry)
-                FILE_EXTS.each do |ext|
+                extensions.each do |ext|
                     if File.exists?(entry+file+ext)
                         set_audio_state(Status::MISPLACED, entry+file+ext)
                         return audio.status

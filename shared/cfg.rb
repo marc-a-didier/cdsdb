@@ -6,6 +6,7 @@ module ConfigFields
     PREFS_ENTRY_PORT            = "prefs_entry_port"
     PREFS_ENTRY_BLKSIZE         = "prefs_entry_blksize"
     PREFS_CB_SYNCCOMMS          = "prefs_cb_synccomms"
+    PREFS_CB_SIZEOVERQUALITY    = "prefs_cb_sizeoverquality"
     PREFS_FC_MUSICDIR           = "prefs_fc_musicdir"
     PREFS_FC_RSRCDIR            = "prefs_fc_rsrcdir"
     PREFS_CB_TRACEDBCACHE       = "prefs_cb_tracedbcache"
@@ -49,7 +50,7 @@ module Cfg
         WINDOWS = 'windows'
 
         CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
-                                :server, :port, :sync_comms, :tx_block_size,
+                                :server, :port, :tx_block_size, :sync_comms, :size_over_quality,
                                 :music_dir, :rsrc_dir,
                                 :trace_db_cache, :trace_image_cache, :trace_gst,
                                 :trace_gstqueue, :trace_network, :trace_sql,
@@ -65,6 +66,7 @@ module Cfg
                 self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]["text="]
                 self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]["text="].to_i
                 self.sync_comms         = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SYNCCOMMS]["active="]
+                self.size_over_quality  = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SIZEOVERQUALITY]["active="]
                 self.music_dir          = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="]+"/"
                 self.rsrc_dir           = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="]+"/"
                 self.notifications      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]["active="]
@@ -94,6 +96,7 @@ module Cfg
                                 PREFS_ENTRY_PORT           => { "text=" => "32666" },
                                 PREFS_ENTRY_BLKSIZE        => { "text=" => "262144" },
                                 PREFS_CB_SYNCCOMMS         => { "active=" => false },
+                                PREFS_CB_SIZEOVERQUALITY   => { "active=" => false },
                                 PREFS_CB_TRACEDBCACHE      => { "active=" => false },
                                 PREFS_CB_IMAGECACHE        => { "active=" => false },
                                 PREFS_CB_TRACEGST          => { "active=" => true  },

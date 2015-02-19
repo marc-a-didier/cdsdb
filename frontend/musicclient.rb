@@ -124,8 +124,11 @@ module MusicClient
 
     def self.get_audio_file(tasks, task_id, rtrack)
         return "" unless socket = hand_shake("send audio")
+
+        # If we prefer small size over quality, pass the block size as a negative number
+        socket.puts(Cfg.size_over_quality ? (-Cfg.tx_block_size).to_s : Cfg.tx_block_size.to_s)
+        
         file = ""
-        socket.puts(Cfg.tx_block_size.to_s)
         if socket.gets.chomp.to_i == Cfg.tx_block_size
             Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
             socket.puts(rtrack.to_s)

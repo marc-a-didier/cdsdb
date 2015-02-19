@@ -6,7 +6,8 @@ module Audio
     Tags = Struct.new(:artist, :album, :title, :track, :length, :year, :genre, :file_name)
 
     # The order matters if the same track is ripped in various format, prefered format first
-    FILE_EXTS = [".flac", ".ogg", ".mp3"]
+    FILE_EXTS_BY_QUALITY = [".flac", ".ogg", ".mp3"]
+    FILE_EXTS_BY_SIZE = [".ogg", ".mp3", ".flac"]
 
     module Status
         NOT_FOUND = 0 # Local audio file not found and/or not on server

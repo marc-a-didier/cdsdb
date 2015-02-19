@@ -107,6 +107,11 @@ class MusicServer
 
     def send_audio(session, is_sync)
         block_size = session.gets.chomp.to_i
+
+        # If client prefers small size over quality, the requested block size is negative.
+        Cfg.size_over_quality = block_size < 0
+        block_size = block_size.abs
+
         session.puts(block_size.to_s)
         rtrack = session.gets.chomp.to_i
         file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file

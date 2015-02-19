@@ -137,7 +137,7 @@ module Utils
     #
     def self.get_files_to_tag(dir)
         files = []
-        Find.find(dir) { |file| files << file if Audio::FILE_EXTS.include?(File.extname(file).downcase) }
+        Find.find(dir) { |file| files << file if Audio::FILE_EXTS_BY_QUALITY.include?(File.extname(file).downcase) }
 
         # Check if track numbers contain a leading 0. If not rename the file with a leading 0.
         files.each_with_index do |file, index|
@@ -161,7 +161,7 @@ module Utils
     #
     def self.tag_full_dir_to_genre(genre, dir)
         Find.find(dir) { |file|
-            if Audio::FILE_EXTS.inlcude?(File.extname(file).downcase)
+            if Audio::FILE_EXTS_BY_QUALITY.inlcude?(File.extname(file).downcase)
                 Trace.debug("Tagging #{file} with genre #{genre}")
                 tags = TagLib::File.new(file)
                 tags.genre = genre
@@ -201,7 +201,7 @@ module Utils
         stats = [0, 0]
         res = File.new(Cfg.rsrc_dir+"orphans.txt", "w")
         Find::find(dir) { |file|
-            if Audio::FILE_EXTS.include?(File.extname(file).downcase)
+            if Audio::FILE_EXTS_BY_QUALITY.include?(File.extname(file).downcase)
 print "Checking #{file}\n"
                 stats[0] += 1
                 res << "File #{file} : "
