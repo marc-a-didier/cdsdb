@@ -9,6 +9,9 @@ module Audio
     FILE_EXTS_BY_QUALITY = [".flac", ".ogg", ".mp3"]
     FILE_EXTS_BY_SIZE = [".ogg", ".mp3", ".flac"]
 
+    MEDIA_CD   = 0
+    MEDIA_FILE = 5
+
     module Status
         NOT_FOUND = 0 # Local audio file not found and/or not on server
         OK        = 1 # Local audio file found where expected to be

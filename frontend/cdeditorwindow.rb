@@ -166,7 +166,7 @@ class CDEditorWindow
         @disc.year = disc.md.year
         @disc.length = disc.mSecPT
         @disc.cddbid = disc.freedbString.split()[0].hex.to_s
-        @disc.medium = DBIntf::MEDIA_CD
+        @disc.medium = Audio::MEDIA_CD
 
         disc.audiotracks.times { |i|
             track = TrackData.new
@@ -194,7 +194,7 @@ class CDEditorWindow
         @disc.year = tags.year
         @disc.length = 0 # tags.length*1000
         @disc.cddbid = DBIntf::NULL_CDDBID
-        @disc.medium = DBIntf::MEDIA_AUDIO_FILE
+        @disc.medium = Audio::MEDIA_FILE
         tags.close
 
         setup_tv

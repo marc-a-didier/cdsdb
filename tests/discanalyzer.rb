@@ -30,7 +30,7 @@ disc.catalog = "FAT 0007"
 disc.year = 2020
 disc.length = 123456
 disc.cddbid = 0x00001
-disc.medium = DBIntf::MEDIA_CD
+disc.medium = Audio::MEDIA_CD
 disc.tracks = []
 10.times { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", disc.title, disc.artist, 10000) }
 DiscAnalyzer.analyze(disc, f)
@@ -44,7 +44,7 @@ disc.catalog = "FAT 0008"
 disc.year = 2025
 disc.length = 234567
 disc.cddbid = 0x00002
-disc.medium = DBIntf::MEDIA_CD
+disc.medium = Audio::MEDIA_CD
 disc.tracks = []
 (1..4).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", "segment 1", disc.artist, 10000) }
 (5..8).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", "segment 2", disc.artist, 10000) }
@@ -59,7 +59,7 @@ disc.catalog = "FAT 0009"
 disc.year = 2026
 disc.length = 345678
 disc.cddbid = 0x00002
-disc.medium = DBIntf::MEDIA_CD
+disc.medium = Audio::MEDIA_CD
 disc.tracks = []
 (1..2).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", disc.title, "artist 1", 10000) }
 (3..4).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", disc.title, "artist 2", 10000) }
@@ -77,7 +77,7 @@ disc.catalog = "FAT 0010"
 disc.year = 2027
 disc.length = 456789
 disc.cddbid = 0x00002
-disc.medium = DBIntf::MEDIA_CD
+disc.medium = Audio::MEDIA_CD
 disc.tracks = []
 (1..2).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", "segment 1", "artist 1", 10000) }
 (3..4).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", "segment 2", "artist 2", 10000) }
@@ -94,7 +94,7 @@ disc.catalog = "FAT 0011"
 disc.year = 2028
 disc.length = 456789
 disc.cddbid = 0x00002
-disc.medium = DBIntf::MEDIA_CD
+disc.medium = Audio::MEDIA_CD
 disc.tracks = []
 (1..6).each { |i| disc.tracks << CDEditorWindow::TrackData.new(i, "title #{i}", "segment title", disc.artist, 10000) }
 DiscAnalyzer.analyze(disc, f)

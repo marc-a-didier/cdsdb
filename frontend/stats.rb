@@ -184,7 +184,7 @@ class Stats
             row = DBIntf.get_first_row("SELECT SUM(iplayed), SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
             genre.played_tracks = row[0].to_i
             genre.played_time = row[1].to_i
-            row = DBIntf.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia <> #{DBIntf::MEDIA_AUDIO_FILE}")
+            row = DBIntf.get_first_row("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia <> #{Audio::MEDIA_FILE}")
             genre.tot_recs = row[0].to_i
             genre.tot_rectime = row[1].to_i
         else
@@ -201,7 +201,7 @@ class Stats
             genre.played_tracks = row[0].to_i
             genre.played_time = row[1].to_i
             sql = "SELECT COUNT(rrecord), SUM(iplaytime) FROM records
-                   WHERE rgenre=#{genre.ref} AND rmedia <> #{DBIntf::MEDIA_AUDIO_FILE};"
+                   WHERE rgenre=#{genre.ref} AND rmedia <> #{Audio::MEDIA_FILE};"
             row = DBIntf.get_first_row(sql)
             genre.tot_recs = row[0].to_i
             genre.tot_rectime = row[1].to_i
@@ -210,7 +210,7 @@ class Stats
 
     def ripped_stats(genre)
         audio_link = Audio::Link.new
-        DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref} AND rmedia<>#{DBIntf::MEDIA_AUDIO_FILE}") do |record|
+        DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref} AND rmedia<>#{Audio::MEDIA_FILE}") do |record|
             Gtk.main_iteration while Gtk.events_pending?
             rtrack = DBIntf.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
             if audio_link.reset.set_track_ref(rtrack).record_on_disk?

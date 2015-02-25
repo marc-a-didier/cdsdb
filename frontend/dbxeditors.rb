@@ -53,7 +53,7 @@ module XIntf
             end
 
             def update_ptime
-                return if rmedia != DBIntf::MEDIA_AUDIO_FILE
+                return if rmedia != Audio::MEDIA_FILE
                 DBUtils::update_record_playtime(@dbs.rrecord)
                 @dbs.sql_load
                 self.field_to_widget("iplaytime")
