@@ -2,6 +2,20 @@
 <interface>
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
+  <object class="GtkListStore" id="cded_store_source">
+    <columns>
+      <!-- column-name Source -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">FreeDB</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">MusicBrainz</col>
+      </row>
+    </data>
+  </object>
   <object class="GtkWindow" id="cd_editor_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Disc Editor</property>
@@ -284,12 +298,11 @@
                 <property name="can_focus">False</property>
                 <property name="spacing">10</property>
                 <child>
-                  <object class="GtkCheckButton" id="cded_chk_flac">
-                    <property name="label" translatable="yes">Rip to FLAC</property>
+                  <object class="GtkLabel" id="cded_lbl_source">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">0</property>
+                    <property name="label" translatable="yes">Source:</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -298,17 +311,42 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="cded_chk_ogg">
-                    <property name="label" translatable="yes">Rip to OGG</property>
+                  <object class="GtkComboBox" id="cded_cmb_source">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="model">cded_store_source</property>
+                    <property name="active">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="cded_btn_query">
+                    <property name="label" translatable="yes">Query</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="cded_btn_merge">
+                    <property name="label" translatable="yes">Merge</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
               </object>
@@ -355,11 +393,12 @@
             <property name="border_width">4</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="cded_btn_swap">
-                <property name="label" translatable="yes">Swap A/T</property>
+              <object class="GtkButton" id="cded_btn_close">
+                <property name="label">gtk-close</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -368,12 +407,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="cded_btn_close">
-                <property name="label">gtk-close</property>
+              <object class="GtkButton" id="cded_btn_swap">
+                <property name="label" translatable="yes">Swap A/T</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -392,19 +430,6 @@
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="cded_btn_rip">
-                <property name="label" translatable="yes">Rip!</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">3</property>
               </packing>
             </child>
           </object>

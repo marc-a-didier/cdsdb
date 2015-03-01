@@ -267,6 +267,9 @@ module GtkIDs
     CDED_ENTRY_YEAR     = "cded_entry_year"
     CDED_ENTRY_LABEL    = "cded_entry_label"
     CDED_ENTRY_CATALOG  = "cded_entry_catalog"
+    CDED_CMB_SOURCE     = "cded_cmb_source"
+    CDED_BTN_QUERY      = "cded_btn_query"
+    CDED_BTN_MERGE      = "cded_btn_merge"
 
 
     #
@@ -609,7 +612,8 @@ module GtkIDs
                    TRK_POPUP_SEGASS, TRK_POPUP_DELFROMFS, TRK_POPUP_UPDPTIME,
                    # REC_BTN_LABEL,
                    # SEG_BTN_ARTIST,
-                   MM_FILE_CHECKCD, MM_FILE_IMPORTSQL, MM_FILE_IMPORTAUDIO,
+#                    MM_FILE_CHECKCD, MM_FILE_IMPORTSQL, MM_FILE_IMPORTAUDIO,
+                   MM_FILE_IMPORTSQL, MM_FILE_IMPORTAUDIO,
                    MM_TOOLS_TAG_GENRE]
                    #MW_TOOLBAR] a revoir...
 end

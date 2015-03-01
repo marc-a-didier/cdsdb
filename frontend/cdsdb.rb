@@ -93,7 +93,8 @@ require './tracksbrowser'
 require './mainwindow'
 require './mastercontroller'
 
-require './my_rr_lib'
+require './cddatafeeder'
+# require './my_rr_lib'
 
 
 # DONE: implementer un player via gstreamer (quand la doc sera a jour!)

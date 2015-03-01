@@ -118,7 +118,7 @@ class MainWindow < TopWindow
         #
         # Toute la plomberie...
         #
-        GtkUI[MM_FILE_CHECKCD].signal_connect(:activate)     { CDEditorWindow.new.edit_record }
+        GtkUI[MM_FILE_CHECKCD].signal_connect(:activate)     { Thread.new { CDEditorWindow.new.edit_record } }
         GtkUI[MM_FILE_IMPORTSQL].signal_connect(:activate)   { import_sql_file }
         GtkUI[MM_FILE_IMPORTAUDIO].signal_connect(:activate) { on_import_audio_file }
         #GtkUI[MM_FILE_SAVE].signal_connect(:activate)        { on_save_item }

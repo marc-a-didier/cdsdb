@@ -2,9 +2,6 @@
 
 class CDEditorWindow
 
-    TrackData = Struct.new(:track, :title, :segment, :artist, :length)
-    DiscInfo  = Struct.new(:title, :artist, :genre, :year, :length, :label, :catalog, :medium, :cddbid, :tracks)
-
     MODE_NONE = 0
     MODE_DISC = 1
     MODE_FILE = 2
@@ -28,54 +25,57 @@ class CDEditorWindow
         GtkUI[GtkIDs::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
         GtkUI[GtkIDs::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
         GtkUI[GtkIDs::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
-        GtkUI["cded_btn_rip"].signal_connect(:clicked)               { rip_tracks }
-        GtkUI[GtkIDs::CDED_BTN_CLOSE].signal_connect(:clicked)     {
+        GtkUI[GtkIDs::CDED_BTN_MERGE].signal_connect(:clicked)     { query_and_merge }
+        GtkUI[GtkIDs::CDED_BTN_QUERY].signal_connect(:clicked) do
+            case GtkUI[GtkIDs::CDED_CMB_SOURCE].active
+                when 0 then @disc = @feeder.query_freedb(Cfg.cd_device).disc
+                when 1 then @disc = @feeder.query_musicbrainz(Cfg.cd_device).disc
+            end
+            update_tv
+        end
+        GtkUI[GtkIDs::CDED_BTN_CLOSE].signal_connect(:clicked) do
             Prefs.save_window(GtkIDs::CD_EDITOR_WINDOW)
             @window.destroy
-        }
+        end
 
         @mode = MODE_NONE
         @disc = nil
 
         @tv.model = Gtk::ListStore.new(Integer, String, String, String, String)
 
-        ["Track", "Title", "Segment", "Artist", "Play time"].each_with_index { |title, i|
+        ["Track", "Title", "Segment", "Artist", "Play time"].each_with_index do |title, i|
             renderer = Gtk::CellRendererText.new()
             if (1..3).include?(i)
                 renderer.editable = true
                 renderer.signal_connect(:edited) { |widget, path, new_text| @tv.selection.selected[i] = new_text }
             end
             @tv.append_column(Gtk::TreeViewColumn.new(title, renderer, :text => i))
-        }
+        end
 
         @tv.columns.each { |column| column.resizable = true }
     end
 
     def on_cp_btn(column_id)
-        @tv.model.each { |model, path, iter|
+        @tv.model.each do |model, path, iter|
             iter[column_id] = column_id == 3 ? GtkUI[GtkIDs::CDED_ENTRY_ARTIST].text : GtkUI[GtkIDs::CDED_ENTRY_TITLE].text
-        }
+        end
     end
 
     def swap_artists_titles
         # @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
-        @tv.model.each { |model, path, iter|
+        @tv.model.each do |model, path, iter|
             artist, title = iter[1].split(" / ")
             iter[1] = title
             iter[3] = artist
-        }
+        end
     end
 
-    def rip_tracks
-        if GtkUI["cded_chk_flac"].active? || GtkUI["cded_chk_ogg"].active?
-            @ripper.settings['flac'] = GtkUI["cded_chk_flac"].active?
-            @ripper.settings['flacsettings'] = "--best -V"
-            @ripper.settings['vorbis'] = GtkUI["cded_chk_ogg"].active?
-            @ripper.settings['vorbissettings'] = "-q 8"
-            Thread.new { @ripper.prepareRip }
-        else
-            GtkUtils.show_message("Faudrait p't'êt' sélectionner un format, non?", Gtk::MessageDialog::ERROR)
-        end
+    def query_and_merge
+        disc = @feeder.query_musicbrainz(Cfg.cd_device).disc
+        @disc.year = disc.year if @disc.year == 0
+        @disc.label = disc.label
+        @disc.catalog = disc.label
+        update_tv
     end
 
     def generate_sql
@@ -86,14 +86,13 @@ class CDEditorWindow
         @disc.label = GtkUI[GtkIDs::CDED_ENTRY_LABEL].text
         @disc.catalog = GtkUI[GtkIDs::CDED_ENTRY_CATALOG].text
 
-        @disc.tracks.each_with_index { |track, i|
+        @disc.tracks.each_with_index do |track, i|
             iter = @tv.model.get_iter(i.to_s)
             track.title = iter[1]
             track.segment = iter[2]
             track.artist = iter[3]
-        }
+        end
 
-#         SQLGenerator.new.process_record(@disc)
         DiscAnalyzer.process(@disc)
     end
 
@@ -119,7 +118,7 @@ class CDEditorWindow
     def add_audio_file(file)
         tags = TagLib::File.new(file)
 
-        track = TrackData.new
+        track = CDDataFeeder::TrackData.new
         track.track   = tags.track
         track.title   = tags.title
         track.segment = tags.album
@@ -131,11 +130,15 @@ class CDEditorWindow
         add_track(track)
     end
 
-    def setup_tv
+    def update_tv
+        @tv.model.clear
+
         GtkUI[GtkIDs::CDED_ENTRY_TITLE].text = @disc.title
         GtkUI[GtkIDs::CDED_ENTRY_ARTIST].text = @disc.artist
         GtkUI[GtkIDs::CDED_ENTRY_GENRE].text = @disc.genre
         GtkUI[GtkIDs::CDED_ENTRY_YEAR].text = @disc.year.to_s
+        GtkUI[GtkIDs::CDED_ENTRY_LABEL].text = @disc.label
+        GtkUI[GtkIDs::CDED_ENTRY_CATALOG].text = @disc.catalog
 
         @disc.tracks.each { |track| add_track(track) }
     end
@@ -144,41 +147,16 @@ class CDEditorWindow
         @window.show
     end
 
-    def edit_record()
-        @ripper = RipperClient.new(Cfg.cd_device)
-        disc = @ripper.settings['cd'] #Disc.new(Cfg.cd_device) # ("/dev/sr0")
-        if disc.md.nil?
-            GtkUtils.show_message("Y'a même pas d'CD dans ta croûte de pc, pauv' tanche!!!", Gtk::MessageDialog::INFO)
+    def edit_record
+        @feeder = CDDataFeeder.new
+        @disc = @feeder.query_freedb(Cfg.cd_device).disc
+#         @disc = feeder.query_musicbrainz(Cfg.cd_device).disc
+        if @disc.nil?
+            GtkUtils.show_message("Y'a un souci, mon gars... pas d'CD, pas de connection ou pas de résultat pour ta galette...", Gtk::MessageDialog::INFO)
             return Gtk::Dialog::RESPONSE_CANCEL
         end
 
-        #disc.md.freedb($rr_defaultSettings)
-        if disc.md.tracklist.size == 0
-            GtkUtils.show_message("Disc not found on freedb!", Gtk::MessageDialog::INFO)
-            return Gtk::Dialog::RESPONSE_CANCEL
-        end
-
-        @disc = DiscInfo.new
-        @disc.tracks = []
-        @disc.title = disc.md.album
-        @disc.artist = disc.md.artist
-        @disc.genre = disc.md.genre
-        @disc.year = disc.md.year
-        @disc.length = disc.mSecPT
-        @disc.cddbid = disc.freedbString.split()[0].hex.to_s
-        @disc.medium = Audio::MEDIA_CD
-
-        disc.audiotracks.times { |i|
-            track = TrackData.new
-            track.track = i+1
-            track.title = disc.md.tracklist[i]
-            track.segment = @disc.title
-            track.artist = disc.md.varArtists.empty? ? @disc.artist : disc.md.varArtists[i]
-            track.length = disc.mSecLength[i]
-            @disc.tracks << track
-        }
-
-        setup_tv
+        update_tv
         run
     end
 
@@ -186,8 +164,7 @@ class CDEditorWindow
         @mode = MODE_FILE
 
         tags = TagLib::File.new(file)
-        @disc = DiscInfo.new
-        @disc.tracks = []
+        @disc = CDDataFeeder::DiscInfo.new.reset
         @disc.title = tags.album
         @disc.artist = tags.artist
         @disc.genre = tags.genre
@@ -197,7 +174,7 @@ class CDEditorWindow
         @disc.medium = Audio::MEDIA_FILE
         tags.close
 
-        setup_tv
+        update_tv
 
         add_audio_file(file)
 
