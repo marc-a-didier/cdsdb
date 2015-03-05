@@ -148,6 +148,7 @@ module GtkIDs
     MM_PLAYER_SRC_PQ            = "mm_player_src_pq"
     MM_PLAYER_SRC_PLIST         = "mm_player_src_plist"
     MM_PLAYER_SRC_BROWSER       = "mm_player_src_browser"
+    MM_PLAYER_LEVEL_SPLIT       = "mm_player_level_split"
 
 
     # Tools menu

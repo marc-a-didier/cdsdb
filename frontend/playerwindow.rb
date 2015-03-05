@@ -416,12 +416,6 @@ class PlayerWindow < TopWindow
             rms = rms > MIN_LEVEL ? (METER_WIDTH*rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
 
             peak = peak > MIN_LEVEL ? (METER_WIDTH*peak / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
-            if peak >= METER_WIDTH
-                peak = METER_WIDTH-1
-                @gc.set_rgb_fg_color(OVR_PEAK_COLOR)
-            else
-                @gc.set_rgb_fg_color(STD_PEAK_COLOR)
-            end
 
             # draw_pixbuf Proto:
             #       draw_pixbuf(gc, copied pixbuf,
@@ -429,20 +423,67 @@ class PlayerWindow < TopWindow
             #                   dest (self) dest_x, dest (self) dest_y,
             #                   width, height, dither, x_dither, y_dither)
 
-            # Draws the lit part from zero upto the rms level
-            @mpix.draw_pixbuf(nil, @bright,
-                              10,  0,
-                              10,  Y_OFFSETS[channel],
-                              rms, 8,
-                              Gdk::RGB::DITHER_NONE, 0, 0)
-            # Draws the unlit part from rms level to the end
-            @mpix.draw_pixbuf(nil, @dark,
-                              rms+11,            0,
-                              rms+11,            Y_OFFSETS[channel],
-                              METER_WIDTH-rms+1, 8,
-                              Gdk::RGB::DITHER_NONE, 0, 0)
+            unless GtkUI[GtkIDs::MM_PLAYER_LEVEL_SPLIT].active?
+                if peak >= METER_WIDTH
+                    peak = METER_WIDTH-1
+                    @gc.set_rgb_fg_color(OVR_PEAK_COLOR)
+                else
+                    @gc.set_rgb_fg_color(STD_PEAK_COLOR)
+                end
 
-            @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
+                # Draws the lit part from zero upto the rms level
+                @mpix.draw_pixbuf(nil, @bright,
+                                10,  0,
+                                10,  Y_OFFSETS[channel],
+                                rms, 8,
+                                Gdk::RGB::DITHER_NONE, 0, 0)
+                # Draws the unlit part from rms level to the end
+                @mpix.draw_pixbuf(nil, @dark,
+                                rms+11,            0,
+                                rms+11,            Y_OFFSETS[channel],
+                                METER_WIDTH-rms+1, 8,
+                                Gdk::RGB::DITHER_NONE, 0, 0)
+
+                @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
+            else
+                peak = METER_WIDTH if peak > METER_WIDTH
+                
+                if channel == GStreamer::Player::LEFT_CHANNEL
+                    @mpix.draw_pixbuf(nil, @bright,
+                                      10,   0,
+                                      10,   Y_OFFSETS[channel],
+                                      peak, 8,
+                                      Gdk::RGB::DITHER_NONE, 0, 0)
+                    # Draws the unlit part from peak & rms level to the end
+                    @mpix.draw_pixbuf(nil, @dark,
+                                      peak+10,          0,
+                                      peak+10,          Y_OFFSETS[channel],
+                                      METER_WIDTH-peak, 4,
+                                      Gdk::RGB::DITHER_NONE, 0, 0)
+                    @mpix.draw_pixbuf(nil, @dark,
+                                      rms+11,            0,
+                                      rms+11,            Y_OFFSETS[channel]+4,
+                                      METER_WIDTH-rms+1, 4,
+                                      Gdk::RGB::DITHER_NONE, 0, 0)
+                else
+                    @mpix.draw_pixbuf(nil, @bright,
+                                      10,   0,
+                                      10,   Y_OFFSETS[channel],
+                                      peak, 8,
+                                      Gdk::RGB::DITHER_NONE, 0, 0)
+                    # Draws the unlit part from rms & peak level to the end
+                    @mpix.draw_pixbuf(nil, @dark,
+                                      rms+11,            0,
+                                      rms+11,            Y_OFFSETS[channel],
+                                      METER_WIDTH-rms+1, 4,
+                                      Gdk::RGB::DITHER_NONE, 0, 0)
+                    @mpix.draw_pixbuf(nil, @dark,
+                                      peak+10,          0,
+                                      peak+10,          Y_OFFSETS[channel]+4,
+                                      METER_WIDTH-peak, 4,
+                                      Gdk::RGB::DITHER_NONE, 0, 0)
+                end
+            end
         end
 
         # Draw image to screen
