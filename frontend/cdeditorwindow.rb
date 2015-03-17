@@ -64,7 +64,7 @@ class CDEditorWindow
     def swap_artists_titles
         # @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
         @tv.model.each do |model, path, iter|
-            artist, title = iter[1].split(" / ")
+            artist, title = iter[1].split(" - ")
             iter[1] = title
             iter[3] = artist
         end
@@ -74,7 +74,7 @@ class CDEditorWindow
         disc = @feeder.query_musicbrainz(Cfg.cd_device).disc
         @disc.year = disc.year if @disc.year == 0
         @disc.label = disc.label
-        @disc.catalog = disc.label
+        @disc.catalog = disc.catalog
         update_tv
     end
 

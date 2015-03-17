@@ -4,7 +4,7 @@ module Dialogs
     class DBSelector
 
         def initialize(dest_field)
-            @dbs = DBClass.class_from_symbol(dest_field).new
+            @dbs = DBClasses.class_from_symbol(dest_field).new
 
             GtkUI.load_window(GtkIDs::DBSEL_DIALOG)
             GtkUI[GtkIDs::DBSEL_TBBTN_ADD].signal_connect(:clicked)    { do_op_add }

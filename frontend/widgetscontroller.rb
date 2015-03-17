@@ -80,14 +80,14 @@ module XIntf
             @dbs = dbs
             @controls = {}
 
-            @dbs.members.each { |member|
-                GTK_HANDLERS.each { |ui_type, handler_proc|
+            @dbs.members.each do |member|
+                GTK_HANDLERS.each do |ui_type, handler_proc|
                     if GtkUI[prefix+ui_type+member.to_s]
                         @controls[member.to_s] = [GtkUI[prefix+ui_type+member.to_s], handler_proc]
                         break
                     end
-                }
-            }
+                end
+            end
         end
 
         def field_to_widget(field)
@@ -120,7 +120,7 @@ module XIntf
             value = Dialogs::DBSelector.new(dest_field).run
             if value
                 @dbs[dest_field] = value
-                self.field_to_widget(dest_field)
+                self.field_to_widget(dest_field.to_s)
             end
         end
     end
