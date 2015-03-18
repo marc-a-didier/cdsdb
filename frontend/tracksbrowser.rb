@@ -56,14 +56,23 @@ class TracksBrowser < Gtk::TreeView
         pixcol.set_cell_data_func(pix) { |column, cell, model, iter| cell.pixbuf = iter.get_value(TTV_PIX) }
 
         colNames = ["Ref.", "Track", "Title", "Play time", "Artist"]
+        title_col = Gtk::TreeViewColumn.new(colNames[2], renderer, :text => TTV_TITLE)
         append_column(Gtk::TreeViewColumn.new(colNames[0], Gtk::CellRendererText.new, :text => TTV_REF))
         append_column(pixcol)
         append_column(Gtk::TreeViewColumn.new(colNames[1], Gtk::CellRendererText.new, :text => TTV_ORDER))
-        append_column(Gtk::TreeViewColumn.new(colNames[2], renderer, :text => TTV_TITLE))
+        append_column(title_col)
         append_column(Gtk::TreeViewColumn.new(colNames[3], Gtk::CellRendererText.new, :text => TTV_PLAY_TIME))
         append_column(Gtk::TreeViewColumn.new(colNames[4], Gtk::CellRendererText.new, :text => TTV_ART_OR_SEG))
         (TTV_ORDER..TTV_PLAY_TIME).each { |i| columns[i].resizable = true }
         columns[TTV_ART_OR_SEG].visible = false
+
+        title_col.set_cell_data_func(renderer) do |col, renderer, model, iter|
+            green = iter[TTV_DATA].track.iplayed
+            green = 255 if green > 255
+            renderer.set_foreground(sprintf('#00%02x00', green))
+#             other = 255-green
+#             renderer.set_background(sprintf('#%02x%02x%02x', other, green, other))
+        end
 
         enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
                                    [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
