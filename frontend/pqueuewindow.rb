@@ -67,12 +67,16 @@ class PQueueWindow < TopWindow
             row = @tvpq.get_dest_row(x, y) # Returns: [path, position] or nil
             if row && tool_tip && tool_tip.is_a?(Gtk::Tooltip)
                 link = @plq.get_iter(row[0])[4].xlink
-                unless @last_tool_tip.link == link
-                    @last_tool_tip.link = link
-                    @last_tool_tip.text = link.markup_tooltip
+                if link
+                    unless @last_tool_tip.link == link
+                        @last_tool_tip.link = link
+                        @last_tool_tip.text = link.markup_tooltip
+                    end
+                    tool_tip.set_markup(@last_tool_tip.text)
+                    true
+                else
+                    false
                 end
-                tool_tip.set_markup(@last_tool_tip.text)
-                true
             else
                 false
             end

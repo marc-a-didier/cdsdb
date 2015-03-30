@@ -83,17 +83,26 @@ class PListsWindow < TopWindow
         @tvpt = GtkUI[GtkIDs::TV_PLTRACKS]
         @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class, Integer)
 
-        ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index { |name, i|
+        ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index do |name, i|
             @tvpt.append_column(Gtk::TreeViewColumn.new(name, trk_renderer, :text => i))
             if i == 3 || i == 4
-                @tvpt.columns[i].set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[i].to_s }
+                @tvpt.columns[i].set_cell_data_func(trk_renderer) do |col, renderer, model, iter|
+                    if i == 3
+                        green = iter[TT_DATA].track.iplayed
+                        green = 255 if green > 255
+                        renderer.set_foreground(sprintf('#00%02x00', green))
+                    else
+                        renderer.set_foreground('black')
+                    end
+                    renderer.markup = iter[i]
+                end
             end
             @tvpt.columns[i].resizable = true
             if i > 0
                 @tvpt.columns[i].clickable = true
                 @tvpt.columns[i].signal_connect(:clicked) { reorder_pltracks(i) }
             end
-        }
+        end
         @tvpt.columns[TT_TRACK].visible = false # Hide the track order, screen space wasted...
 
         @tvpt.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 0) }
@@ -117,12 +126,16 @@ class PListsWindow < TopWindow
             row = @tvpt.get_dest_row(x, y) # Returns: [path, position] or nil
             if row && tool_tip && tool_tip.is_a?(Gtk::Tooltip)
                 link = @pts.get_iter(row[0])[TT_DATA]
-                unless @last_tool_tip.link == link
-                    @last_tool_tip.link = link
-                    @last_tool_tip.text = link.markup_tooltip
+                if link
+                    unless @last_tool_tip.link == link
+                        @last_tool_tip.link = link
+                        @last_tool_tip.text = link.markup_tooltip
+                    end
+                    tool_tip.set_markup(@last_tool_tip.text)
+                    true
+                else
+                    false
                 end
-                tool_tip.set_markup(@last_tool_tip.text)
-                true
             else
                 false
             end

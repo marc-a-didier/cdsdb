@@ -194,7 +194,7 @@ class MusicServer
             file_name = File.expand_path(Cfg.database_dir+File.basename(file_name))
         elsif file_name.index("/Music/").nil? && file_name.index(Cfg.rsrc_dir).nil?
             Log.warn("Attempt to download file #{file_name} from #{ip_address(session)}")
-            session.puts("Fucked up...")
+            session.puts(Cfg::MSG_FUCKED)
             return
         end
         Log.info("Sending file #{file_name} in #{block_size} bytes chunks to #{hostname(session)}")

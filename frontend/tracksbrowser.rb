@@ -75,13 +75,12 @@ class TracksBrowser < Gtk::TreeView
         end
 
         enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
-                                   [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
-                                   Gdk::DragContext::ACTION_COPY)
-        signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
+                                 [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
+                                 Gdk::DragContext::ACTION_COPY)
+        signal_connect(:drag_data_get) do |widget, drag_context, selection_data, info, time|
             tracks = "tracks:message:get_tracks_selection"
-#             @tv.selection.selected_each { |model, path, iter| tracks += ":"+iter[0].to_s }
             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
-        }
+        end
 
         self.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, Integer, String, String, String, Class)
 
@@ -101,13 +100,13 @@ class TracksBrowser < Gtk::TreeView
         GtkUI[GtkIDs::TRK_POPUP_ENQUEUE].signal_connect(:activate)   { on_trk_enqueue(false) }
         GtkUI[GtkIDs::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
 
-        GtkUI[GtkIDs::TRK_POPUP_AUDIOINFO].signal_connect(:activate) {
+        GtkUI[GtkIDs::TRK_POPUP_AUDIOINFO].signal_connect(:activate) do
             if @trklnk.valid_track_ref? && @trklnk.playable?
                 Dialogs::Audio.run(@trklnk.audio_file)
             else
                 GtkUtils.show_message("File not found!", Gtk::MessageDialog::ERROR)
             end
-        }
+        end
         GtkUI[GtkIDs::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
             Dialogs::PlayHistory.show_track(@trklnk.track.rtrack)
         }
@@ -133,11 +132,11 @@ class TracksBrowser < Gtk::TreeView
                 smtpm = Gtk::Menu.new
                 items = []
                 if @mc.record.segmented?
-                    DBIntf.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") { |row|
+                    DBIntf.execute("SELECT stitle FROM segments WHERE rrecord=#{@trklnk.track.rrecord}") do |row|
                         items << Gtk::MenuItem.new(row[0], false)
                         items.last.signal_connect(:activate) { |widget| on_trk_segment_assign(widget) }
                         smtpm.append(items.last)
-                    }
+                    end
                 else
                     items << Gtk::MenuItem.new(@mc.record.stitle, false)
                     items.last.signal_connect(:activate) { |widget| on_trk_assign_first_segment(widget) }
@@ -154,11 +153,11 @@ class TracksBrowser < Gtk::TreeView
             if DBIntf.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
                 pltpm = Gtk::Menu.new
                 items = []
-                DBIntf.execute("SELECT sname FROM plists ORDER BY sname;") { |row|
+                DBIntf.execute("SELECT sname FROM plists ORDER BY sname;") do |row|
                     items << Gtk::MenuItem.new(row[0], false)
                     items.last.signal_connect(:activate) { |widget| on_trk_add_to_pl(widget) }
                     pltpm.append(items.last)
-                }
+                end
                 GtkUI[GtkIDs::TRK_POPUP_ADDTOPL].submenu = pltpm
                 pltpm.show_all
             end
@@ -166,12 +165,12 @@ class TracksBrowser < Gtk::TreeView
             @mc.update_tags_menu(self, GtkUI[GtkIDs::TRK_POPUP_TAGS])
 
             download_enabled = false
-            selection.selected_each { |model, path, iter|
+            selection.selected_each do |model, path, iter|
                 if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                     download_enabled = true
                     break
                 end
-            } if self.selection
+            end if self.selection
             GtkUI[GtkIDs::TRK_POPUP_DOWNLOAD].sensitive = download_enabled
 
 
@@ -297,11 +296,11 @@ class TracksBrowser < Gtk::TreeView
         check_on_server = false
 
         # Get local files first and stores the state of each track
-        model.each { |model, path, iter|
+        model.each do |model, path, iter|
             if iter[TTV_DATA].audio_status.nil? || iter[TTV_DATA].audio_status == Audio::Status::UNKNOWN
                 check_on_server = true if iter[TTV_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
             end
-        }
+        end
 
         # If client mode and some or all files not found, ask if present on the server
         if Cfg.remote? && check_on_server
@@ -309,10 +308,10 @@ class TracksBrowser < Gtk::TreeView
             tracks = ""
             model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
             # Replace each file not found state with server state
-            MusicClient.check_multiple_audio(tracks).each_with_index { |found, i|
+            MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
                 iter = model.get_iter(i.to_s)
                 iter[TTV_DATA].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_DATA].audio_status == Audio::Status::NOT_FOUND) && found != '0'
-            }
+            end
         end
 
         # Update tracks icons
@@ -453,12 +452,12 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_trk_segment_assign(widget)
-        selection.selected_each { |model, path, iter|
+        selection.selected_each do |model, path, iter|
             rsegment = DBIntf.get_first_value(
                                "SELECT rsegment FROM segments " \
                                "WHERE rrecord=#{@track.rrecord} AND stitle=#{widget.child.label.to_sql}")
             DBUtils.client_sql("UPDATE tracks SET rsegment=#{rsegment} WHERE rtrack=#{iter[TTV_REF]}")
-        }
+        end
     end
 
     def on_trk_assign_first_segment(widget)
@@ -507,20 +506,20 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_download_trk
-        selection.selected_each { |model, path, iter|
+        selection.selected_each do |model, path, iter|
             if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
-        }
+        end
     end
 
     def download_tracks(use_selection)
         meth = use_selection ? selection.method(:selected_each) : model.method(:each)
-        meth.call { |model, path, iter|
+        meth.call do |model, path, iter|
             if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end
-        }
+        end
     end
 
 
