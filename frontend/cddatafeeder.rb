@@ -77,16 +77,16 @@ class CDDataFeeder
             found = page.css('h2') && page.css('h2').text == "Matching CDs"
             if found && page.css('table')
                 table = page.css('table')
-                @disc.title = table.css('td')[1].text
-                @disc.artist = table.css('td')[2].text
+                @disc.title = table.css('td')[1].text.gsub(/’/, "'")
+                @disc.artist = table.css('td')[2].text.gsub(/’/, "'")
                 @disc.year = table.css('td')[4].text.split("-")[0].to_i
-                @disc.label = table.css('td')[6].text
-                @disc.catalog = table.css('td')[7].text
+                @disc.label = table.css('td')[6].text.gsub(/’/, "'")
+                @disc.catalog = table.css('td')[7].text.gsub(/’/, "'")
                 if refs = table.css('a[href]')
                     rec_ref = refs[0].attributes['href'].value.split("/").last
                     MusicBrainz::Release.find(rec_ref).tracks.each_with_index do |track, i|
-                        @disc.tracks[i].title = track.title
-                        @disc.tracks[i].artist = track.respond_to?(:artist) ? track.artist : @disc.artist
+                        @disc.tracks[i].title = track.title.gsub(/’/, "'")
+                        @disc.tracks[i].artist = track.respond_to?(:artist) ? track.artist.gsub(/’/, "'") : @disc.artist
                         @disc.tracks[i].segment = @disc.title
                     end
                 else
@@ -116,8 +116,8 @@ class CDDataFeeder
             if fdb.results.size > 0
                 fdb.get_result(0)
 
-                @disc.title = fdb.title.force_encoding('iso-8859-1').encode('utf-8')
-                @disc.artist = fdb.artist.force_encoding('iso-8859-1').encode('utf-8')
+                @disc.title = fdb.title.force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'")
+                @disc.artist = fdb.artist.force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'")
                 @disc.year = fdb.year
                 @disc.genre = fdb.category
 
@@ -125,9 +125,9 @@ class CDDataFeeder
                 fdb.tracks.each { |track| is_compile &= track['title'].match(/.+\/.+/) } if is_compile
 
                 fdb.tracks.each_with_index do |track, i|
-                    title = track['title'].force_encoding('iso-8859-1').encode('utf-8')
+                    title = track['title'].force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'")
                     @disc.tracks[i].title = is_compile ? title.split('/')[1] : title
-                    @disc.tracks[i].artist = is_compile ? title.split('/')[0] : @disc.artist
+                    @disc.tracks[i].artist = is_compile ? title.split('/')[0].gsub(/’/, "'") : @disc.artist
                     @disc.tracks[i].segment = @disc.title
                 end
             else
