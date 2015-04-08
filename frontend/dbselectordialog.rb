@@ -27,7 +27,7 @@ module Dialogs
         def on_tv_edited(widget, path, new_text)
             return if @tv.selection.selected[1] == new_text
 
-            @dbs[0], @dbs[1] = @tv.selection.selected[1], new_text
+            @dbs[0], @dbs[1] = @tv.selection.selected[0], new_text
             @dbs.sql_update
 
             @tv.selection.selected[1] = new_text
