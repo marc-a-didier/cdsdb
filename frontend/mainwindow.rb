@@ -112,7 +112,8 @@ class MainWindow < TopWindow
         @search_dlg   = nil
 
         # Reload windows state from the last session BEFORE connecting signals
-        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| Prefs.load_menu_state(GtkUI[menu]) }
+        [MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU,
+         MM_VIEW_ST, MM_PLAYER_SRC].each { |menu| Prefs.load_menu_state(GtkUI[menu]) }
 
 
         #
@@ -128,7 +129,9 @@ class MainWindow < TopWindow
         GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { Dialogs::Preferences.run; @mc.tasks.check_config }
 
 
-        GtkUI[MM_VIEW_BYRATING].signal_connect(:activate) { @mc.record_changed   }
+        [MM_VIEW_BYNUMBER, MM_VIEW_BYRATING, MM_VIEW_BYPLAYCOUNT].map { |item|
+            GtkUI[item].signal_connect(:activate) { @mc.record_changed   }
+        }
         GtkUI[MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
         GtkUI[MM_VIEW_DBREFS].signal_connect(:activate)   { set_dbrefs_visibility }
 

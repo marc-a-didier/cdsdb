@@ -94,7 +94,7 @@ module Prefs
     def self.load_menu_state(menu)
         return if Cfg.menus[menu.builder_name].nil?
         Cfg.menus[menu.builder_name].each do |obj, msg|
-            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) }
+            msg.each { |method, params| GtkUI[obj].send(method.to_sym, *params) if GtkUI[obj] }
         end
     end
 

@@ -49,7 +49,8 @@ class MasterController
     def clean_up
         @player.terminate
 
-        [VIEW_MENU, MM_WIN_MENU, MM_EDIT_MENU, MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| Prefs.save_menu_state(GtkUI[menu]) }
+        [VIEW_MENU, MM_VIEW_ST, MM_WIN_MENU, MM_EDIT_MENU,
+         MM_PLAYER_MENU, MM_PLAYER_SRC].each { |menu| Prefs.save_menu_state(GtkUI[menu]) }
 
         Prefs.save_windows([MAIN_WINDOW, PLISTS_WINDOW, PLAYER_WINDOW, PQUEUE_WINDOW,
                             CHARTS_WINDOW, FILTER_WINDOW, TASKS_WINDOW, MEMOS_WINDOW])
