@@ -2,6 +2,7 @@
 
 class TracksBrowser < Gtk::TreeView
 
+    include PlayerIntf
     include PlayerIntf::Browser
 
     TTV_REF         = 0
@@ -221,6 +222,10 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def load_entries
+        # if no artist, we're probably trying to load but there's no reference.
+        # example: change track view mode while no selection has been made in the browser.
+        return self unless @mc.artist
+
         model.clear
 
         columns[TTV_ART_OR_SEG].visible = @mc.artist.compile? ||
