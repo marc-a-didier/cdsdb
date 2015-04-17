@@ -375,7 +375,7 @@ class MainWindow < TopWindow
     #
     #
     def on_update_db
-        if Socket.gethostname.match("madD510|192.168.1.14") || !Cfg.remote?
+        unless Cfg.remote?
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end

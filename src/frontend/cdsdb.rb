@@ -94,7 +94,6 @@ require './mainwindow'
 require './mastercontroller'
 
 require './cddatafeeder'
-# require './my_rr_lib'
 
 
 # DONE: implementer un player via gstreamer (quand la doc sera a jour!)
@@ -289,13 +288,8 @@ class Cdsdb
 
     VERSION = "0.9.5"
 
-    def has_arg(arg)
-        ARGV.each { |the_arg| return true if the_arg == arg }
-        return false
-    end
-
     def initialize
-        Cfg.admin = has_arg("--admin")
+        Cfg.admin = ARGV.detect { |arg| arg == "--admin" }
 
         DBIntf.execute("PRAGMA synchronous=OFF;")
 
