@@ -79,7 +79,7 @@ module Cfg
         end
 
 
-        SERVER_RSRC_DIR = "../../"
+        SERVER_RSRC_DIR = File.join(File.dirname(__FILE__), "../../")
         PREFS_FILE      = "prefs.yml"
         LOG_FILE        = "cdsdb.log"
 
@@ -92,7 +92,7 @@ module Cfg
                                 PREFS_FC_MUSICDIR          => { "current_folder=" => ENV['HOME']+"/Music/" },
                                 PREFS_FC_RSRCDIR           => { "current_folder=" => "./../../" },
                                 PREFS_CD_DEVICE            => { "text=" => "/dev/cdrom" },
-                                PREFS_ENTRY_SERVER         => { "text=" => "madd510" },
+                                PREFS_ENTRY_SERVER         => { "text=" => "madAM1H" },
                                 PREFS_ENTRY_PORT           => { "text=" => "32666" },
                                 PREFS_ENTRY_BLKSIZE        => { "text=" => "262144" },
                                 PREFS_CB_SYNCCOMMS         => { "active=" => false },
