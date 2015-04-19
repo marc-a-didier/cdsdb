@@ -2,6 +2,12 @@
 <interface>
   <requires lib="gtk+" version="2.22"/>
   <!-- interface-naming-policy project-wide -->
+  <object class="GtkListStore" id="trked_lstore_rating">
+    <columns>
+      <!-- column-name item -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkDialog" id="dlg_db_editor">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -19,7 +25,6 @@
             <child>
               <object class="GtkButton" id="dbed_btn_ok">
                 <property name="label">gtk-ok</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -34,7 +39,6 @@
             <child>
               <object class="GtkButton" id="dbed_btn_cancel">
                 <property name="label">gtk-cancel</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -171,7 +175,6 @@
                 <child>
                   <object class="GtkButton" id="arted_btn_origin">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -182,7 +185,7 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">1</property>
                     <property name="bottom_attach">2</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -238,10 +241,13 @@
               <object class="GtkTable" id="table1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="n_rows">17</property>
+                <property name="n_rows">20</property>
                 <property name="n_columns">3</property>
                 <property name="column_spacing">2</property>
                 <property name="row_spacing">1</property>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -303,7 +309,6 @@
                 <child>
                   <object class="GtkButton" id="reced_btn_artist">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -444,7 +449,6 @@
                 <child>
                   <object class="GtkButton" id="reced_btn_ptime">
                     <property name="label" translatable="yes">Update</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">60</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -455,7 +459,7 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">4</property>
                     <property name="bottom_attach">5</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                   </packing>
                 </child>
                 <child>
@@ -493,7 +497,6 @@
                 <child>
                   <object class="GtkButton" id="reced_btn_label">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -504,7 +507,7 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">5</property>
                     <property name="bottom_attach">6</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                   </packing>
                 </child>
                 <child>
@@ -604,7 +607,6 @@
                 <child>
                   <object class="GtkButton" id="reced_btn_medium">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -615,7 +617,7 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">8</property>
                     <property name="bottom_attach">9</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                   </packing>
                 </child>
                 <child>
@@ -715,7 +717,6 @@
                 <child>
                   <object class="GtkButton" id="reced_btn_collection">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -726,7 +727,7 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">11</property>
                     <property name="bottom_attach">12</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                   </packing>
                 </child>
                 <child>
@@ -792,37 +793,8 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="reced_lbl_segmented">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="xalign">1</property>
-                    <property name="label" translatable="yes">Segmented</property>
-                  </object>
-                  <packing>
-                    <property name="top_attach">14</property>
-                    <property name="bottom_attach">15</property>
-                    <property name="x_options">GTK_FILL</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkCheckButton" id="reced_cb_iissegmented">
-                    <property name="use_action_appearance">False</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">14</property>
-                    <property name="bottom_attach">15</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkButton" id="reced_btn_genre">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -833,8 +805,17 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">3</property>
                     <property name="bottom_attach">4</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkLabel" id="reced_lbl_dbref">
@@ -844,8 +825,8 @@
                     <property name="label" translatable="yes">DB Ref.</property>
                   </object>
                   <packing>
-                    <property name="top_attach">16</property>
-                    <property name="bottom_attach">17</property>
+                    <property name="top_attach">19</property>
+                    <property name="bottom_attach">20</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -863,8 +844,8 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">16</property>
-                    <property name="bottom_attach">17</property>
+                    <property name="top_attach">19</property>
+                    <property name="bottom_attach">20</property>
                   </packing>
                 </child>
                 <child>
@@ -875,8 +856,8 @@
                     <property name="label" translatable="yes">Record link</property>
                   </object>
                   <packing>
-                    <property name="top_attach">15</property>
-                    <property name="bottom_attach">16</property>
+                    <property name="top_attach">18</property>
+                    <property name="bottom_attach">19</property>
                     <property name="x_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -894,12 +875,123 @@
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
+                    <property name="top_attach">18</property>
+                    <property name="bottom_attach">19</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="reced_lbl_segmented">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Segmented</property>
+                  </object>
+                  <packing>
+                    <property name="top_attach">17</property>
+                    <property name="bottom_attach">18</property>
+                    <property name="x_options">GTK_FILL</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="reced_cb_iissegmented">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">17</property>
+                    <property name="bottom_attach">18</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="reced_lbl_tracks">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Tracks</property>
+                  </object>
+                  <packing>
+                    <property name="top_attach">14</property>
+                    <property name="bottom_attach">15</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="reced_entry_itrackscount">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">14</property>
+                    <property name="bottom_attach">15</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="reced_lbl_gain">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Gain</property>
+                  </object>
+                  <packing>
                     <property name="top_attach">15</property>
                     <property name="bottom_attach">16</property>
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <object class="GtkEntry" id="reced_entry_igain">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">15</property>
+                    <property name="bottom_attach">16</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="reced_lbl_peak">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="xalign">1</property>
+                    <property name="label" translatable="yes">Peak</property>
+                  </object>
+                  <packing>
+                    <property name="top_attach">16</property>
+                    <property name="bottom_attach">17</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="reced_entry_ipeak">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">True</property>
+                    <property name="secondary_icon_sensitive">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">16</property>
+                    <property name="bottom_attach">17</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -970,7 +1062,6 @@
                 <child>
                   <object class="GtkButton" id="seged_btn_artist">
                     <property name="label" translatable="yes">...</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">30</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -979,7 +1070,7 @@
                   <packing>
                     <property name="left_attach">2</property>
                     <property name="right_attach">3</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -1086,7 +1177,6 @@
                 <child>
                   <object class="GtkButton" id="seged_btn_ptime">
                     <property name="label" translatable="yes">Update</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="width_request">60</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -1097,7 +1187,7 @@
                     <property name="right_attach">3</property>
                     <property name="top_attach">3</property>
                     <property name="bottom_attach">4</property>
-                    <property name="x_options"></property>
+                    <property name="x_options"/>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
                 </child>
@@ -1191,59 +1281,10 @@
                   <object class="GtkTable" id="table6">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="n_rows">10</property>
+                    <property name="n_rows">12</property>
                     <property name="n_columns">2</property>
                     <property name="column_spacing">2</property>
                     <property name="row_spacing">1</property>
-                    <child>
-                      <object class="GtkEntry" id="trked_entry_rrecord">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="invisible_char">●</property>
-                        <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">7</property>
-                        <property name="bottom_attach">8</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="trked_lbl_segref">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="xalign">1</property>
-                        <property name="label" translatable="yes">Segment Ref.</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">8</property>
-                        <property name="bottom_attach">9</property>
-                        <property name="x_options">GTK_FILL</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="trked_entry_rsegment">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="invisible_char">●</property>
-                        <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">8</property>
-                        <property name="bottom_attach">9</property>
-                      </packing>
-                    </child>
                     <child>
                       <object class="GtkLabel" id="trked_lbl_title">
                         <property name="visible">True</property>
@@ -1440,50 +1481,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="trked_lbl_recref">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="xalign">1</property>
-                        <property name="label" translatable="yes">Record Ref.</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">7</property>
-                        <property name="bottom_attach">8</property>
-                        <property name="x_options">GTK_FILL</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="trked_lbl_dbref">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="xalign">1</property>
-                        <property name="label" translatable="yes">DB Ref.</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">9</property>
-                        <property name="bottom_attach">10</property>
-                        <property name="x_options">GTK_FILL</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="trked_entry_rtrack">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="invisible_char">●</property>
-                        <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">9</property>
-                        <property name="bottom_attach">10</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkComboBox" id="trked_cmb_irating">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -1501,6 +1498,157 @@
                         <property name="right_attach">2</property>
                         <property name="top_attach">6</property>
                         <property name="bottom_attach">7</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="trked_lbl_dbref">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">1</property>
+                        <property name="label" translatable="yes">DB Ref.</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">11</property>
+                        <property name="bottom_attach">12</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="trked_entry_rtrack">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">●</property>
+                        <property name="invisible_char_set">True</property>
+                        <property name="primary_icon_activatable">False</property>
+                        <property name="secondary_icon_activatable">False</property>
+                        <property name="primary_icon_sensitive">True</property>
+                        <property name="secondary_icon_sensitive">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">11</property>
+                        <property name="bottom_attach">12</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="trked_lbl_segref">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">1</property>
+                        <property name="label" translatable="yes">Segment Ref.</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">10</property>
+                        <property name="bottom_attach">11</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="trked_entry_rsegment">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">●</property>
+                        <property name="invisible_char_set">True</property>
+                        <property name="primary_icon_activatable">False</property>
+                        <property name="secondary_icon_activatable">False</property>
+                        <property name="primary_icon_sensitive">True</property>
+                        <property name="secondary_icon_sensitive">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">10</property>
+                        <property name="bottom_attach">11</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="trked_lbl_recref">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">1</property>
+                        <property name="label" translatable="yes">Record Ref.</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">9</property>
+                        <property name="bottom_attach">10</property>
+                        <property name="x_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="trked_entry_rrecord">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">●</property>
+                        <property name="invisible_char_set">True</property>
+                        <property name="primary_icon_activatable">False</property>
+                        <property name="secondary_icon_activatable">False</property>
+                        <property name="primary_icon_sensitive">True</property>
+                        <property name="secondary_icon_sensitive">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">9</property>
+                        <property name="bottom_attach">10</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="trked_lbl_gain">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">1</property>
+                        <property name="label" translatable="yes">Gain</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">7</property>
+                        <property name="bottom_attach">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="trked_entry_igain">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">●</property>
+                        <property name="primary_icon_activatable">False</property>
+                        <property name="secondary_icon_activatable">False</property>
+                        <property name="primary_icon_sensitive">True</property>
+                        <property name="secondary_icon_sensitive">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">7</property>
+                        <property name="bottom_attach">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="trked_lbl_peak">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="xalign">1</property>
+                        <property name="label" translatable="yes">Peak</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">8</property>
+                        <property name="bottom_attach">9</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="trked_entry_ipeak">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">●</property>
+                        <property name="primary_icon_activatable">False</property>
+                        <property name="secondary_icon_activatable">False</property>
+                        <property name="primary_icon_sensitive">True</property>
+                        <property name="secondary_icon_sensitive">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">8</property>
+                        <property name="bottom_attach">9</property>
                       </packing>
                     </child>
                   </object>
@@ -1588,11 +1736,5 @@
       <action-widget response="-5">dbed_btn_ok</action-widget>
       <action-widget response="-6">dbed_btn_cancel</action-widget>
     </action-widgets>
-  </object>
-  <object class="GtkListStore" id="trked_lstore_rating">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
   </object>
 </interface>

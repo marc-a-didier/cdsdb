@@ -94,6 +94,7 @@ module DiscAnalyzer
         record.rmedia = disc.medium
         record.idateadded = Time.now.to_i
         record.iissegmented = is_segmented ? 1 : 0
+        record.itrackscount = disc.tracks.size
         f.puts(record.generate_insert)
 
         # Generate insert statement for each segment

@@ -20,5 +20,7 @@ module Audio
         UNKNOWN   = 4 # Should be default value, no check has been made
     end
 
+    # Value needed to divide the gain and peak values from db
+    # to fall back to gst usable values as they're stored as int in the db
     GAIN_FACTOR = 10000.0
 end
