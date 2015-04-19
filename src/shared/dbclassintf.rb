@@ -147,7 +147,7 @@ module DBClasses
     Record = Struct.new(:rrecord, :icddbid, :rartist, :stitle, :iyear, :rlabel,
                         :rgenre, :rmedia, :rcollection, :iplaytime, :isetorder, :isetof,
                         :scatalog, :mnotes, :idateadded, :idateripped, :iissegmented, :irecsymlink,
-                        :ipeak, :igain) do
+                        :ipeak, :igain, :itrackscount) do
 
         include SQLintf
 

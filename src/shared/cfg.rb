@@ -84,7 +84,7 @@ module Cfg
         LOG_FILE        = "cdsdb.log"
 
 
-        DEF_CONFIG = {  "dbversion" => "6.0",
+        DEF_CONFIG = {  "dbversion" => "6.2",
                         WINDOWS => {
                             PREFS_DIALOG => {
                                 PREFS_CB_SHOWNOTIFICATIONS => { "active=" => true },
