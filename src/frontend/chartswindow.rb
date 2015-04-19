@@ -28,14 +28,22 @@ class ChartsWindow < TopWindow
     COLUMNS_TITLES = ["Track", "Record", "Artist", "Country", "Genre"]
     COL_PIX_TITLES = ["Cover", "Cover", "Country", "", ""]
 
-    COL_ENTRY  = 0
-    COL_RANK   = 1
+#     COL_ENTRY  = 0
+#     COL_RANK   = 1
+#     COL_PIX    = 2
+#     COL_TEXT   = 3
+#     COL_PLAYED = 4
+#     COL_REF    = 5
+
+#     COL_ENTRY  = 0
+    COL_RANK   = 0
+    COL_PLAYED = 1
     COL_PIX    = 2
     COL_TEXT   = 3
-    COL_PLAYED = 4
-    COL_REF    = 5
+    COL_REF    = 4
 
-    ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :xlink)
+#     ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :xlink)
+    ChartEntry = Struct.new(:rank, :played, :pix, :title, :ref, :xlink)
 
     def initialize(mc)
         super(mc, CHARTS_WINDOW)
@@ -81,7 +89,10 @@ class ChartsWindow < TopWindow
         srenderer = Gtk::CellRendererText.new()
         @tvc = GtkUI[CHARTS_TV]
         # Columns: Entry, Rank, cover, title, played -- Hidden: ref
-        @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, String, Integer)
+#         @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, String, Integer)
+        # Columns: Rank, played, cover, title, -- Hidden: ref
+#         @lsc = Gtk::ListStore.new(String, String, Gdk::Pixbuf, String, Integer)
+        @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, Integer)
 
         pix = Gtk::CellRendererPixbuf.new
         pixcol = Gtk::TreeViewColumn.new("Cover")
@@ -92,11 +103,12 @@ class ChartsWindow < TopWindow
         trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
         trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[COL_TEXT] }
 
-        @tvc.append_column(Gtk::TreeViewColumn.new("Entry", srenderer, :text => COL_ENTRY))
+#         @tvc.append_column(Gtk::TreeViewColumn.new("Entry", srenderer, :text => COL_ENTRY))
         @tvc.append_column(Gtk::TreeViewColumn.new("Rank", srenderer, :text => COL_RANK))
+        @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
         @tvc.append_column(pixcol)
         @tvc.append_column(trk_column)
-        @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
+#         @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
 
         @tvc.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvc.signal_connect(:drag_data_get) do |widget, drag_context, selection_data, info, time|
@@ -124,7 +136,8 @@ class ChartsWindow < TopWindow
     end
 
     def entry_from_selection
-        return @entries[@tvc.selection.selected[COL_ENTRY]-1]
+#         return @entries[@tvc.selection.selected[COL_ENTRY]-1]
+        return @entries[@tvc.selection.selected.to_s.to_i]
     end
 
     def show_history
@@ -137,7 +150,8 @@ class ChartsWindow < TopWindow
         links = []
         ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-            links << @entries[@tvc.selection.selected[COL_ENTRY]-1].xlink #.clone
+#             links << @entries[@tvc.selection.selected[COL_ENTRY]-1].xlink #.clone
+            links << entry_from_selection.xlink #.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
             DBIntf.execute(sql) { |row| links << XIntf::Link.new.set_track_ref(row[0]).set_use_of_record_gain }
@@ -158,10 +172,12 @@ class ChartsWindow < TopWindow
         # By calling enqueue only once with all links it reduce all the
         # messaging system to only one call.
         links = []
-        selection = @tvc.selection.selected[COL_ENTRY]-1
-        @entries.each do |entry|
-            links << entry.xlink if entry.entry >= selection
-            break if entry.entry >= Cfg.max_items
+        selection = entry_from_selection #@tvc.selection.selected[COL_ENTRY]-1
+        @entries.each_with_index do |entry, i|
+#             links << entry.xlink if entry.entry >= selection
+            links << entry.xlink if i >= selection
+#             break if entry.entry >= Cfg.max_items
+            break if i >= Cfg.max_items
         end
         @mc.pqueue.enqueue(links)
     end
@@ -219,6 +235,7 @@ class ChartsWindow < TopWindow
         #
         field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
         field += " AS totplayed"
+        field = "MIN(tracks.iplayed) AS minplayed" if @view_type == VIEW_RECORDS && @count_type == COUNT_PLAYED
         case @view_type
             when VIEW_TRACKS
                 sql = %Q{SELECT #{field}, tracks.rtrack, tracks.rrecord, records.irecsymlink, tracks.stitle,
@@ -235,7 +252,8 @@ class ChartsWindow < TopWindow
                 sql = "SELECT #{field}, records.rrecord, records.stitle, records.irecsymlink, artists.sname FROM tracks " \
                       "INNER JOIN records ON tracks.rrecord=records.rrecord " \
                       "INNER JOIN artists ON artists.rartist=records.rartist " \
-                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
+#                       "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
+                      "LEFT JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
                       "WHERE tracks.iplayed > 0 "
                 group_by = "records.rrecord"
             when VIEW_ARTISTS
@@ -271,7 +289,13 @@ class ChartsWindow < TopWindow
                 group_by = "records.rlabel"
         end
         sql += @filter unless @filter.empty?
-        sql += "GROUP BY #{group_by} ORDER BY totplayed DESC LIMIT #{Cfg.max_items+50};"
+        sql += "GROUP BY #{group_by} "
+        if @view_type == VIEW_RECORDS && @count_type == COUNT_PLAYED
+            sql += "HAVING minplayed > 0 AND records.itrackscount > 1 "
+            sql += "ORDER BY minplayed DESC LIMIT #{Cfg.max_items+50};"
+        else
+            sql += "ORDER BY totplayed DESC LIMIT #{Cfg.max_items+50};"
+        end
 # p sql
         return  sql
     end
@@ -285,7 +309,7 @@ class ChartsWindow < TopWindow
         last_played = -1
         DBIntf.execute(generate_sql) do |row|
             entry = ChartEntry.new
-            entry.entry = i
+#             entry.entry = i
             entry.played = row[0].to_i
             entry.ref = row[1]
             i += 1
@@ -296,7 +320,7 @@ class ChartsWindow < TopWindow
             entry.rank = rank
 
             # If view is other than tracks or record, the entry is fully loaded in this loop
-            if ![VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+            unless [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
                 entry.title = row[2].to_html_bold
                 entry.pix   = XIntf::Image::Cache.get_flag(row[3]) if @view_type == VIEW_ARTISTS
                 entry.pix   = XIntf::Image::Cache.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
@@ -331,8 +355,8 @@ class ChartsWindow < TopWindow
         @entries.each_with_index do |entry, i|
             break if i == Cfg.max_items
             iter = is_reload ? @lsc.get_iter(i.to_s) : @lsc.append
-            iter[COL_ENTRY] = entry.entry+1
-            iter[COL_RANK]  = entry.rank.to_s
+#             iter[COL_ENTRY] = entry.entry+1
+            iter[COL_RANK]  = entry.rank #.to_s
             if @count_type == COUNT_PLAYED
                 iter[COL_PLAYED] = entry.played.to_s
             else
@@ -391,13 +415,14 @@ class ChartsWindow < TopWindow
         rank = pos = 0
         last_played = -1
         @entries.each_with_index do |entry, i|
-            entry.entry = i
+#             entry.entry = i
             if entry.played != last_played
                 rank = i+1
                 last_played = entry.played
             end
             entry.rank = rank
-            pos = entry.entry if entry.ref == ref
+#             pos = entry.entry if entry.ref == ref
+            pos = i if entry.ref == ref
         end
         display_charts(true) if pos < Cfg.max_items
         Trace.debug("Charts lazy update done".green)
