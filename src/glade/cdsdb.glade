@@ -89,51 +89,74 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="charts_mm_tracks">
+                      <object class="GtkRadioMenuItem" id="charts_mm_tracks">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Tracks</property>
                         <property name="use_underline">True</property>
+                        <property name="active">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_records_abs</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="charts_mm_records">
+                      <object class="GtkRadioMenuItem" id="charts_mm_records_abs">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">By _Records</property>
+                        <property name="label" translatable="yes">By _Records - Absolute</property>
                         <property name="use_underline">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_tracks</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="charts_mm_artists">
+                      <object class="GtkRadioMenuItem" id="charts_mm_records_full">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">By Records - _Full length</property>
+                        <property name="use_underline">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_tracks</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkRadioMenuItem" id="charts_mm_artists">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Artists</property>
                         <property name="use_underline">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_tracks</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="charts_mm_countries">
+                      <object class="GtkRadioMenuItem" id="charts_mm_countries">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By Countrie_s</property>
                         <property name="use_underline">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_tracks</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="charts_mm_mtypes">
+                      <object class="GtkRadioMenuItem" id="charts_mm_mtypes">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By Music _Genres</property>
                         <property name="use_underline">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_tracks</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="charts_mm_labels">
+                      <object class="GtkRadioMenuItem" id="charts_mm_labels">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">By _Labels</property>
                         <property name="use_underline">True</property>
+                        <property name="draw_as_radio">True</property>
+                        <property name="group">charts_mm_tracks</property>
                       </object>
                     </child>
                     <child>

@@ -360,7 +360,8 @@ module GtkIDs
 
     CHARTS_TV               = "charts_tv"
     CHARTS_MM_TRACKS        = "charts_mm_tracks"
-    CHARTS_MM_RECORDS       = "charts_mm_records"
+    CHARTS_MM_RECORDS_ABS   = "charts_mm_records_abs"
+    CHARTS_MM_RECORDS_FULL  = "charts_mm_records_full"
     CHARTS_MM_ARTISTS       = "charts_mm_artists"
     CHARTS_MM_MTYPES        = "charts_mm_mtypes"
     CHARTS_MM_LABELS        = "charts_mm_labels"

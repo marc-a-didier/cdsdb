@@ -15,12 +15,13 @@ class ChartsWindow < TopWindow
 
     include GtkIDs
 
-    VIEW_TRACKS    = 0
-    VIEW_RECORDS   = 1
-    VIEW_ARTISTS   = 2
-    VIEW_COUNTRIES = 3
-    VIEW_MTYPES    = 4
-    VIEW_LABELS    = 5
+    VIEW_TRACKS       = 0
+    VIEW_RECORDS_ABS  = 1
+    VIEW_ARTISTS      = 2
+    VIEW_COUNTRIES    = 3
+    VIEW_MTYPES       = 4
+    VIEW_LABELS       = 5
+    VIEW_RECORDS_FULL = 6
 
     COUNT_PLAYED = 0
     COUNT_TIME   = 1
@@ -28,21 +29,12 @@ class ChartsWindow < TopWindow
     COLUMNS_TITLES = ["Track", "Record", "Artist", "Country", "Genre"]
     COL_PIX_TITLES = ["Cover", "Cover", "Country", "", ""]
 
-#     COL_ENTRY  = 0
-#     COL_RANK   = 1
-#     COL_PIX    = 2
-#     COL_TEXT   = 3
-#     COL_PLAYED = 4
-#     COL_REF    = 5
-
-#     COL_ENTRY  = 0
     COL_RANK   = 0
     COL_PLAYED = 1
     COL_PIX    = 2
     COL_TEXT   = 3
     COL_REF    = 4
 
-#     ChartEntry = Struct.new(:entry, :rank, :pix, :title, :ref, :played, :xlink)
     ChartEntry = Struct.new(:rank, :played, :pix, :title, :ref, :xlink)
 
     def initialize(mc)
@@ -56,15 +48,24 @@ class ChartsWindow < TopWindow
         GtkUI[CHARTS_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE)
         GtkUI[CHARTS_WINDOW].signal_connect("focus_in_event")  { |widget, event| @mc.filter_receiver = self; false }
 
-        GtkUI[CHARTS_MM_TRACKS].signal_connect(:activate)    { load_view(VIEW_TRACKS)    }
-        GtkUI[CHARTS_MM_RECORDS].signal_connect(:activate)   { load_view(VIEW_RECORDS)   }
-        GtkUI[CHARTS_MM_ARTISTS].signal_connect(:activate)   { load_view(VIEW_ARTISTS)   }
-        GtkUI[CHARTS_MM_MTYPES].signal_connect(:activate)    { load_view(VIEW_MTYPES)    }
-        GtkUI[CHARTS_MM_COUNTRIES].signal_connect(:activate) { load_view(VIEW_COUNTRIES) }
-        GtkUI[CHARTS_MM_LABELS].signal_connect(:activate)    { load_view(VIEW_LABELS)    }
-        GtkUI[CHARTS_MM_PLAYED].signal_connect(:activate)    { @count_type = COUNT_PLAYED; load_view(@view_type) }
-        GtkUI[CHARTS_MM_TIME].signal_connect(:activate)      { @count_type = COUNT_TIME;   load_view(@view_type) }
-        GtkUI[CHARTS_MM_CLOSE].signal_connect(:activate)     { @mc.notify_closed(self) }
+        GtkUI[CHARTS_MM_TRACKS].signal_connect(:activate)       { |widget| load_view(VIEW_TRACKS,       widget) }
+        GtkUI[CHARTS_MM_RECORDS_ABS].signal_connect(:activate)  { |widget| load_view(VIEW_RECORDS_ABS,  widget) }
+        GtkUI[CHARTS_MM_RECORDS_FULL].signal_connect(:activate) { |widget| load_view(VIEW_RECORDS_FULL, widget) }
+        GtkUI[CHARTS_MM_ARTISTS].signal_connect(:activate)      { |widget| load_view(VIEW_ARTISTS,      widget) }
+        GtkUI[CHARTS_MM_MTYPES].signal_connect(:activate)       { |widget| load_view(VIEW_MTYPES,       widget) }
+        GtkUI[CHARTS_MM_COUNTRIES].signal_connect(:activate)    { |widget| load_view(VIEW_COUNTRIES,    widget) }
+        GtkUI[CHARTS_MM_LABELS].signal_connect(:activate)       { |widget| load_view(VIEW_LABELS,       widget) }
+
+        GtkUI[CHARTS_MM_PLAYED].signal_connect(:activate) do |widget|
+            @count_type = COUNT_PLAYED
+            load_view(@view_type, widget)
+        end
+        GtkUI[CHARTS_MM_TIME].signal_connect(:activate)   do |widget|
+            @count_type = COUNT_TIME
+            load_view(@view_type, widget)
+        end
+
+        GtkUI[CHARTS_MM_CLOSE].signal_connect(:activate) { @mc.notify_closed(self) }
 
         GtkUI[CHARTS_PM_ENQUEUE].signal_connect(:activate)     { enqueue }
         GtkUI[CHARTS_PM_ENQUEUEFROM].signal_connect(:activate) { enqueue_multiple_tracks }
@@ -78,9 +79,10 @@ class ChartsWindow < TopWindow
         GtkUI[CHARTS_PM_GENPL].signal_connect(:activate)    { generate_play_list }
         GtkUI[CHARTS_PM_SHOWINDB].signal_connect(:activate) do
             case @view_type
-                when VIEW_TRACKS  then @mc.select_track(entry_from_selection.xlink)
-                when VIEW_RECORDS then @mc.select_record(entry_from_selection.xlink)
-                when VIEW_ARTISTS then @mc.select_artist(@tvc.selection.selected[COL_REF])
+                when VIEW_TRACKS       then @mc.select_track(entry_from_selection.xlink)
+                when VIEW_RECORDS_ABS  then @mc.select_record(entry_from_selection.xlink)
+                when VIEW_RECORDS_FULL then @mc.select_record(entry_from_selection.xlink)
+                when VIEW_ARTISTS      then @mc.select_artist(@tvc.selection.selected[COL_REF])
             end
         end
 
@@ -88,10 +90,6 @@ class ChartsWindow < TopWindow
 
         srenderer = Gtk::CellRendererText.new()
         @tvc = GtkUI[CHARTS_TV]
-        # Columns: Entry, Rank, cover, title, played -- Hidden: ref
-#         @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, String, Integer)
-        # Columns: Rank, played, cover, title, -- Hidden: ref
-#         @lsc = Gtk::ListStore.new(String, String, Gdk::Pixbuf, String, Integer)
         @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, Integer)
 
         pix = Gtk::CellRendererPixbuf.new
@@ -103,16 +101,14 @@ class ChartsWindow < TopWindow
         trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
         trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[COL_TEXT] }
 
-#         @tvc.append_column(Gtk::TreeViewColumn.new("Entry", srenderer, :text => COL_ENTRY))
         @tvc.append_column(Gtk::TreeViewColumn.new("Rank", srenderer, :text => COL_RANK))
         @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
         @tvc.append_column(pixcol)
         @tvc.append_column(trk_column)
-#         @tvc.append_column(Gtk::TreeViewColumn.new("Played", srenderer, :text => COL_PLAYED))
 
         @tvc.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvc.signal_connect(:drag_data_get) do |widget, drag_context, selection_data, info, time|
-            if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+            if view_tracks_or_records?
                 selection_data.set(Gdk::Selection::TYPE_STRING, "charts:message:get_charts_selection")
             end
         end
@@ -135,8 +131,11 @@ class ChartsWindow < TopWindow
         end
     end
 
+    def view_tracks_or_records?
+        return [VIEW_TRACKS, VIEW_RECORDS_ABS, VIEW_RECORDS_FULL].include?(@view_type)
+    end
+
     def entry_from_selection
-#         return @entries[@tvc.selection.selected[COL_ENTRY]-1]
         return @entries[@tvc.selection.selected.to_s.to_i]
     end
 
@@ -150,7 +149,6 @@ class ChartsWindow < TopWindow
         links = []
         ref = @tvc.selection.selected[COL_REF]
         if @view_type == VIEW_TRACKS
-#             links << @entries[@tvc.selection.selected[COL_ENTRY]-1].xlink #.clone
             links << entry_from_selection.xlink #.clone
         else
             sql = "SELECT rtrack FROM tracks WHERE rrecord=#{ref};"
@@ -174,9 +172,7 @@ class ChartsWindow < TopWindow
         links = []
         selection = entry_from_selection #@tvc.selection.selected[COL_ENTRY]-1
         @entries.each_with_index do |entry, i|
-#             links << entry.xlink if entry.entry >= selection
             links << entry.xlink if i >= selection
-#             break if entry.entry >= Cfg.max_items
             break if i >= Cfg.max_items
         end
         @mc.pqueue.enqueue(links)
@@ -187,7 +183,7 @@ class ChartsWindow < TopWindow
         ref = case @view_type
             when VIEW_TRACKS
                 xlink.track.rtrack
-            when VIEW_RECORDS
+            when VIEW_RECORDS_ABS, VIEW_RECORDS_FULL
                 xlink.track.rrecord
             when VIEW_ARTISTS
                 xlink.segment.rartist
@@ -235,62 +231,67 @@ class ChartsWindow < TopWindow
         #
         field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
         field += " AS totplayed"
-        field = "MIN(tracks.iplayed) AS minplayed" if @view_type == VIEW_RECORDS && @count_type == COUNT_PLAYED
+        field = "MIN(tracks.iplayed) AS minplayed" if @view_type == VIEW_RECORDS_FULL
         case @view_type
             when VIEW_TRACKS
-                sql = %Q{SELECT #{field}, tracks.rtrack, tracks.rrecord, records.irecsymlink, tracks.stitle,
+                sql = %{SELECT #{field}, tracks.rtrack, tracks.rrecord, records.irecsymlink, tracks.stitle,
                                 segments.stitle, records.stitle, artists.sname, tracks.isegorder
                         FROM tracks
-                        INNER JOIN segments ON tracks.rsegment=segments.rsegment
-                        INNER JOIN records ON tracks.rrecord=records.rrecord
-                        INNER JOIN artists ON artists.rartist=segments.rartist
-                        INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                            INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN artists ON artists.rartist=segments.rartist
+                            INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
                         WHERE tracks.iplayed > 0 }
                 group_by = "tracks.rtrack"
-            when VIEW_RECORDS
-#                 field = "(COUNT(logtracks.rtrack)/COUNT(tracks.rtrack)) AS totplayed" if @count_type == COUNT_PLAYED
-                sql = "SELECT #{field}, records.rrecord, records.stitle, records.irecsymlink, artists.sname FROM tracks " \
-                      "INNER JOIN records ON tracks.rrecord=records.rrecord " \
-                      "INNER JOIN artists ON artists.rartist=records.rartist " \
-#                       "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
-                      "LEFT JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
-                      "WHERE tracks.iplayed > 0 "
+            when VIEW_RECORDS_ABS
+                sql = %{SELECT #{field}, records.rrecord, records.stitle, records.irecsymlink, artists.sname FROM tracks
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN artists ON artists.rartist=records.rartist
+                            INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                        WHERE tracks.iplayed > 0 }
+                group_by = "records.rrecord"
+            when VIEW_RECORDS_FULL
+                sql = %{SELECT #{field}, records.rrecord, records.stitle, records.irecsymlink, artists.sname FROM tracks
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN artists ON artists.rartist=records.rartist
+                            LEFT JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                        WHERE 1 = 1 } # Special WHERE clause cause must be a where if a filter is applied
                 group_by = "records.rrecord"
             when VIEW_ARTISTS
-                sql = "SELECT #{field}, artists.rartist, artists.sname, artists.rorigin FROM tracks " \
-                      "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                      "INNER JOIN artists ON artists.rartist=segments.rartist " \
-                      "INNER JOIN records ON tracks.rrecord=records.rrecord " \
-                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
-                      "WHERE tracks.iplayed > 0 "
+                sql = %{SELECT #{field}, artists.rartist, artists.sname, artists.rorigin FROM tracks
+                            INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                            INNER JOIN artists ON artists.rartist=segments.rartist
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                        WHERE tracks.iplayed > 0 }
                 group_by = "artists.rartist"
             when VIEW_COUNTRIES
-                sql = "SELECT #{field}, origins.rorigin, origins.sname FROM tracks " \
-                      "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                      "INNER JOIN artists ON artists.rartist=segments.rartist " \
-                      "INNER JOIN records ON tracks.rrecord=records.rrecord " \
-                      "INNER JOIN origins ON origins.rorigin=artists.rorigin " \
-                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
-                      "WHERE tracks.iplayed > 0 " #AND origins.rorigin > 0 "
+                sql = %{SELECT #{field}, origins.rorigin, origins.sname FROM tracks
+                            INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                            INNER JOIN artists ON artists.rartist=segments.rartist
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN origins ON origins.rorigin=artists.rorigin
+                            INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                        WHERE tracks.iplayed > 0 " #AND origins.rorigin > 0 }
                 group_by = "artists.rorigin"
             when VIEW_MTYPES
-                sql = "SELECT #{field}, genres.rgenre, genres.sname FROM tracks " \
-                      "INNER JOIN records ON tracks.rrecord=records.rrecord " \
-                      "INNER JOIN genres ON records.rgenre=genres.rgenre " \
-                      "INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack " \
-                      "WHERE tracks.iplayed > 0 " #AND records.rgenre > 0 "
+                sql = %{SELECT #{field}, genres.rgenre, genres.sname FROM tracks
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN genres ON records.rgenre=genres.rgenre
+                            INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                        WHERE tracks.iplayed > 0 } #AND records.rgenre > 0 "
                 group_by = "records.rgenre"
             when VIEW_LABELS
-                sql = %Q{SELECT #{field}, labels.rlabel, labels.sname FROM tracks
-                           INNER JOIN records ON tracks.rrecord=records.rrecord
-                             INNER JOIN labels ON records.rlabel=labels.rlabel
-                               INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
+                sql = %{SELECT #{field}, labels.rlabel, labels.sname FROM tracks
+                            INNER JOIN records ON tracks.rrecord=records.rrecord
+                            INNER JOIN labels ON records.rlabel=labels.rlabel
+                            INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
                          WHERE tracks.iplayed > 0 }
                 group_by = "records.rlabel"
         end
         sql += @filter unless @filter.empty?
         sql += "GROUP BY #{group_by} "
-        if @view_type == VIEW_RECORDS && @count_type == COUNT_PLAYED
+        if @view_type == VIEW_RECORDS_FULL
             sql += "HAVING minplayed > 0 AND records.itrackscount > 1 "
             sql += "ORDER BY minplayed DESC LIMIT #{Cfg.max_items+50};"
         else
@@ -309,7 +310,6 @@ class ChartsWindow < TopWindow
         last_played = -1
         DBIntf.execute(generate_sql) do |row|
             entry = ChartEntry.new
-#             entry.entry = i
             entry.played = row[0].to_i
             entry.ref = row[1]
             i += 1
@@ -320,7 +320,7 @@ class ChartsWindow < TopWindow
             entry.rank = rank
 
             # If view is other than tracks or record, the entry is fully loaded in this loop
-            unless [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+            unless view_tracks_or_records?
                 entry.title = row[2].to_html_bold
                 entry.pix   = XIntf::Image::Cache.get_flag(row[3]) if @view_type == VIEW_ARTISTS
                 entry.pix   = XIntf::Image::Cache.get_flag(row[1]) if @view_type == VIEW_COUNTRIES
@@ -330,7 +330,7 @@ class ChartsWindow < TopWindow
         end
 
         # Done if not tracks or records charts
-        return unless [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+        return unless view_tracks_or_records?
 
         # Pix and title loading are in another loop because making db accesses while reading
         # the result set of the query greatly speeds the things down...
@@ -355,12 +355,11 @@ class ChartsWindow < TopWindow
         @entries.each_with_index do |entry, i|
             break if i == Cfg.max_items
             iter = is_reload ? @lsc.get_iter(i.to_s) : @lsc.append
-#             iter[COL_ENTRY] = entry.entry+1
             iter[COL_RANK]  = entry.rank #.to_s
             if @count_type == COUNT_PLAYED
                 iter[COL_PLAYED] = entry.played.to_s
             else
-                if [VIEW_TRACKS, VIEW_RECORDS].include?(@view_type)
+                if view_tracks_or_records?
                     iter[COL_PLAYED] = entry.played.to_hr_length
                 else
                     iter[COL_PLAYED] = entry.played.to_day_length
@@ -375,7 +374,9 @@ class ChartsWindow < TopWindow
     #
     # Sets the columns titles and visibility and makes a snapshot of the database.
     #
-    def load_view(view_type)
+    def load_view(view_type, widget)
+        return if widget && !widget.active?
+
         if view_type != @view_type
             @tvc.columns[COL_PIX].visible = view_type != VIEW_MTYPES && view_type != VIEW_LABELS
             @tvc.columns[COL_TEXT].title = COLUMNS_TITLES[view_type]
@@ -409,19 +410,22 @@ class ChartsWindow < TopWindow
         pos = @entries.index { |ce| ce.ref == ref }
         return unless pos
 
-        @entries[pos].played += @count_type == COUNT_PLAYED ? 1 : track.iplaytime
+        if @view_type == VIEW_RECORDS_FULL
+            min = DBIntf.get_first_value("SELECT MIN(tracks.iplayed) FROM tracks WHERE tracks.rrecord=#{ref}")
+            @entries[pos].played += 1 if @entries[pos].played < min
+        else
+            @entries[pos].played += @count_type == COUNT_PLAYED ? 1 : track.iplaytime
+        end
         @entries.sort! { |ce1, ce2| ce2.played <=> ce1.played }
 
         rank = pos = 0
         last_played = -1
         @entries.each_with_index do |entry, i|
-#             entry.entry = i
             if entry.played != last_played
                 rank = i+1
                 last_played = entry.played
             end
             entry.rank = rank
-#             pos = entry.entry if entry.ref == ref
             pos = i if entry.ref == ref
         end
         display_charts(true) if pos < Cfg.max_items
@@ -429,7 +433,7 @@ class ChartsWindow < TopWindow
     end
 
     def show
-        load_view(@view_type) #if !Cfg.live_charts_update || @lsc.iter_first.nil?
+        load_view(@view_type, nil)
         super
     end
 end
