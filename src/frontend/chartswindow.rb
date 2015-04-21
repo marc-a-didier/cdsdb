@@ -229,9 +229,12 @@ class ChartsWindow < TopWindow
         # N.B: le join sur les records dans les vues par artiste et pays est necessaire si on utilise le filtre!!!
         #      (Juste pour me rappeler pourquoi je me demande pourquoi j'ai foutu ça alors qu'à priori y'a pas besoin)
         #
-        field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
+        if @view_type == VIEW_RECORDS_FULL
+            field = @count_type == COUNT_TIME ? "MIN(tracks.iplayed)*records.iplaytime" : "MIN(tracks.iplayed)"
+        else
+            field = @count_type == COUNT_TIME ? "SUM(tracks.iplaytime)" : "COUNT(logtracks.rtrack)"
+        end
         field += " AS totplayed"
-        field = "MIN(tracks.iplayed) AS minplayed" if @view_type == VIEW_RECORDS_FULL
         case @view_type
             when VIEW_TRACKS
                 sql = %{SELECT #{field}, tracks.rtrack, tracks.rrecord, records.irecsymlink, tracks.stitle,
@@ -291,12 +294,8 @@ class ChartsWindow < TopWindow
         end
         sql += @filter unless @filter.empty?
         sql += "GROUP BY #{group_by} "
-        if @view_type == VIEW_RECORDS_FULL
-            sql += "HAVING minplayed > 0 AND records.itrackscount > 1 "
-            sql += "ORDER BY minplayed DESC LIMIT #{Cfg.max_items+50};"
-        else
-            sql += "ORDER BY totplayed DESC LIMIT #{Cfg.max_items+50};"
-        end
+        sql += "HAVING totplayed > 0 AND records.itrackscount > 1 " if @view_type == VIEW_RECORDS_FULL
+        sql += "ORDER BY totplayed DESC LIMIT #{Cfg.max_items+50};"
 # p sql
         return  sql
     end
@@ -410,12 +409,13 @@ class ChartsWindow < TopWindow
         pos = @entries.index { |ce| ce.ref == ref }
         return unless pos
 
+        update = true
         if @view_type == VIEW_RECORDS_FULL
             min = DBIntf.get_first_value("SELECT MIN(tracks.iplayed) FROM tracks WHERE tracks.rrecord=#{ref}")
-            @entries[pos].played += 1 if @entries[pos].played < min
-        else
-            @entries[pos].played += @count_type == COUNT_PLAYED ? 1 : track.iplaytime
+            update = @entries[pos].played < min
         end
+        @entries[pos].played += (@count_type == COUNT_PLAYED ? 1 : track.iplaytime) if update
+
         @entries.sort! { |ce1, ce2| ce2.played <=> ce1.played }
 
         rank = pos = 0
