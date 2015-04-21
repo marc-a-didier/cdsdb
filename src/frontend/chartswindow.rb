@@ -409,12 +409,16 @@ class ChartsWindow < TopWindow
         pos = @entries.index { |ce| ce.ref == ref }
         return unless pos
 
-        update = true
         if @view_type == VIEW_RECORDS_FULL
             min = DBIntf.get_first_value("SELECT MIN(tracks.iplayed) FROM tracks WHERE tracks.rrecord=#{ref}")
-            update = @entries[pos].played < min
+            if @count_type == COUNT_PLAYED
+                @entries[pos].played += 1 if @entries[pos].played < min
+            else
+                @entries[pos].played += @entries[pos].xlink.record.iplaytime if @entries[pos].played < min*@entries[pos].xlink.record.iplaytime
+            end
+        else
+            @entries[pos].played += (@count_type == COUNT_PLAYED ? 1 : track.iplaytime) if update
         end
-        @entries[pos].played += (@count_type == COUNT_PLAYED ? 1 : track.iplaytime) if update
 
         @entries.sort! { |ce1, ce2| ce2.played <=> ce1.played }
 
