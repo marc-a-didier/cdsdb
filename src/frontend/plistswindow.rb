@@ -123,6 +123,7 @@ class PListsWindow < TopWindow
 
         @tvpt.set_has_tooltip(true)
         @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
+            display = false
             row = @tvpt.get_dest_row(x, y) # Returns: [path, position] or nil
             if row && tool_tip && tool_tip.is_a?(Gtk::Tooltip)
                 link = @pts.get_iter(row[0])[TT_DATA]
@@ -131,14 +132,13 @@ class PListsWindow < TopWindow
                         @last_tool_tip.link = link
                         @last_tool_tip.text = link.markup_tooltip
                     end
-                    tool_tip.set_markup(@last_tool_tip.text)
-                    true
-                else
-                    false
+                    if @last_tool_tip.text
+                        tool_tip.set_markup(@last_tool_tip.text)
+                        display = true
+                    end
                 end
-            else
-                false
             end
+            display
         end
 
         # Status bar infos related vars
