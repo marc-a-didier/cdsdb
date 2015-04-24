@@ -207,10 +207,6 @@ module DBClasses
             self.stitle = "New track"
             return sql_add
         end
-
-        def banned?
-            return (self.itags & Qualifiers::TAGS_BANNED) != 0
-        end
     end
 
 

@@ -197,7 +197,7 @@ class MasterController
 
     def notify_played(xlink, host = "")
         # If tags isn't nil the track has been dropped into the pq from the file system
-        return if xlink.tags #|| xlink.track.banned?
+        return if xlink.tags
 
         Thread.new do
             host = Socket.gethostname if host.empty?
