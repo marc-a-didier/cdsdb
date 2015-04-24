@@ -51,6 +51,7 @@ class RecordsBrowser < Gtk::TreeView
         GtkUI[GtkIDs::REC_POPUP_TAGDIR].signal_connect(:activate)   { on_tag_dir }
         GtkUI[GtkIDs::REC_POPUP_ENQUEUE].signal_connect(:activate)  { @mc.enqueue_record }
         GtkUI[GtkIDs::REC_POPUP_DOWNLOAD].signal_connect(:activate) { @mc.download_tracks }
+        GtkUI[GtkIDs::REC_POPUP_UPLOAD].signal_connect(:activate)   { @mc.upload_tracks }
         GtkUI[GtkIDs::REC_POPUP_SEGORDER].signal_connect(:activate) { Utils.assign_track_seg_order(@reclnk.record.rrecord) }
         GtkUI[GtkIDs::REC_POPUP_PHISTORY].signal_connect(:activate) {
             Dialogs::PlayHistory.show_record(@reclnk.record.rrecord)

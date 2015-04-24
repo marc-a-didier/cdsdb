@@ -69,6 +69,8 @@ module GtkIDs
     REC_POPUP_GETRPGAIN = "rpm_getrpgain"
     REC_POPUP_PHISTORY  = "rpm_phistory"
     REC_POPUP_DOWNLOAD  = "rpm_download"
+    REC_POPUP_UPLOAD    = "rpm_upload"
+
 
     # Tracks browser popup menu
     TRK_POPUP_MENU      = "tpm_menu"
@@ -611,7 +613,7 @@ module GtkIDs
     ADMIN_CTRLS = [ART_POPUP_ADD, ART_POPUP_DEL,
                    REC_POPUP_ADD, REC_POPUP_DEL, REC_POPUP_SEGADD,
                    # REC_POPUP_CPTITLE, REC_POPUP_TAGDIR, REC_POPUP_SEGORDER,
-                   REC_POPUP_CPTITLE, REC_POPUP_SEGORDER,
+                   REC_POPUP_CPTITLE, REC_POPUP_SEGORDER, REC_POPUP_UPLOAD,
                    # TRK_POPUP_ADD, TRK_POPUP_DEL, TRK_POPUP_TAGFILE,
                    TRK_POPUP_ADD, TRK_POPUP_DEL,
                    TRK_POPUP_SEGASS, TRK_POPUP_DELFROMFS, TRK_POPUP_UPDPTIME,

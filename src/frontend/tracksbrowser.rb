@@ -520,8 +520,24 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def download_tracks(use_selection)
-        meth = use_selection ? selection.method(:selected_each) : model.method(:each)
-        meth.call do |model, path, iter|
+#         meth = use_selection ? selection.method(:selected_each) : model.method(:each)
+#         meth.call do |model, path, iter|
+        selection.send(use_selection ? :selected_each : :each) do |model, path, iter|
+            if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
+                iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
+            end
+        end
+    end
+
+    def upload_tracks
+        tracks = ''
+        model.each { |model, path, iter| tracks << iter[TTV_REF].to_s+' ' }
+        # Replace each file not found state with server state
+        MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
+            if found == '0'
+            end
+        end
+        selection.each do |model, path, iter|
             if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
             end

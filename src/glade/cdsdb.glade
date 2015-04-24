@@ -1083,7 +1083,7 @@
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-network</property>
+    <property name="stock">gtk-go-down</property>
     <property name="icon-size">1</property>
   </object>
   <object class="GtkMenu" id="tpm_menu">
@@ -1255,7 +1255,130 @@
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-network</property>
+    <property name="stock">gtk-go-down</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-info</property>
+  </object>
+  <object class="GtkMenu" id="pm_pq">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="pm_pq_remove">
+        <property name="label">gtk-remove</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="accel_group">accelgroup1</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="pm_pq_rmfromhere">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Remove from here</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="pm_pq_clear">
+        <property name="label">gtk-clear</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="accel_group">accelgroup1</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="pm_pq_sep1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="pm_pq_shuffle">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Shuffle</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="pm_pq_sep2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="pm_pq_showinbrowser">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Show in browser</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="pm_pq_infos">
+        <property name="label" translatable="yes">Show infos</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image3</property>
+        <property name="use_stock">False</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkImage" id="image4">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-cancel</property>
+  </object>
+  <object class="GtkMenu" id="tasks_pm">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="tkpm_clear">
+        <property name="label">gtk-clear</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="accel_group">accelgroup1</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="tkpm_cancel">
+        <property name="label" translatable="yes">Cancel jobs</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image4</property>
+        <property name="use_stock">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="tkpm_sep1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="tkpm_close">
+        <property name="label">gtk-close</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <property name="accel_group">accelgroup1</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkImage" id="image5">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-up</property>
   </object>
   <object class="GtkMenu" id="rpm_menu">
     <property name="visible">True</property>
@@ -1388,122 +1511,13 @@
         <property name="use_stock">False</property>
       </object>
     </child>
-  </object>
-  <object class="GtkImage" id="image3">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-info</property>
-  </object>
-  <object class="GtkMenu" id="pm_pq">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <child>
-      <object class="GtkImageMenuItem" id="pm_pq_remove">
-        <property name="label">gtk-remove</property>
+      <object class="GtkImageMenuItem" id="rpm_upload">
+        <property name="label" translatable="yes">Upload to server</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <property name="accel_group">accelgroup1</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="pm_pq_rmfromhere">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Remove from here</property>
-        <property name="use_underline">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="pm_pq_clear">
-        <property name="label">gtk-clear</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <property name="accel_group">accelgroup1</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="pm_pq_sep1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="pm_pq_shuffle">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Shuffle</property>
-        <property name="use_underline">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="pm_pq_sep2">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="pm_pq_showinbrowser">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Show in browser</property>
-        <property name="use_underline">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="pm_pq_infos">
-        <property name="label" translatable="yes">Show infos</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="image">image3</property>
+        <property name="image">image5</property>
         <property name="use_stock">False</property>
-      </object>
-    </child>
-  </object>
-  <object class="GtkImage" id="image4">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-cancel</property>
-  </object>
-  <object class="GtkMenu" id="tasks_pm">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkImageMenuItem" id="tkpm_clear">
-        <property name="label">gtk-clear</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <property name="accel_group">accelgroup1</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="tkpm_cancel">
-        <property name="label" translatable="yes">Cancel downloads</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="image">image4</property>
-        <property name="use_stock">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="tkpm_sep1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="tkpm_close">
-        <property name="label">gtk-close</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <property name="accel_group">accelgroup1</property>
       </object>
     </child>
   </object>
