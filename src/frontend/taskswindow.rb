@@ -105,15 +105,16 @@ class TasksWindow < TopWindow
     def check_waiting_tasks
         @mutex.synchronize do
             @tv.model.each do |model, path, iter|
-                break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD
+                break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD || iter[COL_STATUS] == STAT_UPLOAD
 
-                if (iter[COL_TASK] == TASK_FILE_DL || iter[COL_TASK] == TASK_AUDIO_DL) && iter[COL_STATUS] == STAT_WAITING
+                if (iter[COL_TASK] == TASK_FILE_DL || iter[COL_TASK] == TASK_AUDIO_DL ||
+                    iter[COL_TASK] == TASK_UPLOAD) && iter[COL_STATUS] == STAT_WAITING
                     @tv.set_cursor(iter.path, nil, false)
                     iter[COL_STATUS] = STAT_DOWNLOAD
-                    if iter[COL_TASK] == TASK_FILE_DL
-                        MusicClient.get_file(iter[COL_REF].file_info, self, iter)
-                    else
-                        MusicClient.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
+                    case iter[COL_TASK]
+                        when TASK_FILE_DL then  MusicClient.get_file(iter[COL_REF].file_info, self, iter)
+                        when TASK_AUDIO_DL then MusicClient.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
+                        when TASK_UPLOAD then   MusicClient.upload_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
                     end
                 end
             end

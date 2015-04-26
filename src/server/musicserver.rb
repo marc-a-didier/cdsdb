@@ -232,6 +232,23 @@ class MusicServer
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 
+    def upload_file(session, is_sync)
+        file = Cfg.music_dir+socket.gets.chomp
+        File.open(file, 'w') do |f|
+            file_size = socket.gets.chomp.to_i
+            if file_size > 0
+                block_size = socket.gets
+                status = Cfg::MSG_CONTINUE
+                while (size = socket.gets.chomp.to_i) > 0 &&  status == Cfg::MSG_CONTINUE
+                    f.write(socket.read(size))
+                    status = socket.gets.chomp
+                end
+            end
+        end
+        FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
+        session.puts(Cfg::MSG_DONE) if is_sync
+    end
+
 end
 
 MusicServer.new.listen if __FILE__ == $0

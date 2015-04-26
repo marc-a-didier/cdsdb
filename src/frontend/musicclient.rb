@@ -127,7 +127,7 @@ module MusicClient
 
         # If we prefer small size over quality, pass the block size as a negative number
         socket.puts(Cfg.size_over_quality ? (-Cfg.tx_block_size).to_s : Cfg.tx_block_size.to_s)
-        
+
         file = ""
         if socket.gets.chomp.to_i == Cfg.tx_block_size
             Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
@@ -176,5 +176,29 @@ module MusicClient
         socket.close
         tasks.end_file_op(task_id, file_name, status)
         FileUtils.rm(file_name) if status == Cfg::MSG_CANCELLED
+    end
+
+    def self.upload_track(tasks, task_id, rtrack)
+        return false unless socket = hand_shake("upload file")
+
+        file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file.sub(Cfg.music_dir, '')
+        socket.puts(file)
+        file_size = File.size(file)
+        if file_size > 0
+            curr_size = 0
+            socket.puts(file_size.to_s)
+            socket.puts(Cfg.tx_block_size.to_s)
+            File.open(file, "r") do |f|
+                while data = f.read(Cfg.tx_block_size)
+                    curr_size += data.size
+                    socket.puts(data.size.to_s)
+                    socket.write(data)
+                    status = tasks.update_file_op(task_id, curr_size, file_size)
+                    socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED)
+                end
+            end
+        end
+        socket.puts('0')
+        close_connection(socket)
     end
 end
