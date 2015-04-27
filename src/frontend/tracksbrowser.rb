@@ -531,15 +531,11 @@ class TracksBrowser < Gtk::TreeView
 
     def upload_tracks
         tracks = ''
-        model.each { |model, path, iter| tracks << iter[TTV_REF].to_s+' ' }
+        model.each { |model, path, iter| (tracks << iter[TTV_REF].to_s+' ') if iter[TTV_DATA].audio_status == Audio::Status::OK }
         # Replace each file not found state with server state
         MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
             if found == '0'
-            end
-        end
-        selection.each do |model, path, iter|
-            if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
-                iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
+                @mc.tasks.new_upload(model.get_iter(i.to_s)[TTV_DATA])
             end
         end
     end

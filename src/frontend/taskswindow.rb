@@ -189,13 +189,13 @@ class TasksWindow < TopWindow
         else
             iter[COL_PROGRESS] = 100
             iter[COL_STATUS]   = STAT_DONE
-            iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_REF].user_ref.kind_of?(Audio::Link)
+            iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_TASK] == TASK_AUDIO_DL #&& iter[COL_REF].user_ref.kind_of?(Audio::Link)
             iter[COL_REF].emitter.dwl_file_name_notification(iter[COL_REF].user_ref, file_name) if iter[COL_REF].emitter
         end
     end
 
-    def new_upload(title)
-        iter = new_task(TASK_UPLOAD, nil, title, 0, "Upload")
+    def new_upload(user_ref)
+        iter = new_task(TASK_UPLOAD, nil, user_ref.track.stitle, user_ref, "Upload")
         iter[COL_STATUS] = TASK_UPLOAD
         return iter
     end
