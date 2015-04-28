@@ -102,6 +102,24 @@ module MusicClient
         return resources
     end
 
+    def self.resources_to_update(resource_type)
+        return [] unless socket = hand_shake("get resources list")
+        socket.puts(resource_type.to_s)
+        updates = []
+        JSON.parse(socket.gets.chomp).each do |file, mtime|
+            updates << file if !File.exists(Cfg.dir(resource_type)+file) || File.mtime(Cfg.dir(resource_type)+file).to_i < mtime
+        end
+        return updates
+    end
+
+    def self.synchronize_gui_resources
+        updates = {}
+        [:covers, :flags, :icons].each do |resource_type|
+            updates[resource_type] = self.resources_to_update(resource_type)
+        end
+        return updates
+    end
+
     def self.synchronize_sources
         return [] unless socket = hand_shake("synchronize sources")
         files = []
@@ -181,9 +199,11 @@ module MusicClient
     def self.upload_track(tasks, task_id, rtrack)
         return false unless socket = hand_shake("upload file")
 
-        file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file.sub(Cfg.music_dir, '')
-        socket.puts(file)
+        status = Cfg::STAT_CONTINUE
+        file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file
         file_size = File.size(file)
+
+        socket.puts(file.sub(Cfg.music_dir, ''))
         if file_size > 0
             curr_size = 0
             socket.puts(file_size.to_s)
@@ -200,5 +220,43 @@ module MusicClient
         end
         socket.puts('0')
         close_connection(socket)
+        tasks.end_file_op(task_id, '', status)
+    end
+
+    def self.upload_resource(tasks, task_id, resource_type, file)
+        return false unless socket = hand_shake("upload resource")
+
+        status = Cfg::STAT_CONTINUE
+
+        file_size = File.size(file)
+
+        socket.puts(resource_type.to_s)
+        socket.puts(resource_type == :track ? file.sub(Cfg.music_dir, '') : File.basename(file))
+        if file_size > 0
+            curr_size = 0
+            socket.puts(file_size.to_s)
+            socket.puts(Cfg.tx_block_size.to_s)
+            File.open(file, "r") do |f|
+                while data = f.read(Cfg.tx_block_size)
+                    curr_size += data.size
+                    socket.puts(data.size.to_s)
+                    socket.write(data)
+                    status = tasks.update_file_op(task_id, curr_size, file_size)
+                    socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED)
+                end
+            end
+        end
+        socket.puts('0')
+        close_connection(socket)
+        tasks.end_file_op(task_id, '', status)
+    end
+
+    def self.has_resource(resource_type, file)
+        return false unless socket = hand_shake("has resource")
+        socket.puts(resource_type.to_s)
+        socket.puts(File.basename(file))
+        status = socket.gets.chomp
+        close_connection(socket)
+        return status == '1'
     end
 end

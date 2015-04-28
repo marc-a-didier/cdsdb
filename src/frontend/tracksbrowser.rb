@@ -535,8 +535,13 @@ class TracksBrowser < Gtk::TreeView
         # Replace each file not found state with server state
         MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
             if found == '0'
-                @mc.tasks.new_upload(model.get_iter(i.to_s)[TTV_DATA])
+                @mc.tasks.new_upload(:track, model.get_iter(i.to_s)[TTV_DATA])
             end
+        end
+
+Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_DATA].cover_file_name}")
+        unless MusicClient.has_resource(:covers, model.get_iter('0')[TTV_DATA].cover_file_name)
+            @mc.tasks.new_upload(:covers, model.get_iter('0')[TTV_DATA].cover_file_name)
         end
     end
 

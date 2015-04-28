@@ -162,7 +162,7 @@ class MasterController
         @mw.trk_browser.download_tracks(false)
     end
 
-    def download_tracks
+    def upload_tracks
         @mw.trk_browser.upload_tracks
     end
 

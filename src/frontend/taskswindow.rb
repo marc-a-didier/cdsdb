@@ -1,7 +1,7 @@
 
 class TasksWindow < TopWindow
 
-    TaskData = Struct.new(:user_ref, :emitter, :file_info)
+    TaskData = Struct.new(:user_ref, :emitter, :file_info, :resource_type)
 
     STATUS = ["Waiting", "Downloading...", "Done", "Uploading...", "Running...", "Cancelled"]
 
@@ -110,11 +110,12 @@ class TasksWindow < TopWindow
                 if (iter[COL_TASK] == TASK_FILE_DL || iter[COL_TASK] == TASK_AUDIO_DL ||
                     iter[COL_TASK] == TASK_UPLOAD) && iter[COL_STATUS] == STAT_WAITING
                     @tv.set_cursor(iter.path, nil, false)
-                    iter[COL_STATUS] = STAT_DOWNLOAD
+                    iter[COL_STATUS] = iter[COL_TASK] == TASK_UPLOAD ? STAT_UPLOAD : STAT_DOWNLOAD
                     case iter[COL_TASK]
                         when TASK_FILE_DL then  MusicClient.get_file(iter[COL_REF].file_info, self, iter)
                         when TASK_AUDIO_DL then MusicClient.get_audio_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
-                        when TASK_UPLOAD then   MusicClient.upload_file(self, iter, iter[COL_REF].user_ref.track.rtrack)
+#                         when TASK_UPLOAD then   MusicClient.upload_track(self, iter, iter[COL_REF].user_ref.track.rtrack)
+                        when TASK_UPLOAD then   MusicClient.upload_resource(self, iter, iter[COL_REF].resource_type, iter[COL_REF].user_ref)
                     end
                 end
             end
@@ -175,6 +176,10 @@ class TasksWindow < TopWindow
         new_task(TASK_FILE_DL, emitter, Utils.get_file_name(file_info), user_ref, file_info)
     end
 
+    def new_download(emitter, resource_type, file)
+        new_task(TASK_FILE_DL, emitter, File.basename(file), file, file_info)
+    end
+
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i
         return @has_cancelled ? Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
@@ -189,14 +194,14 @@ class TasksWindow < TopWindow
         else
             iter[COL_PROGRESS] = 100
             iter[COL_STATUS]   = STAT_DONE
-            iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_TASK] == TASK_AUDIO_DL #&& iter[COL_REF].user_ref.kind_of?(Audio::Link)
+#             iter[COL_REF].user_ref.set_audio_state(Audio::Status::OK, file_name) if iter[COL_TASK] == TASK_AUDIO_DL #&& iter[COL_REF].user_ref.kind_of?(Audio::Link)
             iter[COL_REF].emitter.dwl_file_name_notification(iter[COL_REF].user_ref, file_name) if iter[COL_REF].emitter
         end
     end
 
-    def new_upload(user_ref)
-        iter = new_task(TASK_UPLOAD, nil, user_ref.track.stitle, user_ref, "Upload")
-        iter[COL_STATUS] = TASK_UPLOAD
+    def new_upload(resource_type, file)
+        iter = new_task(TASK_UPLOAD, nil, File.basename(file), file, "Upload")
+        iter[COL_REF].resource_type = resource_type
         return iter
     end
 

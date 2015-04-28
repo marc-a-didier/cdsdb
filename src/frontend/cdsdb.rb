@@ -26,6 +26,7 @@ require 'thread' # For mutex in tasks window
 
 require 'logger'
 require 'psych'
+require 'json'
 require 'rexml/document'
 require 'uri'
 require 'cgi'

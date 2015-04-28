@@ -8,7 +8,10 @@ require 'singleton'
 require 'logger'
 
 require 'sqlite3'
+require 'taglib2'
 require 'yaml'
+require 'json'
+
 
 require_relative '../shared/extenders'
 require_relative '../shared/cfg'
@@ -175,6 +178,16 @@ class MusicServer
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 
+    def get_resources_list(session, is_sync)
+        resource_type = session.gets.chomp.to_sym
+        result = []
+        Dir[Cfg.dir(resource_type)+'*'].map do |file|
+            result << [File.basename(file), File.mtime(file).to_i] unless File.directory?(file)
+        end
+        session.puts(result.to_json)
+        session.puts(Cfg::MSG_DONE) if is_sync
+    end
+
     def synchronize_sources(session, is_sync)
         Find.find(Cfg.sources_dir) { |file|
             next if file.match(/.*\.bzr/) # Skip hidden dir (.bzr for example...)
@@ -233,15 +246,16 @@ class MusicServer
     end
 
     def upload_file(session, is_sync)
-        file = Cfg.music_dir+socket.gets.chomp
+        status = Cfg::MSG_CONTINUE
+        file = Cfg.music_dir+session.gets.chomp
         File.open(file, 'w') do |f|
-            file_size = socket.gets.chomp.to_i
+            file_size = session.gets.chomp.to_i
             if file_size > 0
-                block_size = socket.gets
+                block_size = session.gets
                 status = Cfg::MSG_CONTINUE
-                while (size = socket.gets.chomp.to_i) > 0 &&  status == Cfg::MSG_CONTINUE
-                    f.write(socket.read(size))
-                    status = socket.gets.chomp
+                while (size = session.gets.chomp.to_i) > 0 &&  status == Cfg::MSG_CONTINUE
+                    f.write(session.read(size))
+                    status = session.gets.chomp
                 end
             end
         end
@@ -249,6 +263,41 @@ class MusicServer
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 
+    def has_resource(session, is_sync)
+        resource_type = session.gets.chomp.to_sym
+        file = session.gets.chomp
+
+        file = resource_type == :track ? Cfg.music_dir+file : Cfg.dir(resource_type)+file
+
+        session.puts(File.exists?(file) ? '1' : '0')
+        session.puts(Cfg::MSG_DONE) if is_sync
+    end
+
+    def upload_resource(session, is_sync)
+        resource_type = session.gets.chomp.to_sym
+        file = session.gets.chomp
+
+        file = resource_type == :track ? Cfg.music_dir+file : Cfg.dir(resource_type)+file
+
+        receive_resource(session, is_sync, file)
+    end
+
+    def receive_resource(session, is_sync, file)
+        status = Cfg::MSG_CONTINUE
+        File.open(file, 'w') do |f|
+            file_size = session.gets.chomp.to_i
+            if file_size > 0
+                block_size = session.gets
+                status = Cfg::MSG_CONTINUE
+                while (size = session.gets.chomp.to_i) > 0 &&  status == Cfg::MSG_CONTINUE
+                    f.write(session.read(size))
+                    status = session.gets.chomp
+                end
+            end
+        end
+        FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
+        session.puts(Cfg::MSG_DONE) if is_sync
+    end
 end
 
 MusicServer.new.listen if __FILE__ == $0
