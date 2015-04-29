@@ -115,7 +115,7 @@ module DBCache
             end
 
             def reset_audio(rtrack)
-                @audio[rtrack].status = Audio::Status::NOT_FOUND
+                @audio[rtrack].status = Audio::Status::UNKNOWN #NOT_FOUND
                 @audio[rtrack].file   = nil
             end
 

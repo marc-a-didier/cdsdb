@@ -379,35 +379,35 @@ class MainWindow < TopWindow
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
-        srv_db_version = MusicClient.get_server_db_version
-        file = File.basename(DBIntf.build_db_name(srv_db_version)+".dwl")
-        @mc.tasks.new_file_download(self, "db"+Cfg::FILE_INFO_SEP+file+Cfg::FILE_INFO_SEP+"0", -1)
+        file = File.basename(DBIntf.build_db_name(MusicClient.get_server_db_version))
+        @mc.tasks.new_download(TasksWindow::NetworkTask.new(:db, file, self))
     end
 
-    # Still unused but should re-enable all browsers when updating the database.
-    def dwl_file_name_notification(user_ref, file_name)
-         # Database update: rename the db as db.back and set the downloaded file as the new database.
-        if user_ref == -1
+    def task_completed(network_task)
+        if network_task.resource_type == :db
             file = DBIntf.build_db_name
-            File.unlink(file+".back") if File.exists?(file+".back")
+            File.unlink(file+'.back') if File.exists?(file+'.back')
             srv_db_version = MusicClient.get_server_db_version
             Trace.debug("new db version=#{srv_db_version}")
             DBIntf.disconnect
             if srv_db_version == Cfg.db_version
-                FileUtils.mv(file, file+".back")
+                FileUtils.mv(file, file+'.back')
             else
                 Cfg.set_db_version(srv_db_version)
             end
-            FileUtils.mv(file_name, DBIntf::build_db_name)
+            FileUtils.mv(Cfg.dir(:db)+network_task.resource_data, DBIntf.build_db_name)
             DBCache::Cache.clear
             @mc.reload_plists.reload_filters
             set_window_title
         end
     end
 
-    #
     def on_update_resources
-        MusicClient.synchronize_resources.each { |file| @mc.tasks.new_file_download(self, file, 0) } if Cfg.remote?
+        MusicClient.synchronize_gui_resources.each do |resource_type, resources_list|
+            resources_list.map do |resource|
+                @mc.tasks.new_download(TasksWindow::NetworkTask.new(resource_type, resource, self))
+            end
+        end if Cfg.remote?
     end
 
     def on_update_sources

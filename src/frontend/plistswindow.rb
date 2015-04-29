@@ -318,8 +318,8 @@ class PListsWindow < TopWindow
         update_ptime_label(@remaining_time)
     end
 
-    def dwl_file_name_notification(xlink, file_name)
-        @mc.audio_link_ok(xlink)
+    def task_completed(network_task)
+        @mc.audio_link_ok(network_task.resource_data)
         notify_player_if_provider
     end
 

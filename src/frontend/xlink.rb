@@ -74,20 +74,21 @@ module XIntf
             return audio_status == Audio::Status::ON_SERVER
         end
 
-        def get_audio_file(emitter, tasks)
+        def get_audio_file(network_task, tasks)
             # Try to find a local file if status is unknown
             setup_audio_file if audio.status == Audio::Status::UNKNOWN || audio.file.nil?
 
             # If status is on server, get the remote file.
-            return get_remote_audio_file(emitter, tasks) if available_on_server?
+            return get_remote_audio_file(network_task, tasks) if available_on_server?
 
             return audio.status
         end
 
-        def get_remote_audio_file(emitter, tasks)
+        def get_remote_audio_file(network_task, tasks)
             if Cfg.remote?
                 unless tasks.track_in_download?(self)
-                    tasks.new_track_download(emitter, self)
+#                     tasks.new_track_download(emitter, self)
+                    tasks.new_download(network_task)
                     set_audio_status(Audio::Status::ON_SERVER)
                 end
             else

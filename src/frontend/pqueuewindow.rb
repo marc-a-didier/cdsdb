@@ -203,9 +203,10 @@ class PQueueWindow < TopWindow
     end
 
     def enqueue(xlinks)
-        xlinks.each { |xlink|
+        xlinks.each do |xlink|
             # Trace.debug("enq before: audiostatus=#{xlink.audio_status}")
-            xlink.get_audio_file(self, @mc.tasks) unless xlink.playable?
+#             xlink.get_audio_file(self, @mc.tasks) unless xlink.playable?
+            xlink.get_audio_file(TasksWindow::NetworkTask.new(:track, xlink, self), @mc.tasks) unless xlink.playable?
             # Trace.debug("enq after : audiostatus=#{xlink.audio_status}")
             unless xlink.audio_status == Audio::Status::NOT_FOUND
                 @internal_ref += 1
@@ -223,13 +224,13 @@ class PQueueWindow < TopWindow
                     Gtk.main_iteration while Gtk.events_pending?
                 end
             end
-        }
+        end
         update_status
         @mc.track_list_changed(self)
     end
 
-    def dwl_file_name_notification(xlink, file_name)
-        @mc.audio_link_ok(xlink)
+    def task_completed(network_task)
+        @mc.audio_link_ok(network_task.resource_data)
         @mc.track_list_changed(self)
     end
 

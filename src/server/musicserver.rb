@@ -179,10 +179,17 @@ class MusicServer
     end
 
     def get_resources_list(session, is_sync)
+        # Get resource type to list
         resource_type = session.gets.chomp.to_sym
+
+        # Cache dir name to avoid repeated calls
+        dir = Cfg.dir(resource_type)
+
+        # Resource dir is scanned and resource directory removed from file name using sub
+        # cause we want to keep resources sub directories if any
         result = []
-        Dir[Cfg.dir(resource_type)+'*'].map do |file|
-            result << [File.basename(file), File.mtime(file).to_i] unless File.directory?(file)
+        Find.find(dir).map do |file|
+            result << [file.sub(dir, ''), File.mtime(file).to_i] unless File.directory?(file)
         end
         session.puts(result.to_json)
         session.puts(Cfg::MSG_DONE) if is_sync
@@ -264,38 +271,80 @@ class MusicServer
     end
 
     def has_resource(session, is_sync)
-        resource_type = session.gets.chomp.to_sym
-        file = session.gets.chomp
-
-        file = resource_type == :track ? Cfg.music_dir+file : Cfg.dir(resource_type)+file
+        # Hope the expression is parsed from left to right...
+        file = Cfg.dir(session.gets.chomp.to_sym)+session.gets.chomp
 
         session.puts(File.exists?(file) ? '1' : '0')
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 
     def upload_resource(session, is_sync)
-        resource_type = session.gets.chomp.to_sym
-        file = session.gets.chomp
+        # Hope the expression is parsed from left to right...
+        file = Cfg.dir(session.gets.chomp.to_sym)+session.gets.chomp
+        Log.info("Uploading file #{file} from #{hostname(session)}")
 
-        file = resource_type == :track ? Cfg.music_dir+file : Cfg.dir(resource_type)+file
+        FileUtils.mkpath(File.dirname(file)) unless Dir.exists?(File.dirname(file))
 
-        receive_resource(session, is_sync, file)
-    end
-
-    def receive_resource(session, is_sync, file)
         status = Cfg::MSG_CONTINUE
         File.open(file, 'w') do |f|
             file_size = session.gets.chomp.to_i
             if file_size > 0
                 block_size = session.gets
-                status = Cfg::MSG_CONTINUE
-                while (size = session.gets.chomp.to_i) > 0 &&  status == Cfg::MSG_CONTINUE
+                while (size = session.gets.chomp.to_i) > 0 && status == Cfg::MSG_CONTINUE
                     f.write(session.read(size))
                     status = session.gets.chomp
                 end
             end
         end
         FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
+        session.puts(Cfg::MSG_DONE) if is_sync
+    end
+
+    def download_resource(session, is_sync)
+        # Get expected resource type to send
+        resource_type = session.gets.chomp.to_sym
+
+        # Set the server file name to send depending on the resource type
+        case resource_type
+            # When audio, client must send the track PK so the server can send back
+            # the file name corresponding to the track
+            when :track
+                rtrack = session.gets.chomp.to_i
+                file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file
+                session.puts(file.sub(Cfg.music_dir, ''))
+            # Otherwise get file file name from the client
+            when :db
+                file = Cfg.database_dir+session.gets.chomp
+            else
+                file = Cfg.dir(resource_type)+session.gets.chomp
+        end
+
+        # Get the block size from client
+        block_size = session.gets.chomp.to_i
+
+        # If client prefers small size over quality, the requested block size is negative.
+        Cfg.size_over_quality = block_size < 0
+        block_size = block_size.abs
+
+        if File.exists?(file)
+            # Send the total file size to the client
+            session.puts(File.size(file))
+
+            # Loop sending blocks to client until complete or interrupted
+            status = Cfg::MSG_CONTINUE
+            File.open(file, "r") do |f|
+                while (data = f.read(block_size)) && status == Cfg::MSG_CONTINUE
+                    session.puts(data.size.to_s)
+                    session.write(data)
+                    status = session.gets.chomp
+                end
+            end
+        else
+            Log.warn("Requested file '#{file}' not found")
+        end
+
+        # Send 0 data size to client so it knows it's done
+        session.puts('0')
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 end

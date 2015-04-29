@@ -505,9 +505,8 @@ class TracksBrowser < Gtk::TreeView
         end
     end
 
-
-    def dwl_file_name_notification(xlink, file_name)
-        audio_link_ok(xlink)
+    def task_completed(network_task)
+        audio_link_ok(network_task.resource_data)
         @mc.track_list_changed(self)
     end
 
@@ -524,7 +523,7 @@ class TracksBrowser < Gtk::TreeView
 #         meth.call do |model, path, iter|
         selection.send(use_selection ? :selected_each : :each) do |model, path, iter|
             if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
-                iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
+                iter[TTV_DATA].get_remote_audio_file(TasksWindow::NetworkTask.new(:track, iter[TTV_DATA], self), @mc.tasks)
             end
         end
     end
@@ -535,13 +534,13 @@ class TracksBrowser < Gtk::TreeView
         # Replace each file not found state with server state
         MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
             if found == '0'
-                @mc.tasks.new_upload(:track, model.get_iter(i.to_s)[TTV_DATA])
+                @mc.tasks.new_upload(TasksWindow::NetworkTask.new(:track, model.get_iter(i.to_s)[TTV_DATA].audio_file, nil))
             end
         end
 
-Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_DATA].cover_file_name}")
+        Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_DATA].cover_file_name}")
         unless MusicClient.has_resource(:covers, model.get_iter('0')[TTV_DATA].cover_file_name)
-            @mc.tasks.new_upload(:covers, model.get_iter('0')[TTV_DATA].cover_file_name)
+            @mc.tasks.new_upload(TasksWindow::NetworkTask.new(:covers, model.get_iter('0')[TTV_DATA].cover_file_name, nil))
         end
     end
 

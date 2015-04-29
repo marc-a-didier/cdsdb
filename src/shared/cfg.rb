@@ -180,12 +180,19 @@ module Cfg
             return @cfg_store.remote
         end
 
-        def dir(type);   return rsrc_dir+type.to_s+"/" end
+        def dir(type)
+            return type == :track ? self.music_dir : self.rsrc_dir+type.to_s+"/"
+        end
+
         def covers_dir;  return dir(:covers)           end
         def icons_dir;   return dir(:icons)            end
         def flags_dir;   return dir(:flags)            end
         def sources_dir; return dir(:src)              end
         def rip_dir;     return ENV["HOME"]+"/rip/"    end
+
+        def relative_path(resource_type, file)
+            return file.sub(dir(resource_type), '')
+        end
 
         def db_version
             return @cfg["dbversion"]
