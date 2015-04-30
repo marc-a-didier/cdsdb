@@ -380,7 +380,7 @@ class MainWindow < TopWindow
             return
         end
         file = File.basename(DBIntf.build_db_name(MusicClient.get_server_db_version))
-        @mc.tasks.new_download(TasksWindow::NetworkTask.new(:db, file, self))
+        @mc.tasks.new_task(TasksWindow::NetworkTask.new(:download, :db, file, self))
     end
 
     def task_completed(network_task)
@@ -405,7 +405,7 @@ class MainWindow < TopWindow
     def on_update_resources
         [:covers, :flags, :icons].each do |resource_type|
             MusicClient.resources_to_update(resource_type).each do |resource|
-                @mc.tasks.new_download(TasksWindow::NetworkTask.new(resource_type, resource, self))
+                @mc.tasks.new_task(TasksWindow::NetworkTask.new(:download, resource_type, resource, self))
             end
         end if Cfg.remote?
     end

@@ -206,7 +206,7 @@ class PQueueWindow < TopWindow
         xlinks.each do |xlink|
             # Trace.debug("enq before: audiostatus=#{xlink.audio_status}")
 #             xlink.get_audio_file(self, @mc.tasks) unless xlink.playable?
-            xlink.get_audio_file(TasksWindow::NetworkTask.new(:track, xlink, self), @mc.tasks) unless xlink.playable?
+            xlink.get_audio_file(TasksWindow::NetworkTask.new(:download, :track, xlink, self), @mc.tasks) unless xlink.playable?
             # Trace.debug("enq after : audiostatus=#{xlink.audio_status}")
             unless xlink.audio_status == Audio::Status::NOT_FOUND
                 @internal_ref += 1

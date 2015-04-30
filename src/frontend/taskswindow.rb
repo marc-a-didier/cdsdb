@@ -1,7 +1,7 @@
 
 class TasksWindow < TopWindow
 
-    NetworkTask = Struct.new(# :action,         # action type (download/upload)
+    NetworkTask = Struct.new(:action,         # action type (download/upload)
                              :resource_type,  # type of file to work with
                              :resource_data,  # may be a file name or a cache link
                              :resource_owner, # call resource_owner.task_completed at the end
@@ -18,11 +18,11 @@ class TasksWindow < TopWindow
     STAT_RUN        = 4
     STAT_CANCELLED  = 5
 
-    TASK_AUDIO_DL = 0
-    TASK_FILE_DL  = 1
-    TASK_UPLOAD   = 2
-
-    TASKS = ["Audio download", "File download", "Upload"]
+#     TASK_AUDIO_DL = 0
+#     TASK_FILE_DL  = 1
+#     TASK_UPLOAD   = 2
+#
+#     TASKS = ["Audio download", "File download", "Upload"]
 
     COL_TASK_TYPE = 0
     COL_TITLE     = 1
@@ -47,7 +47,7 @@ class TasksWindow < TopWindow
 
         task_renderer = Gtk::CellRendererText.new
         task_column = Gtk::TreeViewColumn.new("Task", task_renderer)
-        task_column.set_cell_data_func(task_renderer) { |col, renderer, model, iter| renderer.text = TASKS[iter[COL_TASK_TYPE]] }
+        task_column.set_cell_data_func(task_renderer) { |col, renderer, model, iter| renderer.text = task_type(iter[COL_TASK]) }
 
         status_renderer = Gtk::CellRendererText.new
         status_column = Gtk::TreeViewColumn.new("Status", status_renderer)
@@ -58,7 +58,7 @@ class TasksWindow < TopWindow
         @tv.append_column(progress_column)
         @tv.append_column(status_column)
 
-        @tv.model = Gtk::ListStore.new(Integer, String, Integer, Integer, Class)
+        @tv.model = Gtk::ListStore.new(Symbol, String, Integer, Integer, Class)
 
         @tv.signal_connect(:button_press_event) do |widget, event|
             if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
@@ -101,17 +101,11 @@ class TasksWindow < TopWindow
             @tv.model.each do |model, path, iter|
                 break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD || iter[COL_STATUS] == STAT_UPLOAD
 
-                if (iter[COL_TASK_TYPE] == TASK_FILE_DL || iter[COL_TASK_TYPE] == TASK_AUDIO_DL ||
-                    iter[COL_TASK_TYPE] == TASK_UPLOAD) && iter[COL_STATUS] == STAT_WAITING
-
+                if iter[COL_STATUS] == STAT_WAITING
                     @tv.set_cursor(iter.path, nil, false)
-                    iter[COL_STATUS] = iter[COL_TASK_TYPE] == TASK_UPLOAD ? STAT_UPLOAD : STAT_DOWNLOAD
+                    iter[COL_STATUS] = iter[COL_TASK_TYPE] == :upload ? STAT_UPLOAD : STAT_DOWNLOAD
 
-                    if iter[COL_TASK_TYPE] == TASK_UPLOAD
-                        MusicClient.upload_resource(iter[COL_TASK])
-                    else
-                        MusicClient.download_resource(iter[COL_TASK])
-                    end
+                    MusicClient.send(iter[COL_TASK_TYPE] == :upload ? :upload_resource : :download_resource, iter[COL_TASK])
                 end
             end
         end
@@ -131,7 +125,7 @@ class TasksWindow < TopWindow
                     end
                 end
             end
-        elsif !@chk_thread.nil?
+        elsif @chk_thread
             DBCache::Cache.set_audio_status_from_to(Audio::Status::ON_SERVER, Audio::Status::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
@@ -153,15 +147,24 @@ class TasksWindow < TopWindow
         return false
     end
 
-    def title_from_task(network_task)
-        title = network_task.resource_type == :track ? 'Audio ' : 'File '
-        title += network_task.action.to_s == :upload ? 'upload' : 'download'
+    def task_type(network_task)
+        type = network_task.resource_type == :track ? 'Audio ' : 'File '
+        return type+network_task.action.to_s
     end
 
-    def new_task(task_type, title, network_task)
+    def task_title(network_task)
+        if network_task.resource_type == :track && network_task.action == :download
+            return network_task.resource_data.track.stitle
+        else
+            return File.basename(network_task.resource_data)
+        end
+    end
+
+#     def new_task(task_type, title, network_task)
+    def new_task(network_task)
         iter = @tv.model.append
-        iter[COL_TASK_TYPE] = task_type
-        iter[COL_TITLE]     = title
+        iter[COL_TASK_TYPE] = network_task.action
+        iter[COL_TITLE]     = task_title(network_task)
         iter[COL_PROGRESS]  = 0
         iter[COL_STATUS]    = STAT_WAITING
         iter[COL_TASK]      = network_task
@@ -172,17 +175,17 @@ class TasksWindow < TopWindow
         return iter
     end
 
-    def new_download(network_task)
-        if network_task.resource_type == :track
-            new_task(TASK_AUDIO_DL, network_task.resource_data.track.stitle, network_task)
-        else
-            new_task(TASK_FILE_DL, File.basename(network_task.resource_data), network_task)
-        end
-    end
-
-    def new_upload(network_task)
-        new_task(TASK_UPLOAD, File.basename(network_task.resource_data), network_task)
-    end
+#     def new_download(network_task)
+#         if network_task.resource_type == :track
+#             new_task(TASK_AUDIO_DL, network_task.resource_data.track.stitle, network_task)
+#         else
+#             new_task(TASK_FILE_DL, File.basename(network_task.resource_data), network_task)
+#         end
+#     end
+#
+#     def new_upload(network_task)
+#         new_task(TASK_UPLOAD, File.basename(network_task.resource_data), network_task)
+#     end
 
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i
