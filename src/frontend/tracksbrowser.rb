@@ -94,7 +94,6 @@ class TracksBrowser < Gtk::TreeView
         GtkUI[GtkIDs::TRK_POPUP_ADD].signal_connect(:activate)       { on_trk_add }
         GtkUI[GtkIDs::TRK_POPUP_DEL].signal_connect(:activate)       { on_trk_del }
         GtkUI[GtkIDs::TRK_POPUP_DELFROMFS].signal_connect(:activate) { on_del_from_fs }
-#         GtkUI[GtkIDs::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { on_download_trk }
         GtkUI[GtkIDs::TRK_POPUP_DOWNLOAD].signal_connect(:activate)  { download_tracks(true) }
         GtkUI[GtkIDs::TRK_POPUP_TAGFILE].signal_connect(:activate)   { on_tag_file }
         GtkUI[GtkIDs::TRK_POPUP_UPDPTIME].signal_connect(:activate)  { on_update_playtime }
@@ -510,17 +509,7 @@ class TracksBrowser < Gtk::TreeView
         @mc.track_list_changed(self)
     end
 
-    def on_download_trk
-        selection.selected_each do |model, path, iter|
-            if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
-                iter[TTV_DATA].get_remote_audio_file(self, @mc.tasks)
-            end
-        end
-    end
-
     def download_tracks(use_selection)
-#         meth = use_selection ? selection.method(:selected_each) : model.method(:each)
-#         meth.call do |model, path, iter|
         selection.send(use_selection ? :selected_each : :each) do |model, path, iter|
             if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(TasksWindow::NetworkTask.new(:track, iter[TTV_DATA], self), @mc.tasks)

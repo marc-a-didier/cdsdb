@@ -87,7 +87,6 @@ module XIntf
         def get_remote_audio_file(network_task, tasks)
             if Cfg.remote?
                 unless tasks.track_in_download?(self)
-#                     tasks.new_track_download(emitter, self)
                     tasks.new_download(network_task)
                     set_audio_status(Audio::Status::ON_SERVER)
                 end

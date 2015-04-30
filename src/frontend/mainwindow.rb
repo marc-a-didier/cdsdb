@@ -403,14 +403,14 @@ class MainWindow < TopWindow
     end
 
     def on_update_resources
-        MusicClient.synchronize_gui_resources.each do |resource_type, resources_list|
-            resources_list.map do |resource|
+        [:covers, :flags, :icons].each do |resource_type|
+            MusicClient.resources_to_update(resource_type).each do |resource|
                 @mc.tasks.new_download(TasksWindow::NetworkTask.new(resource_type, resource, self))
             end
         end if Cfg.remote?
     end
 
     def on_update_sources
-        MusicClient.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
+        # MusicClient.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
     end
 end

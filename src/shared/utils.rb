@@ -4,28 +4,6 @@ module Utils
     # Default random numbers file name
     RANDOM_FILE = ENV['HOME']+"/Downloads/randomorg.bin"
 
-    #
-    # Methods intended to deal with the fact that files may now be anywhere on disk rather than just ../
-	#
-	# Expected format for input params is what is sent by server:
-	#   type@:@file_name@:@modification_time
-	#
-	# file_name is the base name of the file or base name + immediate parent directory
-    #
-    def self.replace_dir_name(file_info)
-        type, name, mtime = file_info.split(Cfg::FILE_INFO_SEP)
-        return Cfg.dir(type.to_sym)+name
-    end
-
-    def self.has_matching_file?(file_info)
-        type, name, mdtime = file_info.split(Cfg::FILE_INFO_SEP)
-        local_file = Cfg.dir(type.to_sym)+name
-        return File::exists?(local_file) && File::mtime(local_file).to_i >= mdtime.to_i
-    end
-
-    def self.get_file_name(file_info)
-        return file_info.split(Cfg::FILE_INFO_SEP)[1]
-    end
 
     # Misc methods to try to get some randomness as by experience every
     # random based run is almost predictible...

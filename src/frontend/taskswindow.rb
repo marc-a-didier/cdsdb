@@ -1,9 +1,7 @@
 
 class TasksWindow < TopWindow
 
-    TaskData = Struct.new(:user_ref, :emitter, :file_info, :resource_type)
-
-    NetworkTask = Struct.new(# :network_op, # operation type (download/upload)
+    NetworkTask = Struct.new(# :action,         # action type (download/upload)
                              :resource_type,  # type of file to work with
                              :resource_data,  # may be a file name or a cache link
                              :resource_owner, # call resource_owner.task_completed at the end
@@ -23,9 +21,8 @@ class TasksWindow < TopWindow
     TASK_AUDIO_DL = 0
     TASK_FILE_DL  = 1
     TASK_UPLOAD   = 2
-    TASK_PROGRESS = 3
 
-    TASKS = ["Audio download", "File download", "Upload", "Database operation"]
+    TASKS = ["Audio download", "File download", "Upload"]
 
     COL_TASK_TYPE = 0
     COL_TITLE     = 1
@@ -106,16 +103,14 @@ class TasksWindow < TopWindow
 
                 if (iter[COL_TASK_TYPE] == TASK_FILE_DL || iter[COL_TASK_TYPE] == TASK_AUDIO_DL ||
                     iter[COL_TASK_TYPE] == TASK_UPLOAD) && iter[COL_STATUS] == STAT_WAITING
+
                     @tv.set_cursor(iter.path, nil, false)
                     iter[COL_STATUS] = iter[COL_TASK_TYPE] == TASK_UPLOAD ? STAT_UPLOAD : STAT_DOWNLOAD
-                    case iter[COL_TASK_TYPE]
-#                         when TASK_FILE_DL then  MusicClient.get_file(iter[COL_TASK].file_info, self, iter)
-#                         when TASK_AUDIO_DL then MusicClient.get_audio_file(self, iter, iter[COL_TASK].user_ref.track.rtrack)
-                        when TASK_FILE_DL then  MusicClient.download_resource(iter[COL_TASK])
-                        when TASK_AUDIO_DL then MusicClient.download_resource(iter[COL_TASK])
-#                         when TASK_UPLOAD then   MusicClient.upload_track(self, iter, iter[COL_TASK].user_ref.track.rtrack)
-#                         when TASK_UPLOAD then   MusicClient.upload_resource(self, iter, iter[COL_TASK].resource_type, iter[COL_TASK].user_ref)
-                        when TASK_UPLOAD then   MusicClient.upload_resource(iter[COL_TASK])
+
+                    if iter[COL_TASK_TYPE] == TASK_UPLOAD
+                        MusicClient.upload_resource(iter[COL_TASK])
+                    else
+                        MusicClient.download_resource(iter[COL_TASK])
                     end
                 end
             end
@@ -158,6 +153,11 @@ class TasksWindow < TopWindow
         return false
     end
 
+    def title_from_task(network_task)
+        title = network_task.resource_type == :track ? 'Audio ' : 'File '
+        title += network_task.action.to_s == :upload ? 'upload' : 'download'
+    end
+
     def new_task(task_type, title, network_task)
         iter = @tv.model.append
         iter[COL_TASK_TYPE] = task_type
@@ -172,17 +172,7 @@ class TasksWindow < TopWindow
         return iter
     end
 
-    def new_track_download(network_task)
-        new_task(TASK_AUDIO_DL, network_task.reource_data.track.stitle, network_task)
-    end
-
-    def new_file_download(network_task)
-#         new_task(TASK_FILE_DL, emitter, Utils.get_file_name(file_info), user_ref, file_info)
-        new_task(TASK_FILE_DL, File.basename(network_task.resource_data), network_task)
-    end
-
     def new_download(network_task)
-#         new_task(TASK_FILE_DL, emitter, File.basename(file), file, file_info)
         if network_task.resource_type == :track
             new_task(TASK_AUDIO_DL, network_task.resource_data.track.stitle, network_task)
         else

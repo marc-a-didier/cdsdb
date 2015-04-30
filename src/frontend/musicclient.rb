@@ -64,12 +64,6 @@ module MusicClient
         return rs
     end
 
-    def self.update_stats(rtrack)
-        return unless socket = hand_shake("update stats")
-        socket.puts(rtrack.to_s)
-        close_connection(socket)
-    end
-
     def self.exec_sql(sql)
         return unless socket = hand_shake("exec sql")
         socket.puts(sql)
@@ -88,22 +82,22 @@ module MusicClient
         close_connection(socket)
     end
 
-    def self.synchronize_resources
-        return [] unless socket = hand_shake("synchronize resources")
-        resources = []
-        str = socket.gets.chomp
-        until str == Cfg::MSG_EOL
-            resources << str unless Utils.has_matching_file?(str) #File.exists?(str)
-            str = socket.gets.chomp
-        end
+    def self.rename_audio(rtrack, new_title)
+        return unless socket = hand_shake("rename audio")
+        socket.puts(rtrack.to_s)
+        socket.puts(new_title)
         close_connection(socket)
-        Trace.debug("<--> Resources list received.".green) if Cfg.trace_network
-        p resources
-        return resources
     end
 
+    #
+    # Get outdated resources for a resource type and
+    # return them as an array of files
+    #
+    # OUT: resource type
+    # IN : an array of arrays [ [file, modification time], ... ] in json format
+    #
     def self.resources_to_update(resource_type)
-        return [] unless socket = hand_shake("get resources list")
+        return [] unless socket = hand_shake("resources list")
         socket.puts(resource_type.to_s)
         updates = []
         JSON.parse(socket.gets.chomp).each do |file, mtime|
@@ -112,119 +106,18 @@ module MusicClient
         return updates
     end
 
-    def self.synchronize_gui_resources
-        updates = {}
-        [:covers, :flags, :icons].each do |resource_type|
-            updates[resource_type] = self.resources_to_update(resource_type)
-p resource_type
-p updates[resource_type]
-        end
-        return updates
-    end
-
-    def self.synchronize_sources
-        return [] unless socket = hand_shake("synchronize sources")
-        files = []
-        str = socket.gets.chomp
-        until str == Cfg::MSG_EOL
-            files << str unless Utils.has_matching_file?(str)
-            str = socket.gets.chomp
-        end
-        close_connection(socket)
-        Trace.debug("<--> Sources list received.".green) if Cfg.trace_network
-        return files
-    end
-
-    def self.rename_audio(rtrack, new_title)
-        return unless socket = hand_shake("rename audio")
-        socket.puts(rtrack.to_s)
-        socket.puts(new_title)
-        close_connection(socket)
-    end
-
-    def self.get_audio_file(tasks, task_id, rtrack)
-        return "" unless socket = hand_shake("send audio")
-
-        # If we prefer small size over quality, pass the block size as a negative number
-        socket.puts(Cfg.size_over_quality ? (-Cfg.tx_block_size).to_s : Cfg.tx_block_size.to_s)
-
-        file = ""
-        if socket.gets.chomp.to_i == Cfg.tx_block_size
-            Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
-            socket.puts(rtrack.to_s)
-            size = socket.gets.chomp.to_i
-            unless size == 0
-                file = socket.gets.chomp
-                FileUtils.mkpath(Cfg.music_dir+File.dirname(file))
-                file = Cfg.music_dir+file
-                download_file(tasks, task_id, file, size, socket)
-            end
-        end
-#         close_connection(socket)
-        return file
-    end
-
-    def self.get_file(file_name, tasks, task_id)
-        return false unless socket = hand_shake("send file")
-        size = 0
-        socket.puts(Cfg.tx_block_size.to_s)
-        if socket.gets.chomp.to_i == Cfg.tx_block_size
-            Trace.debug("<--> Negociated block size is #{Cfg.tx_block_size.to_s} bytes".brown) if Cfg.trace_network
-            socket.puts(file_name)
-            size = socket.gets.chomp.to_i
-            download_file(tasks, task_id, Utils.replace_dir_name(file_name), size, socket) unless size == 0
-        end
-#         close_connection(socket)
-        return size > 0
-    end
-
-    def self.download_file(tasks, task_id, file_name, file_size, socket)
-        curr_size = 0
-        status = Cfg::MSG_CONTINUE
-        FileUtils.mkpath(File.dirname(file_name)) #unless File.directory?(File.dirname(file_name))
-        f = File.new(file_name, "wb")
-        while (data = socket.read(Cfg.tx_block_size))
-            curr_size += data.size
-            status = tasks.update_file_op(task_id, curr_size, file_size)
-            socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED) if curr_size < file_size
-            break if status == Cfg::MSG_CANCELLED
-            f.write(data)
-        end
-        # Must close the file before calling end_file_op, there may be ops on this file.
-        f.close
-#         close_connection(socket)
-        socket.close
-        tasks.end_file_op(task_id, file_name, status)
-        FileUtils.rm(file_name) if status == Cfg::MSG_CANCELLED
-    end
-
-    def self.upload_track(tasks, task_id, rtrack)
-        return false unless socket = hand_shake("upload file")
-
-        status = Cfg::STAT_CONTINUE
-        file = Audio::Link.new.set_track_ref(rtrack).setup_audio_file.file
-        file_size = File.size(file)
-
-        socket.puts(file.sub(Cfg.music_dir, ''))
-        if file_size > 0
-            curr_size = 0
-            socket.puts(file_size.to_s)
-            socket.puts(Cfg.tx_block_size.to_s)
-            File.open(file, "r") do |f|
-                while data = f.read(Cfg.tx_block_size)
-                    curr_size += data.size
-                    socket.puts(data.size.to_s)
-                    socket.write(data)
-                    status = tasks.update_file_op(task_id, curr_size, file_size)
-                    socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED)
-                end
-            end
-        end
-        socket.puts('0')
-        close_connection(socket)
-        tasks.end_file_op(task_id, status)
-    end
-
+    #
+    # Download resource from server
+    #
+    # OUT: expected resource type
+    # OUT: track PK is resource is a track, otherwise file name
+    # OUT: transfer block size, negative if resource is track and want smallest file size
+    # IN : resource size
+    # repeated:
+    #   IN : block data size
+    #   IN : block data
+    #   OUT: status (continue/cancel)
+    #
     def self.download_resource(network_task)
         return false unless socket = hand_shake("download resource")
 
@@ -259,7 +152,8 @@ p updates[resource_type]
 
         status = Cfg::STAT_CONTINUE
 
-        # Create destination file
+        # Create destination path & file
+        FileUtils.mkpath(File.dirname(file))
         File.open(file, 'w') do |f|
 
             # Get the total file size
@@ -280,8 +174,39 @@ p updates[resource_type]
         FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
         close_connection(socket)
         network_task.task_owner.end_file_op(network_task.task_ref, status)
+
+        Trace.debug("<--> Downloaded '#{file.cyan}'") if Cfg.trace_network
     end
 
+    #
+    # Check if a resource is available on the server
+    #
+    # OUT: resource type searched for
+    # OUT: file name searched for
+    # IN : '1' if resouce found, '0' otherwise
+    #
+    def self.has_resource(resource_type, file)
+        return false unless socket = hand_shake("has resource")
+        socket.puts(resource_type.to_s)
+        socket.puts(Cfg.relative_path(resource_type, file))
+        status = socket.gets.chomp
+        close_connection(socket)
+        Trace.debug("<--> Checked resource '#{file.cyan}'") if Cfg.trace_network
+        return status == '1'
+    end
+
+    #
+    # Upload a resource to the server
+    #
+    # OUT: resource type
+    # OUT: resource file name
+    # OUT: resource file size
+    # repeated:
+    #   OUT: block data size
+    #   OUT: block data
+    #   OUT: status (continue/cancel)
+    # OUT: '0' block size
+    #
     def self.upload_resource(network_task)
         return false unless socket = hand_shake("upload resource")
 
@@ -294,7 +219,6 @@ p updates[resource_type]
         if file_size > 0
             curr_size = 0
             socket.puts(file_size.to_s)
-            socket.puts(Cfg.tx_block_size.to_s)
             File.open(network_task.resource_data, "r") do |f|
                 while (data = f.read(Cfg.tx_block_size)) && status == Cfg::STAT_CONTINUE
                     curr_size += data.size
@@ -308,14 +232,7 @@ p updates[resource_type]
         socket.puts('0')
         close_connection(socket)
         network_task.task_owner.end_file_op(network_task.task_ref, status)
-    end
 
-    def self.has_resource(resource_type, file)
-        return false unless socket = hand_shake("has resource")
-        socket.puts(resource_type.to_s)
-        socket.puts(Cfg.relative_path(resource_type, file))
-        status = socket.gets.chomp
-        close_connection(socket)
-        return status == '1'
+        Trace.debug("<--> Uploaded '#{file.cyan}'") if Cfg.trace_network
     end
 end
