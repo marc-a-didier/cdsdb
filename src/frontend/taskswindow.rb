@@ -18,12 +18,6 @@ class TasksWindow < TopWindow
     STAT_RUN        = 4
     STAT_CANCELLED  = 5
 
-#     TASK_AUDIO_DL = 0
-#     TASK_FILE_DL  = 1
-#     TASK_UPLOAD   = 2
-#
-#     TASKS = ["Audio download", "File download", "Upload"]
-
     COL_TASK_TYPE = 0
     COL_TITLE     = 1
     COL_PROGRESS  = 2
@@ -115,9 +109,7 @@ class TasksWindow < TopWindow
         if Cfg.remote?
             if @chk_thread.nil?
                 Trace.debug("Task thread started...".green) if Cfg.trace_network
-#                 MusicClient.is_server_alive?
                 DBCache::Cache.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
-#                 GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Connected mode]"
                 @chk_thread = Thread.new do
                     loop do
                         check_waiting_tasks
@@ -129,7 +121,6 @@ class TasksWindow < TopWindow
             DBCache::Cache.set_audio_status_from_to(Audio::Status::ON_SERVER, Audio::Status::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
-#             GtkUI[GtkIDs::MAIN_WINDOW].title = "CDsDB -- [Local mode]"
             Trace.debug("Task thread stopped".brown) if Cfg.trace_network
         end
     end
@@ -160,7 +151,6 @@ class TasksWindow < TopWindow
         end
     end
 
-#     def new_task(task_type, title, network_task)
     def new_task(network_task)
         iter = @tv.model.append
         iter[COL_TASK_TYPE] = network_task.action
@@ -174,18 +164,6 @@ class TasksWindow < TopWindow
 
         return iter
     end
-
-#     def new_download(network_task)
-#         if network_task.resource_type == :track
-#             new_task(TASK_AUDIO_DL, network_task.resource_data.track.stitle, network_task)
-#         else
-#             new_task(TASK_FILE_DL, File.basename(network_task.resource_data), network_task)
-#         end
-#     end
-#
-#     def new_upload(network_task)
-#         new_task(TASK_UPLOAD, File.basename(network_task.resource_data), network_task)
-#     end
 
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i

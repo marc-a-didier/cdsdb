@@ -174,8 +174,6 @@ module MusicClient
         FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
         close_connection(socket)
         network_task.task_owner.end_file_op(network_task.task_ref, status)
-
-        Trace.debug("<--> Downloaded '#{file.cyan}'") if Cfg.trace_network
     end
 
     #
@@ -232,7 +230,5 @@ module MusicClient
         socket.puts('0')
         close_connection(socket)
         network_task.task_owner.end_file_op(network_task.task_ref, status)
-
-        Trace.debug("<--> Uploaded '#{file.cyan}'") if Cfg.trace_network
     end
 end
