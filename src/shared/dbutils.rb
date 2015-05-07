@@ -11,7 +11,7 @@ module DBUtils
     end
 
     def self.log_exec(sql, host = "localhost")
-        Trace.debug(sql) if !Cfg.server_mode && Cfg.trace_sql
+        Trace.sql(sql)
         Log.info(sql+" [#{host}]")
         DBIntf.execute(sql)
     end
@@ -31,7 +31,7 @@ module DBUtils
     end
 
     def self.exec_local_batch(sql, host)
-        Trace.debug(sql) if !Cfg.server_mode && Cfg.trace_sql
+        Trace.sql(sql)
         DBIntf.transaction do |db|
             Log.info(sql+" [#{host}]")
             db.execute_batch(sql)

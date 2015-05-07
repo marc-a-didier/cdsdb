@@ -17,7 +17,7 @@ module MusicClient
     def self.close_connection(socket)
         if Cfg.sync_comms
             status = socket.gets.chomp
-            Trace.debug("<--> Server transaction: #{status.green}") if Cfg.trace_network
+            Trace.net("server transaction [#{status.green}]")
         end
         socket.close
     end
@@ -27,10 +27,9 @@ module MusicClient
         return nil unless socket
 
         # Server always first responds 'OK' if the method is supported
-        Trace.debug("<--> Request is: #{msg.green}") if Cfg.trace_network
         socket.puts(msg+Cfg::SYNC_HDR+Cfg::SYNC_MODE[Cfg.sync_comms])
         response = socket.gets.chomp
-        Trace.debug("<--> Server response is: #{response.green}") if Cfg.trace_network
+        Trace.net("[#{msg.magenta}] <-> [#{response.green}]")
 
         return socket if response == Cfg::MSG_OK
 
@@ -44,7 +43,7 @@ module MusicClient
 
     def self.is_server_alive?
         return false unless socket = hand_shake("is alive")
-        Trace.debug("<--> Server alive request: #{socket.gets.chomp.green}") if Cfg.trace_network
+        Trace.net("server alive request [#{socket.gets.chomp.green}]")
         close_connection(socket)
         return true
     end
@@ -189,7 +188,7 @@ module MusicClient
         socket.puts(Cfg.relative_path(resource_type, file))
         status = socket.gets.chomp
         close_connection(socket)
-        Trace.debug("<--> Checked resource '#{file.cyan}'") if Cfg.trace_network
+        Trace.net("checked resource '#{file.cyan}'")
         return status == '1'
     end
 

@@ -33,9 +33,9 @@ module DBCache
             def artist(rartist)
                 if @artists[rartist].nil?
                     @artists[rartist] = DBClasses::Artist.new.ref_load(rartist)
-                    Trace.debug("Artist cache MISS for key #{rartist}, size=#{@artists.size}") if Cfg.trace_db_cache
+                    Trace.dbc("artist cache MISS for key #{rartist}, size=#{@artists.size}")
                 else
-                    Trace.debug("Artist cache HIT for key #{rartist}, size=#{@artists.size}") if Cfg.trace_db_cache
+                    Trace.dbc("artist cache HIT for key #{rartist}, size=#{@artists.size}")
                 end
                 return @artists[rartist]
             end
@@ -43,9 +43,9 @@ module DBCache
             def record(rrecord)
                 if @records[rrecord].nil?
                     @records[rrecord] = DBClasses::Record.new.ref_load(rrecord)
-                    Trace.debug("Record cache MISS for key #{rrecord}, size=#{@records.size}") if Cfg.trace_db_cache
+                    Trace.dbc("record cache MISS for key #{rrecord}, size=#{@records.size}")
                 else
-                    Trace.debug("Record cache HIT for key #{rrecord}, size=#{@records.size}") if Cfg.trace_db_cache
+                    Trace.dbc("record cache HIT for key #{rrecord}, size=#{@records.size}")
                 end
                 return @records[rrecord]
             end
@@ -53,9 +53,9 @@ module DBCache
             def segment(rsegment)
                 if @segments[rsegment].nil?
                     @segments[rsegment] = DBClasses::Segment.new.ref_load(rsegment)
-                    Trace.debug("Segment cache MISS for key #{rsegment}, size=#{@segments.size}") if Cfg.trace_db_cache
+                    Trace.dbc("segment cache MISS for key #{rsegment}, size=#{@segments.size}")
                 else
-                    Trace.debug("Segment cache HIT for key #{rsegment}, size=#{@segments.size}") if Cfg.trace_db_cache
+                    Trace.dbc("segment cache HIT for key #{rsegment}, size=#{@segments.size}")
                 end
                 return @segments[rsegment]
             end
@@ -64,9 +64,9 @@ module DBCache
                 if @tracks[rtrack].nil?
                     @tracks[rtrack] = DBClasses::Track.new.ref_load(rtrack)
                     @audio[rtrack] = TrackState.new(Audio::Status::UNKNOWN, nil)
-                    Trace.debug("Track cache MISS for key #{rtrack}, size=#{@tracks.size}") if Cfg.trace_db_cache
+                    Trace.dbc("Track cache MISS for key #{rtrack}, size=#{@tracks.size}")
                 else
-                    Trace.debug("Track cache HIT for key #{rtrack}, size=#{@tracks.size}") if Cfg.trace_db_cache
+                    Trace.dbc("track cache HIT for key #{rtrack}, size=#{@tracks.size}")
                 end
                 return @tracks[rtrack]
             end
@@ -123,7 +123,7 @@ module DBCache
                 # instance_variables.each { |cache| cache.clear } # Marche pas!!!???
                 [@artists, @records, @segments, @tracks, @audio,
                 @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
-                Trace.debug("ALL CACHES cleared") if Cfg.trace_db_cache
+                Trace.dbc("ALL CACHES cleared")
             end
 
             # Set audio status from a status to another

@@ -52,13 +52,13 @@ module XIntf
                     data = @map[key]
                     if size == SMALL_SIZE
                         if data.small_pix.nil?
-                            Trace.debug("Image::Cache check pix load small from cache".brown) if Cfg.trace_image_cache
+                            Trace.imc("Image::Cache check pix load small from cache".brown)
                             data.small_pix = Gdk::Pixbuf.new(Cfg.covers_dir+data.file_name, size, size)
                         end
                         return data.small_pix
                     else
                         if data.large_pix.nil?
-                            Trace.debug("Image::Cache check pix load large from cache".brown) if Cfg.trace_image_cache
+                            Trace.imc("Image::Cache check pix load large from cache".brown)
                             data.large_pix = Gdk::Pixbuf.new(Cfg.covers_dir+data.file_name, size, size)
                         end
                         return data.large_pix
@@ -67,7 +67,7 @@ module XIntf
 
                 def load_cover(key, size, file_name)
                     fname = Cfg.covers_dir+file_name
-                    Trace.debug("Image::Cache load_cover from #{fname} size=#{@map.size+1}".red) if Cfg.trace_image_cache
+                    Trace.imc("Image::Cache load_cover from #{fname} size=#{@map.size+1}".red)
                     if size == SMALL_SIZE
                         @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
                         return @map[key].small_pix
@@ -114,11 +114,11 @@ module XIntf
                 def get_flag(rorigin)
                     key = "f"+rorigin.to_s
                     if @map[key].nil?
-                        Trace.debug("Flag MISS for origin #{rorigin}".red) if Cfg.trace_image_cache
+                        Trace.imc("Flag MISS for origin #{rorigin}".red)
                         file = Cfg.flags_dir+rorigin.to_s+".svg"
                         File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
                     else
-                        Trace.debug("Flag HIT for origin #{rorigin}".red) if Cfg.trace_image_cache
+                        Trace.imc("Flag HIT for origin #{rorigin}".red)
                     end
                     return @map[key]
                 end
@@ -141,13 +141,13 @@ module XIntf
                             next if File::directory?(file)
                             key =  "t"+File::basename(file).gsub(File::extname(file), "")
                             @map[key] = ImageData.new(file.gsub(Cfg.covers_dir, ""), nil, nil)
-                            Trace.debug("Key #{key} added, file=#{@map[key].file_name}") if Cfg.trace_image_cache
+                            Trace.imc("Key #{key} added, file=#{@map[key].file_name}")
                         end
                     end
                 end
 
                 def dump_infos
-                    Trace.debug("Image cache size=#{@map.size}")
+                    Trace.imc("cache size=#{@map.size}")
                 end
             end
         end

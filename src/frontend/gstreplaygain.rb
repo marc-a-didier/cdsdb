@@ -8,7 +8,7 @@ module GStreamer
     #
     def self.analyze(files)
 
-        Trace.debug("Starting gain evaluation".green) if Cfg.trace_gst
+        Trace.gst("starting gain evaluation".green)
 
         tpeak = tgain = rpeak = rgain = 0.0
         done  = false
@@ -72,12 +72,12 @@ module GStreamer
 
             gains << [tgain, tpeak]
 
-            Trace.debug("Track gain=#{tgain}, peak=#{tpeak}".cyan) if Cfg.trace_gst
+            Trace.gst("track gain=#{tgain}, peak=#{tpeak}".cyan)
         end
         rgana.set_state(Gst::STATE_NULL)
 
         gains << [rgain, rpeak]
-        Trace.debug("Record gain=#{rgain}, peak=#{rpeak}".brown) if Cfg.trace_gst
+        Trace.gst("record gain=#{rgain}, peak=#{rpeak}".brown)
 
         return gains
     end
