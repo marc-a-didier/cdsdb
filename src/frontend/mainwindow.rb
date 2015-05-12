@@ -159,7 +159,7 @@ class MainWindow < TopWindow
 
         GtkUI[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
 
-        GtkUI[REC_VP_IMAGE].signal_connect("button_press_event") { zoom_rec_image }
+        GtkUI[REC_VP_IMAGE].signal_connect("button_press_event") { zoom_rec_image; true }
 
         GtkUI[MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
         GtkUI[MAIN_WINDOW].signal_connect(:delete_event) { @mc.clean_up; false }

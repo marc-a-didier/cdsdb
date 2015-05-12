@@ -275,7 +275,7 @@ class ChartsWindow < TopWindow
                             INNER JOIN records ON tracks.rrecord=records.rrecord
                             INNER JOIN origins ON origins.rorigin=artists.rorigin
                             INNER JOIN logtracks ON tracks.rtrack=logtracks.rtrack
-                        WHERE tracks.iplayed > 0 " #AND origins.rorigin > 0 }
+                        WHERE tracks.iplayed > 0 } #AND origins.rorigin > 0 }
                 group_by = "artists.rorigin"
             when VIEW_MTYPES
                 sql = %{SELECT #{field}, genres.rgenre, genres.sname FROM tracks

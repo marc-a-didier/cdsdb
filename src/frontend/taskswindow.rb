@@ -97,9 +97,9 @@ class TasksWindow < TopWindow
 
                 if iter[COL_STATUS] == STAT_WAITING
                     @tv.set_cursor(iter.path, nil, false)
-                    iter[COL_STATUS] = iter[COL_TASK_TYPE] == :upload ? STAT_UPLOAD : STAT_DOWNLOAD
+                    iter[COL_STATUS] = iter[COL_TASK_TYPE].to_sym == :upload ? STAT_UPLOAD : STAT_DOWNLOAD
 
-                    MusicClient.send(iter[COL_TASK_TYPE] == :upload ? :upload_resource : :download_resource, iter[COL_TASK])
+                    MusicClient.send(iter[COL_TASK_TYPE].to_sym == :upload ? :upload_resource : :download_resource, iter[COL_TASK])
                 end
             end
         end

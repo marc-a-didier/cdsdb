@@ -71,8 +71,6 @@ class TracksBrowser < Gtk::TreeView
             green = iter[TTV_DATA].track.iplayed
             green = 255 if green > 255
             renderer.set_foreground(sprintf('#00%02x00', green))
-#             other = 255-green
-#             renderer.set_background(sprintf('#%02x%02x%02x', other, green, other))
         end
 
         enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
@@ -510,7 +508,8 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def download_tracks(use_selection)
-        selection.send(use_selection ? :selected_each : :each) do |model, path, iter|
+        meth = use_selection ? selection.method(:selected_each) : model.method(:each)
+        meth.call do |model, path, iter|
             if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
                 iter[TTV_DATA].get_remote_audio_file(TasksWindow::NetworkTask.new(:download, :track, iter[TTV_DATA], self), @mc.tasks)
             end
