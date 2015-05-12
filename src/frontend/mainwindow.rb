@@ -159,8 +159,6 @@ class MainWindow < TopWindow
 
         GtkUI[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
 
-        GtkUI[REC_VP_IMAGE].signal_connect("button_press_event") { zoom_rec_image; true }
-
         GtkUI[MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
         GtkUI[MAIN_WINDOW].signal_connect(:delete_event) { @mc.clean_up; false }
 
@@ -177,13 +175,23 @@ class MainWindow < TopWindow
         GtkUI[TTPM_ITEM_QUIT].signal_connect(:activate)  { GtkUI[MM_FILE_QUIT].send(:activate) }
 
 
-        dragtable = [ ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105] ] #, #DragType::URI_LIST],
-                      #["image/jpeg", Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
-#         @ri = GtkUI[REC_VP_IMAGE]
-        Gtk::Drag::dest_set(GtkUI[REC_VP_IMAGE], Gtk::Drag::DEST_DEFAULT_ALL, dragtable, Gdk::DragContext::ACTION_COPY)
+        GtkUI[REC_VP_IMAGE].signal_connect("button_press_event") { |widget, event| handle_img_click(widget, event) }
+
+        dragtable = [ ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105] ]
+        Gtk::Drag::dest_set(GtkUI[REC_VP_IMAGE],
+                            Gtk::Drag::DEST_DEFAULT_ALL, dragtable,
+                            Gdk::DragContext::ACTION_COPY)
         GtkUI[REC_VP_IMAGE].signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time|
             on_urls_received(widget, context, x, y, data, info, time)
         }
+
+        @img_popup = Gtk::Menu.new
+        item = Gtk::MenuItem.new('Upload to server', false)
+        item.signal_connect(:activate) { |widget|
+            @mc.tasks.new_task(TasksWindow::NetworkTask.new(:upload, :covers, @mc.track_xlink.cover_file_name, nil))
+        }
+        @img_popup.append(item)
+        @img_popup.show_all
 
         #
         # Generate the submenus for the tags and ratings of the records and tracks popup menus
@@ -355,14 +363,21 @@ class MainWindow < TopWindow
     end
 
 
-    def zoom_rec_image
-        cover_name = @mc.track_xlink ? @mc.track_xlink.cover_file_name : nil
-        return unless cover_name
-        dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
-        dlg.vbox.add(Gtk::Image.new(cover_name))
-        dlg.show_all
-        dlg.run
-        dlg.destroy
+    def handle_img_click(widget, event)
+        # Check if there's a cover other than the default one
+        cover_name = @mc.track ? @mc.track_xlink.cover_file_name : nil
+        return true unless cover_name
+
+        if event.button == 3 # right mouse button
+            @img_popup.popup(nil, nil, event.button, event.time) if Cfg.admin
+        else
+            dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
+            dlg.vbox.add(Gtk::Image.new(cover_name))
+            dlg.show_all
+            dlg.run
+            dlg.destroy
+        end
+        return true
     end
 
     def dump_cacheinfo
