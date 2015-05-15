@@ -167,13 +167,13 @@ class ChartsWindow < TopWindow
         # Changed the behavior because call to pqueue.enqueue now notifies
         # the mc that the pq has changed which in turn tells the player that
         # it needs to be refetched.
-        # By calling enqueue only once with all links it reduce all the
+        # By calling enqueue only once with all links it reduces all the
         # messaging system to only one call.
         links = []
-        selection = entry_from_selection #@tvc.selection.selected[COL_ENTRY]-1
+        selection_index = @tvc.selection.selected.to_s.to_i
         @entries.each_with_index do |entry, i|
-            links << entry.xlink if i >= selection
             break if i >= Cfg.max_items
+            links << entry.xlink if i >= selection_index
         end
         @mc.pqueue.enqueue(links)
     end
@@ -195,11 +195,11 @@ class ChartsWindow < TopWindow
                 xlink.record.rlabel
         end
 
-        lazy_update(@view_type, ref, xlink.track)
-
-        # Cannot use the if as a modifier, iter is considered as undeclared...
-        if iter = @tvc.find_ref(ref, COL_REF)
-            @tvc.set_cursor(iter.path, nil, false)
+        if lazy_update(ref, xlink.track)
+            # Cannot use the if as a modifier, iter is considered as undeclared...
+            if iter = @tvc.find_ref(ref, COL_REF)
+                @tvc.set_cursor(iter.path, nil, false)
+            end
         end
     end
 
@@ -390,14 +390,6 @@ class ChartsWindow < TopWindow
 
         @tvc.columns_autosize
         Trace.debug("Charts full load done".red)
-        return
-#RubyProf.start
-#result = RubyProf.stop
-#printer = RubyProf::FlatPrinter.new(result)
-# f = File.new("../../chartsprofile.txt", "a+")
-# printer.print(f, 0)
-# f.close
-#printer.print
     end
 
     #
@@ -405,19 +397,22 @@ class ChartsWindow < TopWindow
     # than the view displays so it should be sufficient if a new track makes it
     # to the top.
     #
-    def lazy_update(view_type, ref, track)
+    # Returns true if the browser should set the selection on the referenced entry, false otherwise
+    #
+    def lazy_update(ref, track)
         pos = @entries.index { |ce| ce.ref == ref }
-        return unless pos
+        return false unless pos
 
         if @view_type == VIEW_RECORDS_FULL
-            min = DBIntf.get_first_value("SELECT MIN(tracks.iplayed) FROM tracks WHERE tracks.rrecord=#{ref}")
-            if @count_type == COUNT_PLAYED
-                @entries[pos].played += 1 if @entries[pos].played < min
+            least = @entries[pos].xlink.record.least_played_track
+            least *=  @entries[pos].xlink.record.iplaytime if @count_type == COUNT_TIME
+            if @entries[pos].played < least
+                @entries[pos].played = least
             else
-                @entries[pos].played += @entries[pos].xlink.record.iplaytime if @entries[pos].played < min*@entries[pos].xlink.record.iplaytime
+                return false
             end
         else
-            @entries[pos].played += (@count_type == COUNT_PLAYED ? 1 : track.iplaytime) if update
+            @entries[pos].played += @count_type == COUNT_PLAYED ? 1 : track.iplaytime
         end
 
         @entries.sort! { |ce1, ce2| ce2.played <=> ce1.played }
@@ -434,6 +429,7 @@ class ChartsWindow < TopWindow
         end
         display_charts(true) if pos < Cfg.max_items
         Trace.debug("Charts lazy update done".green)
+        return true
     end
 
     def show

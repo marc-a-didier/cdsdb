@@ -167,6 +167,10 @@ module DBClasses
         def compile?
             return self.rartist == 0
         end
+
+        def least_played_track
+            return DBIntf.get_first_value("SELECT MIN(tracks.iplayed) FROM tracks WHERE tracks.rrecord=#{self.rrecord}")
+        end
     end
 
 
