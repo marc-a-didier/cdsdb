@@ -72,9 +72,7 @@ module XIntf
                 GtkUI[SEGED_BTN_ARTIST].signal_connect(:clicked) { select_dialog(:rartist) }
                 GtkUI[SEGED_BTN_PTIME].signal_connect(:clicked)  { update_ptime }
 
-                [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl|
-                    GtkUI[ctrl].sensitive = Cfg.admin
-                }
+                [SEGED_BTN_ARTIST, SEGED_BTN_PTIME].each { |ctrl| GtkUI[ctrl].sensitive = Cfg.admin }
             end
 
             def update_ptime
@@ -128,7 +126,7 @@ module XIntf
                 @editors[3] = Track.new(@dblink.track)     if @dblink.valid_track_ref?
 
                 # Set data to fields or remove page if no data. Do it backward so it doesn't screw with page
-                # number since pages are in the tables hierarchy order
+                # number since pages are following tables relationship
                 3.downto(0) { |i|  @editors[i] ? @editors[i].to_widgets : GtkUI[DBED_NBOOK].remove_page(i) }
 
                 GtkUI[DBED_NBOOK].page = default_page # default page is in theory always visible
@@ -139,8 +137,11 @@ module XIntf
 
                 response = GtkUI[DLG_DB_EDITOR].run
                 if response == Gtk::Dialog::RESPONSE_OK
+                    current_audio_file = @dblink.build_audio_file_name
                     @editors.each { |dbs| dbs.from_widgets if dbs }
-                    @dblink.flush_main_tables
+
+#                     @dblink.flush_main_tables
+                    @dblink.check_db_changes
                 end
                 GtkUI[DLG_DB_EDITOR].destroy
                 return response

@@ -38,27 +38,29 @@ module Audio
 
         # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
         def build_audio_file_name
-            # If we have a segment, find the intra-segment order. If segmented and isegorder is 0, then the track
-            # is alone in its segment.
-            track_pos = 0
-            if record.segmented?
-                track_pos = track.isegorder == 0 ? 1 : track.isegorder
-            end
-            # If we have a segment, prepend the title with the track position inside the segment
-            title = track_pos == 0 ? track.stitle : track_pos.to_s+". "+track.stitle
+            return track.build_audio_file_name(segment_artist, record, segment, genre)
 
-            # If we have a compilation, the main dir is the record title as opposite to the standard case
-            # where it's the artist name
-            if record.compile?
-                dir = File.join(record.stitle.clean_path, segment_artist.sname.clean_path)
-            else
-                dir = File.join(segment_artist.sname.clean_path, record.stitle.clean_path)
-            end
-
-            fname = sprintf("%02d - %s", track.iorder, title.clean_path)
-            dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
-
-            return Cfg.music_dir+genre.sname+"/"+dir+"/"+fname
+#             # If we have a segment, find the intra-segment order. If segmented and isegorder is 0, then the track
+#             # is alone in its segment.
+#             track_pos = 0
+#             if record.segmented?
+#                 track_pos = track.isegorder == 0 ? 1 : track.isegorder
+#             end
+#             # If we have a segment, prepend the title with the track position inside the segment
+#             title = track_pos == 0 ? track.stitle : track_pos.to_s+". "+track.stitle
+#
+#             # If we have a compilation, the main dir is the record title as opposite to the standard case
+#             # where it's the artist name
+#             if record.compile?
+#                 dir = File.join(record.stitle.clean_path, segment_artist.sname.clean_path)
+#             else
+#                 dir = File.join(segment_artist.sname.clean_path, record.stitle.clean_path)
+#             end
+#
+#             fname = sprintf("%02d - %s", track.iorder, title.clean_path)
+#             dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
+#
+#             return Cfg.music_dir+genre.sname+"/"+dir+"/"+fname
         end
 
         def setup_audio_file
@@ -164,6 +166,27 @@ module Audio
         def record_on_disk?
             setup_audio_file unless audio.file
             return Dir.exists?(File.dirname(audio.file))
+        end
+
+        #
+        # Intended to be called if the db editor has been run to check if the track
+        # should be re-tagged & moved.
+        #
+        # Fields that must be checked:
+        #   artist : name
+        #   record : rartist, title, genre
+        #   segment: rartist, title
+        #   track  : title, order, rrecord, rsegment
+        #
+        # Should get the old value and compare against new ones
+        #
+        def check_db_changes
+            partist = DBClasses::Artist.new.ref_load(self.artist.rartist)
+            precord = DBClasses::Record.new.ref_load(self.record.rrecord)
+            psegment = DBClasses::Segment.new.ref_load(self.segment.rsegment)
+            ptrack = DBClasses::Track.new.ref_load(self.track.rtrack)
+
+
         end
     end
 end

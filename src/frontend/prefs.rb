@@ -119,12 +119,10 @@ module Prefs
             end
         end
 
-#         return Psych.to_json(hash).gsub(/\n| /, "")
         return hash.to_json(hash)
     end
 
     def self.content_from_json(json_str)
-#         hash = Psych.load(json_str)
         hash = JSON.parse(json_str)
         hash[FILTER].each do |obj, msg|
             msg.each do |method, params|

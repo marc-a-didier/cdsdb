@@ -11,7 +11,7 @@ class TracksBrowser < Gtk::TreeView
     TTV_TITLE       = 3
     TTV_PLAY_TIME   = 4
     TTV_ART_OR_SEG  = 5
-    TTV_DATA        = 6
+    TTV_XLINK       = 6
 
     ROW_REF         = 0
     ROW_ORDER       = 1
@@ -68,7 +68,7 @@ class TracksBrowser < Gtk::TreeView
         columns[TTV_ART_OR_SEG].visible = false
 
         title_col.set_cell_data_func(renderer) do |col, renderer, model, iter|
-            green = iter[TTV_DATA].track.iplayed
+            green = iter[TTV_XLINK].track.iplayed
             green = 255 if green > 255
             renderer.set_foreground(sprintf('#00%02x00', green))
         end
@@ -164,7 +164,7 @@ class TracksBrowser < Gtk::TreeView
 
             download_enabled = false
             selection.selected_each do |model, path, iter|
-                if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
+                if iter[TTV_XLINK].audio_status == Audio::Status::ON_SERVER
                     download_enabled = true
                     break
                 end
@@ -215,7 +215,7 @@ class TracksBrowser < Gtk::TreeView
         else
             iter[TTV_ART_OR_SEG] = ""
         end
-        iter[TTV_DATA] = XIntf::Track.new.set_track_ref(iter[TTV_REF])
+        iter[TTV_XLINK] = XIntf::Track.new.set_track_ref(iter[TTV_REF])
     end
 
     def load_entries
@@ -257,14 +257,14 @@ class TracksBrowser < Gtk::TreeView
 
     def get_selection
         links = []
-        selection.selected_each { |model, path, iter| links << iter[TTV_DATA] } #.clone }
+        selection.selected_each { |model, path, iter| links << iter[TTV_XLINK] } #.clone }
         return links
     end
 
     # Returns a list of the the currently visible tracks
     def get_tracks_list
         links = []
-        model.each { |model, path, iter| links << iter[TTV_DATA] } #.clone }
+        model.each { |model, path, iter| links << iter[TTV_XLINK] } #.clone }
         return links
     end
 
@@ -287,7 +287,7 @@ class TracksBrowser < Gtk::TreeView
         DBUtils.threaded_client_sql(sql)
 
         # Refresh the cache
-        meth.call { |model, path, iter| iter[TTV_DATA].track.sql_load }
+        meth.call { |model, path, iter| iter[TTV_XLINK].track.sql_load }
 
         @trklnk.to_widgets if @trklnk.valid_track_ref? # @trklnk is invalid if multiple selection was made
     end
@@ -300,8 +300,8 @@ class TracksBrowser < Gtk::TreeView
 
         # Get local files first and stores the state of each track
         model.each do |model, path, iter|
-            if iter[TTV_DATA].audio_status.nil? || iter[TTV_DATA].audio_status == Audio::Status::UNKNOWN
-                check_on_server = true if iter[TTV_DATA].setup_audio_file.status == Audio::Status::NOT_FOUND
+            if iter[TTV_XLINK].audio_status.nil? || iter[TTV_XLINK].audio_status == Audio::Status::UNKNOWN
+                check_on_server = true if iter[TTV_XLINK].setup_audio_file.status == Audio::Status::NOT_FOUND
             end
         end
 
@@ -313,13 +313,13 @@ class TracksBrowser < Gtk::TreeView
             # Replace each file not found state with server state
             MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
                 iter = model.get_iter(i.to_s)
-                iter[TTV_DATA].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_DATA].audio_status == Audio::Status::NOT_FOUND) && found != '0'
+                iter[TTV_XLINK].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_XLINK].audio_status == Audio::Status::NOT_FOUND) && found != '0'
             end
         end
 
         # Update tracks icons
         model.each { |model, path, iter|
-            iter[TTV_PIX] = render_icon(@stocks[iter[TTV_DATA].audio_status], Gtk::IconSize::MENU)
+            iter[TTV_PIX] = render_icon(@stocks[iter[TTV_XLINK].audio_status], Gtk::IconSize::MENU)
         }
     end
 
@@ -337,7 +337,7 @@ class TracksBrowser < Gtk::TreeView
     # Returns the XIntf::Track for the currently selected track in the browser.
     # Returns nil if no selection or multi-selection.
     def selected_track
-        return selection.count_selected_rows == 1 ? model.get_iter(selection.selected_rows[0])[TTV_DATA] : nil
+        return selection.count_selected_rows == 1 ? model.get_iter(selection.selected_rows[0])[TTV_XLINK] : nil
     end
 
 
@@ -401,7 +401,7 @@ class TracksBrowser < Gtk::TreeView
     def on_del_from_fs
         msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
         if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
-            selection.selected_each { |model, path, iter| iter[TTV_DATA].remove_from_fs }
+            selection.selected_each { |model, path, iter| iter[TTV_XLINK].remove_from_fs }
             check_for_audio_file
         end
     end
@@ -480,9 +480,9 @@ class TracksBrowser < Gtk::TreeView
         links = []
         if is_from
             iter = model.get_iter(selection.selected_rows[0])
-            begin links << iter[TTV_DATA] end while iter.next!
+            begin links << iter[TTV_XLINK] end while iter.next!
         else
-            selection.selected_each { |model, path, iter| links << iter[TTV_DATA] }
+            selection.selected_each { |model, path, iter| links << iter[TTV_XLINK] }
         end
         @mc.pqueue.enqueue(links)
     end
@@ -510,25 +510,25 @@ class TracksBrowser < Gtk::TreeView
     def download_tracks(use_selection)
         meth = use_selection ? selection.method(:selected_each) : model.method(:each)
         meth.call do |model, path, iter|
-            if iter[TTV_DATA].audio_status == Audio::Status::ON_SERVER
-                iter[TTV_DATA].get_remote_audio_file(TasksWindow::NetworkTask.new(:download, :track, iter[TTV_DATA], self), @mc.tasks)
+            if iter[TTV_XLINK].audio_status == Audio::Status::ON_SERVER
+                iter[TTV_XLINK].get_remote_audio_file(TasksWindow::NetworkTask.new(:download, :track, iter[TTV_XLINK], self), @mc.tasks)
             end
         end
     end
 
     def upload_tracks
         tracks = ''
-        model.each { |model, path, iter| (tracks << iter[TTV_REF].to_s+' ') if iter[TTV_DATA].audio_status == Audio::Status::OK }
+        model.each { |model, path, iter| (tracks << iter[TTV_REF].to_s+' ') if iter[TTV_XLINK].audio_status == Audio::Status::OK }
         # Replace each file not found state with server state
         MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
             if found == '0'
-                @mc.tasks.new_task(TasksWindow::NetworkTask.new(:upload, :track, model.get_iter(i.to_s)[TTV_DATA].audio_file, nil))
+                @mc.tasks.new_task(TasksWindow::NetworkTask.new(:upload, :track, model.get_iter(i.to_s)[TTV_XLINK].audio_file, nil))
             end
         end
 
-        Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_DATA].cover_file_name}")
-        unless MusicClient.has_resource(:covers, model.get_iter('0')[TTV_DATA].cover_file_name)
-            @mc.tasks.new_task(TasksWindow::NetworkTask.new(:upload, :covers, model.get_iter('0')[TTV_DATA].cover_file_name, nil))
+        Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_XLINK].cover_file_name}")
+        unless MusicClient.has_resource(:covers, model.get_iter('0')[TTV_XLINK].cover_file_name)
+            @mc.tasks.new_task(TasksWindow::NetworkTask.new(:upload, :covers, model.get_iter('0')[TTV_XLINK].cover_file_name, nil))
         end
     end
 
@@ -555,11 +555,11 @@ class TracksBrowser < Gtk::TreeView
                 return nil
             end
         end
-        return do_prefetch_tracks(self.model, TTV_DATA, queue, max_entries)
+        return do_prefetch_tracks(self.model, TTV_XLINK, queue, max_entries)
     end
 
     def get_track(player_data, direction)
-        return do_get_track(self, TTV_DATA, player_data, direction)
+        return do_get_track(self, TTV_XLINK, player_data, direction)
     end
 
 end

@@ -141,6 +141,12 @@ module DBClasses
         def compile?
             return self.rartist == 0
         end
+
+        def each_record(&block)
+            DBIntf.execute("SELECT * FROM records WHERE rartist=#{self.rartist}") do |row|
+                yield(DBClasses::Record.new.load_from_row(row))
+            end
+        end
     end
 
 
@@ -171,6 +177,12 @@ module DBClasses
         def least_played_track
             return DBIntf.get_first_value("SELECT MIN(tracks.iplayed) FROM tracks WHERE tracks.rrecord=#{self.rrecord}")
         end
+
+        def each_segment(&block)
+            DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{self.rrecord}") do |row|
+                yield(DBClasses::Segment.new.load_from_row(row))
+            end
+        end
     end
 
 
@@ -193,6 +205,12 @@ module DBClasses
         def first_segment(rrecord)
             return load_from_row(DBIntf.get_first_row("SELECT * FROM segments WHERE rrecord=#{rrecord};"))
         end
+
+        def each_track(&block)
+            DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{self.rsegment}") do |row|
+                yield(DBClasses::Track.new.load_from_row(row))
+            end
+        end
     end
 
 
@@ -210,6 +228,31 @@ module DBClasses
             self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.stitle = "New track"
             return sql_add
+        end
+
+        # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
+        def build_audio_file_name(artist, record, segment, genre)
+            # If we have a segment, find the intra-segment order. If segmented and isegorder is 0, then the track
+            # is alone in its segment.
+            track_pos = 0
+            if record.segmented?
+                track_pos = self.isegorder == 0 ? 1 : self.isegorder
+            end
+            # If we have a segment, prepend the title with the track position inside the segment
+            title = track_pos == 0 ? self.stitle : track_pos.to_s+'. '+self.stitle
+
+            # If we have a compilation, the main dir is the record title as opposite to the standard case
+            # where it's the artist name
+            if record.compile?
+                dir = File.join(record.stitle.clean_path, artist.sname.clean_path)
+            else
+                dir = File.join(artist.sname.clean_path, record.stitle.clean_path)
+            end
+
+            fname = sprintf("%02d - %s", self.iorder, title.clean_path)
+            dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
+
+            return Cfg.music_dir+genre.sname+"/"+dir+"/"+fname
         end
     end
 
