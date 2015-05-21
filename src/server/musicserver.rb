@@ -331,9 +331,9 @@ class MusicServer
                     status = session.gets.chomp
                 end
             end
-            Log.warn("Sent file '#{file}' in #{block_size} bytes chunks [#{hostname(session)}]")
+            Log.info("Sent file '#{file}' in #{block_size} bytes chunks [#{hostname(session)}]")
         else
-            Log.warn("Requested file '#{file}' not found [#{hostname(session)}]")
+            Log.info("Requested file '#{file}' not found [#{hostname(session)}]")
         end
 
         # Send 0 data size to client so it knows it's done
