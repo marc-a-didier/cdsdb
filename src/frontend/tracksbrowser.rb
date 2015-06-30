@@ -56,7 +56,7 @@ class TracksBrowser < Gtk::TreeView
         pixcol.pack_start(pix, false)
         pixcol.set_cell_data_func(pix) { |column, cell, model, iter| cell.pixbuf = iter.get_value(TTV_PIX) }
 
-        colNames = ["Ref.", "Track", "Title", "Play time", "Artist"]
+        colNames = ["Ref.", "Track", "Title", "Duration", "Artist"]
         title_col = Gtk::TreeViewColumn.new(colNames[2], renderer, :text => TTV_TITLE)
         append_column(Gtk::TreeViewColumn.new(colNames[0], Gtk::CellRendererText.new, :text => TTV_REF))
         append_column(pixcol)

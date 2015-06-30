@@ -274,8 +274,9 @@ class FilterWindow < TopWindow
 
         # The array is ready. If random selection, shuffle it else compute and sort by weight
         if GtkUI[FLT_CMB_SELECTBY].active == 0 # Random selection
-            rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
-            tracks = Array.new(rvalues.size).fill { |i| tracks[rvalues[i]] }.uniq
+#             rvalues = Utils::rnd_from_file(tracks.size, max_tracks, f)
+#             tracks = Array.new(rvalues.size).fill { |i| tracks[rvalues[i]] }.uniq
+            tracks.shuffle!
         elsif GtkUI[FLT_CMB_SELECTBY].active != 3 # Do nothing if oldest played first
             tracks.each { |track|
                 track.played = track.played/max_played*100.0 if max_played > 0

@@ -83,7 +83,7 @@ class PListsWindow < TopWindow
         @tvpt = GtkUI[GtkIDs::TV_PLTRACKS]
         @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class, Integer)
 
-        ["Ref.", "Order", "Track", "Title", "By", "From", "Play time"].each_with_index do |name, i|
+        ["Ref.", "Order", "Track", "Title", "By", "From", "Duration"].each_with_index do |name, i|
             @tvpt.append_column(Gtk::TreeViewColumn.new(name, trk_renderer, :text => i))
             if i == 3 || i == 4
                 @tvpt.columns[i].set_cell_data_func(trk_renderer) do |col, renderer, model, iter|

@@ -173,10 +173,18 @@ module Audio
         # should be re-tagged & moved.
         #
         # Fields that must be checked:
-        #   artist : name
-        #   record : rartist, title, genre
-        #   segment: rartist, title
-        #   track  : title, order, rrecord, rsegment
+        #   artist :
+        #       name -> mv folder & re-tag
+        #   record :
+        #       rartist
+        #       title -> mv folder & re-tag
+        #       genre -> mv folder & re-tag
+        #   segment:
+        #       rartist
+        #       title -> mv folder & re-tag (only if seg name not empty)
+        #   track  :
+        #       title, order -> rename track & re-tag
+        #       rrecord, rsegment
         #
         # Should get the old value and compare against new ones
         #

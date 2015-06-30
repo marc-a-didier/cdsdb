@@ -137,11 +137,15 @@ module XIntf
 
                 response = GtkUI[DLG_DB_EDITOR].run
                 if response == Gtk::Dialog::RESPONSE_OK
-                    current_audio_file = @dblink.build_audio_file_name
+#                     pkeys = []
+#                     @editors.each { |dbs| pkeys << (dbs ? dbs[0] : nil) }
+
+#                     current_audio_file = @dblink.build_audio_file_name
+#                     Audio::File.new(@editors.compact.last.dbs)
                     @editors.each { |dbs| dbs.from_widgets if dbs }
 
-#                     @dblink.flush_main_tables
-                    @dblink.check_db_changes
+                    @dblink.flush_main_tables
+#                     @dblink.check_db_changes
                 end
                 GtkUI[DLG_DB_EDITOR].destroy
                 return response

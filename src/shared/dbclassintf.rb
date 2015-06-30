@@ -147,6 +147,12 @@ module DBClasses
                 yield(DBClasses::Record.new.load_from_row(row))
             end
         end
+
+        def each_segment(&block)
+            DBIntf.execute("SELECT * FROM segments WHERE rartist=#{self.rartist}") do |row|
+                yield(DBClasses::Segment.new.load_from_row(row))
+            end
+        end
     end
 
 

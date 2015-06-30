@@ -37,7 +37,7 @@ class PQueueWindow < TopWindow
         @tvpq.append_column(Gtk::TreeViewColumn.new("Seq.", srenderer, :text => 0))
         @tvpq.append_column(pixcol)
         @tvpq.append_column(trk_column)
-        @tvpq.append_column(Gtk::TreeViewColumn.new("Play time", srenderer, :text => 3))
+        @tvpq.append_column(Gtk::TreeViewColumn.new("Duration", srenderer, :text => 3))
         @tvpq.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
         # Seems that drag_end is only called when reordering.
         @tvpq.signal_connect(:drag_end) { |widget, context| @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 } }

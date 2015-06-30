@@ -24,7 +24,7 @@ class RecordsBrowser < Gtk::TreeView
 
         renderer = Gtk::CellRendererText.new
 
-        ["Ref.", "Title", "Play time"].each_with_index { |name, i| append_column(Gtk::TreeViewColumn.new(name, renderer, :text => i)) }
+        ["Ref.", "Title", "Duration"].each_with_index { |name, i| append_column(Gtk::TreeViewColumn.new(name, renderer, :text => i)) }
         columns[RTV_TITLE].resizable = columns[RTV_TITLE].sort_indicator = columns[RTV_TITLE].clickable = true
         columns[RTV_TITLE].signal_connect(:clicked) { change_sort_order(RTV_TITLE) } #{ load_entries } }
 

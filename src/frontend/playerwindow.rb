@@ -254,30 +254,37 @@ class PlayerWindow < TopWindow
         @readybin.stop
     end
 
+    def build_info_string(player_data, replay_gain, gain_src = '')
+        return "#{player_data.xlink.audio_file.sub(Cfg.music_dir, '')} [#{player_data.xlink.tags.nil? ? player_data.xlink.track.rtrack : 'dropped'}, #{gain_src}#{replay_gain}]"
+    end
+
     # Initialize the next track to be played in paused state in the ready bin
     def set_ready(player_data)
         # audio_file may only be nil if the cache has been cleared
         # while there were ready to play tracks in the queue.
         unless player_data.xlink.audio_file
             player_data.xlink.setup_audio_file
-            Trace.gst('link audio file was empty!'.red)
+            Trace.gst('link audio file was empty!'.red.bold)
         end
 
         # Check if the ready bin already has the same audio file
         # If the file is the same we also have to check that the ready bin is in paused state
         if player_data.xlink.audio_file != @readybin.audio_file || !@readybin.paused?
-            Trace.gst("readying #{player_data.xlink.audio_file}".brown)
+#             Trace.gst("readying #{player_data.xlink.audio_file}".brown)
 
             # Can't use replay gain if track has been dropped.
             # Replay gain should work if tags are set in the audio file
             replay_gain = 0.0
+            gain_src = 'NONE '
             if player_data.xlink.tags.nil?
                 if player_data.xlink.use_record_gain? && GtkUI[GtkIDs::MM_PLAYER_USERECRG].active?
                     replay_gain = player_data.xlink.record.igain/Audio::GAIN_FACTOR
-                    Trace.gst("RECORD gain: #{replay_gain}".brown)
+                    gain_src = 'RECORD '
+#                     Trace.gst("RECORD gain: #{replay_gain}".brown)
                 elsif GtkUI[GtkIDs::MM_PLAYER_USETRKRG].active?
                     replay_gain = player_data.xlink.track.igain/Audio::GAIN_FACTOR
-                    Trace.gst("TRACK gain #{replay_gain}".brown)
+                    gain_src = 'TRACK '
+#                     Trace.gst("TRACK gain #{replay_gain}".brown)
                 end
             end
 
@@ -285,6 +292,8 @@ class PlayerWindow < TopWindow
             sleep(0.1) while not player_data.xlink.playable?
 
             @readybin.set_ready(player_data.xlink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
+
+            Trace.gst("inited "+build_info_string(player_data, replay_gain, gain_src).brown)
         end
     end
 
@@ -297,8 +306,8 @@ class PlayerWindow < TopWindow
         @playbin.start_track
 
         # Debug info
-        info = player_data.xlink.tags.nil? ? player_data.xlink.track.rtrack.to_s : 'dropped'
-        Trace.gst((info+" -> #{player_data.xlink.audio_file}").cyan)
+#         info = "#{player_data.xlink.audio_file} [#{player_data.xlink.tags.nil? ? player_data.xlink.track.rtrack : 'dropped'}, #{@playbin.get_replay_gain}]"
+        Trace.gst("started "+build_info_string(player_data, @playbin.get_replay_gain).cyan)
 
         # Delayed UI operations start now
         @tip_pix = nil

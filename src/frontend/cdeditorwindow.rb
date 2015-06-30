@@ -43,7 +43,7 @@ class CDEditorWindow
 
         @tv.model = Gtk::ListStore.new(Integer, String, String, String, String)
 
-        ["Track", "Title", "Segment", "Artist", "Play time"].each_with_index do |title, i|
+        ["Track", "Title", "Segment", "Artist", "Duration"].each_with_index do |title, i|
             renderer = Gtk::CellRendererText.new()
             if (1..3).include?(i)
                 renderer.editable = true

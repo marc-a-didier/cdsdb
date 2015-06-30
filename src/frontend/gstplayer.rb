@@ -154,6 +154,9 @@ module GStreamer
             return @gstbin.get_state[1]
         end
 
+        def get_replay_gain
+            return @rgain.fallback_gain
+        end
 
         # Returned value is a FLOAT in millisecond
         def play_time

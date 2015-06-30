@@ -160,12 +160,12 @@ class Stats
         @f << "<h1>DB stats generated #{Time.now}</h1><br />"
         new_table("General infos")
         new_row(["Total number of artists", @db_tots.artists])
-        new_row(["Total number of records", "#{@db_tots.records} - Play time: #{@db_tots.ptime.to_day_length}"])
+        new_row(["Total number of records", "#{@db_tots.records} - Duration: #{@db_tots.ptime.to_day_length}"])
         new_row(["Total number of segments", @db_tots.segments])
         new_row(["Total number of tracks", @db_tots.tracks])
         end_table
 
-        new_table("Records by media type", ["Medium", "Records:R", "Play time:R"])
+        new_table("Records by media type", ["Medium", "Records:R", "Duration:R"])
         DBIntf.execute("SELECT * FROM medias;") do |mediatype|
             DBIntf.execute("SELECT COUNT(rrecord), SUM(iplaytime) FROM records WHERE rmedia=#{mediatype[0]};") do |row|
                 #Gtk.main_iteration while Gtk.events_pending?
@@ -223,7 +223,7 @@ class Stats
     end
 
     def records_by_genre
-        new_table("Ripped records", ["Genre", "Ripped:R", "Available:R", "Ripped play time:R", "Available play time:R"])
+        new_table("Ripped records", ["Genre", "Ripped:R", "Available:R", "Ripped duration:R", "Available duration:R"])
         @genres.each { |genre|
             next if genre.ref == 0
             new_row([genre.name, genre.ripped, genre.tot_recs,
@@ -239,7 +239,7 @@ class Stats
         sql = "SELECT COUNT(records.rrecord) AS nrecs, SUM(records.iplaytime), artists.sname FROM artists
                INNER JOIN records ON artists.rartist=records.rartist
                GROUP BY artists.rartist ORDER BY nrecs DESC;"
-        new_table("Records by artists", ["Rank:R", "Artist", "Records:R", "Play time:R"])
+        new_table("Records by artists", ["Rank:R", "Artist", "Records:R", "Duration:R"])
         DBIntf.execute(sql) do |row|
             #Gtk.main_iteration while Gtk.events_pending?
             new_row([@altr.counter+1, row[2], row[0], row[1].to_i.to_day_length])

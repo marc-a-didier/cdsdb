@@ -279,6 +279,15 @@
                   <placeholder/>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkLabel" id="reced_lbl_artist">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -419,7 +428,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="xalign">1</property>
-                    <property name="label" translatable="yes">Play time</property>
+                    <property name="label" translatable="yes">Duration</property>
                   </object>
                   <packing>
                     <property name="top_attach">4</property>
@@ -809,15 +818,6 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkLabel" id="reced_lbl_dbref">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -1145,7 +1145,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="xalign">1</property>
-                    <property name="label" translatable="yes">Play time</property>
+                    <property name="label" translatable="yes">Duration</property>
                   </object>
                   <packing>
                     <property name="top_attach">3</property>
@@ -1348,7 +1348,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="xalign">1</property>
-                        <property name="label" translatable="yes">Play time</property>
+                        <property name="label" translatable="yes">Duration</property>
                       </object>
                       <packing>
                         <property name="top_attach">2</property>

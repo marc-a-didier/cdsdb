@@ -10,7 +10,7 @@ class ArtistsBrowser < Gtk::TreeView
                      TreeProvider::Ripped.new(6, "artists", 1, true, "records.rrecord", "Last ripped"),
                      TreeProvider::NeverPlayed.new(7, "tracks", 2, true, "tracks.iplayed", "Never played"),
                      TreeProvider::Ratings.new(8, "ratings", 3, true, "tracks.irating", "Rating"),
-                     TreeProvider::PlayTime.new(9, "records", 3, true, "records.iplaytime", "Records play time"),
+                     TreeProvider::PlayTime.new(9, "records", 3, true, "records.iplaytime", "Duration"),
                      TreeProvider::Records.new(10, "records", 1, true, "records.rrecord", "All Records")]
 
     ATV_REF   = 0
