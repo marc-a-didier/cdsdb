@@ -26,6 +26,23 @@ class Gtk::TreeView
         return nil
     end
 
+    def detect(&block)
+        model.each { |model, path, iter| return iter if yield(iter) }
+        return nil
+    end
+
+    def map(&block)
+        iters = []
+        self.model.each { |model, path, iter| iters << yield(iter) }
+        return iters
+    end
+
+    def selected_map(&block)
+        iters = []
+        self.selection.selected_each { |model, path, iter| iters << yield(iter) }
+        return iters
+    end
+
     def position_to(ref)
         iter = find_ref(ref)
         set_cursor(iter.path, nil, false) if iter

@@ -134,16 +134,6 @@ class PQueueWindow < TopWindow
         end
     end
 
-    def get_title_and_length(fname)
-        tags = TagLib::File.new(fname)
-        title = (tags.track.to_s+". "+tags.title).to_html_bold+"\n"+
-                "by "+tags.artist.to_html_italic+"\n"+
-                "from "+tags.album.to_html_italic
-        length = tags.length*1000
-        tags.close
-        return [title, length]
-    end
-
     # Play queue is not in multi-select mode
     def get_selection
         return [@tvpq.selection.selected[4].xlink]
@@ -154,9 +144,7 @@ class PQueueWindow < TopWindow
             when 700 #DragType::BROWSER_SELECTION
                 sender, type, call_back, param = data.text.split(":")
                 if sender == "pqueue" # -> reordering
-                    iref = @tvpq.selection.selected[4].internal_ref
-                    itr = nil
-                    @plq.each { |model, path, iter| if iter[4].internal_ref == iref then itr = iter; break end }
+                    itr = @tvpq.detect { |iter| iter[4].internal_ref == @tvpq.selection.selected[4].internal_ref }
                     if itr
                         r = @tvpq.get_dest_row(x, y)
                         if r.nil?
