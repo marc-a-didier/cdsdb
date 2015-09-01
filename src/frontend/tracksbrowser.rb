@@ -256,37 +256,25 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def get_selection
-        links = []
-        selection.selected_each { |model, path, iter| links << iter[TTV_XLINK] } #.clone }
-        return links
+        return selected_map { |iter| iter[TTV_XLINK] }
     end
 
     # Returns a list of the the currently visible tracks
     def get_tracks_list
-        links = []
-        model.each { |model, path, iter| links << iter[TTV_XLINK] } #.clone }
-        return links
+        return map { |iter| iter[TTV_XLINK] }
     end
 
 
     # Set the tags or rating for a selected track(s) or all tracks (when set from records)
     def set_track_field(field, value, to_all)
-        meth = to_all ? model.method(:each) : selection.method(:selected_each)
-
-        sql = "UPDATE tracks SET #{field}="
-        if field == "itags"
-            operator = value < 0 ? "& ~" : "|"
-            sql += "#{field} #{operator} #{value.abs}"
-        else
-            sql += value.to_s
-        end
-        sql += " WHERE rtrack IN ("
-        meth.call { |model, path, iter| sql += iter[TTV_REF].to_s+"," }
-        sql[-1] = ")"
+        sql = "UPDATE tracks SET #{field}=" +
+              (field == "itags" ? field+(value < 0 ? ' & ~ ' : ' | ')+value.abs.to_s : value.abs.to_s) +
+              " WHERE rtrack IN ("+self.send(to_all ? :map : :selected_map) { |iter| iter[TTV_REF].to_s }.join(',')+');'
 
         DBUtils.threaded_client_sql(sql)
 
         # Refresh the cache
+        meth = to_all ? model.method(:each) : selection.method(:selected_each)
         meth.call { |model, path, iter| iter[TTV_XLINK].track.sql_load }
 
         @trklnk.to_widgets if @trklnk.valid_track_ref? # @trklnk is invalid if multiple selection was made
@@ -308,10 +296,11 @@ class TracksBrowser < Gtk::TreeView
         # If client mode and some or all files not found, ask if present on the server
         if Cfg.remote? && check_on_server
             # Save track list to avoid threading problems
-            tracks = ""
-            model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
+#             tracks = self.map { |iter| iter[TTV_REF].to_s }.join(' ')
+#             tracks = ""
+#             model.each { |mode, path, iter| tracks << iter[TTV_REF].to_s+" " }
             # Replace each file not found state with server state
-            MusicClient.check_multiple_audio(tracks).each_with_index do |found, i|
+            MusicClient.check_multiple_audio(self.map { |iter| iter[TTV_REF].to_s }.join(' ')).each_with_index do |found, i|
                 iter = model.get_iter(i.to_s)
                 iter[TTV_XLINK].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_XLINK].audio_status == Audio::Status::NOT_FOUND) && found != '0'
             end
