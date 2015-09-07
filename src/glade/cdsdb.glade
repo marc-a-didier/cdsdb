@@ -1939,6 +1939,16 @@
                                 <property name="group">mm_view_stbynumber</property>
                               </object>
                             </child>
+                            <child>
+                              <object class="GtkRadioMenuItem" id="mm_view_stbydate">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Date</property>
+                                <property name="use_underline">True</property>
+                                <property name="draw_as_radio">True</property>
+                                <property name="group">mm_view_stbynumber</property>
+                              </object>
+                            </child>
                           </object>
                         </child>
                       </object>
