@@ -151,7 +151,7 @@ module DBUtils
         end
         Trace.debug("Check dates integrity between tracks and log ended (iterations=#{iterations}).")
         Trace.debug("Check integrity ended with #{tracks.size} mismatches.")
-        return
+#         return
 
         if tracks.size > 0 && Cfg.admin
             Trace.debug("Starting tracks update.")
