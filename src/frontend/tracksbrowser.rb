@@ -194,9 +194,10 @@ class TracksBrowser < Gtk::TreeView
             sql += @mc.main_filter
             sql += " AND "+@mc.sub_filter unless @mc.sub_filter.empty?
             sql += " ORDER BY "
-            sql += "(tracks.irating*1000+tracks.iplayed) DESC, " if GtkUI[GtkIDs::MM_VIEW_BYRATING].active?
+            sql += "tracks.irating DESC, tracks.iplayed DESC, " if GtkUI[GtkIDs::MM_VIEW_BYRATING].active?
             sql += "tracks.iplayed DESC, " if GtkUI[GtkIDs::MM_VIEW_BYPLAYCOUNT].active?
             sql += "tracks.ilastplayed DESC, " if GtkUI[GtkIDs::MM_VIEW_BYDATE].active?
+            sql += "tracks.iplaytime, " if GtkUI[GtkIDs::MM_VIEW_BYLENGTH].active?
             sql += "tracks.iorder;"
         else
             sql += "WHERE rtrack=#{rtrack};"

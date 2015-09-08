@@ -125,6 +125,7 @@ module GtkIDs
     MM_VIEW_BYRATING            = "mm_view_stbyrating"
     MM_VIEW_BYPLAYCOUNT         = "mm_view_stbyplaycount"
     MM_VIEW_BYDATE              = "mm_view_stbydate"
+    MM_VIEW_BYLENGTH            = "mm_view_stbylength"
     MM_VIEW_COMPILE             = "mm_view_compile"
     MM_VIEW_DBREFS              = "mm_view_dbrefs"
     MM_VIEW_UPDATENP            = "mm_view_updatenp"

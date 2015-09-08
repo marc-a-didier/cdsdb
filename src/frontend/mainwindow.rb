@@ -129,7 +129,7 @@ class MainWindow < TopWindow
         GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { Dialogs::Preferences.run; @mc.tasks.check_config }
 
 
-        [MM_VIEW_BYNUMBER, MM_VIEW_BYRATING, MM_VIEW_BYPLAYCOUNT, MM_VIEW_BYDATE].each { |item|
+        [MM_VIEW_BYNUMBER, MM_VIEW_BYRATING, MM_VIEW_BYPLAYCOUNT, MM_VIEW_BYDATE, MM_VIEW_BYLENGTH].each { |item|
             GtkUI[item].signal_connect(:activate) { @mc.record_changed   }
         }
         GtkUI[MM_VIEW_COMPILE].signal_connect(:activate)  { change_view_mode }
