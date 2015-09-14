@@ -58,9 +58,7 @@ module Dialogs
         end
 
         def get_selection
-            stores = []
-            @tv.selection.selected_each { |model, path, iter| stores << iter[2] }
-            return stores
+            return @tv.selected_map { |iter| iter[2] }
         end
 
         def search_record?

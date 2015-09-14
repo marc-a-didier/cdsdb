@@ -249,9 +249,7 @@ class PListsWindow < TopWindow
     end
 
     def get_selection
-        links = []
-        @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA] } #.clone }
-        return links
+        return @tvpt.selected_map { |iter| iter[TT_DATA] }
     end
 
     def reorder_pltracks(col_id)
@@ -425,17 +423,9 @@ class PListsWindow < TopWindow
     end
 
     def shuffle_play_list
-        count = 0
-        new_order = []
-        @pts.each { |model, path, iter| new_order << count; count += 1 }
-        return if count < 2
-        new_order.shuffle!
-        # ce putain de truc marche plus depuis qu'on peut trier les colonnes...!!!
-        # Apres consultation de diverses doc, c'est impossible de remettre le sort a nil
-        # une fois qu'on a selectionne une colonne... donc impossible!
         @track_ref = -1
         @tvpt.selection.unselect_path(@tvpt.cursor[0]) unless @tvpt.cursor.nil?
-        @pts.reorder(new_order) # It's magic!
+        @pts.reorder(Array.new(@tvpt.items_count).fill { |i| i }.shuffle) # It's magic!
         notify_player_if_provider
     end
 
@@ -447,11 +437,7 @@ class PListsWindow < TopWindow
     end
 
     def enqueue_track
-        # Changed the oneliner to optimize messaging system by filling the queue
-        # with all entries at once.
-        links = []
-        @tvpt.selection.selected_each { |model, path, iter| links << iter[TT_DATA] }
-        @mc.pqueue.enqueue(links)
+        @mc.pqueue.enqueue(@tvpt.selected_map { |iter| iter[TT_DATA] })
     end
 
     def show_infos(is_popup)

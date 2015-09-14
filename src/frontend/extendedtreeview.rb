@@ -26,6 +26,15 @@ class Gtk::TreeView
         return nil
     end
 
+    def each_with_index(&block)
+        i = 0
+        self.model.each do |model, path, iter|
+            yield(iter, i)
+            i += 1
+        end
+        return self
+    end
+
     def detect(&block)
         model.each { |model, path, iter| return iter if yield(iter) }
         return nil
@@ -41,6 +50,12 @@ class Gtk::TreeView
         iters = []
         self.selection.selected_each { |model, path, iter| iters << yield(iter) }
         return iters
+    end
+
+    def items_count
+        i = 0
+        self.model.each { |model, path, iter| i += 1 }
+        return i
     end
 
     def position_to(ref)

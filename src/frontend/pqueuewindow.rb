@@ -40,7 +40,7 @@ class PQueueWindow < TopWindow
         @tvpq.append_column(Gtk::TreeViewColumn.new("Duration", srenderer, :text => 3))
         @tvpq.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
         # Seems that drag_end is only called when reordering.
-        @tvpq.signal_connect(:drag_end) { |widget, context| @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 } }
+        @tvpq.signal_connect(:drag_end) { |widget, context| @tvpq.each_with_index { |iter, i| iter[0] = i+1 } }
 
         @tvpq.columns[2].resizable = true
 
@@ -100,7 +100,7 @@ class PQueueWindow < TopWindow
             end
         else
             @plq.remove(@plq.get_iter(item))
-            @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
+            @tvpq.each_with_index { |iter, i| iter[0] = i+1 }
         end
         @tvpq.columns_autosize
         update_status
@@ -115,11 +115,8 @@ class PQueueWindow < TopWindow
     end
 
     def shuffle
-        order = []
-        @plq.each { |model, path, iter| order << path.to_s.to_i }
-        return if order.size < 2
-        @plq.reorder(order.shuffle!)
-        @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
+        @plq.reorder(Array.new(@tvpq.items_count).fill { |i| i }.shuffle)
+        @tvpq.each_with_index { |iter, i| iter[0] = i+1 }
         @mc.track_list_changed(self)
     end
 
@@ -172,7 +169,7 @@ class PQueueWindow < TopWindow
                 end
 
             when 105 #DragType::URI_LIST
-                data.uris.each { |uri|
+                data.uris.each do |uri|
                     @internal_ref += 1
                     iter = @plq.append
                     data = PQData.new(@internal_ref, XIntf::Link.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
@@ -182,7 +179,7 @@ class PQueueWindow < TopWindow
                     iter[2] = data.xlink.html_track_title(@mc.show_segment_title?)
                     iter[3] = (data.xlink.tags.length/1000).to_sec_length
                     iter[4] = data
-                }
+                end
                 @mc.track_list_changed(self)
         end
         Gtk::Drag.finish(context, true, false, Time.now.to_i)
@@ -193,7 +190,6 @@ class PQueueWindow < TopWindow
     def enqueue(xlinks)
         xlinks.each do |xlink|
             # Trace.debug("enq before: audiostatus=#{xlink.audio_status}")
-#             xlink.get_audio_file(self, @mc.tasks) unless xlink.playable?
             xlink.get_audio_file(TasksWindow::NetworkTask.new(:download, :track, xlink, self), @mc.tasks) unless xlink.playable?
             # Trace.debug("enq after : audiostatus=#{xlink.audio_status}")
             unless xlink.audio_status == Audio::Status::NOT_FOUND
@@ -224,10 +220,10 @@ class PQueueWindow < TopWindow
 
     def update_status
         @play_time = @ntracks = 0
-        @plq.each { |model, path, iter|
+        @plq.each do |model, path, iter|
             @ntracks += 1
             @play_time += iter[4].xlink.tags.nil? ? iter[4].xlink.track.iplaytime : iter[4].xlink.tags.length
-        }
+        end
         update_tracks_label
         update_ptime_label(@play_time)
     end
@@ -260,12 +256,9 @@ class PQueueWindow < TopWindow
 
     def notify_played(player_data, message)
         if message != :stop # message is :next or :finish
-            curr_trk = nil
-            @plq.each { |model, path, iter| if iter[4].internal_ref == player_data.internal_ref then curr_trk = iter; break; end }
-            if curr_trk
+            if curr_trk = @tvpq.detect { |iter| iter[4].internal_ref == player_data.internal_ref }
                 @plq.remove(curr_trk)
-                @plq.each { |model, path, iter| iter[0] = path.to_s.to_i+1 }
-                @tvpq.columns_autosize
+                @tvpq.each_with_index { |iter, i| iter[0] = i+1 }.columns_autosize
                 update_status
             end
         end
@@ -277,23 +270,20 @@ class PQueueWindow < TopWindow
     # tracks to play.
     # player_data is the current top of stack track of the player
     def prefetch_tracks(queue, max_entries)
-        @plq.each { |model, path, iter|
+        @plq.each do |model, path, iter|
             # Must check for every track if it's already in the queue. It may have been moved or something else.
-            in_queue = queue.select { |elem| elem.internal_ref == iter[4].internal_ref }.size > 0
-            if !in_queue && iter[4].xlink.audio_status != Audio::Status::ON_SERVER
+            if queue.detect { |elem| elem.internal_ref == iter[4].internal_ref }.nil? && iter[4].xlink.audio_status != Audio::Status::ON_SERVER
                 queue << TrackRefs.new(self, iter[4].internal_ref, iter[4].xlink)
                 break if queue.size > max_entries # queue has at least [0] element -> check on >
             end
-        }
+        end
     end
 
     def get_track(player_data, direction)
         if direction == :start
-            @plq.each { |model, path, iter|
-                unless iter[4].xlink.audio_status == Audio::Status::ON_SERVER
-                    return TrackRefs.new(self, iter[4].internal_ref, iter[4].xlink)
-                end
-            }
+            if iter = @tvpq.detect { |iter| iter[4].xlink.audio_status != Audio::Status::ON_SERVER }
+                return TrackRefs.new(self, iter[4].internal_ref, iter[4].xlink)
+            end
         end
         return nil
     end
