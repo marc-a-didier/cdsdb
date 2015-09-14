@@ -72,28 +72,23 @@ module DBCache
             end
 
             def genre(rgenre)
-                @genres[rgenre] = DBClasses::Genre.new.ref_load(rgenre) if @genres[rgenre].nil?
-                return @genres[rgenre]
+                @genres[rgenre] ||= DBClasses::Genre.new.ref_load(rgenre)
             end
 
             def label(rlabel)
-                @labels[rlabel] = DBClasses::Label.new.ref_load(rlabel) if @labels[rlabel].nil?
-                return @labels[rlabel]
+                @labels[rlabel] ||= DBClasses::Label.new.ref_load(rlabel)
             end
 
             def media(rmedia)
-                @medias[rmedia] = DBClasses::Media.new.ref_load(rmedia) if @medias[rmedia].nil?
-                return @medias[rmedia]
+                @medias[rmedia] ||= DBClasses::Media.new.ref_load(rmedia)
             end
 
             def collection(rcollection)
-                @collections[rcollection] = DBClasses::Collection.new.ref_load(rcollection) if @collections[rcollection].nil?
-                return @collections[rcollection]
+                @collections[rcollection] ||= DBClasses::Collection.new.ref_load(rcollection)
             end
 
             def origin(rorigin)
-                @origins[rorigin] = DBClasses::Origin.new.ref_load(rorigin) if @origins[rorigin].nil?
-                return @origins[rorigin]
+                @origins[rorigin] ||= DBClasses::Origin.new.ref_load(rorigin)
             end
 
             def audio(rtrack)
