@@ -73,9 +73,7 @@ class Gtk::TreeView
     end
 
     def change_sort_order(col_id)
-        columns[col_id].sort_order == Gtk::SORT_ASCENDING ?
-            columns[col_id].sort_order = Gtk::SORT_DESCENDING :
-            columns[col_id].sort_order = Gtk::SORT_ASCENDING
+        columns[col_id].sort_order = columns[col_id].sort_order == Gtk::SORT_ASCENDING ? Gtk::SORT_DESCENDING : Gtk::SORT_ASCENDING
 
         # Reposition the cursor on the same entry if selected and a block to update the view is given
         ref = selection.selected ? selection.selected[0] : -1

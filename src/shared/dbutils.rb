@@ -108,17 +108,19 @@ module DBUtils
     def self.check_log_vs_played
         Trace.debug("Starting log integrity check...")
 
-        tracks = []
+        Trace.debug('Step 1: Checking for bad tracks ids in logtracks table')
         DBIntf.execute("SELECT COUNT(rtrack) FROM logtracks WHERE rtrack <= 0") do |log|
             if log[0] > 0
                 Trace.debug("#{log[0]} bad rtrack id(s) found in db.")
-                DBIntf.execute("DELETE FROM logtracks WHERE rtrack <= 0")
+                self.client_sql("DELETE FROM logtracks WHERE rtrack <= 0")
                 Trace.debug("Bad tracks id(s) deleted.")
             else
                 Trace.debug("No bad rtrack ids found in db.")
             end
         end
+        Trace.debug('Step 1: finished')
 
+        Trace.debug('Step 2: Checking if play count match between tracks and logtracks')
         DBIntf.execute("SELECT COUNT(DISTINCT(rtrack)) FROM logtracks") do |log|
             DBIntf.execute("SELECT COUNT(rtrack) FROM tracks WHERE iplayed > 0") do |track|
                 if log[0] != track[0]
@@ -126,8 +128,9 @@ module DBUtils
                 end
             end
         end
-        Trace.debug("Check log track count vs track played count ended.")
+        Trace.debug('Step 2: finished')
 
+        Trace.debug('Step 3: Checking if logtracks rtrack matches tracks entry')
         iterations = 0
         DBIntf.execute("SELECT DISTINCT(rtrack) FROM logtracks") do |log|
             DBIntf.execute("SELECT rtrack, stitle, iplayed FROM tracks WHERE rtrack=#{log[0]}") do |track|
@@ -137,8 +140,10 @@ module DBUtils
                 iterations += 1
             end
         end
-        Trace.debug("Check log track existence in tracks ended (iterations=#{iterations}).")
+        Trace.debug("Step 3: finished after #{iterations} iterations")
 
+        Trace.debug('Step 4: Checking if tracks play count and date match logtracks entries')
+        tracks = []
         iterations = 0
         DBIntf.execute("SELECT rtrack, iplayed FROM tracks WHERE iplayed > 0") do |row|
             DBIntf.execute("SELECT COUNT(rtrack), MAX(idateplayed) FROM logtracks WHERE rtrack=#{row[0]}") do |log|
@@ -149,18 +154,22 @@ module DBUtils
                 iterations += 1
             end
         end
-        Trace.debug("Check dates integrity between tracks and log ended (iterations=#{iterations}).")
-        Trace.debug("Check integrity ended with #{tracks.size} mismatches.")
-#         return
+        Trace.debug("Step 4: finished after #{iterations} iterations")
 
-        if tracks.size > 0 && Cfg.admin
-            Trace.debug("Starting tracks update.")
-            tracks.each do |track|
-                sql = "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]}"
-                puts sql
-                DBIntf.execute(sql)
+        if tracks.size > 0
+            if Cfg.admin
+                Trace.debug("Starting tracks update.")
+                tracks.each do |track|
+                    sql = "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]}"
+                    Trace.debug("Repair: #{sql}")
+                    self.client_sql(sql)
+                end
+                Trace.debug("End tracks update.")
+            else
+                Trace.debug("Not in admin mode, skipping repair statements.")
             end
-            Trace.debug("End tracks update.")
+        else
+            Trace.debug("Check integrity ended with no mismatch.")
         end
     end
 

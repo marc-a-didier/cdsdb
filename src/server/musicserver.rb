@@ -47,9 +47,7 @@ class MusicServer
         # A bit of security...
         @allowed_hosts = []
         IO.foreach("/etc/hosts") { |line| @allowed_hosts << line.split(" ")[0] if line.match('^[0-9]') }
-        hosts = "Allowed hosts :"
-        @allowed_hosts.each { |host| hosts += " "+host }
-        Log.info(hosts)
+        Log.info("Allowed hosts: #{@allowed_hosts.join(' ')}")
     end
 
     # Returned array of peeraddr: ["AF_INET", 46515, "jukebox", "192.168.1.123"]
