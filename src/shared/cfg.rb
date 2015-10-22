@@ -202,6 +202,18 @@ module Cfg
             @cfg["dbversion"] = version
         end
 
+        def last_integrity_check
+            # Stores the last date track date from logtracks on which the check log ntegrity
+            # was made to restart from it rather than processing the whole db.
+            # 1 is to skip never played tracks in check log
+            return @cfg['last_integrity_check'] || 1
+        end
+
+        def set_last_integrity_check(date)
+            @cfg['last_integrity_check'] = date
+        end
+
+
         #
         # Special cases for the server: db & log are forced to specific directories
         #

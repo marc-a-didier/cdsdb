@@ -143,9 +143,10 @@ module DBUtils
         Trace.debug("Step 3: finished after #{iterations} iterations")
 
         Trace.debug('Step 4: Checking if tracks play count and date match logtracks entries')
+        Trace.debug("        Starting from #{Cfg.last_integrity_check.to_std_date}")
         tracks = []
         iterations = 0
-        DBIntf.execute("SELECT rtrack, iplayed FROM tracks WHERE iplayed > 0") do |row|
+        DBIntf.execute("SELECT rtrack, iplayed FROM tracks WHERE ilastplayed >= #{Cfg.last_integrity_check}") do |row|
             DBIntf.execute("SELECT COUNT(rtrack), MAX(idateplayed) FROM logtracks WHERE rtrack=#{row[0]}") do |log|
                 if log[0] != row[1]
                     puts("Track #{row[0]}: played=#{row[1]}, logged=#{log[0]}, last=#{log[1].to_std_date}")
@@ -154,16 +155,18 @@ module DBUtils
                 iterations += 1
             end
         end
+        Cfg.set_last_integrity_check(DBIntf.get_first_value('SELECT MAX(idateplayed) FROM logtracks'))
         Trace.debug("Step 4: finished after #{iterations} iterations")
 
         if tracks.size > 0
             if Cfg.admin
                 Trace.debug("Starting tracks update.")
+                sql = ''
                 tracks.each do |track|
-                    sql = "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]}"
-                    Trace.debug("Repair: #{sql}")
-                    self.client_sql(sql)
+                    sql << "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]};\n"
                 end
+                Trace.debug("Repair: \n#{sql}")
+                self.exec_batch(sql, Socket.gethostname)
                 Trace.debug("End tracks update.")
             else
                 Trace.debug("Not in admin mode, skipping repair statements.")

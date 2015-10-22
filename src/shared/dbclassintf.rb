@@ -46,9 +46,7 @@ module DBClasses
         end
 
         def generate_insert
-            sql = "INSERT INTO #{tbl_name} VALUES ("
-            self.each { |value| sql += value.to_sql+"," }
-            return sql[0..-2]+");" # Remove last ,
+            return "INSERT INTO #{tbl_name} VALUES (#{self.map { |value| value.to_sql }.join(',')});"
         end
 
         def generate_update
