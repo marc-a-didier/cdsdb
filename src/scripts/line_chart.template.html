@@ -1,0 +1,27 @@
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load('visualization', '1', {packages: ['corechart', 'line']});
+    google.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+        var data = new google.visualization.arrayToDataTable([
+            ___DATA_TITLES___,
+            ___DATA_ROWS___
+        ]);
+
+        var options = {
+            explorer: {
+                actions: ['dragToZoom', 'rightClickToReset']
+            },
+            focusTarget: 'category',
+            ___CHART_OPTS___,
+            width: 900,
+            height: 550
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('line_chart_@@id@@_div'));
+
+        chart.draw(data, options);
+    }
+</script>
