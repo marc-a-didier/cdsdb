@@ -51,12 +51,11 @@ module XIntf
         def rec_info_string
             return "" unless valid_record_ref?
             rec = DBCache::Cache.record(@rrecord) # Cache of the cache!!!
-            str  = rec.itrackscount.to_s+" track".check_plural(rec.itrackscount)+" "
+            str  = rec.itrackscount.to_s+" "+genre.sname+" track".check_plural(rec.itrackscount)+" "
             str += DBCache::Cache.media(rec.rmedia).sname
             str += rec.iyear == 0 ? ", Unknown" : ", "+rec.iyear.to_s
             str += ", "+DBCache::Cache.label(record.rlabel).sname
             str += ", "+rec.scatalog unless rec.scatalog.empty?
-            str += ", "+genre.sname
             str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
             str += ", "+DBCache::Cache.collection(rec.rcollection).sname if rec.rcollection != 0
             str += ", "+rec.iplaytime.to_ms_length

@@ -147,7 +147,8 @@ class MainWindow < TopWindow
 #             } )
 #         }
         GtkUI[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
-        GtkUI[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(GtkUI["main_window"]) }
+#         GtkUI[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(GtkUI["main_window"]) }
+        GtkUI[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { GraphStats.new.tags_line_chart }
         GtkUI[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played } # update_log_time
         GtkUI[MM_TOOLS_SYNCSRC].signal_connect(:activate)     { on_update_sources }
         GtkUI[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }

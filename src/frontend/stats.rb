@@ -69,27 +69,27 @@ class Stats
     end
 
     def new_table(title, headers = [])
-        @f << "<h1>" << title << "</h1><br />"
-        @f << '<table id="mytbl">'
+        @tables << "<h1>" << title << "</h1><br />"
+        @tables << '<table id="mytbl">'
         @altr.reset
         @alignments = []
         headers.each { |header|
             @alignments << (header.match(/:R$/) ? "r" : "l")
-            @f << "<th>" << header.sub(/:R$/, "") << "</th>"
+            @tables << "<th>" << header.sub(/:R$/, "") << "</th>"
         }
     end
 
     def new_row(cols)
-        @f << @altr.get_color
+        @tables << @altr.get_color
         cols.each_with_index { |col_title, i|
             align = @alignments[i] && @alignments[i] == "r" ? '<td class="alt">' : '<td>'
-            @f << align << col_title.to_s << '</td>'
+            @tables << align << col_title.to_s << '</td>'
         }
-        @f << "</tr>"
+        @tables << "</tr>\n"
     end
 
     def end_table(html_epilogue = "")
-        @f << "</table><hr /><br /><br />"+html_epilogue
+        @tables << "</table><hr /><br /><br />"+html_epilogue
     end
 
     def get_count(stbl)
@@ -97,49 +97,50 @@ class Stats
     end
 
     def init_globals(fname, title)
-        @f = File.new(fname, "w")
-        @f << "<!DOCTYPE html><head>"
-        @f << '<meta charset="UTF-8">'
-        @f << "<title>#{title}</title>"
-        @f << %{<style type="text/css">
-                h1 {font-size: 18px; font-family: "sans";}
-                h2 {font-size: 16px; font-family: "sans";}
-                p {font-size: 10px; font-family: "sans";}
-                #mytbl
-                {
-                    font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
-                    border-collapse:collapse;
-                }
-                #mytbl td, #mytbl th
-                {
-                    font-size:1em;
-                    border:1px solid #98bf21;
-                    padding:3px 7px 2px 7px;
-                }
-                #mytbl th
-                {
-                    font-size:1.1em;
-                    text-align:left;
-                    padding-top:5px;
-                    padding-bottom:4px;
-                    background-color:#A7C942;
-                    color:#ffffff;
-                }
-                #mytbl tr.alt td
-                {
-                    color:#000000;
-                    background-color:#B5DDF7;
-                }
-                #mytbl td.alt
-                {
-                    text-align:right;
-                }
-                }
+#         @f = File.new(fname, "w")
+#         @f << "<!DOCTYPE html><head>"
+#         @f << '<meta charset="UTF-8">'
+#         @f << "<title>#{title}</title>"
+#         @f << %{<style type="text/css">
+#                 h1 {font-size: 18px; font-family: "sans";}
+#                 h2 {font-size: 16px; font-family: "sans";}
+#                 p {font-size: 10px; font-family: "sans";}
+#                 #mytbl
+#                 {
+#                     font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+#                     border-collapse:collapse;
+#                 }
+#                 #mytbl td, #mytbl th
+#                 {
+#                     font-size:1em;
+#                     border:1px solid #98bf21;
+#                     padding:3px 7px 2px 7px;
+#                 }
+#                 #mytbl th
+#                 {
+#                     font-size:1.1em;
+#                     text-align:left;
+#                     padding-top:5px;
+#                     padding-bottom:4px;
+#                     background-color:#A7C942;
+#                     color:#ffffff;
+#                 }
+#                 #mytbl tr.alt td
+#                 {
+#                     color:#000000;
+#                     background-color:#B5DDF7;
+#                 }
+#                 #mytbl td.alt
+#                 {
+#                     text-align:right;
+#                 }
+#                 }
 #                     background-color:#EAF2D3;
-        @f << '</style></head><body>'
+#         @f << '</style></head><body>'
 
-        # @genres is an array of GenreStruct. @genres[0] is the global total of all genres
-        @genres = []
+        @tables = ''
+
+#         @genres = []
         @db_tots = DBTotals.new
         @media = Hash.new
 
@@ -149,15 +150,16 @@ class Stats
         @db_tots.played = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks;")
         @db_tots.tot_ptime = DBIntf.get_first_value("SELECT SUM(iplayed*iplaytime) FROM tracks WHERE iplayed > 0;")
 
+        # @genres is an array of GenreStruct. @genres[0] is the global total of all genres
         # Initialize totals by genres
-        @genres << GenreStruct.new.init
+        @genres = Array.new(1, GenreStruct.new.init)
         DBIntf.execute("SELECT * FROM genres WHERE rgenre<>0 ORDER BY sname;") { |row| @genres << GenreStruct.new(row[0], row[1]).init }
         @genres.each { |genre| init_table(genre) }
         @genres.delete_if { |genre| genre.tot_tracks == 0 } # Remove genres with no tracks
     end
 
     def db_general_infos
-        @f << "<h1>DB stats generated #{Time.now}</h1><br />"
+        @tables << "<h1>DB stats generated #{Time.now}</h1><br />"
         new_table("General infos")
         new_row(["Total number of artists", @db_tots.artists])
         new_row(["Total number of records", "#{@db_tots.records} - Duration: #{@db_tots.ptime.to_day_length}"])
@@ -256,8 +258,7 @@ class Stats
         new_table("Music Style Top Chart", ["Rank:R", "Play count:R", "Genre", "Played:R", "Available:R", "% Played:R"])
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
-            genre = nil
-            @genres.each { |g| if g.index(row[1]) then genre = g; break; end }
+            genre = @genres.detect { |g| g.index(row[1]) }
             cols = [@altr.counter+1, row[0], row[1]]
             unless genre.nil?
                 cols += [row[2], genre.tot_tracks, "#{"%6.2f" % [row[2].to_f/genre.tot_tracks.to_f*100.0]}%"]
@@ -472,7 +473,7 @@ class Stats
     end
 
     def cleanup
-        @f << "</body></html>"
+#         @f << "</body></html>"
         @f.close
     end
 
@@ -503,7 +504,8 @@ class Stats
             return
         end
 
-        init_globals(Cfg.rsrc_dir+"dbstats.html", "DB Statistics")
+        @html = IO.read('./stats.template.html')
+        init_globals(Cfg.rsrc_dir+"dbstats.html", "CDsDB Statistics")
         db_general_infos
 
         # Check to see if a selection needs the ripped records data
@@ -518,7 +520,10 @@ class Stats
             self.send(TV_ITEMS[iter[1]][1]) if iter[0]
         }
 
-        cleanup
+        @html.sub!(/___TITLE___/, 'CDsDB Statistics')
+        @html.sub!(/___TABLES___/, @tables)
+        IO.write(Cfg.rsrc_dir+'dbstats.html', @html)
+#         cleanup
 
         GtkUI[GtkIDs::DLG_STATS].destroy
     end
