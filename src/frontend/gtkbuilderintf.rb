@@ -170,6 +170,10 @@ module GtkIDs
     MM_TOOLS_GENREORDER      = "mm_tools_genreorder"
     MM_TOOLS_CACHEINFO       = "mm_tools_cacheinfo"
     MM_TOOLS_STATS           = "mm_tools_stats"
+    MM_TOOLS_GRAPH           = "mm_tools_graph"
+    MM_GRAPH_DAILY           = "mm_graph_daily"
+    MM_GRAPH_MONTHLY         = "mm_graph_monthly"
+    MM_GRAPH_YEARLY          = "mm_graph_yearly"
 
     # About menu
     MM_ABOUT                 = "about_imagemenuitem"

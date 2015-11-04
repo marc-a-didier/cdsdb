@@ -2,7 +2,8 @@
 class DatesHandler
 
     def initialize(from_date, increment)
-        @curr_date = DateTime.parse(from_date)
+        @from_date = from_date
+        @curr_date = from_date #DateTime.parse(from_date)
         @increment = increment
     end
 
@@ -50,6 +51,14 @@ class DatesHandler
             when :year  then "Yearly"
         end
     end
+
+    def start_date_str
+        return case @increment
+            when :day   then @from_date.strftime("%a %b %-d %Y")
+            when :month then @from_date.strftime("%B %Y")
+            when :year  then @from_date.strftime("%Y")
+        end
+    end
 end
 
 module GraphStats
@@ -79,7 +88,7 @@ module GraphStats
         end
     end
 
-    def self.genres_chart(start_date, period, type)
+    def self.genres_evolution(start_date, period)
         genres = {}
         DBIntf.execute("SELECT sname FROM genres WHERE rgenre<>0;") { |row| genres[row[0]] = 0 }
         dh = DatesHandler.new(start_date, period)
@@ -114,10 +123,31 @@ module GraphStats
             data.size.times { |di| data[di].delete_at(rmd[1]) }
             genres.delete(rmd[0])
         end
-        new_chart(type,
+        new_chart(:line,
                   genres.keys.unshift('Genre').to_s,
                   data.map { |row| row.to_s }.join(",\n"),
                   "title: '#{dh.period_label} play count by genre', vAxis: { title: 'Play count' }")
+    end
+
+    def self.genres_snapshot(start_date, period)
+        genres = {}
+        DBIntf.execute("SELECT sname FROM genres WHERE rgenre<>0;") { |row| genres[row[0]] = 0 }
+        dh = DatesHandler.new(start_date, period)
+        sql = %{
+            SELECT genres.sname, COUNT(records.rgenre) FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                INNER JOIN records ON tracks.rrecord=records.rrecord
+                INNER JOIN genres ON records.rgenre=genres.rgenre
+            WHERE logtracks.idateplayed >= #{dh.start_date} AND logtracks.idateplayed <= #{dh.end_date}
+            GROUP BY records.rgenre;
+        }
+        DBIntf.execute(sql) { |row| genres[row[0]] = row[1] }
+        genres.delete_if { |k, v| v == 0 }
+
+        new_chart(:column,
+                  "['Genres', 'Count']",
+                  genres.map { |row| row.to_s }.join(",\n"),
+                  "title: '#{dh.period_label} play count by genre for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
 #     def self.artists_col_chart
@@ -195,7 +225,7 @@ module GraphStats
                   "title: 'Play count by tags'")
     end
 
-    def self.ratings_chart(start_date, period, type)
+    def self.ratings_evolution(start_date, period)
         ratings = []
         dh = DatesHandler.new(start_date, period)
         dh.range.each do
@@ -212,13 +242,30 @@ module GraphStats
             end
             dh.next_date
         end
-        new_chart(type,
-                  "['Ratings', "+Qualifiers::RATINGS.map { |rating| '"'+rating+'"' }.join(',')+']',
+        new_chart(:line,
+                  Qualifiers::RATINGS.clone.unshift('Rating').to_s,
                   ratings.map { |rating| rating.to_s }.join(",\n"),
                   "title: '#{dh.period_label} play count by rating', vAxis: { title: 'Play count' }")
     end
 
-    def self.played_tracks(start_date, period, type)
+    def self.ratings_snapshot(start_date, period)
+        ratings = Array.new(Qualifiers::RATINGS.size).fill { |i| [Qualifiers::RATINGS[i], 0] }
+        dh = DatesHandler.new(start_date, period)
+        sql = %{
+            SELECT tracks.irating FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+            WHERE logtracks.idateplayed >= #{dh.start_date} AND logtracks.idateplayed <= #{dh.end_date};
+        }
+        DBIntf.execute(sql) do |row|
+            ratings[row[0]][1] += 1
+        end
+        new_chart(:column,
+                  "['Rating', 'Count']",
+                  ratings.map { |rating| rating.to_s }.join(",\n"),
+                  "title: '#{dh.period_label} play count by rating for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
+    end
+
+    def self.played_tracks_evolution(start_date, period)
         data = []
         dh = DatesHandler.new(start_date, period)
         dh.range.each do
@@ -229,13 +276,13 @@ module GraphStats
             data << [dh.x_axis_label, DBIntf.get_first_value(sql)]
             dh.next_date
         end
-        new_chart(type,
+        new_chart(:line,
                   "['Year', 'Play count']",
                   data.map { |entry| entry.to_s }.join(",\n"),
                   "title: '#{dh.period_label} played tracks'")
     end
 
-    def self.tags_chart(start_date, period, type)
+    def self.tags_evolution(start_date, period)
         tags = []
         dh = DatesHandler.new(start_date, period)
         dh.range.each do
@@ -253,18 +300,40 @@ module GraphStats
             end
             dh.next_date
         end
-        new_chart(type,
-                  "['Tags', "+Qualifiers::TAGS.map { |tag| '"'+tag+'"' }.join(',')+']',
+        new_chart(:line,
+                  Qualifiers::TAGS.clone.unshift('Tags').to_s,
                   tags.map { |tag| tag.to_s }.join(",\n"),
                   "title: '#{dh.period_label} play count by tag', vAxis: { title: 'Play count' }")
     end
 
+    def self.tags_snapshot(start_date, period)
+        tags = Array.new(Qualifiers::TAGS.size).fill { |i| [Qualifiers::TAGS[i], 0] }
+        dh = DatesHandler.new(start_date, period)
+        sql = %{
+            SELECT tracks.itags FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+            WHERE logtracks.idateplayed >= #{dh.start_date} AND logtracks.idateplayed <= #{dh.end_date} AND
+                  tracks.itags<>0;
+        }
+        DBIntf.execute(sql) do |row|
+            Qualifiers::TAGS.size.times { |i| tags[i][1] += 1 if row[0] & (1 << i) != 0 }
+        end
+        new_chart(:column,
+                  "['Tags', 'Count']",
+                  tags.map { |tag| tag.to_s }.join(",\n"),
+                  "title: '#{dh.period_label} play count by tag for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
+    end
+
     def self.draw_charts
         charts = []
-        charts << played_tracks(Time.new(2015, 10, 4).to_s, :day, :line)
-        charts << tags_chart(Time.new(2015, 10, 4).to_s, :day, :line)
-        charts << ratings_chart(Time.new(2015, 10, 4).to_s, :day, :line)
-        charts << genres_chart(Time.new(2015, 10, 4).to_s, :day, :line)
+        charts << played_tracks_evolution(Time.new(2015, 10, 5).to_s, :day)
+        charts << tags_snapshot(Time.new(2015, 11, 4).to_s, :day)
+        charts << tags_evolution(Time.new(2015, 10, 5).to_s, :day)
+#         charts << tags_col_chart(Time.new(2015, 10, 5).to_s, :day, :line)
+        charts << ratings_snapshot(Time.new(2015, 11, 4).to_s, :day)
+        charts << ratings_evolution(Time.new(2015, 10, 5).to_s, :day)
+        charts << genres_snapshot(Time.new(2015, 11, 4).to_s, :day)
+        charts << genres_evolution(Time.new(2015, 10, 5).to_s, :day)
 #         charts << tags_line_chart
 #         charts << ratings_line_chart
 #         charts << genres_played_line
@@ -275,6 +344,46 @@ module GraphStats
 #         charts << tags_chart(Time.new(2011).to_s, :month, :line)
 #         charts << played_tracks(Time.new(2010).to_s, :year, :column)
 #         charts << played_tracks(Time.new(2011).to_s, :month, :column)
+        render_charts(charts)
+    end
+
+    def self.daily_status
+        d = Date.today
+        charts = []
+        charts << played_tracks_evolution(d - 30, :day)
+        charts << tags_snapshot(d, :day)
+        charts << tags_evolution(d - 30, :day)
+        charts << ratings_snapshot(d, :day)
+        charts << ratings_evolution(d - 30, :day)
+        charts << genres_snapshot(d, :day)
+        charts << genres_evolution(d - 30, :day)
+        render_charts(charts)
+    end
+
+    def self.monthly_status
+        d = Date.new(Date.today.year, Date.today.month, 1)
+        charts = []
+        charts << played_tracks_evolution(d << 11, :month)
+        charts << tags_snapshot(d, :month)
+        charts << tags_evolution(d << 11, :month)
+        charts << ratings_snapshot(d, :month)
+        charts << ratings_evolution(d << 11, :month)
+        charts << genres_snapshot(d, :month)
+        charts << genres_evolution(d << 11, :month)
+        render_charts(charts)
+    end
+
+    def self.yearly_status
+        d = Date.new(Date.today.year, 1, 1)
+        origin = Date.new(2010, 1, 1)
+        charts = []
+        charts << played_tracks_evolution(origin, :year)
+        charts << tags_snapshot(d, :year)
+        charts << tags_evolution(origin, :year)
+        charts << ratings_snapshot(d, :year)
+        charts << ratings_evolution(origin, :year)
+        charts << genres_snapshot(d, :year)
+        charts << genres_evolution(origin, :year)
         render_charts(charts)
     end
 end

@@ -9,11 +9,13 @@
             ___DATA_TITLES___,
             ___DATA_ROWS___
         ]);
+        var w = data.getNumberOfColumns() > data.getNumberOfRows() ? data.getNumberOfColumns() : data.getNumberOfRows();
         var options = {
             ___CHART_OPTS___,
-            width: data.getNumberOfRows() * 65,
-            height: 550,
-            bar: {groupWidth: 30}
+//             width: data.getNumberOfRows() * 100,
+            width: w*100,
+            height: 550
+//             bar: { groupWidth: data.getNumberOfColumns() * 20 }
         };
 
         var chart = new google.visualization.ColumnChart(document.getElementById('column_chart_@@id@@_div'));
