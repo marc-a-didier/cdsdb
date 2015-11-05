@@ -9,11 +9,11 @@
             ___DATA_TITLES___,
             ___DATA_ROWS___
         ]);
-        var w = data.getNumberOfColumns() > data.getNumberOfRows() ? data.getNumberOfColumns() : data.getNumberOfRows();
+        var w = data.getNumberOfRows()*55 < 900 ? 900 : data.getNumberOfRows()*55;
         var options = {
             ___CHART_OPTS___,
-//             width: data.getNumberOfRows() * 100,
-            width: w*100,
+//             width: data.getNumberOfRows() * 65,
+            width: w,
             height: 550
 //             bar: { groupWidth: data.getNumberOfColumns() * 20 }
         };

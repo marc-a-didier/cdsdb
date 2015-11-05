@@ -199,6 +199,19 @@ module GraphStats
                   "title: '20 most played artists'")
     end
 
+    def self.artists_snapshot(start_date, period)
+        dh = DatesHandler.new(start_date, period)
+        sql = %{
+            SELECT artists.sname, COUNT(segments.rartist) AS artcount FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                INNER JOIN artists ON segments.rartist=artists.rartist
+            WHERE logtracks.idateplayed >= #{dh.start_date} AND logtracks.idateplayed <= #{dh.end_date}
+            GROUP BY segments.rartist ORDER BY artcount DESC LIMIT 20;
+        }
+        new_chart(:column, "['Artist', 'Count']", DBIntf.execute(sql).map { |row| row.to_s }.join(",\n"), "title: '20 most played artists'")
+    end
+
     def self.tags_col_chart(start_date, period, type)
         yix = 1
         data = Array.new(Qualifiers::TAGS.size).fill { |i| [Qualifiers::TAGS[i]] }
@@ -357,6 +370,7 @@ module GraphStats
         charts << ratings_evolution(d - 30, :day)
         charts << genres_snapshot(d, :day)
         charts << genres_evolution(d - 30, :day)
+        charts << artists_snapshot(d, :day)
         render_charts(charts)
     end
 
@@ -370,6 +384,7 @@ module GraphStats
         charts << ratings_evolution(d << 11, :month)
         charts << genres_snapshot(d, :month)
         charts << genres_evolution(d << 11, :month)
+        charts << artists_snapshot(d, :month)
         render_charts(charts)
     end
 
@@ -384,6 +399,7 @@ module GraphStats
         charts << ratings_evolution(origin, :year)
         charts << genres_snapshot(d, :year)
         charts << genres_evolution(origin, :year)
+        charts << artists_snapshot(d, :year)
         render_charts(charts)
     end
 end
