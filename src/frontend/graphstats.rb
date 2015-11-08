@@ -283,14 +283,16 @@ module GraphStats
         dh = DatesHandler.new(start_date, period)
         dh.range.each do
             sql = %{
-                SELECT COUNT(rtrack) FROM logtracks
+                SELECT logtracks.rhost FROM logtracks
                 WHERE logtracks.idateplayed >= #{dh.start_date} AND logtracks.idateplayed <= #{dh.end_date};
             }
-            data << [dh.x_axis_label, DBIntf.get_first_value(sql)]
+            rows = DBIntf.execute(sql).flatten
+            data << [dh.x_axis_label, rows.size]
+            [9, 4, 7].each { |rhost| data.last << rows.count { |rrhost| rhost == rrhost } }
             dh.next_date
         end
         new_chart(:line,
-                  "['Year', 'Play count']",
+                  "['Year', 'Play count', 'madP9X79', 'jukebox', 'mad.rsd.com']",
                   data.map { |entry| entry.to_s }.join(",\n"),
                   "title: '#{dh.period_label} played tracks'")
     end
@@ -337,69 +339,30 @@ module GraphStats
                   "title: '#{dh.period_label} play count by tag for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
-    def self.draw_charts
-        charts = []
-        charts << played_tracks_evolution(Time.new(2015, 10, 5).to_s, :day)
-        charts << tags_snapshot(Time.new(2015, 11, 4).to_s, :day)
-        charts << tags_evolution(Time.new(2015, 10, 5).to_s, :day)
-#         charts << tags_col_chart(Time.new(2015, 10, 5).to_s, :day, :line)
-        charts << ratings_snapshot(Time.new(2015, 11, 4).to_s, :day)
-        charts << ratings_evolution(Time.new(2015, 10, 5).to_s, :day)
-        charts << genres_snapshot(Time.new(2015, 11, 4).to_s, :day)
-        charts << genres_evolution(Time.new(2015, 10, 5).to_s, :day)
-#         charts << tags_line_chart
-#         charts << ratings_line_chart
-#         charts << genres_played_line
-#         charts << played_tracks
-#         charts << tags_col_chart
-#         charts << artists_col_chart
-#         charts << tags_chart(Time.new(2010).to_s, :year, :column)
-#         charts << tags_chart(Time.new(2011).to_s, :month, :line)
-#         charts << played_tracks(Time.new(2010).to_s, :year, :column)
-#         charts << played_tracks(Time.new(2011).to_s, :month, :column)
-        render_charts(charts)
-    end
+    def self.graph_period
+        date, period = Dialogs::GraphStatsSelector.run
+        if date
+            case period
+                when :day
+                    offset = date - 30
+                when :month
+                    date = Date.new(date.year, date.month, 1)
+                    offset = date << 11
+                when :year
+                    date = Date.new(date.year, 1, 1)
+                    offset = Date.new(2010, 1, 1)
+            end
 
-    def self.daily_status
-        d = Date.today
-        charts = []
-        charts << played_tracks_evolution(d - 30, :day)
-        charts << tags_snapshot(d, :day)
-        charts << tags_evolution(d - 30, :day)
-        charts << ratings_snapshot(d, :day)
-        charts << ratings_evolution(d - 30, :day)
-        charts << genres_snapshot(d, :day)
-        charts << genres_evolution(d - 30, :day)
-        charts << artists_snapshot(d, :day)
-        render_charts(charts)
-    end
-
-    def self.monthly_status
-        d = Date.new(Date.today.year, Date.today.month, 1)
-        charts = []
-        charts << played_tracks_evolution(d << 11, :month)
-        charts << tags_snapshot(d, :month)
-        charts << tags_evolution(d << 11, :month)
-        charts << ratings_snapshot(d, :month)
-        charts << ratings_evolution(d << 11, :month)
-        charts << genres_snapshot(d, :month)
-        charts << genres_evolution(d << 11, :month)
-        charts << artists_snapshot(d, :month)
-        render_charts(charts)
-    end
-
-    def self.yearly_status
-        d = Date.new(Date.today.year, 1, 1)
-        origin = Date.new(2010, 1, 1)
-        charts = []
-        charts << played_tracks_evolution(origin, :year)
-        charts << tags_snapshot(d, :year)
-        charts << tags_evolution(origin, :year)
-        charts << ratings_snapshot(d, :year)
-        charts << ratings_evolution(origin, :year)
-        charts << genres_snapshot(d, :year)
-        charts << genres_evolution(origin, :year)
-        charts << artists_snapshot(d, :year)
-        render_charts(charts)
+            charts = []
+            charts << self.played_tracks_evolution(offset, period)
+            charts << self.tags_snapshot(date, period)
+            charts << self.tags_evolution(offset, period)
+            charts << self.ratings_snapshot(date, period)
+            charts << self.ratings_evolution(offset, period)
+            charts << self.genres_snapshot(date, period)
+            charts << self.genres_evolution(offset, period)
+            charts << self.artists_snapshot(date, period)
+            self.render_charts(charts)
+        end
     end
 end

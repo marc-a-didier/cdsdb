@@ -73,8 +73,8 @@ module Dialogs
             GtkUI.load_window(DLG_DATE_SELECTOR)
             GtkUI[DATED_CALENDAR].signal_connect(:day_selected_double_click) { GtkUI[DATED_BTN_OK].send(:clicked) }
             if GtkUI[DLG_DATE_SELECTOR].run == Gtk::Dialog::RESPONSE_OK
-                dt = GtkUI[DATED_CALENDAR].date
-                control.text = dt[0].to_s+"-"+dt[1].to_s+"-"+dt[2].to_s
+                control.text = GtkUI[DATED_CALENDAR].date.map { |v| v.to_s }.join('-')
+#                 control.text = dt[0].to_s+"-"+dt[1].to_s+"-"+dt[2].to_s
             end
             GtkUI[DLG_DATE_SELECTOR].destroy
         end
@@ -105,6 +105,24 @@ module Dialogs
             end
             GtkUI[DLG_DATE_CHOOSER].destroy
             return dates
+        end
+    end
+
+    module GraphStatsSelector
+
+        def self.run
+            selection = nil
+            GtkUI.load_window(GtkIDs::DLG_GRAPH_STATS)
+            GtkUI[GtkIDs::GRAPH_STATS_DLG_CALENDAR].set_day(Date.today.day).set_month(Date.today.month-1).set_year(Date.today.year)
+            GtkUI[GtkIDs::GRAPH_STATS_DLG_CMB_PERIOD].active = 0
+            GtkUI[GtkIDs::DLG_GRAPH_STATS].run do |response|
+                if response == Gtk::Dialog::RESPONSE_OK
+                    selection = [Date.parse(GtkUI[GtkIDs::GRAPH_STATS_DLG_CALENDAR].date.map { |v| v.to_s }.join('-')),
+                                 GtkUI[GtkIDs::GRAPH_STATS_DLG_CMB_PERIOD].active_text.downcase.to_sym]
+                end
+            end
+            GtkUI[GtkIDs::DLG_GRAPH_STATS].destroy
+            return selection
         end
     end
 

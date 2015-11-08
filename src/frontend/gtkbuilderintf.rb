@@ -612,6 +612,15 @@ module GtkIDs
     DTDLG_BTN_TODATE     = "dtdlg_btn_todate"
     DTDLG_ENTRY_TODATE   = "dtdlg_entry_todate"
 
+    #
+    # Graphic stats dialog
+    #
+    DLG_GRAPH_STATS = "dlg_graph_stats"
+
+    GRAPH_STATS_DLG_CALENDAR   = "graph_stats_dlg_calendar"
+    GRAPH_STATS_DLG_CMB_PERIOD = "graph_stats_dlg_cmb_period"
+
+
 
     #
     # Disabled controls when not in admin mode.

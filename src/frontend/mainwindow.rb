@@ -156,7 +156,7 @@ class MainWindow < TopWindow
         GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
         GtkUI[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
         GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
-        GtkUI[MM_GRAPH_DAILY].signal_connect(:activate)       { GraphStats.daily_status }
+        GtkUI[MM_GRAPH_DAILY].signal_connect(:activate)       { GraphStats.graph_period }
         GtkUI[MM_GRAPH_MONTHLY].signal_connect(:activate)     { GraphStats.monthly_status }
         GtkUI[MM_GRAPH_YEARLY].signal_connect(:activate)      { GraphStats.yearly_status }
 
