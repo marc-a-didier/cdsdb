@@ -32,7 +32,7 @@ class DatesHandler
         return case @increment
             when :day   then (1..Date.new(@curr_date.year, @curr_date.month, -1).day)
             when :month then (1..12)
-            when :year  then (2010..2015)
+            when :year  then (2010..Date.today.year)
         end
     end
 
@@ -294,7 +294,7 @@ module GraphStats
         new_chart(:line,
                   "['Year', 'Play count', 'madP9X79', 'jukebox', 'mad.rsd.com']",
                   data.map { |entry| entry.to_s }.join(",\n"),
-                  "title: '#{dh.period_label} played tracks'")
+                  "title: '#{dh.period_label} played tracks', curveType: 'function'")
     end
 
     def self.tags_evolution(start_date, period)
