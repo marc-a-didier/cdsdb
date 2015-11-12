@@ -33,6 +33,7 @@ class CDEditorWindow
             end
             update_tv
         end
+        GtkUI[GtkIDs::CDED_CMB_SOURCE].active = 0
         GtkUI[GtkIDs::CDED_BTN_CLOSE].signal_connect(:clicked) do
             Prefs.save_window(GtkIDs::CD_EDITOR_WINDOW)
             @window.destroy

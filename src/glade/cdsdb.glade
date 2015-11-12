@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.22"/>
+  <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAccelGroup" id="accelgroup1"/>
   <object class="GtkMenu" id="apm_menu">
@@ -3604,7 +3604,7 @@
                       <object class="GtkMenuItem" id="mm_tools_stats">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Statistics</property>
+                        <property name="label" translatable="yes">Numeric Statistics</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
@@ -3612,7 +3612,7 @@
                       <object class="GtkMenuItem" id="mm_tools_graph">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Graphics</property>
+                        <property name="label" translatable="yes">Graphic Statistics</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>

@@ -1,21 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.22"/>
+  <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkListStore" id="cded_store_source">
-    <columns>
-      <!-- column-name Source -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">FreeDB</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">MusicBrainz</col>
-      </row>
-    </data>
-  </object>
   <object class="GtkWindow" id="cd_editor_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Disc Editor</property>
@@ -311,11 +297,14 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBox" id="cded_cmb_source">
+                  <object class="GtkComboBoxText" id="cded_cmb_source">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="model">cded_store_source</property>
                     <property name="active">0</property>
+                    <items>
+                      <item translatable="yes">FreeDB</item>
+                      <item translatable="yes">MusicBrainz</item>
+                    </items>
                   </object>
                   <packing>
                     <property name="expand">False</property>
