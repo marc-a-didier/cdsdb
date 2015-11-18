@@ -379,7 +379,7 @@ class PlayerWindow < TopWindow
             Trace.ppq("player refetched by #{track_provider.class.name}".red)
             @queue.slice!(1, PREFETCH_SIZE) # Remove all entries after the first one
             track_provider.prefetch_tracks(@queue, PREFETCH_SIZE)
-            set_ready(@queue[1]) if @queue[1]
+            @queue[1] ? set_ready(@queue[1]) : @readybin.stop
             debug_queue if Cfg.trace_gstqueue
         end
     end
