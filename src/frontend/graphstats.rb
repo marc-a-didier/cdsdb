@@ -30,7 +30,7 @@ class DatesHandler
 
     def range
         return case @increment
-            when :day   then (1..Date.new(@curr_date.year, @curr_date.month, -1).day)
+            when :day   then (1..31) # 30 days back + 1 for today
             when :month then (1..12)
             when :year  then (2010..Date.today.year)
         end
