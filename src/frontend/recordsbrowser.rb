@@ -248,7 +248,7 @@ p row
         # Exit if row has already been loaded, children are already there
         return if iter.first_child && iter.first_child[RTV_REF] != -1
 
-        DBIntf.execute(generate_seg_sql(iter[RTV_REF])) { |row|
+        DBIntf.execute(generate_seg_sql(iter[RTV_REF])) do |row|
             child = model.append(iter)
 
             dblink = XIntf::Record.new.set_segment_ref(row[0])
@@ -263,7 +263,7 @@ p row
             end
             child[RTV_PTIME] = row[1].to_ms_length
             child[RTV_DBLNK] = dblink
-        }
+        end
         model.remove(iter.first_child)
     end
 

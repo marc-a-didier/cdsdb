@@ -155,7 +155,6 @@ module DBUtils
                 iterations += 1
             end
         end
-        Cfg.set_last_integrity_check(DBIntf.get_first_value('SELECT MAX(idateplayed) FROM logtracks'))
         Trace.debug("Step 4: finished after #{iterations} iterations")
 
         if tracks.size > 0
@@ -168,10 +167,14 @@ module DBUtils
                 Trace.debug("Repair: \n#{sql}")
                 self.exec_batch(sql, Socket.gethostname)
                 Trace.debug("End tracks update.")
+
+                # Save last check only if repaired so can restart in admin mode
+                Cfg.set_last_integrity_check(DBIntf.get_first_value('SELECT MAX(idateplayed) FROM logtracks'))
             else
                 Trace.debug("Not in admin mode, skipping repair statements.")
             end
         else
+            Cfg.set_last_integrity_check(DBIntf.get_first_value('SELECT MAX(idateplayed) FROM logtracks'))
             Trace.debug("Check integrity ended with no mismatch.")
         end
     end

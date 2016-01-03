@@ -148,8 +148,7 @@ class FilterWindow < TopWindow
         GtkUI.load_window(DLG_DATE_SELECTOR)
         GtkUI[DATED_CALENDAR].signal_connect(:day_selected_double_click) { GtkUI[DATED_BTN_OK].send(:clicked) }
         if GtkUI[DLG_DATE_SELECTOR].run == Gtk::Dialog::RESPONSE_OK
-            dt = GtkUI[DATED_CALENDAR].date
-            control.text = dt[0].to_s+"-"+dt[1].to_s+"-"+dt[2].to_s
+            control.text = GtkUI[DATED_CALENDAR].date.map { |d| d.to_s }.join('-')
         end
         GtkUI[DLG_DATE_SELECTOR].destroy
     end
@@ -204,14 +203,14 @@ class FilterWindow < TopWindow
     def add_tv_clause(ls, cond_field)
         wc = ""
         total = selected = 0
-        ls.each { |model, path, iter| total += 1; selected += 1 if iter[0] == true }
+        ls.each { |model, path, iter| total += 1; selected += 1 if iter[0] }
         if selected > 0 && selected != total
             cond = " IN ("
             if selected <= total/2
-                ls.each { |model, path, iter| cond += iter[2].to_s+"," if iter[0] == true }
+                ls.each { |model, path, iter| cond += iter[2].to_s+"," if iter[0] }
             else
                 cond = " NOT"+cond
-                ls.each { |model, path, iter| cond += iter[2].to_s+"," if iter[0] == false }
+                ls.each { |model, path, iter| cond += iter[2].to_s+"," unless iter[0] }
             end
             cond[-1] = ")"
             wc = " AND ("+cond_field+cond+")"
@@ -245,16 +244,13 @@ class FilterWindow < TopWindow
         tracks = []
         dblink = Audio::Link.new
         DBIntf.execute(sql) do |row|
-            # Skip tracks which aren't ripped
             dblink.reset.set_track_ref(row[0])
-            if GtkUI[FLT_CHK_MUSICFILE].active?
-                next if dblink.setup_audio_file.status == Audio::Status::NOT_FOUND
-            end
+            next if GtkUI[FLT_CHK_MUSICFILE].active? && dblink.setup_audio_file.status == Audio::Status::NOT_FOUND
 
             max_played = dblink.track.iplayed if dblink.track.iplayed > max_played
 
             tracks << TrackData.new(0.0, dblink.track.iplayed.to_f, dblink.track.irating.to_f/6.0*100.0, row[0], dblink.track.stitle)
-            f << row[0] << " - " << dblink.track.iplayed << " - " << dblink.track.irating << " - " << dblink.track.stitle << "\n"
+            f.puts("#{row[0]} - #{dblink.track.iplayed} - #{dblink.track.irating} - #{dblink.track.stitle}")
         end
         f.puts
 
@@ -278,12 +274,11 @@ class FilterWindow < TopWindow
 #             tracks = Array.new(rvalues.size).fill { |i| tracks[rvalues[i]] }.uniq
             tracks.shuffle!
         elsif GtkUI[FLT_CMB_SELECTBY].active != 3 # Do nothing if oldest played first
-            tracks.each { |track|
+            tracks.each do |track|
                 track.played = track.played/max_played*100.0 if max_played > 0
                 track.weight = track.played*pcweight+track.rating*rtweight
-                f << track.rtrack << " - pcp: " << track.played << " - rtp: " << track.rating \
-                  << " - Weight: " << track.weight << " for " << track.title << "\n"
-            }
+                f.puts("#{track.rtrack} - pcp: #{track.played} - rtp: #{track.rating} - Weight: #{track.weight} for #{track.title}")
+            end
 
             tracks.sort! { |t1, t2| t2.weight <=> t1.weight } # reverse sort, most weighted first
 
@@ -311,7 +306,7 @@ class FilterWindow < TopWindow
                 ttracks = []
                 count = 0
                 curr_weight = tracks[0].weight
-                tracks.each { |track|
+                tracks.each do |track|
                     if curr_weight != track.weight
                         ttracks.shuffle!
                         stracks += ttracks
@@ -321,10 +316,10 @@ class FilterWindow < TopWindow
                     end
                     count += 1
                     ttracks << track
-                }
+                end
 
-                f << "\n" << stracks.size << " tracks selected until weight " << curr_weight << "\n"
-                stracks.each { |track| f << track.weight << " " << track.title << "\n" }
+                f.puts("\n#{stracks.size} tracks selected until weight #{curr_weight}")
+                stracks.each { |track| f.puts("#{track.weight} #{track.title}") }
                 tracks = stracks
             end
         end
@@ -340,14 +335,14 @@ class FilterWindow < TopWindow
             rpltrack = DBUtils::get_last_id("pltrack")+1
         end
 
-        tracks.each_with_index { |track, i|
-            f << "i="<< i << "  Weight: " << track.weight << " for " << track.title << "\n"
+        tracks.each_with_index do |track, i|
+            f.puts("i=#{i}  Weight: #{track.weight} for #{track.title}")
             if destination == DEST_PLIST
                 DBIntf.execute("INSERT INTO pltracks VALUES (#{rpltrack+i}, #{rplist}, #{track.rtrack}, #{(i+1)*1024});")
             else
                 links << XIntf::Link.new.set_track_ref(track.rtrack)
             end
-        }
+        end
         f.close
 
         destination == DEST_PLIST ? @mc.reload_plists : @mc.pqueue.enqueue(links)

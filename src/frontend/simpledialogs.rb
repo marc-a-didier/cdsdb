@@ -74,7 +74,6 @@ module Dialogs
             GtkUI[DATED_CALENDAR].signal_connect(:day_selected_double_click) { GtkUI[DATED_BTN_OK].send(:clicked) }
             if GtkUI[DLG_DATE_SELECTOR].run == Gtk::Dialog::RESPONSE_OK
                 control.text = GtkUI[DATED_CALENDAR].date.map { |v| v.to_s }.join('-')
-#                 control.text = dt[0].to_s+"-"+dt[1].to_s+"-"+dt[2].to_s
             end
             GtkUI[DLG_DATE_SELECTOR].destroy
         end
