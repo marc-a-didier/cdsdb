@@ -267,6 +267,23 @@ module GraphStats
                   "title: '#{dh.start_date_str} 20 most played artists', vAxis: { title: 'Play count' }")
     end
 
+    def self.countries_snapshot(start_date, period)
+        dh = DatesHandler.new(start_date, period)
+        sql = %{
+            SELECT origins.sname, COUNT(artists.rorigin) AS origincount FROM logtracks
+                INNER JOIN tracks ON tracks.rtrack=logtracks.rtrack
+                INNER JOIN segments ON tracks.rsegment=segments.rsegment
+                INNER JOIN artists ON segments.rartist=artists.rartist
+                INNER JOIN origins ON artists.rorigin=origins.rorigin
+            WHERE logtracks.idateplayed >= #{dh.start_date} AND logtracks.idateplayed <= #{dh.end_date}
+            GROUP BY artists.rorigin ORDER BY origincount DESC;
+        }
+        new_chart(:column,
+                  "['Origin', 'Count']",
+                  DBIntf.execute(sql).map { |row| row.to_s }.join(",\n"),
+                  "title: 'Play count by origin for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
+    end
+
     def self.graph_period
         date, period = Dialogs::GraphStatsSelector.run
         if date
@@ -290,6 +307,7 @@ module GraphStats
             charts << self.genres_snapshot(date, period)
             charts << self.genres_evolution(offset, period)
             charts << self.artists_snapshot(date, period)
+            charts << self.countries_snapshot(date, period)
             self.render_charts(charts)
         end
     end
