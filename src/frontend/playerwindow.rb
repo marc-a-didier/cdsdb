@@ -442,16 +442,16 @@ class PlayerWindow < TopWindow
 
                 # Draws the lit part from zero upto the rms level
                 @mpix.draw_pixbuf(nil, @bright,
-                                10,  0,
-                                10,  Y_OFFSETS[channel],
-                                rms, 8,
-                                Gdk::RGB::DITHER_NONE, 0, 0)
+                                  10,  0,
+                                  10,  Y_OFFSETS[channel],
+                                  rms, 8,
+                                  Gdk::RGB::DITHER_NONE, 0, 0)
                 # Draws the unlit part from rms level to the end
                 @mpix.draw_pixbuf(nil, @dark,
-                                rms+11,            0,
-                                rms+11,            Y_OFFSETS[channel],
-                                METER_WIDTH-rms+1, 8,
-                                Gdk::RGB::DITHER_NONE, 0, 0)
+                                  rms+11,            0,
+                                  rms+11,            Y_OFFSETS[channel],
+                                  METER_WIDTH-rms+1, 8,
+                                  Gdk::RGB::DITHER_NONE, 0, 0)
 
                 @mpix.draw_rectangle(@gc, true, peak+9, Y_OFFSETS[channel], 2, 8) if peak > 9
             else

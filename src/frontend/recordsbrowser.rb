@@ -239,8 +239,7 @@ p row
     end
 
     def is_on_record
-        return true if selection.selected.nil?
-        return selection.selected.parent.nil?
+        return selection.selected.nil? ? true : selection.selected.parent.nil?
     end
 
     # Fills all children of a record (its segments)

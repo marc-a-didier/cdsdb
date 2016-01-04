@@ -76,7 +76,7 @@ module GraphStats
     def self.render_charts(charts)
         File.open(Cfg.rsrc_dir+'dbstats.html', 'w') do |f|
             f.write('<!DOCTYPE html><head><meta charset="UTF-8">')
-            body = "</head>\n<body>\n"
+            body = "</head>\n<body>\n".dup
             charts.each_with_index do |chart, i|
                 chart.sub!(/@@id@@/, (i+1).to_s)
                 id = chart.match(/getElementById\('(.+)'\)/).captures.first
@@ -103,7 +103,7 @@ module GraphStats
         end
         new_chart(:line,
                   "['Year', 'Play count', 'madP9X79', 'jukebox', 'mad.rsd.com']",
-                  data.map { |entry| entry.to_s }.join(",\n"),
+                  data.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} played tracks history since #{dh.start_date_str}', curveType: 'function'")
     end
 
@@ -121,7 +121,7 @@ module GraphStats
         end
         new_chart(:column,
                   "['Tags', 'Count']",
-                  tags.map { |tag| tag.to_s }.join(",\n"),
+                  tags.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} play count by tag for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
@@ -145,7 +145,7 @@ module GraphStats
         end
         new_chart(:line,
                   Qualifiers::TAGS.clone.unshift('Tags').to_s,
-                  tags.map { |tag| tag.to_s }.join(",\n"),
+                  tags.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} play count history by tag since #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
@@ -162,7 +162,7 @@ module GraphStats
         end
         new_chart(:column,
                   "['Rating', 'Count']",
-                  ratings.map { |rating| rating.to_s }.join(",\n"),
+                  ratings.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} play count by rating for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
@@ -185,7 +185,7 @@ module GraphStats
         end
         new_chart(:line,
                   Qualifiers::RATINGS.clone.unshift('Rating').to_s,
-                  ratings.map { |rating| rating.to_s }.join(",\n"),
+                  ratings.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} play count history by rating since #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
@@ -206,7 +206,7 @@ module GraphStats
 
         new_chart(:column,
                   "['Genres', 'Count']",
-                  genres.map { |row| row.to_s }.join(",\n"),
+                  genres.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} play count by genre for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
@@ -247,7 +247,7 @@ module GraphStats
         end
         new_chart(:line,
                   genres.keys.unshift('Genre').to_s,
-                  data.map { |row| row.to_s }.join(",\n"),
+                  data.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} play count history by genre since #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
@@ -263,7 +263,7 @@ module GraphStats
         }
         new_chart(:column,
                   "['Artist', 'Count']",
-                  DBIntf.execute(sql).map { |row| row.to_s }.join(",\n"),
+                  DBIntf.execute(sql).map(&:to_s).join(",\n"),
                   "title: '#{dh.start_date_str} 20 most played artists', vAxis: { title: 'Play count' }")
     end
 
@@ -280,7 +280,7 @@ module GraphStats
         }
         new_chart(:column,
                   "['Origin', 'Count']",
-                  DBIntf.execute(sql).map { |row| row.to_s }.join(",\n"),
+                  DBIntf.execute(sql).map(&:to_s).join(",\n"),
                   "title: 'Play count by origin for #{dh.start_date_str}', vAxis: { title: 'Play count' }")
     end
 
