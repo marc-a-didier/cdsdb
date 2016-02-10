@@ -162,6 +162,7 @@ module GtkIDs
     MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
     MM_TOOLS_BATCHRG         = "mm_tools_batchrg"
     MM_TOOLS_SCANAUDIO       = "mm_tools_scanaudio"
+    MM_TOOLS_FULLCHECKLOG    = "mm_tools_fullchecklog"
     MM_TOOLS_CHECKLOG        = "mm_tools_checklog"
     MM_TOOLS_SYNCSRC         = "mm_tools_syncsrc"
     MM_TOOLS_SYNCDB          = "mm_tools_syncdb"

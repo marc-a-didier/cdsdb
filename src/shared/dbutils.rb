@@ -90,7 +90,7 @@ module DBUtils
     # is_local_only tells wether the statement should also be transmitted to the server or not
     def self.renumber_plist(rplist, is_local_only)
         i = 1024
-        sql = ""
+        sql = ''.dup
         DBIntf.execute(%Q{SELECT rpltrack FROM pltracks WHERE rplist=#{rplist} ORDER BY iorder;}) do |row|
             sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
             i += 1024
@@ -105,7 +105,7 @@ module DBUtils
     # Methods to update the database after I made some big fucking mistakes...
     # Should not exist and never be used.
     #
-    def self.check_log_vs_played
+    def self.check_log_vs_played(is_full_check)
         Trace.debug("Starting log integrity check...")
 
         Trace.debug('Step 1: Checking for bad tracks ids in logtracks table')
@@ -142,6 +142,7 @@ module DBUtils
         end
         Trace.debug("Step 3: finished after #{iterations} iterations")
 
+        Cfg.set_last_integrity_check(0) if is_full_check
         Trace.debug('Step 4: Checking if tracks play count and date match logtracks entries')
         Trace.debug("        Starting from #{Cfg.last_integrity_check.to_std_date}")
         tracks = []
@@ -160,7 +161,7 @@ module DBUtils
         if tracks.size > 0
             if Cfg.admin
                 Trace.debug("Starting tracks update.")
-                sql = ''
+                sql = ''.dup
                 tracks.each do |track|
                     sql << "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]};\n"
                 end
