@@ -3612,7 +3612,7 @@
                       <object class="GtkMenuItem" id="mm_tools_stats">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Numeric Statistics</property>
+                        <property name="label" translatable="yes">Numerical Statistics</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
@@ -3620,7 +3620,7 @@
                       <object class="GtkMenuItem" id="mm_tools_graph">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Graphic Statistics</property>
+                        <property name="label" translatable="yes">Graphical Statistics</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>

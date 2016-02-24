@@ -213,6 +213,20 @@ require './cddatafeeder'
 # DONE: Ajouter un menu dans le player menu pour selectionner la source du player?
 #       Avec un mode 'automatique' qui fonctionne comme actuellement.
 
+# DONE: Try to have to playbin in player and switch from one to the other when track change.
+#       This would maybe drastically reduce the gap between two tracks.
+
+# DONE: A refaire au plus vite: virer le generic browser et mettre les methodes dans
+#       multi_drag_treeview ou une classe descendante, meme mecanisme pour topwindow.
+#       Refaire les browser qui descendent de generic browser et virer les tv & model,
+#       c'est debile. Utiliser model a la place et virer le treeview.
+
+# DONE: Dans les charts, faire une vue pour les records avec le min(iplayed) pour avoir
+#       une vue des disques les plus joues en ENTIER?
+
+# DONE: Add latency time for remote execution of sql statements
+
+# DONE: set the view the total played tracks as an option
 
 #
 # ^^^       ^^^
@@ -248,19 +262,7 @@ require './cddatafeeder'
 #       pres ou de loin (utile pour les stats et le tri des genres)
 #       En faire un bitmap ou une table associee?
 
-# TODO: Dans les charts, faire une vue pour les records avec le nombre de morceaux joues divise par
-#       le nombre du titre du disque?
-
-# TODO: A refaire au plus vite: virer le generic browser et mettre les methodes dans
-#       multi_drag_treeview ou une classe descendante, meme mecanisme pour topwindow.
-#       Refaire les browser qui descendent de generic browser et virer les tv & model,
-#       c'est debile. Utiliser model a la place et virer le treeview.
-
 # TODO: Check track existence by just finding the number of the track rather than the full name???
-
-# TODO: Try to have to playbin in player and switch from one to the other when track change.
-#       This would maybe drastically reduce the gap between two tracks.
-
 
 # Peu realistes:
 #   TODO: splitter les genres en deux styles: principal et sous-categorie (punk + rock, metal + black, ...)

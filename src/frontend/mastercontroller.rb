@@ -208,7 +208,7 @@ class MasterController
             # Dangerous if track is being modified
             @mw.trk_browser.update_infos
 
-            @mw.set_window_title
+            @mw.set_window_title if Cfg.show_count
 
             @charts.live_update(xlink) if Cfg.live_charts_update && @charts.window.visible?
         end

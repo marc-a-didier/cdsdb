@@ -244,7 +244,7 @@ class MainWindow < TopWindow
     end
 
     def set_window_title
-        GtkUI[MAIN_WINDOW].title = "CDsDB #{Cdsdb::VERSION} -- [#{DBUtils.get_total_played}]"
+        GtkUI[MAIN_WINDOW].title = Cfg.show_count ? "CDsDB #{Cdsdb::VERSION} -- [#{DBUtils.get_total_played}]" : "CDsDB #{Cdsdb::VERSION}"
     end
 
     def on_urls_received(widget, context, x, y, data, info, time)
