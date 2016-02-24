@@ -1,7 +1,16 @@
 
 module MusicClient
 
+    def self.record_start_time
+        @@start = Time.now.to_f if Cfg.trace_network
+    end
+
+    def self.show_latency
+        Trace.net("Latency: #{"%8.6f" % [Time.now.to_f-@@start]}") if Cfg.trace_network
+    end
+
     def self.get_connection
+        self.record_start_time
         begin
             socket = TCPSocket.new(Cfg.server, Cfg.port)
         rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT => ex
@@ -20,6 +29,7 @@ module MusicClient
             Trace.net("server transaction [#{status.green}]")
         end
         socket.close
+        self.show_latency
     end
 
     def self.hand_shake(msg)
