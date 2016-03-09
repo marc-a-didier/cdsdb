@@ -26,18 +26,18 @@ class PQueueWindow < TopWindow
         @plq = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
 
         pix = Gtk::CellRendererPixbuf.new
-        pixcol = Gtk::TreeViewColumn.new("Cover")
+        pixcol = Gtk::TreeViewColumn.new('Cover')
         pixcol.pack_start(pix, false)
         pixcol.set_cell_data_func(pix) { |column, cell, model, iter| cell.pixbuf = iter.get_value(1) }
 
         trk_renderer = Gtk::CellRendererText.new
-        trk_column = Gtk::TreeViewColumn.new("Track", trk_renderer)
+        trk_column = Gtk::TreeViewColumn.new('Track', trk_renderer)
         trk_column.set_cell_data_func(trk_renderer) { |col, renderer, model, iter| renderer.markup = iter[2] }
 
-        @tvpq.append_column(Gtk::TreeViewColumn.new("Seq.", srenderer, :text => 0))
+        @tvpq.append_column(Gtk::TreeViewColumn.new('Seq.', srenderer, :text => 0))
         @tvpq.append_column(pixcol)
         @tvpq.append_column(trk_column)
-        @tvpq.append_column(Gtk::TreeViewColumn.new("Duration", srenderer, :text => 3))
+        @tvpq.append_column(Gtk::TreeViewColumn.new('Duration', srenderer, :text => 3))
         @tvpq.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
         # Seems that drag_end is only called when reordering.
         @tvpq.signal_connect(:drag_end) { |widget, context| @tvpq.each_with_index { |iter, i| iter[0] = i+1 } }
@@ -48,40 +48,21 @@ class PQueueWindow < TopWindow
         @tvpq.reorderable = false #true
 
         # L'ordre indique la preference quand y'a plusieurs choix
-        dragtable = [ ["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700], #DragType::BROWSER_SELECTION],
-                      ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105], #DragType::URI_LIST],
-                      ["text/plain", Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
+        dragtable = [ ['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700], #DragType::BROWSER_SELECTION],
+                      ['text/uri-list', Gtk::Drag::TargetFlags::OTHER_APP, 105], #DragType::URI_LIST],
+                      ['text/plain', Gtk::Drag::TargetFlags::OTHER_APP, 106] ] #DragType::URI_LIST] ]
         @sw = GtkUI[GtkIDs::SCROLLEDWINDOW_PQUEUE]
         Gtk::Drag::dest_set(@sw, Gtk::Drag::DEST_DEFAULT_ALL, dragtable, Gdk::DragContext::ACTION_COPY)
         @sw.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time| on_drag_received(widget, context, x, y, data, info, time) }
 
-        @tvpq.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        @tvpq.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvpq.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            selection_data.set(Gdk::Selection::TYPE_STRING, "pqueue:message:get_pqueue_selection")
+            selection_data.set(Gdk::Selection::TYPE_STRING, 'pqueue:message:get_pqueue_selection')
         }
-
-        @last_tool_tip = XIntf::TooltipCache.new(nil, nil)
 
         @tvpq.set_has_tooltip(true)
         @tvpq.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
-            display = false
-            if x > 0 && y > 0
-                row = @tvpq.get_dest_row(x, y) # Returns: [path, position] or nil
-                if row && tool_tip && tool_tip.is_a?(Gtk::Tooltip)
-                    link = @plq.get_iter(row[0])[4].xlink
-                    if link
-                        unless @last_tool_tip.link == link
-                            @last_tool_tip.link = link
-                            @last_tool_tip.text = link.markup_tooltip
-                        end
-                        if @last_tool_tip.text
-                            tool_tip.set_markup(@last_tool_tip.text)
-                            display = true
-                        end
-                    end
-                end
-            end
-            display
+            widget.show_tool_tip(widget, x, y, is_kbd, tool_tip, 4)
         end
 
         @play_time = 0
@@ -94,7 +75,7 @@ class PQueueWindow < TopWindow
             return if @tvpq.selection.selected.nil?
             item = @tvpq.selection.selected.path.to_s
         else
-            item = "0"
+            item = '0'
         end
         if rm_next
             while iter = @plq.get_iter(item)
@@ -141,8 +122,8 @@ class PQueueWindow < TopWindow
     def on_drag_received(widget, context, x, y, data, info, time)
         case info
             when 700 #DragType::BROWSER_SELECTION
-                sender, type, call_back, param = data.text.split(":")
-                if sender == "pqueue" # -> reordering
+                sender, type, call_back, param = data.text.split(':')
+                if sender == 'pqueue' # -> reordering
                     itr = @tvpq.detect { |iter| iter[4].internal_ref == @tvpq.selection.selected[4].internal_ref }
                     if itr
                         r = @tvpq.get_dest_row(x, y)
@@ -159,13 +140,13 @@ class PQueueWindow < TopWindow
                         @mc.track_list_changed(self)
                     end
                 else
-                    if type == "message"
+                    if type == 'message'
                         # Trace.debug("message received, calling back #{call_back}")
                         tracks = param ? @mc.send(call_back, param.to_i) : @mc.send(call_back)
                         # When a full record or segment is dropped, set the use of record gain
                         # rather than track gain. But if the use of record gain is not enabled in the
                         # player menu, the player will use the track gain or no gain at all.
-                        tracks.each { |xlink| xlink.set_use_of_record_gain } if sender == "records"
+                        tracks.each { |xlink| xlink.set_use_of_record_gain } if sender == 'records'
                         enqueue(tracks)
                     end
                 end
@@ -174,7 +155,7 @@ class PQueueWindow < TopWindow
                 data.uris.each do |uri|
                     @internal_ref += 1
                     iter = @plq.append
-                    data = PQData.new(@internal_ref, XIntf::Link.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, "")))
+                    data = PQData.new(@internal_ref, XIntf::Link.new.load_from_tags(URI::unescape(uri).sub(/^file:\/\//, '')))
 
                     iter[0] = iter.path.to_s.to_i+1
                     iter[1] = data.xlink.small_track_cover
@@ -231,15 +212,15 @@ class PQueueWindow < TopWindow
     end
 
     def update_tracks_label
-        GtkUI[GtkIDs::PQ_LBL_TRACKS].text = @ntracks == 0 ?  "No track" : "#{@ntracks} #{"track".check_plural(@ntracks)}"
+        GtkUI[GtkIDs::PQ_LBL_TRACKS].text = @ntracks == 0 ?  'No track' : "#{@ntracks} #{'track'.check_plural(@ntracks)}"
     end
 
     def update_ptime_label(ptime)
-        GtkUI[GtkIDs::PQ_LBL_PTIME].text = @ntracks == 0 ? "00:00:00" : ptime.to_hr_length
+        GtkUI[GtkIDs::PQ_LBL_PTIME].text = @ntracks == 0 ? '00:00:00' : ptime.to_hr_length
     end
 
     def update_eta_label(ptime)
-        GtkUI[GtkIDs::PQ_LBL_ETA].text = @ntracks == 0 ? "" : Time.at(Time.now.to_i+ptime/1000).strftime("%a %d, %H:%M")
+        GtkUI[GtkIDs::PQ_LBL_ETA].text = @ntracks == 0 ? '' : Time.at(Time.now.to_i+ptime/1000).strftime('%a %d, %H:%M')
     end
 
     #
@@ -249,7 +230,7 @@ class PQueueWindow < TopWindow
     def timer_notification(ms_time)
         if ms_time == -1
             update_status
-            GtkUI[GtkIDs::PQ_LBL_ETA].text = ""
+            GtkUI[GtkIDs::PQ_LBL_ETA].text = ''
         else
             update_ptime_label(@play_time-ms_time)
             update_eta_label(@play_time-ms_time)

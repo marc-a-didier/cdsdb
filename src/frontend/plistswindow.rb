@@ -67,8 +67,8 @@ class PListsWindow < TopWindow
         @pls = Gtk::ListStore.new(Integer, String)
         @current_pl = DBClasses::PList.new
 
-        @tvpl.append_column(Gtk::TreeViewColumn.new("Ref.", srenderer, :text => 0))
-        @tvpl.append_column(Gtk::TreeViewColumn.new("Play lists", edrenderer, :text => 1))
+        @tvpl.append_column(Gtk::TreeViewColumn.new('Ref.', srenderer, :text => 0))
+        @tvpl.append_column(Gtk::TreeViewColumn.new('Play lists', edrenderer, :text => 1))
         @tvpl.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 1) }
         @pls.set_sort_column_id(1, Gtk::SORT_ASCENDING)
         @tvpl.columns[1].sort_indicator = Gtk::SORT_ASCENDING
@@ -83,7 +83,7 @@ class PListsWindow < TopWindow
         @tvpt = GtkUI[GtkIDs::TV_PLTRACKS]
         @pts = Gtk::ListStore.new(Integer, Integer, Integer, String, String, String, String, Class, Integer)
 
-        ["Ref.", "Order", "Track", "Title", "By", "From", "Duration"].each_with_index do |name, i|
+        ['Ref.', 'Order', 'Track', 'Title', 'By', 'From', 'Duration'].each_with_index do |name, i|
             @tvpt.append_column(Gtk::TreeViewColumn.new(name, trk_renderer, :text => i))
             if i == 3 || i == 4
                 @tvpt.columns[i].set_cell_data_func(trk_renderer) do |col, renderer, model, iter|
@@ -108,39 +108,20 @@ class PListsWindow < TopWindow
         @tvpt.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 0) }
 
         @tvpt.signal_connect(:drag_data_received) { |widget, context, x, y, data, info, time| on_drag_received(widget, context, x, y, data, info, time) }
-        dragtable = [ ["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700] ] #DragType::BROWSER_SELECTION
+        dragtable = [ ['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700] ] #DragType::BROWSER_SELECTION
         @tvpt.enable_model_drag_dest(dragtable, Gdk::DragContext::ACTION_COPY)
 
-        @tvpt.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
+        @tvpt.enable_model_drag_source(Gdk::Window::BUTTON1_MASK, [['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700]], Gdk::DragContext::ACTION_COPY)
         @tvpt.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
-            selection_data.set(Gdk::Selection::TYPE_STRING, "plist:message:get_plist_selection")
+            selection_data.set(Gdk::Selection::TYPE_STRING, 'plist:message:get_plist_selection')
         }
 
         @tvpt.model = @pts
         @tvpt.selection.mode = Gtk::SELECTION_MULTIPLE
 
-        @last_tool_tip = XIntf::TooltipCache.new(nil, nil)
-
         @tvpt.set_has_tooltip(true)
         @tvpt.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
-            display = false
-            if x > 0 && y > 0
-                row = @tvpt.get_dest_row(x, y) # Returns: [path, position] or nil
-                if row && tool_tip && tool_tip.is_a?(Gtk::Tooltip)
-                    link = @pts.get_iter(row[0])[TT_DATA]
-                    if link
-                        unless @last_tool_tip.link == link
-                            @last_tool_tip.link = link
-                            @last_tool_tip.text = link.markup_tooltip
-                        end
-                        if @last_tool_tip.text
-                            tool_tip.set_markup(@last_tool_tip.text)
-                            display = true
-                        end
-                    end
-                end
-            end
-            display
+            widget.show_tool_tip(widget, x, y, is_kbd, tool_tip, TT_DATA)
         end
 
         # Status bar infos related vars
@@ -194,10 +175,10 @@ class PListsWindow < TopWindow
 
     def add_to_plist(rplist, rtrack)
         count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM pltracks WHERE rplist=#{rplist} AND rtrack=#{rtrack};")
-        count = 0 if count > 0 && GtkUtils.get_response("This track is already in this play list. Add anyway?") == Gtk::Dialog::RESPONSE_OK
+        count = 0 if count > 0 && GtkUtils.get_response('This track is already in this play list. Add anyway?') == Gtk::Dialog::RESPONSE_OK
         if count == 0
             seq = DBIntf.get_first_value("SELECT MAX(iorder) FROM pltracks WHERE rplist=#{rplist}").to_i+1
-            exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id("pltrack")+1}, #{rplist}, #{rtrack}, #{seq});")
+            exec_sql("INSERT INTO pltracks VALUES (#{DBUtils::get_last_id('pltrack')+1}, #{rplist}, #{rtrack}, #{seq});")
             exec_sql("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
             update_tvpt
             notify_player_if_provider
@@ -215,8 +196,8 @@ class PListsWindow < TopWindow
             return false
         end
 
-        sender, type, call_back = data.text.split(":")
-        if sender == "plist" # -> reordering
+        sender, type, call_back = data.text.split(':')
+        if sender == 'plist' # -> reordering
             # Won't work in case of multi-selection
             itr = selected_track
             if itr
@@ -293,9 +274,9 @@ class PListsWindow < TopWindow
 
     # Displayed infos when plists window is not the current player provider
     def plist_infos
-        GtkUI[GtkIDs::PL_LBL_TRACKS].text = @tracks.to_s+" track".check_plural(@tracks)
+        GtkUI[GtkIDs::PL_LBL_TRACKS].text = @tracks.to_s+' track'.check_plural(@tracks)
         GtkUI[GtkIDs::PL_LBL_PTIME].text = @ttime.to_hr_length
-        GtkUI[GtkIDs::PL_LBL_ETA].text = ""
+        GtkUI[GtkIDs::PL_LBL_ETA].text = ''
     end
 
     def update_tracks_label
@@ -304,7 +285,7 @@ class PListsWindow < TopWindow
 
     def update_ptime_label(rmg_time)
         GtkUI[GtkIDs::PL_LBL_PTIME].text = "#{rmg_time.to_hr_length} left of #{@ttime.to_hr_length}"
-        GtkUI[GtkIDs::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime("%a %d, %H:%M")
+        GtkUI[GtkIDs::PL_LBL_ETA].text = Time.at(Time.now.to_i+rmg_time/1000).strftime('%a %d, %H:%M')
     end
 
     def update_remaining_time
@@ -397,9 +378,9 @@ class PListsWindow < TopWindow
         # Check if the add item is sensitive to determinate if the popup is in the play lists or tracks
         unless GtkUI[GtkIDs::PM_PL_ADD].sensitive?
             iters = []
-            sql = "DELETE FROM pltracks WHERE rpltrack IN ("
-            @tvpt.selection.selected_each { |model, path, iter| sql += iter[0].to_s+","; iters << iter }
-            sql[-1] = ")"
+            sql = 'DELETE FROM pltracks WHERE rpltrack IN ('
+            @tvpt.selection.selected_each { |model, path, iter| sql += iter[0].to_s+','; iters << iter }
+            sql[-1] = ')'
             exec_sql(sql)
             iters.each { |iter|
                 if @track_ref != 1
@@ -415,7 +396,7 @@ class PListsWindow < TopWindow
             update_tracks_time_infos
             notify_player_if_provider
         else
-            if GtkUtils.get_response("This will remove the entire playlist! Process anyway?") == Gtk::Dialog::RESPONSE_OK
+            if GtkUtils.get_response('This will remove the entire playlist! Process anyway?') == Gtk::Dialog::RESPONSE_OK
                 exec_sql("DELETE FROM pltracks WHERE rplist=#{@current_pl.rplist};")
                 exec_sql("DELETE FROM plists WHERE rplist=#{@current_pl.rplist};")
                 update_tvpl
@@ -465,7 +446,7 @@ class PListsWindow < TopWindow
 
     def update_tvpl
         @pls.clear
-        DBIntf.execute("SELECT rplist, sname FROM plists") do |row|
+        DBIntf.execute('SELECT rplist, sname FROM plists') do |row|
             iter = @pls.append
             iter[0] = row[0]
             iter[1] = row[1]
@@ -490,7 +471,7 @@ class PListsWindow < TopWindow
                 if iter[TT_DATA].segment.stitle.empty?
                     iter[TT_TITLE] = iter[TT_DATA].track.stitle.to_html_bold
                 else
-                    iter[TT_TITLE] = iter[TT_DATA].segment.stitle.to_html_bold+": "+iter[TT_DATA].track.stitle.to_html_bold
+                    iter[TT_TITLE] = iter[TT_DATA].segment.stitle.to_html_bold+': '+iter[TT_DATA].track.stitle.to_html_bold
                 end
                 iter[TT_ARTIST] = iter[TT_DATA].segment_artist.sname.to_html_italic
                 iter[TT_RECORD] = iter[TT_DATA].record.stitle

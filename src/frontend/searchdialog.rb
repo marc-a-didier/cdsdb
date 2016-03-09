@@ -23,37 +23,31 @@ module Dialogs
             GtkUI[GtkIDs::SRCH_DLG_BTN_SHOW].signal_connect(:clicked)   { show }
 
             title_renderer = Gtk::CellRendererText.new
-            title_col = Gtk::TreeViewColumn.new("Found in", title_renderer)
+            title_col = Gtk::TreeViewColumn.new('Found in', title_renderer)
             title_col.set_cell_data_func(title_renderer) { |col, renderer, model, iter| renderer.markup = iter[1] }
 
             @tv = GtkUI[GtkIDs::SRCH_DLG_TV]
-            @tv.append_column(Gtk::TreeViewColumn.new("Match", Gtk::CellRendererText.new, :text => 0))
+            @tv.append_column(Gtk::TreeViewColumn.new('Match', Gtk::CellRendererText.new, :text => 0))
             @tv.append_column(title_col)
             # Last column is the table reference (not shown)
             @tv.model = Gtk::ListStore.new(Integer, String, Class)
             @tv.selection.mode = Gtk::SELECTION_MULTIPLE
 
             # May drag tracks to play list or queue
-            dragtable = [ ["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700] ]
+            dragtable = [ ['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700] ]
             @tv.enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
-                                        [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
+                                        [['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700]],
                                         Gdk::DragContext::ACTION_COPY)
             @tv.signal_connect(:drag_data_get) { |widget, drag_context, selection_data, info, time|
                 # Drag/drop is only enabled when viewing track search result set (name or lyrics)
                 if GtkUI[GtkIDs::SRCH_DLG_RB_TRACK].active? || GtkUI[GtkIDs::SRCH_DLG_RB_LYRICS].active?
-                    selection_data.set(Gdk::Selection::TYPE_STRING, "search:message:get_search_selection")
+                    selection_data.set(Gdk::Selection::TYPE_STRING, 'search:message:get_search_selection')
                 end
             }
 
             @tv.set_has_tooltip(true)
             @tv.signal_connect(:query_tooltip) do |widget, x, y, is_kbd, tool_tip|
-                path = @tv.get_dest_row(x, y)
-                if path && search_track?
-                    tool_tip.set_markup(@tv.model.get_iter(path[0])[2].markup_tooltip)
-                    true
-                else
-                    false
-                end
+                widget.show_tool_tip(widget, x, y, is_kbd, tool_tip, 2) if search_track?
             end
         end
 
@@ -75,7 +69,7 @@ module Dialogs
 
         def search
             @tv.model.clear
-            txt = ("%"+GtkUI[GtkIDs::SRCH_ENTRY_TEXT].text+"%").to_sql
+            txt = ('%'+GtkUI[GtkIDs::SRCH_ENTRY_TEXT].text+'%').to_sql
             if search_record?
                 sql = "SELECT records.stitle, artists.sname, records.rrecord, records.rrecord FROM records
                     INNER JOIN artists ON artists.rartist = records.rartist
@@ -108,9 +102,9 @@ module Dialogs
                 iter = @tv.model.append
                 iter[0] = i
                 if GtkUI[GtkIDs::SRCH_DLG_RB_REC].active?
-                    iter[1] = row[0].to_html_bold+" by "+row[1].to_html_italic
+                    iter[1] = row[0].to_html_bold+' by '+row[1].to_html_italic
                 else
-                    iter[1] = row[0].to_html_bold+" from "+row[1].to_html_italic+" by "+row[2].to_html_italic
+                    iter[1] = row[0].to_html_bold+' from '+row[1].to_html_italic+' by '+row[2].to_html_italic
                 end
                 iter[2] = XIntf::Link.new.set_track_ref(row[3]) if search_track?
                 iter[2] = XIntf::Link.new.set_segment_ref(row[3]) if search_segment?

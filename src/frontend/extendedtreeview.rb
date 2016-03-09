@@ -109,5 +109,22 @@ class Gtk::TreeView
         end
     end
 
+    # Called from PQueue, PList & search dialog to display a tool tip
+    # Last parameter is the xlink index in the current iter
+    # For PQueue, the iter must get the xlink since it stores other entries at the same index
+    def show_tool_tip(widget, x, y, is_kbd, tool_tip, xlink_index)
+        if is_kbd
+            path, = widget.cursor
+            return false unless path
+        else
+            bin_x, bin_y = widget.convert_widget_to_bin_window_coords(x, y)
+            path, = widget.get_path_at_pos(bin_x, bin_y)
+            return false unless path
+        end
+        link = widget.model.get_iter(path)[xlink_index]
+        link = link.xlink if link.respond_to?(:xlink) # PQueue specific
+        tool_tip.set_markup(link.markup_tooltip) if link
+        return !link.nil?
+    end
 
 end
