@@ -36,6 +36,14 @@ class DatesHandler
         end
     end
 
+    def samples
+        return case @increment
+            when :day   then 31
+            when :month then 12
+            when :year  then Date.today.year-2010+1
+        end
+    end
+
     def x_axis_label
         return case @increment
             when :day   then @curr_date.strftime('%b %-d %Y')
@@ -91,6 +99,7 @@ module GraphStats
     def self.played_tracks_evolution(start_date, period)
         data = []
         dh = DatesHandler.new(start_date, period)
+        total_play_count = 0
         dh.range.each do
             sql = %{
                 SELECT logtracks.rhost FROM logtracks
@@ -100,9 +109,12 @@ module GraphStats
             data << [dh.x_axis_label, rows.size]
             [9, 4, 7].each { |rhost| data.last << rows.count { |rrhost| rhost == rrhost } }
             dh.next_date
+            total_play_count += rows.size
         end
+        mean_play_count = total_play_count/dh.samples
+        data.each { |row| row << mean_play_count }
         new_chart(:line,
-                  "['Year', 'Play count', 'madP9X79', 'jukebox', 'mad.rsd.com']",
+                  "['Year', 'Play count', 'madP9X79', 'jukebox', 'mad.rsd.com', 'Mean play count']",
                   data.map(&:to_s).join(",\n"),
                   "title: '#{dh.period_label} played tracks history since #{dh.start_date_str}', curveType: 'function'")
     end
