@@ -116,7 +116,7 @@ module GraphStats
         new_chart(:line,
                   "['Year', 'Play count', 'madP9X79', 'jukebox', 'mad.rsd.com', 'Mean play count']",
                   data.map(&:to_s).join(",\n"),
-                  "title: '#{dh.period_label} played tracks history since #{dh.start_date_str}', curveType: 'function'")
+                  "title: '#{dh.period_label} played tracks history since #{dh.start_date_str}', curveType: 'function', series: {4:{lineDashStyle:[5, 1, 3]}}")
     end
 
     def self.tags_snapshot(start_date, period)
