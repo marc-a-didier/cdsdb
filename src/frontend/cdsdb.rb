@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-#require 'musicbrainz' !! A explorer!!
-
 gem 'gstreamer', '1.2.6'
 # require 'gstreamer'
 
@@ -44,6 +42,7 @@ require '../shared/dbutils'
 require '../shared/audiolink'
 
 require './gstplayer'
+# require './gstplayer_g1.0'
 require './gstreplaygain'
 
 require './qualifiers'
@@ -68,6 +67,7 @@ require './discanalyzer'
 require './prefs'
 require './filterwindow'
 require './playerwindow'
+# require './playerwindow_g1.0'
 require './pqueuewindow'
 require './cdeditorwindow'
 require './memoswindow'
@@ -288,18 +288,18 @@ require './cddatafeeder'
 # - May show/hide db references in tree views
 #
 
-class Cdsdb
+module Cdsdb
 
     VERSION = "0.9.5"
 
-    def initialize
+    def self.run
         Cfg.admin = ARGV.detect { |arg| arg == "--admin" }
 
         DBIntf.execute("PRAGMA synchronous=OFF;")
 
         Thread.abort_on_exception = true
 
-        Gst::init
+        Gst.init
 
         MasterController.new
     end
@@ -307,5 +307,5 @@ class Cdsdb
 end
 
 
-Cdsdb.new
+Cdsdb.run
 Gtk.main

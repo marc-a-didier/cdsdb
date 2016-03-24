@@ -46,7 +46,7 @@ class PlayerWindow < TopWindow
 
         # GtkUI[GtkIDs::PLAYER_BTN_SWITCH].signal_connect(:clicked) { on_change_time_view }
 
-        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ''
 
         # TrackRefs array: [0] is the current track, [1..PREFETCH_SIZE-1] are the next tracks to play
         @queue = []
@@ -105,9 +105,9 @@ class PlayerWindow < TopWindow
         @gc = Gdk::GC.new(@meter.window)
 
         # Get the meter image, unlit and lit images from their files
-        scale   = Gdk::Pixbuf.new(Cfg.icons_dir+"k14-scaleH.png")
-        @dark   = Gdk::Pixbuf.new(Cfg.icons_dir+"k14-meterH0.png")
-        @bright = Gdk::Pixbuf.new(Cfg.icons_dir+"k14-meterH1.png")
+        scale   = Gdk::Pixbuf.new(Cfg.icons_dir+'k14-scaleH.png')
+        @dark   = Gdk::Pixbuf.new(Cfg.icons_dir+'k14-meterH0.png')
+        @bright = Gdk::Pixbuf.new(Cfg.icons_dir+'k14-meterH1.png')
 
         # Start splitting the meter image to build the definitive bitmap as the scale image
         # is not the final image onto which we draw
@@ -132,9 +132,9 @@ class PlayerWindow < TopWindow
 
         @digits = []
         10.times { |i| @digits[i] = Gdk::Pixbuf.new(Cfg.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
-        @digits[10] = Gdk::Pixbuf.new(Cfg.icons_dir+"unlitdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[11] = Gdk::Pixbuf.new(Cfg.icons_dir+"colondigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[12] = Gdk::Pixbuf.new(Cfg.icons_dir+"minusdigit.png", DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[10] = Gdk::Pixbuf.new(Cfg.icons_dir+'unlitdigit.png', DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[11] = Gdk::Pixbuf.new(Cfg.icons_dir+'colondigit.png', DIGIT_WIDTH, DIGIT_HEIGHT)
+        @digits[12] = Gdk::Pixbuf.new(Cfg.icons_dir+'minusdigit.png', DIGIT_WIDTH, DIGIT_HEIGHT)
 
         reset_counter
     end
@@ -169,9 +169,9 @@ class PlayerWindow < TopWindow
 
     def set_window_title
         msg = case @playbin.get_state #[1]
-            when Gst::STATE_PLAYING then "Playing"
-            when Gst::STATE_PAUSED  then "Paused"
-            else "Stopped"
+            when Gst::STATE_PLAYING then 'Playing'
+            when Gst::STATE_PAUSED  then 'Paused'
+            else 'Stopped'
         end
         window.title = "Player - [#{msg}]"
     end
@@ -239,7 +239,7 @@ class PlayerWindow < TopWindow
 
         # Clear title, time and slider
         reset_counter
-        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ""
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = ''
         @slider.value = 0.0
     end
 
@@ -293,7 +293,7 @@ class PlayerWindow < TopWindow
 
             @readybin.set_ready(player_data.xlink.audio_file, replay_gain, GtkUI[GtkIDs::MM_PLAYER_LEVELBEFORERG].active?)
 
-            Trace.gst("inited "+build_info_string(player_data, replay_gain, gain_src).brown)
+            Trace.gst('inited '+build_info_string(player_data, replay_gain, gain_src).brown)
         end
     end
 
@@ -307,13 +307,13 @@ class PlayerWindow < TopWindow
 
         # Debug info
 #         info = "#{player_data.xlink.audio_file} [#{player_data.xlink.tags.nil? ? player_data.xlink.track.rtrack : 'dropped'}, #{@playbin.get_replay_gain}]"
-        Trace.gst("started "+build_info_string(player_data, @playbin.get_replay_gain).cyan)
+        Trace.gst('started '+build_info_string(player_data, @playbin.get_replay_gain).cyan)
 
         # Delayed UI operations start now
         @tip_pix = nil
 
         # Update the slider to the new track length
-        @total_time = @playbin.play_time
+        @total_time = @playbin.duration.to_f
         @slider.set_range(0.0, @total_time)
         @total_time = @total_time.to_i
 
@@ -321,7 +321,7 @@ class PlayerWindow < TopWindow
 
         player_data.owner.started_playing(player_data)
 
-        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = player_data.xlink.html_track_title_no_track_num(false, " ")
+        GtkUI[GtkIDs::PLAYER_LABEL_TITLE].label = player_data.xlink.html_track_title_no_track_num(false, ' ')
         GtkUI[GtkIDs::PLAYER_BTN_START].stock_id = Gtk::Stock::MEDIA_PAUSE
         GtkUI[GtkIDs::TTPM_ITEM_PLAY].sensitive = false
         GtkUI[GtkIDs::TTPM_ITEM_PAUSE].sensitive = true
@@ -419,8 +419,8 @@ class PlayerWindow < TopWindow
 
     def gstplayer_level(msg_struct)
         GStreamer::Player::CHANNELS.each do |channel|
-            rms  = msg_struct["rms"][channel]
-            peak = msg_struct["decay"][channel]
+            rms  = msg_struct['rms'][channel]
+            peak = msg_struct['decay'][channel]
 
             rms = rms > MIN_LEVEL ? (METER_WIDTH*rms / POS_MIN_LEVEL).to_i+METER_WIDTH : 0
 
@@ -517,23 +517,23 @@ class PlayerWindow < TopWindow
 
     def show_time(itime)
         if @time_view_mode == ELAPSED
-            time_to_digits(format_time(@total_time)+"-"+format_time(itime))
+            time_to_digits(format_time(@total_time)+'-'+format_time(itime))
             # To show decreasing time use uncomment this
-            # time_to_digits(format_time(@total_time-itime)+"-"+format_time(itime))
+            # time_to_digits(format_time(@total_time-itime)+'-'+format_time(itime))
         else
-            GtkUI[GtkIDs::PLAYER_LABEL_POS].label = "-"+format_time(@total_time-itime)
+            GtkUI[GtkIDs::PLAYER_LABEL_POS].label = '-'+format_time(@total_time-itime)
         end
     end
 
     def format_time(itime)
-        return sprintf("%02d:%02d", itime/60000, (itime % 60000)/1000)
+        return sprintf('%02d:%02d', itime/60000, (itime % 60000)/1000)
     end
 
     def show_tooltip(si, tool_tip)
         if @playbin.playing?
             @tip_pix = @queue[0].xlink.large_track_cover if @tip_pix.nil?
             tool_tip.set_icon(@tip_pix)
-            text = @queue[0].xlink.html_track_title(true)+"\n\n"+format_time(@slider.value)+" / "+format_time(@total_time)
+            text = @queue[0].xlink.html_track_title(true)+"\n\n"+format_time(@slider.value)+' / '+format_time(@total_time)
         else
             text = "\n<b>CDsDB: waiting for tracks to play...</b>\n"
         end

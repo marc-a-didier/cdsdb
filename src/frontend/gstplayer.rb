@@ -50,34 +50,30 @@ module GStreamer
 
             @track_len = Gst::QueryDuration.new(Gst::Format::TIME)
             @track_pos = Gst::QueryPosition.new(Gst::Format::TIME)
-            # @track_pos = @gstbin.query_position(Gst::Format::TIME) # GStreamer 1.0
-            # @track_len = @gstbin.query_duration(Gst::Format::TIME) # GStreamer 1.0
 
-            @convertor = Gst::ElementFactory.make("audioconvert")
+            @convertor = Gst::ElementFactory.make('audioconvert')
 
-            @level = Gst::ElementFactory.make("level")
+            @level = Gst::ElementFactory.make('level')
             @level.interval = INTERVAL
             @level.message = true
             @level.peak_falloff = 100
             @level.peak_ttl = 200000000
 
-            @rgain = Gst::ElementFactory.make("rgvolume")
+            @rgain = Gst::ElementFactory.make('rgvolume')
 
-            @sink = Gst::ElementFactory.make("autoaudiosink")
+            @sink = Gst::ElementFactory.make('autoaudiosink')
 
-            @decoder = Gst::ElementFactory.make("decodebin")
-            @decoder.signal_connect(:new_decoded_pad) { |dbin, pad, is_last|
-                # @decoder.signal_connect(:pad_added) { |dbin, pad| # GStreamer 1.0
-                pad.link(@convertor.get_pad("sink"))
-                # pad.link(@convertor.???) # GStreamer 1.0 Impossible to find the new way to do it...
+            @decoder = Gst::ElementFactory.make('decodebin')
+            @decoder.signal_connect(:new_decoded_pad) do |dbin, pad, is_last|
+                pad.link(@convertor.get_pad('sink'))
                 if @level_before_rg
                     @convertor >> @level >> @rgain >> @sink
                 else
                     @convertor >> @rgain >> @level >> @sink
                 end
-            }
+            end
 
-            @source = Gst::ElementFactory.make("filesrc")
+            @source = Gst::ElementFactory.make('filesrc')
 
             return self
         end
@@ -90,7 +86,7 @@ module GStreamer
 
             @rgain.fallback_gain = replay_gain
 
-            @gstbin.clear  # Doesn't exist in GStreamer 1.0
+            @gstbin.clear
             @gstbin.add(@source, @decoder, @convertor, @level, @rgain, @sink)
 
             @source >> @decoder
@@ -100,8 +96,6 @@ module GStreamer
         end
 
         def start_track
-            # system("vmtouch \"#{@source.location}\"")
-
             @gstbin.play
 
             sleep(0.001) while not playing?
@@ -138,12 +132,10 @@ module GStreamer
 
         def playing?
             @gstbin.get_state[1] == Gst::STATE_PLAYING
-            # @gstbin.get_state(0)[1] == Gst::State::PLAYING # GStreamer 1.0
         end
 
         def paused?
             @gstbin.get_state[1] == Gst::STATE_PAUSED
-            # @gstbin.get_state(0)[1] == Gst::State::PAUSED # GStreamer 1.0
         end
 
         def active?
@@ -158,24 +150,23 @@ module GStreamer
             return @rgain.fallback_gain
         end
 
-        # Returned value is a FLOAT in millisecond
-        def play_time
-            return @track_len.parse[1].to_f/Gst::MSECOND
+        # Returned value is an INTEGER in millisecond
+        def duration
+            return @track_len.parse[1]/Gst::MSECOND
         end
 
         # Returned value is an INTEGER in millisecond
         def play_position
             @gstbin.query(@track_pos)
-            return (@track_pos.parse[1].to_f/Gst::MSECOND).to_i
+            return @track_pos.parse[1]/Gst::MSECOND
         end
 
         def seek_set(value)
             @gstbin.seek(1.0, Gst::Format::Type::TIME,
-                        Gst::Seek::FLAG_FLUSH.to_i |
-                        Gst::Seek::FLAG_KEY_UNIT.to_i,
-                        Gst::Seek::TYPE_SET,
-                        (value * Gst::MSECOND).to_i,
-                        Gst::Seek::TYPE_NONE, -1)
+                         Gst::Seek::FLAG_FLUSH | Gst::Seek::FLAG_KEY_UNIT,
+                         Gst::Seek::TYPE_SET,
+                         value * Gst::MSECOND,
+                         Gst::Seek::TYPE_NONE, -1)
             # Wait at most 100 miliseconds for a state changes, this throttles the seek
             # events to ensure the playbin can keep up
             @gstbin.get_state(100 * Gst::MSECOND)
