@@ -1,4 +1,3 @@
-# encoding: utf-8
 
 class CDEditorWindow
 
@@ -24,7 +23,6 @@ class CDEditorWindow
         GtkUI[GtkIDs::CDED_BTN_CP_ARTIST].signal_connect(:clicked) { on_cp_btn(3) }
         GtkUI[GtkIDs::CDED_BTN_CP_TITLE].signal_connect(:clicked)  { on_cp_btn(2) }
         GtkUI[GtkIDs::CDED_BTN_GENSQL].signal_connect(:clicked)    { generate_sql }
-        GtkUI[GtkIDs::CDED_BTN_SWAP].signal_connect(:clicked)      { swap_artists_titles }
         GtkUI[GtkIDs::CDED_BTN_MERGE].signal_connect(:clicked)     { query_and_merge }
         GtkUI[GtkIDs::CDED_BTN_QUERY].signal_connect(:clicked) do
             case GtkUI[GtkIDs::CDED_CMB_SOURCE].active
@@ -54,6 +52,21 @@ class CDEditorWindow
         end
 
         @tv.columns.each { |column| column.resizable = true }
+
+        # Popup menu
+        GtkUI[GtkIDs::CDED_SWAPAT].signal_connect(:activate)     { swap_artists_titles }
+        GtkUI[GtkIDs::CDED_SPLITAT].signal_connect(:activate)    { split_artists_titles }
+        GtkUI[GtkIDs::CDED_IMPTITLES].signal_connect(:activate)  { import_artists_titles }
+        GtkUI[GtkIDs::CDED_CAPTITLES].signal_connect(:activate)  { capitalize_titles }
+        GtkUI[GtkIDs::CDED_CAPARTISTS].signal_connect(:activate) { capitalize_artists }
+
+        @tv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event) }
+    end
+
+    def show_popup(widget, event)
+        if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
+            GtkUI[GtkIDs::CDED_POPUP].popup(nil, nil, event.button, event.time)
+        end
     end
 
     def on_cp_btn(column_id)
@@ -62,13 +75,44 @@ class CDEditorWindow
         end
     end
 
-    def swap_artists_titles
-        # @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
+    def capitalize(str)
+        return str.split(' ').each(&:downcase!).each(&:capitalize!).join(' ')
+    end
+
+    def split_artists_titles
         @tv.model.each do |model, path, iter|
             artist, title = iter[1].split(" - ")
             iter[1] = title
             iter[3] = artist
         end
+    end
+
+    def swap_artists_titles
+        @tv.model.each { |model, path, iter| iter[1], iter[3] = iter[3], iter[1] }
+    end
+
+    def import_artists_titles
+        dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, Cfg.rip_dir)
+        return if dir.empty?
+
+        path = 0
+        Dir[dir+'/*'].sort.each do |entry|
+            next if File.directory?(entry)
+            # K3B format : 'nn - artist - title.ext'
+            track, artist, title = File.basename(entry).split(' - ')
+            iter = @tv.model.get_iter(path.to_s)
+            iter[1] = title.sub(/\..*$/, '')
+            iter[3] = artist
+            path += 1
+        end
+    end
+
+    def capitalize_titles
+        @tv.model.each { |model, path, iter| iter[1] = capitalize(iter[1]) }
+    end
+
+    def capitalize_artists
+        @tv.model.each { |model, path, iter| iter[3] = capitalize(iter[3]) }
     end
 
     def query_and_merge

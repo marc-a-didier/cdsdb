@@ -270,7 +270,6 @@ module GtkIDs
     CDED_BTN_CP_TITLE   = "cded_btn_cp_title"
     CDED_BTN_GENSQL     = "cded_btn_gensql"
     CDED_BTN_CLOSE      = "cded_btn_close"
-    CDED_BTN_SWAP       = "cded_btn_swap"
     CDED_ENTRY_ARTIST   = "cded_entry_artist"
     CDED_ENTRY_TITLE    = "cded_entry_title"
     CDED_ENTRY_GENRE    = "cded_entry_genre"
@@ -280,6 +279,13 @@ module GtkIDs
     CDED_CMB_SOURCE     = "cded_cmb_source"
     CDED_BTN_QUERY      = "cded_btn_query"
     CDED_BTN_MERGE      = "cded_btn_merge"
+
+    CDED_POPUP          = 'cded_popup'
+    CDED_SWAPAT         = 'cded_swapat'
+    CDED_IMPTITLES      = 'cded_imptitles'
+    CDED_CAPTITLES      = 'cded_captitles'
+    CDED_CAPARTISTS     = 'cded_capartists'
+    CDED_SPLITAT        = 'cded_splitat'
 
 
     #

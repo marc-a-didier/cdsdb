@@ -116,8 +116,8 @@ class CDDataFeeder
             if fdb.results.size > 0
                 fdb.get_result(0)
 
-                @disc.title = fdb.title.force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'")
-                @disc.artist = fdb.artist.force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'")
+                @disc.title = fdb.title.force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'").strip
+                @disc.artist = fdb.artist.force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'").strip
                 @disc.year = fdb.year
                 @disc.genre = fdb.category
 
@@ -125,9 +125,9 @@ class CDDataFeeder
                 fdb.tracks.each { |track| is_compile &= track['title'].match(/.+\/.+/) } if is_compile
 
                 fdb.tracks.each_with_index do |track, i|
-                    title = track['title'].force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'")
-                    @disc.tracks[i].title = is_compile ? title.split('/')[1] : title
-                    @disc.tracks[i].artist = is_compile ? title.split('/')[0].gsub(/’/, "'") : @disc.artist
+                    title = track['title'].force_encoding('iso-8859-1').encode('utf-8').gsub(/’/, "'").strip
+                    @disc.tracks[i].title = is_compile ? title.split('/')[1].strip : title
+                    @disc.tracks[i].artist = is_compile ? title.split('/')[0].gsub(/’/, "'").strip : @disc.artist
                     @disc.tracks[i].segment = @disc.title
                 end
             else
