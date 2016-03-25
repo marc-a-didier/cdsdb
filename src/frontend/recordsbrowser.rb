@@ -312,24 +312,24 @@ p row
     end
 
     def on_tag_dir
-        tracks = @mc.get_tracks_list
+        xlinks = @mc.get_tracks_list
 
-        default_dir = tracks.first.playable? ? tracks.first.full_dir : Cfg.rip_dir
+        default_dir = xlinks.first.playable? ? xlinks.first.full_dir : Cfg.rip_dir
 
         dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER, default_dir)
         unless dir.empty?
             files = Utils.get_files_to_tag(dir)
-            if tracks.size == files.size
-                tracks.each_with_index do |track, index|
-                    track.tag_and_move_file(files[index])
-                    @mc.audio_link_ok(track)
+            if xlinks.size == files.size
+                xlinks.each do |xlink|
+                    xlink.tag_and_move_file(files[xlink.track.iorder-1])
+                    @mc.audio_link_ok(xlink)
                 end
                 if dir.match(/\/rip\//)
                     @reclnk.record.idateripped = Time.now.to_i
                     @reclnk.record.sql_update
                 end
             else
-                GtkUtils.show_message("File count mismatch (#{files.size} found, #{tracks.size} expected).", Gtk::MessageDialog::ERROR)
+                GtkUtils.show_message("File count mismatch (#{files.size} found, #{xlinks.size} expected).", Gtk::MessageDialog::ERROR)
             end
         end
     end

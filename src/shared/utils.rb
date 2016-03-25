@@ -121,7 +121,7 @@ module Utils
         files.each_with_index do |file, index|
             File.basename(file).match(/([^0-9]*)([0-9]+)(.*)/) do |match|
                 if match[2].length < 2
-                    new_file = File.join(File.dirname(file), match[1]+"0"+match[2]+match[3])
+                    new_file = File.join(File.dirname(file), match[1]+'0'+match[2]+match[3])
                     FileUtils.mv(file, new_file)
                     Trace.debug("File #{file[0]} renamed to #{nfile}")
                     files[index] = new_file
@@ -129,7 +129,10 @@ module Utils
             end
         end
 
-        files.sort!
+        # If we are re-tagging a compile, files will be sorted by artist name since there
+        # is one more dir level and it results in a complete mess!
+        # Files must be sorted by their track number in any case!
+        files.sort! { |f1, f2| File.basename(f1) <=> File.basename(f2) }
 
         return files
     end
@@ -138,7 +141,7 @@ module Utils
     # Recursively tags all files from a specified directory with given genre
     #
     def self.tag_full_dir_to_genre(genre, dir)
-        Find.find(dir) { |file|
+        Find.find(dir) do |file|
             if Audio::FILE_EXTS_BY_QUALITY.inlcude?(File.extname(file).downcase)
                 Trace.debug("Tagging #{file} with genre #{genre}")
                 tags = TagLib::File.new(file)
@@ -146,7 +149,7 @@ module Utils
                 tags.save
                 tags.close
             end
-        }
+        end
         Log.info("Directory #{dir} tagged with genre #{genre}")
     end
 
@@ -159,14 +162,14 @@ module Utils
         return if record.iissegmented == 0
 
         segment = DBClasses::Segment.new
-        DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") { |seg_row|
+        DBIntf.execute("SELECT * FROM segments WHERE rrecord=#{record.rrecord};") do |seg_row|
             segment.load_from_row(seg_row)
             seg_order = 1
-            DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") { |trk_row|
+            DBIntf.execute("SELECT * FROM tracks WHERE rsegment=#{segment.rsegment}  ORDER BY iorder;") do |trk_row|
                 DBUtils.log_exec("UPDATE tracks SET isegorder=#{seg_order} WHERE rtrack=#{trk_row[0]};")
                 seg_order += 1
-            }
-        }
+            end
+        end
     end
 
     #
