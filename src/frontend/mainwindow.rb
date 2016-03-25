@@ -147,9 +147,6 @@ class MainWindow < TopWindow
 #             } )
 #         }
         GtkUI[MM_TOOLS_TAG_GENRE].signal_connect(:activate)   { on_tag_dir_genre }
-#         GtkUI[MM_TOOLS_SCANAUDIO].signal_connect(:activate)   { Utils.scan_for_audio_files(GtkUI["main_window"]) }
-        GtkUI[MM_TOOLS_FULLCHECKLOG].signal_connect(:activate){ DBUtils.check_log_vs_played(true) } # update_log_time
-        GtkUI[MM_TOOLS_CHECKLOG].signal_connect(:activate)    { DBUtils.check_log_vs_played(false) } # update_log_time
         GtkUI[MM_TOOLS_SYNCSRC].signal_connect(:activate)     { on_update_sources }
         GtkUI[MM_TOOLS_SYNCDB].signal_connect(:activate)      { on_update_db }
         GtkUI[MM_TOOLS_SYNCRES].signal_connect(:activate)     { on_update_resources }
@@ -159,7 +156,14 @@ class MainWindow < TopWindow
         GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
         GtkUI[MM_TOOLS_GRAPH].signal_connect(:activate)       { GraphStats.graph_period }
 
-        GtkUI[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
+        GtkUI[MM_DBTOOLS_FULLCHECKLOG].signal_connect(:activate) { DBUtils.check_log_vs_played(true) } # update_log_time
+        GtkUI[MM_DBTOOLS_CHECKLOG].signal_connect(:activate)     { DBUtils.check_log_vs_played(false) } # update_log_time
+        GtkUI[MM_DBTOOLS_ORPHART].signal_connect(:activate)      { DBUtils.scan_for_orphan_artists }
+        GtkUI[MM_DBTOOLS_ORPHREC].signal_connect(:activate)      { DBUtils.scan_for_orphan_records }
+        GtkUI[MM_DBTOOLS_ORPHSEG].signal_connect(:activate)      { DBUtils.scan_for_orphan_segments }
+        GtkUI[MM_DBTOOLS_ORPHTRK].signal_connect(:activate)      { DBUtils.scan_for_orphan_tracks }
+
+#         GtkUI[MM_ABOUT].signal_connect(:activate) { Credits::show_credits }
 
         GtkUI[MAIN_WINDOW].signal_connect(:destroy)      { Gtk.main_quit }
         GtkUI[MAIN_WINDOW].signal_connect(:delete_event) { @mc.clean_up; false }

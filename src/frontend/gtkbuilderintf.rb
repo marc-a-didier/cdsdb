@@ -161,9 +161,6 @@ module GtkIDs
     # Tools menu
     MM_TOOLS_TAG_GENRE       = "mm_tools_tag_genre"
     MM_TOOLS_BATCHRG         = "mm_tools_batchrg"
-    MM_TOOLS_SCANAUDIO       = "mm_tools_scanaudio"
-    MM_TOOLS_FULLCHECKLOG    = "mm_tools_fullchecklog"
-    MM_TOOLS_CHECKLOG        = "mm_tools_checklog"
     MM_TOOLS_SYNCSRC         = "mm_tools_syncsrc"
     MM_TOOLS_SYNCDB          = "mm_tools_syncdb"
     MM_TOOLS_SYNCRES         = "mm_tools_syncres"
@@ -172,6 +169,13 @@ module GtkIDs
     MM_TOOLS_CACHEINFO       = "mm_tools_cacheinfo"
     MM_TOOLS_STATS           = "mm_tools_stats"
     MM_TOOLS_GRAPH           = "mm_tools_graph"
+    MM_DBTOOLS_FULLCHECKLOG  = "mm_dbtools_fullchecklog"
+    MM_DBTOOLS_CHECKLOG      = "mm_dbtools_checklog"
+    MM_DBTOOLS_ORPHART       = "mm_dbtools_orphart"
+    MM_DBTOOLS_ORPHREC       = "mm_dbtools_orphrec"
+    MM_DBTOOLS_ORPHSEG       = "mm_dbtools_orphseg"
+    MM_DBTOOLS_ORPHTRK       = "mm_dbtools_orphtrk"
+
 
     # About menu
     MM_ABOUT                 = "about_imagemenuitem"

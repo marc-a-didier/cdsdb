@@ -189,4 +189,48 @@ module DBUtils
         end
         Trace.debug("End check log time.")
     end
+
+    def self.scan_for_orphan_artists
+        DBIntf.execute("SELECT * FROM artists") do |art_row|
+            if DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE rartist=#{art_row[0]}") == 0
+                if DBIntf.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rartist=#{art_row[0]}") == 0
+                    puts("Artist '#{art_row[1]}', ref #{art_row[0]}, has no record nor segment")
+                    if Cfg.admin
+                        self.client_sql("DELETE FROM artists WHERE rartist=#{art_row[0]}")
+                        puts("Artist '#{art_row[1]}' removed from DB")
+                    end
+                end
+            end
+        end
+    end
+
+    def self.scan_for_orphan_records
+        DBIntf.execute("SELECT * FROM records") do |rec_row|
+            if DBIntf.get_first_value("SELECT COUNT(rartist) FROM artists WHERE rartist=#{rec_row[2]}") == 0
+                puts("Record '#{rec_row[3]}', ref #{rec_row[0]}, has a not found artist")
+            end
+        end
+    end
+
+    def self.scan_for_orphan_segments
+        DBIntf.execute("SELECT * FROM segments") do |seg_row|
+            if DBIntf.get_first_value("SELECT COUNT(rartist) FROM artists WHERE rartist=#{seg_row[2]}") == 0
+                puts("Segment '#{seg_row[4]}', ref #{seg_row[0]}, has a not found artist")
+            end
+            if DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE rrecord=#{seg_row[1]}") == 0
+                puts("Segment '#{seg_row[4]}', ref #{seg_row[0]}, has a not found record")
+            end
+        end
+    end
+
+    def self.scan_for_orphan_tracks
+        DBIntf.execute("SELECT * FROM tracks") do |trk_row|
+            if DBIntf.get_first_value("SELECT COUNT(rsegment) FROM segments WHERE rsegment=#{trk_row[1]}") == 0
+                puts("Track '#{trk_row[5]}', ref #{trk_row[0]}, has a not found segment")
+            end
+            if DBIntf.get_first_value("SELECT COUNT(rrecord) FROM records WHERE rrecord=#{trk_row[2]}") == 0
+                puts("Track '#{trk_row[5]}', ref #{trk_row[0]}, has a not found record")
+            end
+        end
+    end
 end
