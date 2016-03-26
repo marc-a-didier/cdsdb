@@ -104,7 +104,7 @@ class Gtk::TreeView
         if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3   # left mouse button
             # No popup if no selection in the tree view except in admin mode
             return if selection.selected.nil? && !Cfg.admin
-            @mc.update_tags_menu(self, GtkUI[GtkIDs::REC_POPUP_TAGS]) if self.instance_of?(RecordsBrowser)
+            @mc.update_tags_menu(self, GtkUI[GtkIDs::REC_POPUP_TAGS]) if @mc.track && self.instance_of?(RecordsBrowser)
             GtkUI[menu_name].popup(nil, nil, event.button, event.time)
         end
     end
@@ -123,6 +123,10 @@ class Gtk::TreeView
         end
         link = widget.model.get_iter(path)[xlink_index]
         link = link.xlink if link.respond_to?(:xlink) # PQueue specific
+
+        # Don't display anything if dropped
+        return false if link.tags
+
         tool_tip.set_markup(link.markup_tooltip) if link
         return !link.nil?
     end
