@@ -55,8 +55,10 @@ module DBUtils
         return DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks")
     end
 
-    def self.update_track_stats(dblink, hostname)
+    def self.update_track_stats(dblink)
         return unless dblink.track.valid? # Possible when files are dropped into the play queue
+
+        hostname = Socket.gethostname
 
         dblink.track.iplayed += 1
         dblink.track.ilastplayed = Time.now.to_i

@@ -25,7 +25,7 @@ module XIntf
         end
 
         def info_string
-            return "" if !valid_artist_ref? || artist.rorigin == 0
+            return '' if !valid_artist_ref? || artist.rorigin == 0
             return DBCache::Cache.origin(artist.rorigin).sname
         end
     end
@@ -35,8 +35,8 @@ module XIntf
 
         def to_widgets(is_record)
             GtkUI[GtkIDs::MW_INFLBL_RECORD].text = is_record ? rec_info_string : seg_info_string
-            GtkUI[GtkIDs::MEMO_RECORD].buffer.text  = valid_record_ref?  ? record.mnotes.to_memo  : ""
-            GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text = valid_segment_ref? ? segment.mnotes.to_memo : ""
+            GtkUI[GtkIDs::MEMO_RECORD].buffer.text  = valid_record_ref?  ? record.mnotes.to_memo  : ''
+            GtkUI[GtkIDs::MEMO_SEGMENT].buffer.text = valid_segment_ref? ? segment.mnotes.to_memo : ''
             return self
         end
 
@@ -49,25 +49,25 @@ module XIntf
         end
 
         def rec_info_string
-            return "" unless valid_record_ref?
+            return '' unless valid_record_ref?
             rec = DBCache::Cache.record(@rrecord) # Cache of the cache!!!
-            str  = rec.itrackscount.to_s+" "+genre.sname+" track".check_plural(rec.itrackscount)+" "
+            str  = rec.itrackscount.to_s+' '+genre.sname+' track'.check_plural(rec.itrackscount)+' '
             str += DBCache::Cache.media(rec.rmedia).sname
-            str += rec.iyear == 0 ? ", Unknown" : ", "+rec.iyear.to_s
-            str += ", "+DBCache::Cache.label(record.rlabel).sname
-            str += ", "+rec.scatalog unless rec.scatalog.empty?
-            str += ", "+rec.isetorder.to_s+" of "+rec.isetof.to_s if rec.isetorder > 0
-            str += ", "+DBCache::Cache.collection(rec.rcollection).sname if rec.rcollection != 0
-            str += ", "+rec.iplaytime.to_ms_length
-            str += " [%.4f | %.4f]" % [rec.igain/Audio::GAIN_FACTOR, rec.ipeak/Audio::GAIN_FACTOR]
+            str += rec.iyear == 0 ? ', Unknown' : ', '+rec.iyear.to_s
+            str += ', '+DBCache::Cache.label(record.rlabel).sname
+            str += ', '+rec.scatalog unless rec.scatalog.empty?
+            str += ', '+rec.isetorder.to_s+' of '+rec.isetof.to_s if rec.isetorder > 0
+            str += ', '+DBCache::Cache.collection(rec.rcollection).sname if rec.rcollection != 0
+            str += ', '+rec.iplaytime.to_ms_length
+            str += ' [%.4f | %.4f]' % [rec.igain/Audio::GAIN_FACTOR, rec.ipeak/Audio::GAIN_FACTOR]
             return str
         end
 
         def seg_info_string
-            return "" unless valid_segment_ref?
-            str  = "Segment "+segment.iorder.to_s
-            str += " "+segment.stitle unless segment.stitle.empty?
-            str += " by "+segment_artist.sname+" "+segment.iplaytime.to_ms_length
+            return '' unless valid_segment_ref?
+            str  = 'Segment '+segment.iorder.to_s
+            str += ' '+segment.stitle unless segment.stitle.empty?
+            str += ' by '+segment_artist.sname+' '+segment.iplaytime.to_ms_length
             return str
         end
     end
@@ -77,7 +77,7 @@ module XIntf
 
         def to_widgets
             GtkUI[GtkIDs::MW_INFLBL_TRACK].text   = info_string
-            GtkUI[GtkIDs::MEMO_TRACK].buffer.text = valid_track_ref? ? track.mnotes.to_memo : ""
+            GtkUI[GtkIDs::MEMO_TRACK].buffer.text = valid_track_ref? ? track.mnotes.to_memo : ''
             return self
         end
 
@@ -94,18 +94,18 @@ module XIntf
         end
 
         def info_string
-            return "" unless valid_track_ref?
+            return '' unless valid_track_ref?
             trk = DBCache::Cache.track(@rtrack) # Cache of the cache!!!
-            str  = Qualifiers::RATINGS[trk.irating]+", "
-            str += trk.iplayed > 0 ? "played "+trk.iplayed.to_s+" time".check_plural(trk.iplayed)+" " : "never played, "
-            str += "(Last: "+trk.ilastplayed.to_std_date+"), " if trk.ilastplayed != 0
+            str  = Qualifiers::RATINGS[trk.irating]+', '
+            str += trk.iplayed > 0 ? 'played '+trk.iplayed.to_s+' time'.check_plural(trk.iplayed)+' ' : 'never played, '
+            str += '(Last: '+trk.ilastplayed.to_std_date+'), ' if trk.ilastplayed != 0
             if trk.itags == 0
-                str += "no tags "
+                str += 'no tags '
             else
-                str += "tagged as "
-                Qualifiers::TAGS.each_with_index { |tag, i| str += tag+" " if (trk.itags & (1 << i)) != 0 }
+                str += 'tagged as '
+                Qualifiers::TAGS.each_with_index { |tag, i| str += tag+' ' if (trk.itags & (1 << i)) != 0 }
             end
-            str += "[%.4f | %.4f]" % [trk.igain/Audio::GAIN_FACTOR, trk.ipeak/Audio::GAIN_FACTOR]
+            str += '[%.4f | %.4f]' % [trk.igain/Audio::GAIN_FACTOR, trk.ipeak/Audio::GAIN_FACTOR]
             return str
         end
     end

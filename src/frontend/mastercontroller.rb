@@ -195,14 +195,12 @@ class MasterController
         return @mw.search_dlg.get_selection
     end
 
-    def notify_played(xlink, host = "")
+    def notify_played(xlink)
         # If tags isn't nil the track has been dropped into the pq from the file system
         return if xlink.tags
 
         Thread.new do
-            host = Socket.gethostname if host.empty?
-
-            DBUtils.update_track_stats(xlink, host)
+            DBUtils.update_track_stats(xlink)
 
             # Update gui if the played track is currently selected.
             # Dangerous if track is being modified

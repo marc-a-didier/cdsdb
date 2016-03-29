@@ -284,13 +284,13 @@ class MainWindow < TopWindow
         tags = @mc.track.itags
         i = 1
         c = 0
-        menu_item.submenu.each { |child|
+        menu_item.submenu.each do |child|
             child.signal_handler_block(@tags_handlers[c])
             child.active = tags & i != 0
             child.signal_handler_unblock(@tags_handlers[c])
             i <<= 1
             c += 1
-        }
+        end
     end
 
     #

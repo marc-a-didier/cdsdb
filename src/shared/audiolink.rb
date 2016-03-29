@@ -71,8 +71,8 @@ module Audio
 
         # Returns the file name without the music dir and genre
         def track_dir(file_name)
-            file = file_name.sub(Cfg.music_dir, "")
-            return file.sub(file.split("/")[0], "")
+            file = file_name.sub(Cfg.music_dir, '')
+            return file.sub(file.split('/')[0], '')
         end
 
         def full_dir
@@ -100,7 +100,7 @@ module Audio
 
             # Remove the root dir & genre dir to get the appropriate sub dir
             file = track_dir(file_name)
-            Dir[Cfg.music_dir+"*"].each do |entry|
+            Dir[Cfg.music_dir+'*'].each do |entry|
                 next unless File.directory?(entry)
                 extensions.each do |ext|
                     if File.exists?(entry+file+ext)
@@ -115,16 +115,16 @@ module Audio
         end
 
         def make_track_title(want_segment_title, want_track_number = true)
-            title = ""
+            title = ''
             if @tags.nil?
-                title += track.iorder.to_s+". " unless track.iorder == 0 || !want_track_number
+                title += track.iorder.to_s+'. ' unless track.iorder == 0 || !want_track_number
                 if want_segment_title
-                    title += segment.stitle+" - " unless segment.stitle.empty?
-                    title += track.isegorder.to_s+". " unless track.isegorder == 0
+                    title += segment.stitle+' - ' unless segment.stitle.empty?
+                    title += track.isegorder.to_s+'. ' unless track.isegorder == 0
                 end
                 title += track.stitle
             else
-                title += @tags.track.to_s+". " if want_track_number
+                title += @tags.track.to_s+'. ' if want_track_number
                 title += @tags.title
             end
             return title
@@ -153,7 +153,7 @@ module Audio
             root_dir = Cfg.music_dir+genre.sname+File::SEPARATOR
             FileUtils.mkpath(root_dir+File.dirname(track_dir(audio.file)))
             FileUtils.mv(file_name, audio.file)
-            Log.info("Source #{file_name} tagged and moved to "+audio.file)
+            Log.info("Source #{file_name} tagged and moved to #{audio.file}")
             Utils.remove_dirs(File.dirname(file_name))
         end
 

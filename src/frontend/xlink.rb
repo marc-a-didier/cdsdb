@@ -16,7 +16,7 @@ module XIntf
 
         def reset
             @use_record_gain = false
-            @pix_key = ""
+            @pix_key = nil
             return super
         end
 
@@ -35,32 +35,28 @@ module XIntf
         end
 
         def cover_file_name
-            @pix_key.empty? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :
-                              Image::Cache.full_name(@pix_key)
+            @pix_key.nil? ? file_name(track.rtrack, track.rrecord, record.irecsymlink) :
+                            Image::Cache.full_name(@pix_key)
         end
 
         def large_track_cover
-            @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
-                              Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
+            @pix_key.nil? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
+                            Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
         end
 
         def small_track_cover
-            @pix_key.empty? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
-                              Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
+            @pix_key.nil? ? track_pix(track.rtrack, track.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
+                            Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
         end
 
         def large_record_cover
-            @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
-                              Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
+            @pix_key.nil? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE) :
+                            Image::Cache.pix(@pix_key, Image::Cache::LARGE_SIZE)
         end
 
         def small_record_cover
-            @pix_key.empty? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
-                              Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
-        end
-
-        def cover_key
-            return @pix_key
+            @pix_key.nil? ? record_pix(record.rrecord, record.irecsymlink, Image::Cache::SMALL_SIZE) :
+                            Image::Cache.pix(@pix_key, Image::Cache::SMALL_SIZE)
         end
 
         def available_on_server?
@@ -99,25 +95,25 @@ module XIntf
             fname = URI::unescape(url)
             return self unless fname.match(/^file:\/\//) # We may get http urls...
 
-            fname.sub!(/^file:\/\//, "")
+            fname.sub!(/^file:\/\//, '')
             if record.rartist == 0 && !is_compile
                 # We're on a track of a compilation but not on the Compilations
                 # so we assign the file to the track rather than the record
                 cover_file = Cfg.covers_dir+record.rrecord.to_s
-                FileUtils::mkpath(cover_file)
-                cover_file += File::SEPARATOR+track.rtrack.to_s+File::extname(fname)
-                ex_name = cover_file+File::SEPARATOR+"ex"+track.rtrack.to_s+File::extname(fname)
+                FileUtils.mkpath(cover_file)
+                cover_file += File::SEPARATOR+track.rtrack.to_s+File.extname(fname)
+                ex_name = cover_file+File::SEPARATOR+'ex'+track.rtrack.to_s+File.extname(fname)
             else
                 # Assign file to record
-                cover_file = Cfg.covers_dir+record.rrecord.to_s+File::extname(fname)
-                ex_name = Cfg.covers_dir+"ex"+record.rrecord.to_s+File::extname(fname)
+                cover_file = Cfg.covers_dir+record.rrecord.to_s+File.extname(fname)
+                ex_name = Cfg.covers_dir+'ex'+record.rrecord.to_s+File.extname(fname)
             end
-            if File::exists?(cover_file)
-                File::unlink(ex_name) if File::exists?(ex_name)
-                FileUtils::mv(cover_file, ex_name)
+            if File.exists?(cover_file)
+                File.unlink(ex_name) if File.exists?(ex_name)
+                FileUtils.mv(cover_file, ex_name)
             end
             #File::unlink(cover_file) if File::exists?(cover_file)
-            FileUtils::mv(fname, cover_file)
+            FileUtils.mv(fname, cover_file)
 
             # Force the cache to reload new image
             load_record_cover(record.rrecord, record.irecsymlink, Image::Cache::LARGE_SIZE)
@@ -126,23 +122,23 @@ module XIntf
         end
 
         def html_track_title(want_segment_title, separator = "\n")
-            title = make_track_title(want_segment_title).to_html_bold + separator +"by "
+            title = make_track_title(want_segment_title).to_html_bold + separator +'by '
             title += @tags.nil? ? segment_artist.sname.to_html_italic : @tags.artist.to_html_italic
-            title += separator + "from "
+            title += separator + 'from '
             title += @tags.nil? ? record.stitle.to_html_italic : @tags.album.to_html_italic
             return title
         end
 
         def html_track_title_no_track_num(want_segment_title, separator = "\n")
-            title = make_track_title(want_segment_title, false).to_html_bold + separator +"by "
+            title = make_track_title(want_segment_title, false).to_html_bold + separator +'by '
             title += @tags.nil? ? segment_artist.sname.to_html_italic : @tags.artist.to_html_italic
-            title += separator + "from "
+            title += separator + 'from '
             title += @tags.nil? ? record.stitle.to_html_italic : @tags.album.to_html_italic
             return title
         end
 
         def html_record_title(separator = "\n")
-            return record.stitle.to_html_bold + separator + "by "+record_artist.sname.to_html_italic
+            return record.stitle.to_html_bold + separator + 'by '+record_artist.sname.to_html_italic
         end
 
         def markup_tooltip
@@ -150,11 +146,11 @@ module XIntf
             text += "<b>Played:</b> #{track.iplayed}"
             text += track.ilastplayed == 0 ? "\n" : " (Last: #{track.ilastplayed.to_std_date})\n"
             text += "<b>Rating:</b> #{Qualifiers::RATINGS[track.irating]}\n"
-            text += "<b>Tags:</b> "
+            text += '<b>Tags:</b> '
             if track.itags == 0
-                text += "No tags"
+                text += 'No tags'
             else
-                Qualifiers::TAGS.each_with_index { |tag, i| text += tag+" " if (track.itags & (1 << i)) != 0 }
+                Qualifiers::TAGS.each_with_index { |tag, i| text += tag+' ' if (track.itags & (1 << i)) != 0 }
             end
             return text
         end

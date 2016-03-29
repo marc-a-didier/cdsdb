@@ -10,11 +10,11 @@ module XIntf
         #
         module Cache
 
-            DEFAULT_FLAG  = "f0"
-            DEFAULT_COVER = "r0"
+            DEFAULT_FLAG  = 'f0'
+            DEFAULT_COVER = 'r0'
 
-            DEF_RECORD_FILE = "default.png"
-            DEF_FLAG_FILE   = "default.svg"
+            DEF_RECORD_FILE = 'default.png'
+            DEF_FLAG_FILE   = 'default.svg'
 
             FLAG_SIZE  =  16
             SMALL_SIZE =  64
@@ -22,7 +22,7 @@ module XIntf
 
             class << self
 
-                # ImageData struct stores the file name and bot small and large cover image
+                # ImageData struct stores the file name and both small and large cover image
                 # for a record or a track.
                 #
                 # Flags directly use a Pixbuf because there's only one size and we don't
@@ -52,13 +52,13 @@ module XIntf
                     data = @map[key]
                     if size == SMALL_SIZE
                         if data.small_pix.nil?
-                            Trace.imc("Image::Cache check pix load small from cache".brown)
+                            Trace.imc('Image::Cache check pix load small from cache'.brown)
                             data.small_pix = Gdk::Pixbuf.new(Cfg.covers_dir+data.file_name, size, size)
                         end
                         return data.small_pix
                     else
                         if data.large_pix.nil?
-                            Trace.imc("Image::Cache check pix load large from cache".brown)
+                            Trace.imc('Image::Cache check pix load large from cache'.brown)
                             data.large_pix = Gdk::Pixbuf.new(Cfg.covers_dir+data.file_name, size, size)
                         end
                         return data.large_pix
@@ -112,10 +112,10 @@ module XIntf
 
 
                 def get_flag(rorigin)
-                    key = "f"+rorigin.to_s
+                    key = 'f'+rorigin.to_s
                     if @map[key].nil?
                         Trace.imc("Flag MISS for origin #{rorigin}".red)
-                        file = Cfg.flags_dir+rorigin.to_s+".svg"
+                        file = Cfg.flags_dir+rorigin.to_s+'.svg'
                         File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
                     else
                         Trace.imc("Flag HIT for origin #{rorigin}".red)
@@ -131,23 +131,23 @@ module XIntf
                     return @map[DEFAULT_COVER].large_pix
                 end
 
-                # Scan covers dir and preload all tracks cover. It avoids of checking the existence of
+                # Scan covers dir and preload all tracks cover. It avoids checking the existence of
                 # a specific directory for a record and search for the cover file each time
                 # a new track is selected in the browser.
                 def preload_tracks_cover
-                    Dir[Cfg.covers_dir+"*"].each do |entry|
-                        next unless File::directory?(entry)
-                        Dir[entry+"/*"].each do |file|
-                            next if File::directory?(file)
-                            key =  "t"+File::basename(file).gsub(File::extname(file), "")
-                            @map[key] = ImageData.new(file.gsub(Cfg.covers_dir, ""), nil, nil)
+                    Dir[Cfg.covers_dir+'*'].each do |entry|
+                        next unless File.directory?(entry)
+                        Dir[entry+'/*'].each do |file|
+                            next if File.directory?(file)
+                            key =  't'+File.basename(file).gsub(File.extname(file), '')
+                            @map[key] = ImageData.new(file.gsub(Cfg.covers_dir, ''), nil, nil)
                             Trace.imc("Key #{key} added, file=#{@map[key].file_name}")
                         end
                     end
                 end
 
                 def dump_infos
-                    Trace.imc("cache size=#{@map.size}")
+                    Trace.debug("Image cache size=#{@map.size}")
                 end
             end
         end
