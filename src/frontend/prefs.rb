@@ -47,8 +47,8 @@ module Prefs
     def self.save_window(gtk_id)
         window = GtkUI[gtk_id]
 
-        Cfg.windows[window.builder_name] = { window.builder_name => { "move" => window.position,
-                                                                      "resize" => window.size } }
+        Cfg.windows[window.builder_name] = { window.builder_name => { 'move' => window.position,
+                                                                      'resize' => window.size } }
 
         klasses = [Gtk::HPaned, Gtk::VPaned]
         klasses << Gtk::Expander unless gtk_id == GtkIDs::FILTER_WINDOW
@@ -86,7 +86,7 @@ module Prefs
         Cfg.menus[menu.builder_name] = {}
         menu.each do |child|
             if child.is_a?(Gtk::CheckMenuItem) || child.is_a?(Gtk::RadioMenuItem)
-                Cfg.menus[menu.builder_name][child.builder_name] = { "active=" => child.active? }
+                Cfg.menus[menu.builder_name][child.builder_name] = { 'active=' => child.active? }
             end
         end
     end
@@ -103,7 +103,7 @@ module Prefs
     # Window content save/restore to/from yaml (only used by the filter window)
     #
 
-    FILTER = "filter"
+    FILTER = 'filter'
 
     def self.json_from_content(gtk_object)
         hash = { FILTER => {} }
@@ -111,9 +111,8 @@ module Prefs
         klasses = [Gtk::Expander, Gtk::Entry, Gtk::CheckButton, Gtk::SpinButton, Gtk::ComboBox, Gtk::TreeView]
         child_controls(gtk_object, klasses, Array.new).each do |obj|
             if getter(obj.class) == nil
-                items = ""
-                obj.model.each { |model, path, iter| items << (iter[0] ? "1" : "0") }
-                hash[FILTER][obj.builder_name] = { setter(obj.class) => items }
+                # obj is an extended tree view
+                hash[FILTER][obj.builder_name] = { setter(obj.class) => obj.map { |iter| iter[0] ? '1' : '0' }.join }
             else
                 hash[FILTER][obj.builder_name] = { setter(obj.class) => obj.send(getter(obj.class)) }
             end
@@ -126,7 +125,7 @@ module Prefs
         hash = JSON.parse(json_str)
         hash[FILTER].each do |obj, msg|
             msg.each do |method, params|
-                if method == "items"
+                if method == 'items'
                     params.bytes.each_with_index { |byte, i| GtkUI[obj].model.get_iter(i.to_s)[0] = byte == 49 } # ascii '1'
                 else
                     GtkUI[obj].send(method.to_sym, *params)

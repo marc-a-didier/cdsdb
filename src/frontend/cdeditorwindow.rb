@@ -98,8 +98,14 @@ class CDEditorWindow
         path = 0
         Dir[dir+'/*'].sort.each do |entry|
             next if File.directory?(entry)
-            # K3B format : 'nn - artist - title.ext'
-            track, artist, title = File.basename(entry).split(' - ')
+            # K3B format : 'nn - artist - title.ext' compile???
+            #              'nn - title.ext' if not compile???
+            artist = ''
+            if File.basename(entry).split(' - ').size < 3
+                track, title = File.basename(entry).split(' - ')
+            else
+                track, artist, title = File.basename(entry).split(' - ')
+            end
             iter = @tv.model.get_iter(path.to_s)
             iter[1] = title.sub(/\..*$/, '')
             iter[3] = artist

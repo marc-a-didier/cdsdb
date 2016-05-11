@@ -41,15 +41,15 @@ class Gtk::TreeView
     end
 
     def map(&block)
-        iters = []
-        self.model.each { |model, path, iter| iters << yield(iter) }
-        return iters
+        result = []
+        self.model.each { |model, path, iter| result << yield(iter) }
+        return result
     end
 
     def selected_map(&block)
-        iters = []
-        self.selection.selected_each { |model, path, iter| iters << yield(iter) }
-        return iters
+        result = []
+        self.selection.selected_each { |model, path, iter| result << yield(iter) }
+        return result
     end
 
     def items_count
