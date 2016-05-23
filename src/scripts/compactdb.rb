@@ -1,36 +1,15 @@
 #!/usr/bin/env ruby
 
-#
-#
-
 require 'sqlite3'
 require 'fileutils'
+require '../shared/extenders'
 
-
-class String
-    def to_sql
-        return "'"+self.gsub(/'/, "''")+"'"
-    end
-end
-
-class Fixnum
-    def to_sql
-        return self.to_s
-    end
-end
-
-class Float
-    def to_sql
-        return self.to_s
-    end
-end
-
-
+version = '6.2'
 path = "../../db/"
 
-dest = path+"cds6.1.compacted.db"
+dest = path+"cds#{version}.compacted.db"
 
-$src = SQLite3::Database.new(path+"cds6.1.db")
+$src = SQLite3::Database.new(path+"cds#{version}.db")
 $src.execute("PRAGMA synchronous=OFF;")
 
 FileUtils.rm(dest) if File.exists?(dest)
@@ -39,7 +18,7 @@ $dst.execute('PRAGMA synchronous=OFF;')
 $dst.execute('PRAGMA encoding="UTF-8";')
 
 sql = ""
-IO.foreach("./sqlitecds6.1.sql") { |line| sql += line.chomp }
+IO.foreach("./sqlitecds#{version}.sql") { |line| sql += line.chomp }
 $dst.execute_batch(sql)
 
 def dup_table(table) # Copy table as it, that is there are no change

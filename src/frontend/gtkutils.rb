@@ -11,7 +11,7 @@ module GtkUtils
 
     def self.show_message(msg, msg_type)
         dialog = Gtk::MessageDialog.new(nil, Gtk::Dialog::MODAL, msg_type, Gtk::MessageDialog::BUTTONS_OK, msg)
-        dialog.title = "Information"
+        dialog.title = 'Information'
         dialog.run # {|r| puts "response=%d" % [r]}
         dialog.destroy
     end
@@ -19,15 +19,15 @@ module GtkUtils
     def self.get_response(msg)
         dialog = Gtk::MessageDialog.new(nil, Gtk::Dialog::MODAL, Gtk::MessageDialog::WARNING,
                                         Gtk::MessageDialog::BUTTONS_OK_CANCEL, msg)
-        dialog.title = "Warning"
+        dialog.title = 'Warning'
         response = dialog.run
         dialog.destroy
         return response
     end
 
-    def self.select_source(action, default_dir = "")
-        file = ""
-        action == Gtk::FileChooser::ACTION_OPEN ? title = "Select file" : title = "Select directory"
+    def self.select_source(action, default_dir = '')
+        file = ''
+        action == Gtk::FileChooser::ACTION_OPEN ? title = 'Select file' : title = 'Select directory'
         dialog = Gtk::FileChooserDialog.new(title, nil, action, nil,
                                             [Gtk::Stock::CANCEL, Gtk::Dialog::RESPONSE_CANCEL],
                                             [Gtk::Stock::OPEN, Gtk::Dialog::RESPONSE_ACCEPT])
@@ -47,19 +47,19 @@ module GtkUtils
 
         arenderer = Gtk::CellRendererToggle.new
         arenderer.activatable = true
-        arenderer.signal_connect(:toggled) { |w, path|
+        arenderer.signal_connect(:toggled) do |w, path|
             iter = tvt.model.get_iter(path)
             iter[0] = !iter[0] if iter
-        }
+        end
         srenderer = Gtk::CellRendererText.new
 
-        tvt.append_column(Gtk::TreeViewColumn.new("Match", arenderer, :active => 0))
-        tvt.append_column(Gtk::TreeViewColumn.new("Tag", srenderer, :text => 1))
-        Qualifiers::TAGS.each { |tag|
+        tvt.append_column(Gtk::TreeViewColumn.new('Match', arenderer, :active => 0))
+        tvt.append_column(Gtk::TreeViewColumn.new('Tag', srenderer, :text => 1))
+        Qualifiers::TAGS.each do |tag|
             iter = tvt.model.append
             iter[0] = false
             iter[1] = tag
-        }
+        end
     end
 
     def self.get_tags_mask(tvt)
@@ -74,8 +74,7 @@ module GtkUtils
     # Pix maps generator for button icons
     #
     def self.get_btn_icon(fname)
-#         return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+"default.svg", 22, 22)
-        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+"default.svg", 22, 22)
+        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+'default.svg', 22, 22)
     end
 
 
@@ -84,9 +83,9 @@ module GtkUtils
     #
 
     def self.import_played_tracks
-        return if self.get_response("OK to import tracks from playedtracks.sql?") != Gtk::Dialog::RESPONSE_OK
-        rlogtrack = DBUtils.get_last_id("logtrack")
-        IO.foreach(Cfg.rsrc_dir+"playedtracks.sql") { |line|
+        return if self.get_response('OK to import tracks from playedtracks.sql?') != Gtk::Dialog::RESPONSE_OK
+        rlogtrack = DBUtils.get_last_id('logtrack')
+        IO.foreach(Cfg.rsrc_dir+'playedtracks.sql') do |line|
             line = line.chomp
             if line.match(/^INSERT/)
                 rlogtrack += 1
@@ -95,11 +94,11 @@ module GtkUtils
                 #puts line
             end
             DBUtils.log_exec(line)
-        }
+        end
     end
 
     def self.delete_artist(rartist)
-        msg = ""
+        msg = ''
         count = DBIntf.get_first_value("SELECT COUNT(rartist) FROM records WHERE rartist=#{rartist};")
         msg = "Error: #{count} reference(s) still in records table." if count > 0
         count = DBIntf.get_first_value("SELECT COUNT(rartist) FROM segments WHERE rartist=#{rartist};")
@@ -145,7 +144,7 @@ module GtkUtils
             count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rsegment=#{row[0][0]}")
             del_seg = count == 1 && self.get_response("This is the last track of its segment. Remove it along?") == Gtk::Dialog::RESPONSE_OK
             count = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM tracks WHERE rrecord=#{row[0][1]}")
-            del_rec = count == 1 && self.get_response("This is the last track of its record. Remove it along?") == Gtk::Dialog::RESPONSE_OK
+            del_rec = count == 1 && self.get_response('This is the last track of its record. Remove it along?') == Gtk::Dialog::RESPONSE_OK
 
             DBUtils.client_sql("DELETE FROM logtracks WHERE rtrack=#{rtrack};")
             DBUtils.client_sql("DELETE FROM tracks WHERE rtrack=#{rtrack};")
