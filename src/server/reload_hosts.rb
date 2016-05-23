@@ -7,5 +7,6 @@ begin
 rescue Errno::ECONNREFUSED => ex
     puts "Connection error (#{ex.class} : #{ex})."
 end
+puts(socket.gets.chomp)
 socket.puts("reload hosts")
 puts("Response: #{socket.gets.chomp}")

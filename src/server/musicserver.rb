@@ -72,6 +72,7 @@ class MusicServer
             loop do #while (session = server.accept)
                 Thread.start(server.accept) do |session|
                     if @allowed_hosts.include?(ip_address(session)) # || ip_address(session).match(/^192\.168\.0\./)
+                        session.puts(Cfg::MSG_WELCOME)
                         meth, mode = session.gets.chomp.split(Cfg::SYNC_HDR)
                         meth = meth.gsub(/ /, '_').to_sym
                         # puts("Request: #{req}")

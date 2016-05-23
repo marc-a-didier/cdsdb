@@ -36,7 +36,8 @@ module Cfg
     MSG_OK         = 'OK'
     MSG_DONE       = 'DONE'
     MSG_ERROR      = 'NO_METHOD'
-    MSG_FUCKED     = 'Fucked up...'
+    MSG_FUCKED     = 'CDsDB music server: Fucked up...'
+    MSG_WELCOME    = 'CDsDB music server: e pericoloso sporgersi dalla finestra!'
 
     STAT_CONTINUE  = 1
     STAT_CANCELLED = 0
