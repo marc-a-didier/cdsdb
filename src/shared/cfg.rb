@@ -51,6 +51,10 @@ module Cfg
 
         WINDOWS = 'windows'
 
+        M_ACTIVE   = 'active='
+        M_TEXT     = 'text='
+        M_CURR_FLD = 'current_folder='
+
         CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
                                 :server, :port, :tx_block_size, :sync_comms, :size_over_quality,
                                 :music_dir, :rsrc_dir,
@@ -59,25 +63,26 @@ module Cfg
                                 :notifications, :notif_duration, :cd_device,
                                 :live_charts_update, :max_items, :show_count) do
             def reload(cfg)
-                self.trace_db_cache     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEDBCACHE]['active=']
-                self.trace_image_cache  = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_IMAGECACHE]['active=']
-                self.trace_gst          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGST]['active=']
-                self.trace_gstqueue     = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACEGSTQUEUE]['active=']
-                self.trace_network      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACENETWORK]['active=']
-                self.trace_sql          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_TRACESQLWRITES]['active=']
-                self.tx_block_size      = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_BLKSIZE]['text='].to_i
-                self.server             = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_SERVER]['text=']
-                self.port               = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_PORT]['text='].to_i
-                self.sync_comms         = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SYNCCOMMS]['active=']
-                self.size_over_quality  = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SIZEOVERQUALITY]['active=']
-                self.music_dir          = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_MUSICDIR]["current_folder="]+'/'
-                self.rsrc_dir           = cfg[WINDOWS][PREFS_DIALOG][PREFS_FC_RSRCDIR]["current_folder="]+'/'
-                self.notifications      = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWNOTIFICATIONS]['active=']
-                self.notif_duration     = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_NOTIFDURATION]['text='].to_i
-                self.live_charts_update = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_LIVEUPDATE]['active=']
-                self.max_items          = cfg[WINDOWS][PREFS_DIALOG][PREFS_ENTRY_MAXITEMS]['text='].to_i
-                self.show_count         = cfg[WINDOWS][PREFS_DIALOG][PREFS_CB_SHOWCOUNT]['active=']
-                self.cd_device          = cfg[WINDOWS][PREFS_DIALOG][PREFS_CD_DEVICE]['text=']
+                t = cfg[WINDOWS][PREFS_DIALOG]
+                self.trace_db_cache     = t[PREFS_CB_TRACEDBCACHE][M_ACTIVE]
+                self.trace_image_cache  = t[PREFS_CB_IMAGECACHE][M_ACTIVE]
+                self.trace_gst          = t[PREFS_CB_TRACEGST][M_ACTIVE]
+                self.trace_gstqueue     = t[PREFS_CB_TRACEGSTQUEUE][M_ACTIVE]
+                self.trace_network      = t[PREFS_CB_TRACENETWORK][M_ACTIVE]
+                self.trace_sql          = t[PREFS_CB_TRACESQLWRITES][M_ACTIVE]
+                self.tx_block_size      = t[PREFS_ENTRY_BLKSIZE][M_TEXT].to_i
+                self.server             = t[PREFS_ENTRY_SERVER][M_TEXT]
+                self.port               = t[PREFS_ENTRY_PORT][M_TEXT].to_i
+                self.sync_comms         = t[PREFS_CB_SYNCCOMMS][M_ACTIVE]
+                self.size_over_quality  = t[PREFS_CB_SIZEOVERQUALITY][M_ACTIVE]
+                self.music_dir          = t[PREFS_FC_MUSICDIR][M_CURR_FLD]+'/'
+                self.rsrc_dir           = t[PREFS_FC_RSRCDIR][M_CURR_FLD]+'/'
+                self.notifications      = t[PREFS_CB_SHOWNOTIFICATIONS][M_ACTIVE]
+                self.notif_duration     = t[PREFS_ENTRY_NOTIFDURATION][M_TEXT].to_i
+                self.live_charts_update = t[PREFS_CB_LIVEUPDATE][M_ACTIVE]
+                self.max_items          = t[PREFS_ENTRY_MAXITEMS][M_TEXT].to_i
+                self.show_count         = t[PREFS_CB_SHOWCOUNT][M_ACTIVE]
+                self.cd_device          = t[PREFS_CD_DEVICE][M_TEXT]
                 return self
             end
         end
@@ -91,25 +96,25 @@ module Cfg
         DEF_CONFIG = {  'dbversion' => '6.2',
                         WINDOWS => {
                             PREFS_DIALOG => {
-                                PREFS_CB_SHOWNOTIFICATIONS => { 'active=' => true },
-                                PREFS_ENTRY_NOTIFDURATION  => { 'text=' => '4' },
-                                PREFS_FC_MUSICDIR          => { 'current_folder=' => ENV['HOME']+'/Music/' },
-                                PREFS_FC_RSRCDIR           => { 'current_folder=' => './../../' },
-                                PREFS_CD_DEVICE            => { 'text=' => '/dev/cdrom' },
-                                PREFS_ENTRY_SERVER         => { 'text=' => 'madAM1H' },
-                                PREFS_ENTRY_PORT           => { 'text=' => '32666' },
-                                PREFS_ENTRY_BLKSIZE        => { 'text=' => '262144' },
-                                PREFS_CB_SYNCCOMMS         => { 'active=' => false },
-                                PREFS_CB_SIZEOVERQUALITY   => { 'active=' => false },
-                                PREFS_CB_TRACEDBCACHE      => { 'active=' => false },
-                                PREFS_CB_IMAGECACHE        => { 'active=' => false },
-                                PREFS_CB_TRACEGST          => { 'active=' => true  },
-                                PREFS_CB_TRACEGSTQUEUE     => { 'active=' => false },
-                                PREFS_CB_TRACENETWORK      => { 'active=' => true  },
-                                PREFS_CB_TRACESQLWRITES    => { 'active=' => false },
-                                PREFS_CB_LIVEUPDATE        => { 'active=' => true  },
-                                PREFS_CB_SHOWCOUNT         => { 'active=' => false },
-                                PREFS_ENTRY_MAXITEMS       => { 'text=' => '100' }
+                                PREFS_CB_SHOWNOTIFICATIONS => { M_ACTIVE => true },
+                                PREFS_ENTRY_NOTIFDURATION  => { M_TEXT => '4' },
+                                PREFS_FC_MUSICDIR          => { M_CURR_FLD => ENV['HOME']+'/Music/' },
+                                PREFS_FC_RSRCDIR           => { M_CURR_FLD => './../../' },
+                                PREFS_CD_DEVICE            => { M_TEXT => '/dev/cdrom' },
+                                PREFS_ENTRY_SERVER         => { M_TEXT => 'madAM1H' },
+                                PREFS_ENTRY_PORT           => { M_TEXT => '32666' },
+                                PREFS_ENTRY_BLKSIZE        => { M_TEXT => '262144' },
+                                PREFS_CB_SYNCCOMMS         => { M_ACTIVE => false },
+                                PREFS_CB_SIZEOVERQUALITY   => { M_ACTIVE => false },
+                                PREFS_CB_TRACEDBCACHE      => { M_ACTIVE => false },
+                                PREFS_CB_IMAGECACHE        => { M_ACTIVE => false },
+                                PREFS_CB_TRACEGST          => { M_ACTIVE => true  },
+                                PREFS_CB_TRACEGSTQUEUE     => { M_ACTIVE => false },
+                                PREFS_CB_TRACENETWORK      => { M_ACTIVE => true  },
+                                PREFS_CB_TRACESQLWRITES    => { M_ACTIVE => false },
+                                PREFS_CB_LIVEUPDATE        => { M_ACTIVE => true  },
+                                PREFS_CB_SHOWCOUNT         => { M_ACTIVE => false },
+                                PREFS_ENTRY_MAXITEMS       => { M_TEXT => '100' }
                             }
                         },
                         'menus' => {}
