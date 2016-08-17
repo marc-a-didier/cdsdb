@@ -99,13 +99,13 @@ class MainWindow < TopWindow
         Prefs.load_menu_state(GtkUI[VIEW_MENU])
 
         # Set windows icons
-        @mc.pqueue.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"pqueue.png")
-        @mc.player.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"player.png")
-        @mc.plists.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"plists.png")
-        @mc.charts.window.icon  = Gdk::Pixbuf.new(Cfg.icons_dir+"charts.png")
-        @mc.tasks.window.icon   = Gdk::Pixbuf.new(Cfg.icons_dir+"tasks.png")
-        @mc.filters.window.icon = Gdk::Pixbuf.new(Cfg.icons_dir+"filter.png")
-        @mc.memos.window.icon   = Gdk::Pixbuf.new(Cfg.icons_dir+"document-edit.png")
+        @mc.pqueue.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"pqueue.png")
+        @mc.player.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"player.png")
+        @mc.plists.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"plists.png")
+        @mc.charts.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"charts.png")
+        @mc.tasks.window.icon   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"tasks.png")
+        @mc.filters.window.icon = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"filter.png")
+        @mc.memos.window.icon   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"document-edit.png")
 
         # Stores the history window object
         @history = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
@@ -229,7 +229,7 @@ class MainWindow < TopWindow
         # Disable sensible controls if not in admin mode
         ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless Cfg.admin
 
-        GtkUI[MAIN_WINDOW].icon = Gdk::Pixbuf.new(Cfg.icons_dir+"audio-cd.png")
+        GtkUI[MAIN_WINDOW].icon = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"audio-cd.png")
         GtkUI[MAIN_WINDOW].show
 
         #

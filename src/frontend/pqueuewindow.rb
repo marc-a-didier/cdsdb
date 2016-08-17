@@ -22,8 +22,8 @@ class PQueueWindow < TopWindow
         srenderer = Gtk::CellRendererText.new()
         @tvpq = GtkUI[GtkIDs::TV_PQUEUE]
         # Displayed: Seq, cover, title, length -- Hidden: rtrack, rrecord, track length, true file name
-        #@plq = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Integer, Integer, Integer, String)
-        @plq = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
+        #@plq = Gtk::ListStore.new(Integer, GdkPixbuf::Pixbuf, String, String, Integer, Integer, Integer, String)
+        @plq = Gtk::ListStore.new(Integer, GdkPixbuf::Pixbuf, String, String, Class)
 
         pix = Gtk::CellRendererPixbuf.new
         pixcol = Gtk::TreeViewColumn.new('Cover')

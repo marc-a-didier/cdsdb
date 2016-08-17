@@ -37,9 +37,9 @@ module XIntf
                 def init
                     @map = Hash.new
                     @map[DEFAULT_COVER] = ImageData.new(DEF_RECORD_FILE,
-                                                        Gdk::Pixbuf.new(Cfg.covers_dir+DEF_RECORD_FILE, SMALL_SIZE, SMALL_SIZE),
-                                                        Gdk::Pixbuf.new(Cfg.covers_dir+DEF_RECORD_FILE, LARGE_SIZE, LARGE_SIZE))
-                    @map[DEFAULT_FLAG] = Gdk::Pixbuf.new(Cfg.flags_dir+DEF_FLAG_FILE, FLAG_SIZE, FLAG_SIZE)
+                                                        GdkPixbuf::Pixbuf.new(file: Cfg.covers_dir+DEF_RECORD_FILE, width: SMALL_SIZE, height: SMALL_SIZE),
+                                                        GdkPixbuf::Pixbuf.new(file: Cfg.covers_dir+DEF_RECORD_FILE, width: LARGE_SIZE, height: LARGE_SIZE))
+                    @map[DEFAULT_FLAG] = GdkPixbuf::Pixbuf.new(file: Cfg.flags_dir+DEF_FLAG_FILE, width: FLAG_SIZE, height: FLAG_SIZE)
                 end
 
                 def has_key(key)
@@ -53,13 +53,13 @@ module XIntf
                     if size == SMALL_SIZE
                         if data.small_pix.nil?
                             Trace.imc('Image::Cache check pix load small from cache'.brown)
-                            data.small_pix = Gdk::Pixbuf.new(Cfg.covers_dir+data.file_name, size, size)
+                            data.small_pix = GdkPixbuf::Pixbuf.new(file: Cfg.covers_dir+data.file_name, width: size, height: size)
                         end
                         return data.small_pix
                     else
                         if data.large_pix.nil?
                             Trace.imc('Image::Cache check pix load large from cache'.brown)
-                            data.large_pix = Gdk::Pixbuf.new(Cfg.covers_dir+data.file_name, size, size)
+                            data.large_pix = GdkPixbuf::Pixbuf.new(file: Cfg.covers_dir+data.file_name, width: size, height: size)
                         end
                         return data.large_pix
                     end
@@ -69,10 +69,10 @@ module XIntf
                     fname = Cfg.covers_dir+file_name
                     Trace.imc("Image::Cache load_cover from #{fname} size=#{@map.size+1}".red)
                     if size == SMALL_SIZE
-                        @map[key] = ImageData.new(file_name, Gdk::Pixbuf.new(fname, size, size), nil)
+                        @map[key] = ImageData.new(file_name, GdkPixbuf::Pixbuf.new(file: fname, width: size, height: size), nil)
                         return @map[key].small_pix
                     else
-                        @map[key] = ImageData.new(file_name, nil, Gdk::Pixbuf.new(fname, size, size))
+                        @map[key] = ImageData.new(file_name, nil, GdkPixbuf::Pixbuf.new(file: fname, width: size, height: size))
                         return @map[key].large_pix
                     end
                 end
@@ -116,7 +116,7 @@ module XIntf
                     if @map[key].nil?
                         Trace.imc("Flag MISS for origin #{rorigin}".red)
                         file = Cfg.flags_dir+rorigin.to_s+'.svg'
-                        File.exists?(file) ? @map[key] = Gdk::Pixbuf.new(file, FLAG_SIZE, FLAG_SIZE) : key = DEFAULT_FLAG
+                        File.exists?(file) ? @map[key] = GdkPixbuf::Pixbuf.new(file: file, width: FLAG_SIZE, height: FLAG_SIZE) : key = DEFAULT_FLAG
                     else
                         Trace.imc("Flag HIT for origin #{rorigin}".red)
                     end

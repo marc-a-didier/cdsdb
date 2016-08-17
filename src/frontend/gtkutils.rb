@@ -74,7 +74,7 @@ module GtkUtils
     # Pix maps generator for button icons
     #
     def self.get_btn_icon(fname)
-        return File.exists?(fname) ? Gdk::Pixbuf.new(fname, 22, 22) : Gdk::Pixbuf.new(Cfg.icons_dir+'default.svg', 22, 22)
+        return File.exists?(fname) ? GdkPixbuf::Pixbuf.new(file: fname, width: 22, height: 22) : GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'default.svg', width: 22, height: 22)
     end
 
 

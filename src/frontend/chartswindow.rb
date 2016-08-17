@@ -90,7 +90,7 @@ class ChartsWindow < TopWindow
 
         srenderer = Gtk::CellRendererText.new()
         @tvc = GtkUI[CHARTS_TV]
-        @lsc = Gtk::ListStore.new(Integer, String, Gdk::Pixbuf, String, Integer)
+        @lsc = Gtk::ListStore.new(Integer, String, GdkPixbuf::Pixbuf, String, Integer)
 
         pix = Gtk::CellRendererPixbuf.new
         pixcol = Gtk::TreeViewColumn.new("Cover")

@@ -105,9 +105,9 @@ class PlayerWindow < TopWindow
         @gc = Gdk::GC.new(@meter.window)
 
         # Get the meter image, unlit and lit images from their files
-        scale   = Gdk::Pixbuf.new(Cfg.icons_dir+'k14-scaleH.png')
-        @dark   = Gdk::Pixbuf.new(Cfg.icons_dir+'k14-meterH0.png')
-        @bright = Gdk::Pixbuf.new(Cfg.icons_dir+'k14-meterH1.png')
+        scale   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'k14-scaleH.png')
+        @dark   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'k14-meterH0.png')
+        @bright = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'k14-meterH1.png')
 
         # Start splitting the meter image to build the definitive bitmap as the scale image
         # is not the final image onto which we draw
@@ -131,10 +131,10 @@ class PlayerWindow < TopWindow
         @dpix = Gdk::Pixmap.new(@counter.window, 11*DIGIT_WIDTH, DIGIT_HEIGHT, -1)
 
         @digits = []
-        10.times { |i| @digits[i] = Gdk::Pixbuf.new(Cfg.icons_dir+"#{i}digit.png", DIGIT_WIDTH, DIGIT_HEIGHT) }
-        @digits[10] = Gdk::Pixbuf.new(Cfg.icons_dir+'unlitdigit.png', DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[11] = Gdk::Pixbuf.new(Cfg.icons_dir+'colondigit.png', DIGIT_WIDTH, DIGIT_HEIGHT)
-        @digits[12] = Gdk::Pixbuf.new(Cfg.icons_dir+'minusdigit.png', DIGIT_WIDTH, DIGIT_HEIGHT)
+        10.times { |i| @digits[i] = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"#{i}digit.png", width: DIGIT_WIDTH, height: DIGIT_HEIGHT) }
+        @digits[10] = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'unlitdigit.png', width: DIGIT_WIDTH, height: DIGIT_HEIGHT)
+        @digits[11] = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'colondigit.png', width: DIGIT_WIDTH, height: DIGIT_HEIGHT)
+        @digits[12] = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'minusdigit.png', width: DIGIT_WIDTH, height: DIGIT_HEIGHT)
 
         reset_counter
     end

@@ -45,7 +45,7 @@ module Dialogs
             srenderer = Gtk::CellRendererText.new()
 
             # Columns: Entry, cover, title, date, XIntf::Link (hidden)
-            @tv.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, String, String, Class)
+            @tv.model = Gtk::ListStore.new(Integer, GdkPixbuf::Pixbuf, String, String, Class)
 
             pix = Gtk::CellRendererPixbuf.new
             pixcol = Gtk::TreeViewColumn.new("Cover")

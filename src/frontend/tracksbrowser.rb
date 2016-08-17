@@ -81,7 +81,7 @@ class TracksBrowser < Gtk::TreeView
             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
         end
 
-        self.model = Gtk::ListStore.new(Integer, Gdk::Pixbuf, Integer, String, String, String, Class)
+        self.model = Gtk::ListStore.new(Integer, GdkPixbuf::Pixbuf, Integer, String, String, String, Class)
 
         selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         selection.mode = Gtk::SELECTION_MULTIPLE
