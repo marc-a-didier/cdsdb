@@ -140,6 +140,9 @@ module Cfg
             # Set store fields from prefs
             @cfg_store.reload(@cfg)
 
+            # Set hostname from config if exists otherwise use real hostname
+            @cfg['hostname'] = Socket.gethostname unless @cfg['hostname']
+
             @cfg_store.remote = false
             @cfg_store.admin  = false
             @cfg_store.server_mode = false
@@ -223,6 +226,10 @@ module Cfg
             @cfg['last_integrity_check'] = date
         end
 
+        def hostname
+            return @cfg['hostname']
+        end
+        
 
         #
         # Special cases for the server: db & log are forced to specific directories

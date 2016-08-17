@@ -339,7 +339,7 @@ class MainWindow < TopWindow
     end
 
     def import_sql_file
-        DBUtils.exec_batch(IO.binread(DiscAnalyzer::RESULT_SQL_FILE), Socket.gethostname)
+        DBUtils.exec_batch(IO.binread(DiscAnalyzer::RESULT_SQL_FILE), Cfg.hostname)
 
         @art_browser.reload
          # The best guess to find the newly imported record

@@ -58,7 +58,7 @@ module DBUtils
     def self.update_track_stats(dblink)
         return unless dblink.track.valid? # Possible when files are dropped into the play queue
 
-        hostname = Socket.gethostname
+        hostname = Cfg.hostname
 
         dblink.track.iplayed += 1
         dblink.track.ilastplayed = Time.now.to_i
@@ -97,7 +97,7 @@ module DBUtils
             sql << "UPDATE pltracks SET iorder=#{i} WHERE rpltrack=#{row[0]};\n"
             i += 1024
         end
-        is_local_only ? self.exec_local_batch(sql, Socket.gethostname) : self.exec_batch(sql, Socket.gethostname)
+        is_local_only ? self.exec_local_batch(sql, Cfg.hostname) : self.exec_batch(sql, Cfg.hostname)
         # DBIntf.transaction { |db| db.execute_batch(sql) }
         # self.log_exec("UPDATE plists SET idatemodified=#{Time.now.to_i} WHERE rplist=#{rplist};")
     end
@@ -168,7 +168,7 @@ module DBUtils
                     sql << "UPDATE tracks SET iplayed=#{track[1]}, ilastplayed=#{track[2]} WHERE rtrack=#{track[0]};\n"
                 end
                 Trace.debug("Repair: \n#{sql}")
-                self.exec_batch(sql, Socket.gethostname)
+                self.exec_batch(sql, Cfg.hostname)
                 Trace.debug("End tracks update.")
 
                 # Save last check only if repaired so can restart in admin mode
