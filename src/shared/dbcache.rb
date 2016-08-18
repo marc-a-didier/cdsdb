@@ -115,9 +115,7 @@ module DBCache
             end
 
             def clear
-                # instance_variables.each { |cache| cache.clear } # Marche pas!!!???
-                [@artists, @records, @segments, @tracks, @audio,
-                @genres, @labels, @medias, @collections, @origins].each { |cache| cache.clear }
+                self.instance_variables.each { |sym| self.instance_variable_get(sym).clear }
                 Trace.dbc("ALL CACHES cleared")
             end
 
@@ -130,16 +128,9 @@ module DBCache
 
             def dump_infos
                 Trace.debug("--- Cache infos ---")
-                Trace.debug("Artist cache size=#{@artists.size}")
-                Trace.debug("Record cache size=#{@records.size}")
-                Trace.debug("Segment cache size=#{@segments.size}")
-                Trace.debug("Track cache size=#{@tracks.size}")
-                Trace.debug("Genre cache size=#{@genres.size}")
-                Trace.debug("Label cache size=#{@labels.size}")
-                Trace.debug("Media cache size=#{@medias.size}")
-                Trace.debug("Collection cache size=#{@collections.size}")
-                Trace.debug("Origin cache size=#{@origins.size}")
-                Trace.debug("Audio infos cache size=#{@audio.size}")
+                self.instance_variables.each do |sym|
+                    Trace.debug("#{sym} cache size=#{self.instance_variable_get(sym).size}")
+                end
             end
         end
     end
