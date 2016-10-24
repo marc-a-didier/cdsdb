@@ -13,7 +13,7 @@ module MusicClient
         self.record_start_time
         begin
             socket = TCPSocket.new(Cfg.server, Cfg.port)
-        rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT => ex
+        rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => ex
             puts "Connection error (#{ex.class} : #{ex})."
             GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate)
             GtkUtils.show_message("Can't connect to server #{Cfg.server} on port #{Cfg.port}.\n
@@ -128,6 +128,7 @@ module MusicClient
     #   IN : block data size
     #   IN : block data
     #   OUT: status (continue/cancel)
+    # IN : file mtime
     #
     def self.download_resource(network_task)
         return false unless socket = hand_shake("download resource")
@@ -182,7 +183,12 @@ module MusicClient
             end
         end
 
-        FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
+        if status == Cfg::STAT_CONTINUE
+            mtime = socket.gets.chomp.to_i
+            File.utime(mtime, mtime, file)
+        else
+            FileUtils.rm(file)
+        end
         close_connection(socket)
         network_task.task_owner.end_file_op(network_task.task_ref, status)
     end
@@ -215,6 +221,7 @@ module MusicClient
     #   OUT: block data
     #   OUT: status (continue/cancel)
     # OUT: '0' block size
+    # OUT: file mtime
     #
     def self.upload_resource(network_task)
         return false unless socket = hand_shake("upload resource")
@@ -223,6 +230,7 @@ module MusicClient
 
         file_size = File.size(network_task.resource_data)
 
+        mtime = 0
         socket.puts(network_task.resource_type.to_s)
         socket.puts(Cfg.relative_path(network_task.resource_type, network_task.resource_data))
         if file_size > 0
@@ -237,8 +245,12 @@ module MusicClient
                     socket.puts(status == Cfg::STAT_CONTINUE ? Cfg::MSG_CONTINUE : Cfg::MSG_CANCELLED)
                 end
             end
+            mtime = File.mtime(network_task.resource_data).to_i
         end
         socket.puts('0')
+
+        socket.puts(mtime.to_s) if status == Cfg::STAT_CONTINUE
+
         close_connection(socket)
         network_task.task_owner.end_file_op(network_task.task_ref, status)
     end

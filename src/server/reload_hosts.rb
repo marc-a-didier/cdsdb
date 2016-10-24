@@ -6,6 +6,7 @@ begin
     socket = TCPSocket.new('madAM1H', 32666)
 rescue Errno::ECONNREFUSED => ex
     puts "Connection error (#{ex.class} : #{ex})."
+    exit(1)
 end
 puts(socket.gets.chomp)
 socket.puts("reload hosts")

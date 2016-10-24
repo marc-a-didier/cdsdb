@@ -55,7 +55,7 @@ module Cfg
         M_TEXT     = 'text='
         M_CURR_FLD = 'current_folder='
 
-        CfgStorage = Struct.new(:remote, :server_mode, :admin, :config_dir,
+        CfgStorage = Struct.new(:remote, :admin, :config_dir,
                                 :server, :port, :tx_block_size, :sync_comms, :size_over_quality,
                                 :music_dir, :rsrc_dir,
                                 :trace_db_cache, :trace_image_cache, :trace_gst,
@@ -145,7 +145,6 @@ module Cfg
 
             @cfg_store.remote = false
             @cfg_store.admin  = false
-            @cfg_store.server_mode = false
         end
 
         def save
@@ -216,7 +215,7 @@ module Cfg
         end
 
         def last_integrity_check
-            # Stores the last date track date from logtracks on which the check log ntegrity
+            # Stores the last track date from logtracks on which the check log integrity
             # was made to restart from it rather than processing the whole db.
             # 1 is to skip never played tracks in check log
             return @cfg['last_integrity_check'] || 1
@@ -229,17 +228,13 @@ module Cfg
         def hostname
             return @cfg['hostname']
         end
-        
 
-        #
-        # Special cases for the server: db & log are forced to specific directories
-        #
         def database_dir
-            return @cfg_store.server_mode ? SERVER_RSRC_DIR+'db/' : dir(:db)
+            return dir(:db)
         end
 
         def log_file
-            return @cfg_store.server_mode ? SERVER_RSRC_DIR+LOG_FILE : rsrc_dir+LOG_FILE
+            return rsrc_dir+LOG_FILE
         end
     end
 end

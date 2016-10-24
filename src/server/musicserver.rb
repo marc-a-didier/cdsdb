@@ -29,7 +29,6 @@ require_relative '../shared/audiolink'
 class MusicServer
 
     def initialize
-        Cfg.server_mode = true
         Cfg.remote = false # On va pas cascader les serveurs...
 
         Thread.abort_on_exception = true
@@ -250,6 +249,7 @@ class MusicServer
     #   IN : data size
     #   IN : data block
     #   IN : status (continue/cancel)
+    # IN : file mtime
     # OUT: ---
     #
     def upload_resource(session, is_sync)
@@ -268,7 +268,13 @@ class MusicServer
                 end
             end
         end
-        FileUtils.rm(file) if status == Cfg::MSG_CANCELLED
+
+        if status == Cfg::MSG_CONTINUE
+            mtime = session.gets.chomp.to_i
+            File.utime(mtime, mtime, file)
+        else
+            FileUtils.rm(file)
+        end
         session.puts(Cfg::MSG_DONE) if is_sync
         Log.info("Received file #{file} [#{hostname(session)}]")
     end
@@ -290,6 +296,7 @@ class MusicServer
     #   OUT: data block
     #   IN : status (continue/cancel)
     # OUT: '0' block size
+    # OUT: file mtime
     #
     def download_resource(session, is_sync)
         # Get expected resource type to send
@@ -317,12 +324,13 @@ class MusicServer
         Cfg.size_over_quality = block_size < 0
         block_size = block_size.abs
 
+        mtime = 0
+        status = Cfg::MSG_CONTINUE
         if File.exists?(file)
             # Send the total file size to the client
             session.puts(File.size(file))
 
             # Loop sending blocks to client until complete or interrupted
-            status = Cfg::MSG_CONTINUE
             File.open(file, "r") do |f|
                 while (data = f.read(block_size)) && status == Cfg::MSG_CONTINUE
                     session.puts(data.size.to_s)
@@ -330,6 +338,10 @@ class MusicServer
                     status = session.gets.chomp
                 end
             end
+
+            # Get modification time of file
+            mtime = File.mtime(file).to_i
+
             Log.info("Sent file '#{file}' in #{block_size} bytes chunks [#{hostname(session)}]")
         else
             Log.info("Requested file '#{file}' not found [#{hostname(session)}]")
@@ -337,6 +349,8 @@ class MusicServer
 
         # Send 0 data size to client so it knows it's done
         session.puts('0')
+        # Send modification time
+        session.puts(mtime.to_s) if status == Cfg::MSG_CONTINUE
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 end

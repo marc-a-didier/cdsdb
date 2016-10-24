@@ -30,7 +30,7 @@ module Trace
         end
 
         def sql(msg)
-            self.trace.debug(SQL+msg) if !Cfg.server_mode && Cfg.trace_sql
+            self.trace.debug(SQL+msg) if Cfg.trace_sql
         end
 
         def dbc(msg)
