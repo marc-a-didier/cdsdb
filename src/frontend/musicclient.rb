@@ -36,7 +36,8 @@ module MusicClient
         socket = get_connection
         return nil unless socket
 
-        if socket.gets.chomp == Cfg::MSG_WELCOME
+        response = socket.gets.chomp
+        if response == Cfg::MSG_WELCOME
             # Server always first responds 'OK' if the method is supported
             socket.puts(msg+Cfg::SYNC_HDR+Cfg::SYNC_MODE[Cfg.sync_comms])
             response = socket.gets.chomp
@@ -44,9 +45,9 @@ module MusicClient
 
             return socket if response == Cfg::MSG_OK
         else
-            # If response is not OK, we're fucked... or it's a bad metod
-            # If were here, the remote mode is active. Deactivate it if fucked...
-            GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate) if response == Cfg::MSG_FUCKED
+            # If response is not WELCOME, we're FUCKED... and should deactivate client mode
+            Trace.net("[#{msg.magenta}] <-> [#{response.red.bold}]")
+            GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate)
         end
 
         socket.close
