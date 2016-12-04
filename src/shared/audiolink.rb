@@ -118,8 +118,8 @@ module Audio
             title = ''
             if @tags.nil?
                 title += track.iorder.to_s+'. ' unless track.iorder == 0 || !want_track_number
-                if want_segment_title
-                    title += segment.stitle+' - ' unless segment.stitle.empty?
+                if want_segment_title && !segment.stitle.empty?
+                    title += segment.stitle+' - '
                     title += track.isegorder.to_s+'. ' unless track.isegorder == 0
                 end
                 title += track.stitle

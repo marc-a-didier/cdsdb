@@ -66,7 +66,7 @@ module DBUtils
         sql = dblink.track.generate_update
 
         host = DBClasses::Host.new
-        host.add_new(:sname => hostname) unless host.select_by_field(:sname, hostname, :case_insensitive)
+        host.add_new(:sname => hostname) unless host.select_by_field(:sname, hostname)
 
         #DBClasses::LogTracks.new.add_new(:rtrack => dblink.track.rtrack,
         #                               :idateplayed => dblink.track.ilastplayed,

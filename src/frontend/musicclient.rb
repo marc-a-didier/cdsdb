@@ -14,10 +14,11 @@ module MusicClient
         begin
             socket = TCPSocket.new(Cfg.server, Cfg.port)
         rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => ex
-            puts "Connection error (#{ex.class} : #{ex})."
+            Trace.net("connection error [#{ex.class.to_s.red.bold}]")
+#             puts "Connection error (#{ex.class} : #{ex})."
             GtkUI[GtkIDs::MW_SERVER_ACTION].send(:activate)
-            GtkUtils.show_message("Can't connect to server #{Cfg.server} on port #{Cfg.port}.\n
-                                   Config reset to local browsing mode.", Gtk::MessageDialog::ERROR)
+#             GtkUtils.show_message("Can't connect to server #{Cfg.server} on port #{Cfg.port}.\n"+
+#                                   "Config reset to local browsing mode.", Gtk::MessageDialog::ERROR)
             return nil
         end
         return socket

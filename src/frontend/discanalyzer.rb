@@ -27,7 +27,7 @@ module DiscAnalyzer
         if ref.empty?
             klass[0] = 0
         else
-            unless klass.select_by_field("sname", ref, :case_insensitive)
+            unless klass.select_by_field("sname", ref)
                 klass[0] = klass.get_last_id+1
                 klass.sname = ref
                 f.puts(klass.generate_insert)
@@ -72,7 +72,7 @@ module DiscAnalyzer
         # Iterate through artists and add those who are missing in the db
         last_id = artists[artists.keys[0]].db_class.get_last_id+1
         artists.each do |name, struct|
-            unless struct.db_class.select_by_field("sname", name, :case_insensitive)
+            unless struct.db_class.select_by_field("sname", name)
                 struct.db_class.rartist = last_id
                 struct.db_class.sname = name
                 f.puts(struct.db_class.generate_insert)

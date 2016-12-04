@@ -14,8 +14,8 @@ class FilterWindow < TopWindow
     DEST_PLIST  = 0
     DEST_PQUEUE = 1
 
-    TITLES = { "genres" => "Genre", "origins" => "Country", "medias" => "Medium" } # "labels" => "Label"
-    COND_FIELDS = ["records.rgenre", "artists.rorigin", "records.rmedia"] # Fields to sort on
+    TITLES = { 'genres' => 'Genre', 'origins' => 'Country', 'medias' => 'Medium' } # "labels" => "Label"
+    COND_FIELDS = ['records.rgenre', 'artists.rorigin', 'records.rmedia'] # Fields to sort on
     EXP_FILEDS = [FLT_EXP_GENRES, FLT_EXP_ORIGINS, FLT_EXP_MEDIAS]
 
     def initialize(mc)
@@ -24,7 +24,7 @@ class FilterWindow < TopWindow
         GtkUI[FLT_BTN_APPLY].signal_connect(:clicked) {
             @mc.filter_receiver.set_filter(generate_filter, GtkUI[FLT_EXP_PLAYDATES].expanded?)
         }
-        GtkUI[FLT_BTN_CLEAR].signal_connect(:clicked) { @mc.filter_receiver.set_filter("", false) }
+        GtkUI[FLT_BTN_CLEAR].signal_connect(:clicked) { @mc.filter_receiver.set_filter('', false) }
         GtkUI[FLT_BTN_SAVE].signal_connect(:clicked)  { save_filter }
         GtkUI[FLT_BTN_PLGEN].signal_connect(:clicked) { generate_play_list(DEST_PLIST) }
         GtkUI[FLT_BTN_PQGEN].signal_connect(:clicked) { generate_play_list(DEST_PQUEUE) }
@@ -51,12 +51,12 @@ class FilterWindow < TopWindow
         edrenderer.editable = true
         edrenderer.signal_connect(:edited) { |widget, path, new_text| ftv_name_edited(widget, path, new_text) }
 
-        @ftv = GtkUI["flt_tv_dbase"]
+        @ftv = GtkUI['flt_tv_dbase']
         @ftv.model = Gtk::ListStore.new(Integer, String, String)
 
-        @ftv.append_column(Gtk::TreeViewColumn.new("Ref.", Gtk::CellRendererText.new(), :text => 0))
-        @ftv.append_column(Gtk::TreeViewColumn.new("Filter name", edrenderer, :text => 1))
-        @ftv.append_column(Gtk::TreeViewColumn.new("YAML", Gtk::CellRendererText.new(), :text => 2))
+        @ftv.append_column(Gtk::TreeViewColumn.new('Ref.', Gtk::CellRendererText.new(), :text => 0))
+        @ftv.append_column(Gtk::TreeViewColumn.new('Filter name', edrenderer, :text => 1))
+        @ftv.append_column(Gtk::TreeViewColumn.new('YAML', Gtk::CellRendererText.new(), :text => 2))
 #         @ftv.signal_connect(:button_press_event) { |widget, event| show_popup(widget, event, 1) }
         @ftv.model.set_sort_column_id(1, Gtk::SORT_ASCENDING)
         @ftv.columns[1].sort_indicator = Gtk::SORT_ASCENDING
@@ -70,7 +70,7 @@ class FilterWindow < TopWindow
     end
 
     def setup_tv(table_name)
-        tv = GtkUI["ftv_"+table_name]
+        tv = GtkUI['ftv_'+table_name]
         ls = Gtk::ListStore.new(TrueClass, String, Integer)
         tv.model = ls
 
@@ -82,7 +82,7 @@ class FilterWindow < TopWindow
         end
         srenderer = Gtk::CellRendererText.new()
 
-        tv.append_column(Gtk::TreeViewColumn.new("Include", grenderer, :active => 0))
+        tv.append_column(Gtk::TreeViewColumn.new('Include', grenderer, :active => 0))
         tv.append_column(Gtk::TreeViewColumn.new(TITLES[table_name], srenderer, :text => 1))
         DBIntf.execute("SELECT * FROM #{table_name};") do |row|
             iter = tv.model.append
@@ -156,7 +156,7 @@ class FilterWindow < TopWindow
     def generate_filter()
         is_for_charts = @mc.filter_receiver == @mc.charts
 
-        wc = ""
+        wc = ''
         if GtkUI[FLT_EXP_PCOUNT].expanded?
             min = GtkUI[FLT_SPIN_MINP].value.round
             max = GtkUI[FLT_SPIN_MAXP].value.round
@@ -177,10 +177,10 @@ class FilterWindow < TopWindow
             to_date   = GtkUI[FLT_ENTRY_TODATE].text.to_date
 #            to_date, from_date = from_date, to_date if to_date < from_date
 
-            wc += " AND (SELECT idateplayed FROM logtracks WHERE logtracks.rtrack=tracks.rtrack" unless is_for_charts
+            wc += ' AND (SELECT idateplayed FROM logtracks WHERE logtracks.rtrack=tracks.rtrack' unless is_for_charts
             wc += " AND logtracks.idateplayed >= #{from_date}" if from_date > 0
             wc += " AND logtracks.idateplayed <= #{to_date}" if to_date > 0
-            wc += ")" unless is_for_charts
+            wc += ')' unless is_for_charts
         end
 
 
@@ -195,25 +195,25 @@ class FilterWindow < TopWindow
 
         @tvs.each_with_index { |tv, i| wc += add_tv_clause(tv.model, COND_FIELDS[i]) if GtkUI[EXP_FILEDS[i]].expanded? }
 
-        wc += " " unless wc.empty?
+        wc += ' ' unless wc.empty?
 # puts wc
         return wc
     end
 
     def add_tv_clause(ls, cond_field)
-        wc = ""
+        wc = ''
         total = selected = 0
         ls.each { |model, path, iter| total += 1; selected += 1 if iter[0] }
         if selected > 0 && selected != total
-            cond = " IN ("
+            cond = ' IN ('
             if selected <= total/2
-                ls.each { |model, path, iter| cond += iter[2].to_s+"," if iter[0] }
+                ls.each { |model, path, iter| cond += iter[2].to_s+',' if iter[0] }
             else
-                cond = " NOT"+cond
-                ls.each { |model, path, iter| cond += iter[2].to_s+"," unless iter[0] }
+                cond = ' NOT'+cond
+                ls.each { |model, path, iter| cond += iter[2].to_s+',' unless iter[0] }
             end
-            cond[-1] = ")"
-            wc = " AND ("+cond_field+cond+")"
+            cond[-1] = ')'
+            wc = ' AND ('+cond_field+cond+')'
         end
         return wc
     end
@@ -231,13 +231,15 @@ class FilterWindow < TopWindow
 
         # This option is only available for play list/queue generation
         # so its not coded in the generate_filter method
-        wc += " ORDER BY tracks.ilastplayed" if GtkUI[FLT_CMB_SELECTBY].active == 3 # Oldest played tracks
+        wc += ' ORDER BY tracks.ilastplayed' if GtkUI[FLT_CMB_SELECTBY].active == 3 # Oldest played tracks
 
-        wc = " WHERE "+wc[5..-1]
-        sql = "SELECT tracks.rtrack FROM tracks " \
-              "INNER JOIN records ON tracks.rrecord=records.rrecord "+wc+";"
+        wc = ' WHERE '+wc[5..-1]
+        sql = %{SELECT tracks.rtrack FROM tracks
+                INNER JOIN segments ON segments.rsegment=tracks.rsegment
+                INNER JOIN records ON segments.rrecord=records.rrecord
+                INNER JOIN artists ON segments.rartist=artists.rartist #{wc};}
 
-        f = File.new(Cfg.rsrc_dir+"genpl.txt", "w")
+        f = File.new(Cfg.rsrc_dir+'genpl.txt', 'w')
         f.puts("SQL: #{sql}\n\n")
 
         max_played = 0
@@ -256,7 +258,7 @@ class FilterWindow < TopWindow
 
         # Filter was too restrictive, no match, exit silently
         if tracks.size == 0
-            f.puts("No tracks found to match the filter.")
+            f.puts('No tracks found to match the filter.')
             f.close
             return
         end
@@ -330,9 +332,9 @@ class FilterWindow < TopWindow
 
         links = []
         if destination == DEST_PLIST
-            rplist = DBUtils::get_last_id("plist")+1
+            rplist = DBUtils::get_last_id('plist')+1
             DBIntf.execute("INSERT INTO plists VALUES (#{rplist}, 'Generated', 1, #{Time.now.to_i}, #{Time.now.to_i});")
-            rpltrack = DBUtils::get_last_id("pltrack")+1
+            rpltrack = DBUtils::get_last_id('pltrack')+1
         end
 
         tracks.each_with_index do |track, i|
