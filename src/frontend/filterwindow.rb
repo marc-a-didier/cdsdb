@@ -148,7 +148,7 @@ class FilterWindow < TopWindow
         GtkUI.load_window(DLG_DATE_SELECTOR)
         GtkUI[DATED_CALENDAR].signal_connect(:day_selected_double_click) { GtkUI[DATED_BTN_OK].send(:clicked) }
         if GtkUI[DLG_DATE_SELECTOR].run == Gtk::Dialog::RESPONSE_OK
-            control.text = GtkUI[DATED_CALENDAR].date.map { |d| d.to_s }.join('-')
+            control.text = GtkUI[DATED_CALENDAR].date.map(&:to_s).join('-')
         end
         GtkUI[DLG_DATE_SELECTOR].destroy
     end
@@ -225,7 +225,7 @@ class FilterWindow < TopWindow
         wc = generate_filter
 
         if wc.empty?
-            GtkUtils.how_message("Can't generate a play list from the current criteria", Gtk::MessageDialog::ERROR)
+            GtkUtils.show_message("Can't generate a play list from the current criteria", Gtk::MessageDialog::ERROR)
             return
         end
 

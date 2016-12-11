@@ -46,15 +46,15 @@ module DBClasses
         end
 
         def generate_insert
-            return "INSERT INTO #{tbl_name} VALUES (#{self.map { |value| value.to_sql }.join(',')});"
+            return "INSERT INTO #{tbl_name} VALUES (#{self.map(&:to_sql).join(',')});"
         end
 
         def generate_update
             old = self.clone.sql_load
-            sql = "UPDATE #{tbl_name} SET "
-            self.each_with_index { |value, i| sql += self.members[i].to_s+'='+value.to_sql+',' if value != old[i] }
-            return sql[-1] == ' ' ? '' : sql[0..-2]+' '+generate_where_on_pk+';'
+            sql = self.size.times.select { |i| self[i] != old[i] }.map { |i| self.members[i].to_s+'='+self[i].to_sql }.join(',')
+            return sql.empty? ? '' : "UPDATE #{tbl_name} SET "+sql+' '+generate_where_on_pk+';'
         end
+
 
         # Set class attributes from a full sqlite3 row
         def load_from_row(row)
