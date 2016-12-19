@@ -103,10 +103,10 @@ module DBClasses
         end
 
         def select_by_field(field, value, opts = { :case_sensitive => true })
-            if opts[:case_insensitive]
-                row = DBIntf.get_first_row("SELECT * FROM #{tbl_name} WHERE LOWER(#{field})=LOWER(#{value.to_sql});")
-            else
+            if opts[:case_sensitive]
                 row = DBIntf.get_first_row("SELECT * FROM #{tbl_name} WHERE #{field}=#{value.to_sql};")
+            else
+                row = DBIntf.get_first_row("SELECT * FROM #{tbl_name} WHERE LOWER(#{field})=LOWER(#{value.to_sql});")
             end
             row.nil? ? reset : load_from_row(row)
             return valid?
