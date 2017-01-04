@@ -60,17 +60,13 @@ module DBUtils
 
         hostname = Cfg.hostname
 
-        dblink.track.iplayed += 1
         dblink.track.ilastplayed = Time.now.to_i
-        #dblink.track.sql_update
-        sql = dblink.track.generate_update
+        sql = dblink.track.generate_inc_update
+        dblink.track.iplayed += 1
 
         host = DBClasses::Host.new
         host.add_new(:sname => hostname) unless host.select_by_field(:sname, hostname)
 
-        #DBClasses::LogTracks.new.add_new(:rtrack => dblink.track.rtrack,
-        #                               :idateplayed => dblink.track.ilastplayed,
-        #                               :rhost => host.rhost)
         sql += DBClasses::LogTracks.new(:rtrack => dblink.track.rtrack,
                                         :idateplayed => dblink.track.ilastplayed,
                                         :rhost => host.rhost).generate_insert

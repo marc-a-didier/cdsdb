@@ -52,7 +52,7 @@ module DBClasses
         def generate_update
             old = self.clone.sql_load
             sql = self.size.times.select { |i| self[i] != old[i] }.map { |i| self.members[i].to_s+'='+self[i].to_sql }.join(',')
-            return sql.empty? ? '' : "UPDATE #{tbl_name} SET "+sql+' '+generate_where_on_pk+';'
+            return sql.empty? ? '' : "UPDATE #{tbl_name} SET #{sql} #{generate_where_on_pk};"
         end
 
 
@@ -224,6 +224,13 @@ module DBClasses
             self.iorder = self.iorder.nil? ? 1 : self.iorder.to_i
             self.stitle = 'New track'
             return sql_add
+        end
+
+        def generate_inc_update
+            old = self.clone.sql_load
+            sql = self.size.times.select { |i| self[i] != old[i] }.map { |i| self.members[i].to_s+'='+self[i].to_sql }.join(',')
+            sql = 'iplayed=iplayed+1,'+sql
+            return "UPDATE #{tbl_name} SET #{sql} #{generate_where_on_pk};"
         end
 
         # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
