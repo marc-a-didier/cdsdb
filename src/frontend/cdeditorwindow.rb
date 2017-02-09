@@ -107,7 +107,7 @@ class CDEditorWindow
                 track, artist, title = File.basename(entry).split(' - ')
             end
             iter = @tv.model.get_iter(path.to_s)
-            iter[1] = title.sub(/\..*$/, '')
+            iter[1] = title.sub(/\.[^.]*$/, '')
             iter[3] = artist
             path += 1
         end
