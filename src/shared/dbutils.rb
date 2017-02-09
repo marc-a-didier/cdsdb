@@ -30,16 +30,16 @@ module DBUtils
         Thread.new { MusicClient.exec_sql(sql) } if Cfg.remote?
     end
 
-    def self.exec_local_batch(sql, host)
+    def self.exec_local_batch(sql, host, log = true)
         Trace.sql(sql)
         DBIntf.transaction do |db|
-            Log.info(sql+" [#{host}]")
+            Log.info(sql+" [#{host}]") if log
             db.execute_batch(sql)
         end
     end
 
-    def self.exec_batch(sql, host)
-        self.exec_local_batch(sql, host)
+    def self.exec_batch(sql, host, log = true)
+        self.exec_local_batch(sql, host, log)
         MusicClient.exec_batch(sql) if Cfg.remote?
         # May be dangerous to spawn a thread... if request made on the record being inserted,
         # don't know what happen...
@@ -71,7 +71,7 @@ module DBUtils
                                         :idateplayed => dblink.track.ilastplayed,
                                         :rhost => host.rhost).generate_insert
 
-        self.exec_batch(sql, hostname)
+        self.exec_batch(sql, hostname, false)
     end
 
     def self.update_record_playtime(rrecord)
