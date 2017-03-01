@@ -36,6 +36,7 @@ module DiscAnalyzer
         return klass
     end
 
+    # TODO: get last ids of tables from server!!!
     def self.analyze(disc, f)
         genre = self.get_reference(DBClasses::Genre.new, disc.genre, f)
         label = self.get_reference(DBClasses::Label.new, disc.label, f)
@@ -66,8 +67,9 @@ module DiscAnalyzer
         end
 
         # Keep a flag that say if the record is segmented or not
-        is_segmented = false
-        artists.each { |name, struct| is_segmented = true if struct.segments.size > 1 }
+#         is_segmented = false
+#         artists.each { |name, struct| is_segmented = true if struct.segments.size > 1 }
+        is_segmented = artists.find { |name, struct| struct.segments.size > 1 }
 
         # Iterate through artists and add those who are missing in the db
         last_id = artists[artists.keys[0]].db_class.get_last_id+1
