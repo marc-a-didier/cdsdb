@@ -157,6 +157,10 @@ module Cfg
             return @cfg_store.config_dir+PREFS_FILE
         end
 
+        def use_ssl?
+            return true
+        end
+        
         #
         # Helpers for Prefs module
         #
