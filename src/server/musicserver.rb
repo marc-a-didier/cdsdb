@@ -36,7 +36,7 @@ class MusicServer
         Log.info("Server started")
         Log.info("    Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}")
         Log.info("    SQLite3 #{`sqlite3 --version`.chomp}")
-        Log.info("    Database #{Cfg.db_version}")
+        Log.info("    Database #{DBIntf.db_version}")
         Log.info("Server listening on host #{Cfg.server} port #{Cfg.port}.")
 
         load_hosts
@@ -184,7 +184,7 @@ class MusicServer
     # OUT: string of db version
     #
     def get_db_version(session, is_sync)
-        session.puts(Cfg.db_version)
+        session.puts(DBIntf.db_version)
         session.puts(Cfg::MSG_DONE) if is_sync
     end
 
