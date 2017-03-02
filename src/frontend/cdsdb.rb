@@ -290,8 +290,6 @@ require './cddatafeeder'
 
 module Cdsdb
 
-    VERSION = "0.9.5"
-
     def self.run
         Cfg.admin = ARGV.detect { |arg| arg == "--admin" }
 

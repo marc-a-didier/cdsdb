@@ -25,6 +25,8 @@ end
 
 module Cfg
 
+    VERSION = "0.10.0"
+
     # Client/Server transmission block size
     TX_BLOCK_SIZE = 128*1024
     MSG_EOL       = 'EOL'

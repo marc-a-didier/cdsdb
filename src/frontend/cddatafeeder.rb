@@ -60,7 +60,7 @@ class CDDataFeeder
         MusicBrainz.configure do |c|
             # Application identity (required)
             c.app_name = "CDsDB"
-            c.app_version = "0.9.5"
+            c.app_version = Cfg::VERSION
             c.contact = "support@nowhere.com"
 
             # Cache config (optional)

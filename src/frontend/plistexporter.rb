@@ -15,7 +15,7 @@ module PListExporter
         xdoc = REXML::Document.new << REXML::XMLDecl.new("1.0", "UTF-8", "no")
 
         xdoc.add_element("playlist", {"version"=>"1", "xmlns"=>"http://xspf.org/ns/0/"})
-        xdoc.root.add_element("creator").text = "CDsDB #{Cdsdb::VERSION}"
+        xdoc.root.add_element("creator").text = "CDsDB #{Cfg::VERSION}"
         tracklist = xdoc.root.add_element("trackList")
 
         list_store.each do |model, path, iter|
