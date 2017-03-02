@@ -83,16 +83,12 @@ class String
 end
 
 
-class Fixnum
-    def to_sql
-        return self.to_s
-    end
+class Integer
+    alias :to_sql :to_s
 end
 
 class Float
-    def to_sql
-        return self.to_s
-    end
+    alias :to_sql :to_s
 end
 
 

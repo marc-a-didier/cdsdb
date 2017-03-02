@@ -364,7 +364,7 @@ class MainWindow < TopWindow
         value = Dialogs::DBSelector.new(:rgenre).run
         if value
             dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
-            Utils.tag_full_dir_to_genre(DBUtils.name_from_id(value, DBIntf::TBL_GENRES), dir) unless dir.empty?
+            Utils.tag_full_dir_to_genre(DBUtils.name_from_id(value, 'genre'), dir) unless dir.empty?
         end
     end
 
@@ -409,12 +409,14 @@ class MainWindow < TopWindow
             file = DBIntf.build_db_name
             File.unlink(file+'.back') if File.exists?(file+'.back')
             srv_db_version = MusicClient.get_server_db_version
-            Trace.debug("new db version=#{srv_db_version}")
+            Trace.debug("server db version=#{srv_db_version}")
             DBIntf.disconnect
-            if srv_db_version == Cfg.db_version
+            if srv_db_version == DBIntf.db_version
                 FileUtils.mv(file, file+'.back')
             else
-                Cfg.set_db_version(srv_db_version)
+                # Cfg.set_db_version(srv_db_version)
+                # Should warn or exit
+                raise 'DB version mismatch'
             end
             FileUtils.mv(Cfg.dir(:db)+network_task.resource_data, DBIntf.build_db_name)
             DBCache::Cache.clear

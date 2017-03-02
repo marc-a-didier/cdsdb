@@ -5,31 +5,14 @@
 
 module DBIntf
 
-    TBL_GENRES      = "genre"
-    TBL_COLLECTIONS = "collection"
-    TBL_LABELS      = "label"
-    TBL_MEDIAS      = "media"
-    TBL_ORIGINS     = "origin"
-
-    TBL_ARTISTS     = "artist"
-    TBL_RECORDS     = "record"
-    TBL_SEGMENTS    = "segment"
-    TBL_TRACKS      = "track"
-
-    TBL_PLISTS      = "plist"
-    TBL_PLTRACKS    = "pltrack"
-
-
     NULL_CDDBID         = 0
 
     MEDIA_CD            = 0
     MEDIA_AUDIO_FILE    = 5
 
-    SQL_NUM_TYPES = ["INTEGER", "SMALLINT"]
-
     class << self
         def connection
-            @db ||= SQLite3::Database.new(self.build_db_name)
+            @db ||= SQLite3::Database.new(build_db_name)
         end
 
         def method_missing(method, *args, &block)
@@ -42,8 +25,18 @@ module DBIntf
         end
 
         # Build the database name from the config resource(client)/database(server) dir and the db version
-        def build_db_name(db_version = Cfg.db_version)
-            return Cfg.database_dir+"cds"+db_version+".db"
+        def build_db_name
+            return Cfg.database_dir+"cds.db"
+        end
+
+        def load_db_version
+            @db_version = self.connection.get_first_value('SELECT * FROM dbversion')
+        end
+
+        def db_version
+            return @db_version
         end
     end
 end
+
+DBIntf.load_db_version

@@ -93,8 +93,7 @@ module Cfg
         LOG_FILE        = 'cdsdb.log'
 
 
-        DEF_CONFIG = {  'dbversion' => '6.2',
-                        WINDOWS => {
+        DEF_CONFIG = {  WINDOWS => {
                             PREFS_DIALOG => {
                                 PREFS_CB_SHOWNOTIFICATIONS => { M_ACTIVE => true },
                                 PREFS_ENTRY_NOTIFDURATION  => { M_TEXT => '4' },
@@ -206,13 +205,13 @@ module Cfg
             return file.sub(dir(resource_type), '')
         end
 
-        def db_version
-            return @cfg['dbversion']
-        end
-
-        def set_db_version(version)
-            @cfg['dbversion'] = version
-        end
+#         def db_version
+#             return @cfg['dbversion']
+#         end
+#
+#         def set_db_version(version)
+#             @cfg['dbversion'] = version
+#         end
 
         def last_integrity_check
             # Stores the last track date from logtracks on which the check log integrity
