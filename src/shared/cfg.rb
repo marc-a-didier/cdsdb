@@ -160,7 +160,7 @@ module Cfg
         def use_ssl?
             return true
         end
-        
+
         #
         # Helpers for Prefs module
         #
@@ -210,14 +210,6 @@ module Cfg
         def relative_path(resource_type, file)
             return file.sub(dir(resource_type), '')
         end
-
-#         def db_version
-#             return @cfg['dbversion']
-#         end
-#
-#         def set_db_version(version)
-#             @cfg['dbversion'] = version
-#         end
 
         def last_integrity_check
             # Stores the last track date from logtracks on which the check log integrity

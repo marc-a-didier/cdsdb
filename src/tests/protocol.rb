@@ -93,7 +93,8 @@ module Epsdf
             return Response.new(status, msg, Time.now.to_f-started).to_h.to_json
         end
 
-        def json_header(source, options = DEF_OPTIONS)
+        def json_header(type, options = DEF_OPTIONS)
+            source = { 'type' => type, 'hostname' => Cfg.hostname }
             return Header.new(source, options, VERSION).to_h.to_json
         end
     end
@@ -107,6 +108,10 @@ module Epsdf
         def initialize(session = nil)
             @session = session
             @header  = nil
+        end
+
+        def hostname
+            return @header['source']['hostname']
         end
 
         def send_stream(json_data)
@@ -251,7 +256,7 @@ module Epsdf
             else
                 FileUtils.rm(file)
             end
-            #  Log.info("Received file #{file} [#{hostname(session)}]")
+            #  Log.info("Received file #{file} [#{streamer.hostname}]")
             return status == STAT_CONT
         end
     end
@@ -263,6 +268,7 @@ module Epsdf
         def new_connection
             begin
                 socket = TCPSocket.new('127.0.0.1', 32667) #(Cfg.server, Cfg.port)
+#                 socket = TCPSocket.new('192.168.1.32', 32667) #(Cfg.server, Cfg.port)
                 if Cfg.use_ssl?
                     expected_cert = OpenSSL::X509::Certificate.new(File.open(SSL_CERT))
                     ssl = OpenSSL::SSL::SSLSocket.new(socket)
@@ -326,24 +332,11 @@ module Epsdf
 
         include Protocol
 
-        def ip_address(session)
-            return session.peeraddr[3]
-        end
-
-        def hostname(session)
-            if Cfg.use_ssl?
-                p session.peeraddr
-                return session.peeraddr[2]
-            else
-                return session.peeraddr(:hostname)[2]
-            end
-        end
-
         def load_hosts
             # A bit of security... in case of plain text protocol
-            @@allowed_hosts = IO.read('/etc/hosts').split("\n").map { |line| line.match(/^[0-9]/) ? line.split[0] : nil }.compact
+            @@allowed_hosts = IO.read('/etc/hosts').split("\n").map { |line| line.match(/^[0-9]/) ? [line.split[0], line.split[1]] : nil }.compact.to_h
             # Log.info("Allowed hosts: #{@@allowed_hosts.join(' ')}")
-            puts("Allowed hosts: #{@@allowed_hosts.join(' ')}")
+            puts("Allowed hosts: #{@@allowed_hosts.keys.join(' ')}")
         end
 
         def listen
@@ -365,9 +358,8 @@ module Epsdf
                     begin
                         Thread.start(server.accept) do |session|
                             started = Time.now.to_f
-                            p hostname(session)
-                            if !Cfg.use_ssl? && !@@allowed_hosts.include?(ip_address(session))
-                                # Log.warn("Unlisted ip, connection refused from #{ip_address(session)}")
+                            if !Cfg.use_ssl? && !@@allowed_hosts[session.peeraddr[3]]
+                                # Log.warn("Unlisted ip, connection refused from #{session.peeraddr[3]}")
                                 session.puts(MSG_FUCKED)
                                 sleep(1)
                                 session.close
@@ -526,7 +518,7 @@ class TestServer
     include Epsdf::Server
 
     def reload_hosts(streamer, request)
-        # Log.info("Reloading hosts, request from #{hostname(session)}")
+        # Log.info("Reloading hosts, request from #{streamer.hostname}")
         # load_hosts
         return Epsdf::Protocol::MSG_OK
     end
@@ -551,12 +543,12 @@ class TestServer
     end
 
     def exec_sql(streamer, request)
-        # DBUtils.log_exec(request['params']['sql'], hostname(streamer.session))
+        # DBUtils.log_exec(request['params']['sql'], streamer.hostname)
         return Epsdf::Protocol::MSG_OK
     end
 
     def exec_batch(streamer, request)
-        # DBUtils.exec_batch(request['params']['sql'], hostname(streamer.session))
+        # DBUtils.exec_batch(request['params']['sql'], streamer.hostname)
         return Epsdf::Protocol::MSG_OK
     end
 
@@ -570,11 +562,11 @@ class TestServer
         file_name  = audio_link.setup_audio_file.file
         if file_name
             audio_link.track.stitle = request['params']['new_title']
-            # Log.info("Track renaming [#{hostname(session)}]")
+            # Log.info("Track renaming [#{streamer.hostname}]")
             # audio_link.tag_and_move_file(file_name)
             return Epsdf::Protocol::MSG_OK
         else
-            # Log.info("Attempt to rename inexisting track to #{request['params']['new_title']} [#{hostname(session)}]")
+            # Log.info("Attempt to rename inexisting track to #{request['params']['new_title']} [#{streamer.hostname}]")
         end
         return Epsdf::Protocol::MSG_ERROR
     end
@@ -606,14 +598,14 @@ class TestServer
         if msg['file_size'] != 0
             streamer.send_stream(json_response(Epsdf::Protocol::MSG_OK, msg, Time.now.to_f))
             if send_resource(streamer, msg)
-                # Log.info("Sent file '#{file}' in #{block_size} bytes chunks [#{hostname(session)}]")
+                # Log.info("Sent file '#{file}' in #{block_size} bytes chunks [#{streamer.hostname}]")
                 return 'Download done'
             else
-                # Log.info("Sent file '#{file}' in #{block_size} bytes chunks [#{hostname(session)}]")
+                # Log.info("Sent file '#{file}' in #{block_size} bytes chunks [#{streamer.hostname}]")
                 return 'Download aborted'
             end
         else
-            # Log.info("Requested file '#{file}' not found [#{hostname(session)}]")
+            # Log.info("Requested file '#{file}' not found [#{streamer.hostname}]")
             return 'Resource not found'
         end
     end
@@ -622,10 +614,10 @@ class TestServer
         setup_resource_from_msg(request['params'])
         streamer.send_stream(json_response(Epsdf::Protocol::MSG_OK, Epsdf::Protocol::MSG_OK, Time.now.to_f))
         if receive_resource(streamer, request['params'])
-            # Log.info("Received file #{file} [#{hostname(session)}]")
+            # Log.info("Received file #{file} [#{streamer.hostname}]")
             return 'Upload done'
         else
-            # Log.info("Received file #{file} [#{hostname(session)}]")
+            # Log.info("Received file #{file} [#{streamer.hostname}]")
             return 'Upload aborted'
         end
     end
