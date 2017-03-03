@@ -228,8 +228,7 @@ module Epsdf
         end
 
         def receive_resource(streamer, msg, &block)
-            # file = Cfg.dir(msg['type'].to_sym)+msg['file_name']
-            file = '/tmp/'+msg['file_name']
+            file = Cfg.dir(msg['type'].to_sym)+msg['file_name']
 
             FileUtils.mkpath(File.dirname(file)) unless Dir.exists?(File.dirname(file))
 
@@ -239,7 +238,7 @@ module Epsdf
             else
                 FileUtils.rm(file)
             end
-            Log.info("Received file '#{file}' in #{msg['block_size']} bytes chunks [#{streamer.hostname}]")
+            Log.info("Received file '#{msg['file_name']}' in #{msg['block_size']} bytes chunks [#{streamer.hostname}]")
             return status == STAT_CONT
         end
     end
@@ -265,16 +264,17 @@ module Epsdf
                     @streamer.session = socket
                 end
 
-                if @streamer.session.gets.chomp == MSG_WELCOME
-                    Trace.net("[#{'Connect'.magenta}] <-> [#{MSG_WELCOME.green}]")
-                else
-                    Trace.net("[#{'Connect'.magenta}] <-> [#{MSG_FUCKED.red.bold}]")
+                msg = @streamer.session.gets.chomp
+                if msg != MSG_WELCOME
+                    Trace.net("[#{'Connect'.magenta}] <-> [#{msg.red.bold}]")
                     return nil
+                # else
+                #     Trace.net("[#{'Connect'.magenta}] <-> [#{msg.green}]")
                 end
                 @streamer.hand_shake
                 # puts(@streamer.header)
             rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError, OpenSSL::X509::CertificateError => ex
-                Trace.net("connection error [#{ex.class.to_s.red.bold}]")
+                Trace.net("Connection: [#{ex.class.to_s.red.bold}]")
                 return nil
             end
             return true
@@ -288,7 +288,7 @@ module Epsdf
                     # puts(response)
                     return response
                 rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => ex
-                    Trace.net("connection error [#{ex.class.to_s.red.bold}]")
+                    Trace.net("Connection: [#{ex.class.to_s.red.bold}]")
                 end
             end
             return nil
@@ -354,6 +354,7 @@ module Epsdf
                             streamer.session.puts(json_header(SERVER, streamer.header['options']))
 
                             request = streamer.parse_request
+                            request['started'] = started
                             # puts(request)
 
                             meth = request['action'].gsub(/ /, '_').to_sym
@@ -369,9 +370,9 @@ module Epsdf
                             sleep(1)
                             session.close
                         end
-                    rescue OpenSSL::SSL::SSLError => ex
+                    rescue Errno::ECONNRESET, OpenSSL::SSL::SSLError => ex
                         # Trace.net("SSL: [#{ex.class.to_s.red.bold}]")
-                        Log.warrn("SSL: #{ex.class.to_s}")
+                        Log.warrn("Connection: #{ex.class.to_s}")
                     end
                 end
             rescue Interrupt

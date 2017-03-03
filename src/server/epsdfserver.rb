@@ -129,7 +129,7 @@ class EpsdfServer
         msg = setup_file_properties_msg(request['params'])
 
         if msg['file_size'] != 0
-            streamer.send_stream(json_response(Epsdf::Protocol::MSG_OK, msg, Time.now.to_f))
+            streamer.send_stream(json_response(Epsdf::Protocol::MSG_OK, msg, request['started']))
             if send_resource(streamer, msg)
                 return 'Download done'
             else
@@ -143,7 +143,7 @@ class EpsdfServer
 
     def upload_resource(streamer, request)
         setup_resource_from_msg(request['params'])
-        streamer.send_stream(json_response(Epsdf::Protocol::MSG_OK, Epsdf::Protocol::MSG_OK, Time.now.to_f))
+        streamer.send_stream(json_response(Epsdf::Protocol::MSG_OK, Epsdf::Protocol::MSG_OK, request['started']))
         if receive_resource(streamer, request['params'])
             return 'Upload done'
         else
