@@ -84,7 +84,7 @@ module PlayerIntf
                     else
                         # If available on server and max downlaods not reached, start a task
                         if downloads_count < max_downloads && iter[link_index].available_on_server?
-                            iter[link_index].get_remote_audio_file(TasksWindow::NetworkTask.new(:download, :track, iter[link_index], self), @mc.tasks)
+                            iter[link_index].get_remote_audio_file(Epsdf::NetworkTask.new(:download, :track, iter[link_index], self), @mc.tasks)
                             downloads_count += 1
                         end
                     end
@@ -138,7 +138,7 @@ module PlayerIntf
                 end
 
                 tv.set_cursor(iter.path, nil, false)
-                if iter[link_index].get_audio_file(TasksWindow::NetworkTask.new(:download, :track, iter[link_index], self), @mc.tasks) == Audio::Status::NOT_FOUND
+                if iter[link_index].get_audio_file(Epsdf::NetworkTask.new(:download, :track, iter[link_index], self), @mc.tasks) == Audio::Status::NOT_FOUND
                     @track_ref += 1
                 else
                     break

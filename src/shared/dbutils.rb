@@ -22,12 +22,12 @@ module DBUtils
     #
     def self.client_sql(sql)
         self.log_exec(sql)
-        MusicClient.exec_sql(sql) if Cfg.remote?
+        EpsdfClient.exec_sql(sql) if Cfg.remote?
     end
 
     def self.threaded_client_sql(sql)
         self.log_exec(sql)
-        Thread.new { MusicClient.exec_sql(sql) } if Cfg.remote?
+        Thread.new { EpsdfClient.exec_sql(sql) } if Cfg.remote?
     end
 
     def self.exec_local_batch(sql, host, log = true)
@@ -40,10 +40,10 @@ module DBUtils
 
     def self.exec_batch(sql, host, log = true)
         self.exec_local_batch(sql, host, log)
-        MusicClient.exec_batch(sql) if Cfg.remote?
+        EpsdfClient.exec_batch(sql) if Cfg.remote?
         # May be dangerous to spawn a thread... if request made on the record being inserted,
         # don't know what happen...
-#         Thread.new { MusicClient.exec_batch(sql) } if Cfg.remote?
+#         Thread.new { EpsdfClient.exec_batch(sql) } if Cfg.remote?
     end
 
     def self.get_last_id(short_tbl_name)

@@ -1,14 +1,6 @@
 
 class TasksWindow < TopWindow
 
-    NetworkTask = Struct.new(:action,         # action type (download/upload)
-                             :resource_type,  # type of file to work with
-                             :resource_data,  # may be a file name or a cache link
-                             :resource_owner, # call resource_owner.task_completed at the end
-                             :task_owner,
-                             :task_ref
-                            )
-
     STATUS = ["Waiting", "Downloading...", "Done", "Uploading...", "Running...", "Cancelled"]
 
     STAT_WAITING    = 0
@@ -99,7 +91,7 @@ class TasksWindow < TopWindow
                     @tv.set_cursor(iter.path, nil, false)
                     iter[COL_STATUS] = iter[COL_TASK_TYPE].to_sym == :upload ? STAT_UPLOAD : STAT_DOWNLOAD
 
-                    MusicClient.send(iter[COL_TASK_TYPE].to_sym == :upload ? :upload_resource : :download_resource, iter[COL_TASK])
+                    EpsdfClient.send(iter[COL_TASK_TYPE].to_sym == :upload ? :upload_resource : :download_resource, iter[COL_TASK])
                 end
             end
         end
@@ -167,7 +159,7 @@ class TasksWindow < TopWindow
 
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i
-        return @has_cancelled ? Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
+        return @has_cancelled ? Epsdf::Protocol::STAT_ABRT : Epsdf::Protocol::STAT_CONT #Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
     end
 
     def end_file_op(iter, status)

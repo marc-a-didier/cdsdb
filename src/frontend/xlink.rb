@@ -61,7 +61,7 @@ module XIntf
 
         def available_on_server?
             if audio_status == Audio::Status::NOT_FOUND && Cfg.remote?
-                if MusicClient.check_multiple_audio(track.rtrack.to_s)[0].to_i != Audio::Status::NOT_FOUND
+                if EpsdfClient.check_multiple_audio([track.rtrack])[0] != Audio::Status::NOT_FOUND
                     set_audio_status(Audio::Status::ON_SERVER)
                 end
             end

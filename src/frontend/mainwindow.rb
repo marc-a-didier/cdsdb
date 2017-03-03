@@ -194,7 +194,7 @@ class MainWindow < TopWindow
         @img_popup = Gtk::Menu.new
         item = Gtk::MenuItem.new('Upload to server', false)
         item.signal_connect(:activate) { |widget|
-            @mc.tasks.new_task(TasksWindow::NetworkTask.new(:upload, :covers, @mc.track_xlink.cover_file_name, nil))
+            @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :covers, @mc.track_xlink.cover_file_name, nil))
         }
         @img_popup.append(item)
         @img_popup.show_all
@@ -400,15 +400,15 @@ class MainWindow < TopWindow
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
-        file = File.basename(DBIntf.build_db_name(MusicClient.get_server_db_version))
-        @mc.tasks.new_task(TasksWindow::NetworkTask.new(:download, :db, file, self))
+        file = File.basename(DBIntf.build_db_name)
+        @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, :db, file, self))
     end
 
     def task_completed(network_task)
         if network_task.resource_type == :db
             file = DBIntf.build_db_name
             File.unlink(file+'.back') if File.exists?(file+'.back')
-            srv_db_version = MusicClient.get_server_db_version
+            srv_db_version = EpsdfClient.get_server_db_version
             Trace.debug("server db version=#{srv_db_version}")
             DBIntf.disconnect
             if srv_db_version == DBIntf.db_version
@@ -427,13 +427,13 @@ class MainWindow < TopWindow
 
     def on_update_resources
         [:covers, :flags, :icons].each do |resource_type|
-            MusicClient.resources_to_update(resource_type).each do |resource|
-                @mc.tasks.new_task(TasksWindow::NetworkTask.new(:download, resource_type, resource, self))
+            EpsdfClient.resources_to_update(resource_type).each do |resource|
+                @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, resource_type, resource, self))
             end
         end if Cfg.remote?
     end
 
     def on_update_sources
-        # MusicClient.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
+        # EpsdfClient.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
     end
 end

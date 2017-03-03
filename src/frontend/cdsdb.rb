@@ -40,6 +40,7 @@ require '../shared/dbcachelink'
 require '../shared/utils'
 require '../shared/dbutils'
 require '../shared/audiolink'
+require '../shared/epsdf'
 
 require './gstplayer'
 # require './gstplayer_g1.0'
@@ -78,7 +79,7 @@ require './searchdialog'
 require './chartswindow'
 require './historydialog'
 
-require './musicclient'
+require './epsdfclient'
 
 require './taskswindow'
 

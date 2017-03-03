@@ -416,7 +416,7 @@ class PListsWindow < TopWindow
         return if @tvpl.selection.selected.nil?
         DBUtils.renumber_plist(@current_pl.rplist, local?)
         # DBUtils.renumber_play_list(@current_pl.rplist)
-        # MusicClient.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
+        # EpsdfClient.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
     end
 
     def enqueue_track
