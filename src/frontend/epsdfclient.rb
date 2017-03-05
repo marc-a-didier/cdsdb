@@ -37,25 +37,25 @@ module EpsdfClient
         end
 
         def exec_sql(sql)
-            send_simple_request('exec sql', { 'sql' => sql, 'async' => 1 }) do |response|
+            send_simple_request('exec sql', { 'sql' => sql, 'async' => Cfg.sync_comms? }) do |response|
                 response['msg']
             end
         end
 
         def exec_batch(sql)
-            send_simple_request('exec batch', { 'sql' => sql, 'async' => 1 }) do |response|
+            send_simple_request('exec batch', { 'sql' => sql, 'async' => Cfg.sync_comms? }) do |response|
                 response['msg']
             end
         end
 
         def renumber_play_list(rplist)
-            send_simple_request('renumber play list', { 'plist' => rplist, 'async' => 1 }) do |response|
+            send_simple_request('renumber play list', { 'plist' => rplist, 'async' => Cfg.sync_comms? }) do |response|
                 response['msg']
             end
         end
 
         def rename_audio(rtrack, new_title)
-            send_simple_request('rename audio', { 'rtrack' => rtrack, 'new_title' => new_title, 'async' => 1 }) do |response|
+            send_simple_request('rename audio', { 'rtrack' => rtrack, 'new_title' => new_title, 'async' => Cfg.sync_comms? }) do |response|
                 response['msg']
             end
         end

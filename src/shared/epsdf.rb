@@ -283,7 +283,7 @@ module Epsdf
         def post_request(request)
             if new_connection
                 begin
-                    request.params['async'] = 0 unless request.params['async']
+                    request.params['async'] = false unless request.params['async']
                     response = @streamer.send_stream(request.to_h.to_json).parse_response
                     # puts(response)
                     return response
@@ -359,9 +359,9 @@ module Epsdf
 
                             meth = request['action'].gsub(/ /, '_').to_sym
                             if self.respond_to?(meth)
-                                streamer.send_stream(json_response(MSG_ASYNC_OK, ASYNC_PROCESSING, started)) if request['params']['async'] == ASYNC_REQ
+                                streamer.send_stream(json_response(MSG_ASYNC_OK, ASYNC_PROCESSING, started)) if request['params']['async']
                                 msg = self.send(meth, streamer, request)
-                                streamer.send_stream(json_response(MSG_OK, msg, started)) unless request['params']['async'] == ASYNC_REQ
+                                streamer.send_stream(json_response(MSG_OK, msg, started)) unless request['params']['async']
                             else
                                 Log.warn("Unknown request #{meth} received.")
                                 streamer.send_stream(json_response(MSG_ERROR, ERR_NO_METH, started))

@@ -5,6 +5,7 @@ module ConfigFields
     PREFS_ENTRY_SERVER          = 'prefs_entry_server'
     PREFS_ENTRY_PORT            = 'prefs_entry_port'
     PREFS_ENTRY_BLKSIZE         = 'prefs_entry_blksize'
+    PREFS_CB_USESSL             = 'prefs_cb_usessl'
     PREFS_CB_SYNCCOMMS          = 'prefs_cb_synccomms'
     PREFS_CB_SIZEOVERQUALITY    = 'prefs_cb_sizeoverquality'
     PREFS_FC_MUSICDIR           = 'prefs_fc_musicdir'
@@ -38,7 +39,8 @@ module Cfg
         M_CURR_FLD = 'current_folder='
 
         CfgStorage = Struct.new(:remote, :admin, :config_dir,
-                                :server, :port, :tx_block_size, :sync_comms, :size_over_quality,
+                                :server, :port, :tx_block_size,
+                                :use_ssl, :size_over_quality, :sync_comms,
                                 :music_dir, :rsrc_dir,
                                 :trace_db_cache, :trace_image_cache, :trace_gst,
                                 :trace_gstqueue, :trace_network, :trace_sql,
@@ -55,6 +57,7 @@ module Cfg
                 self.tx_block_size      = t[PREFS_ENTRY_BLKSIZE][M_TEXT].to_i
                 self.server             = t[PREFS_ENTRY_SERVER][M_TEXT]
                 self.port               = t[PREFS_ENTRY_PORT][M_TEXT].to_i
+                self.use_ssl            = t[PREFS_CB_USESSL][M_ACTIVE]
                 self.sync_comms         = t[PREFS_CB_SYNCCOMMS][M_ACTIVE]
                 self.size_over_quality  = t[PREFS_CB_SIZEOVERQUALITY][M_ACTIVE]
                 self.music_dir          = t[PREFS_FC_MUSICDIR][M_CURR_FLD]+'/'
@@ -85,6 +88,7 @@ module Cfg
                                 PREFS_ENTRY_SERVER         => { M_TEXT => 'madAM1H' },
                                 PREFS_ENTRY_PORT           => { M_TEXT => '32666' },
                                 PREFS_ENTRY_BLKSIZE        => { M_TEXT => '262144' },
+                                PREFS_CB_USESSL            => { M_ACTIVE => true  },
                                 PREFS_CB_SYNCCOMMS         => { M_ACTIVE => false },
                                 PREFS_CB_SIZEOVERQUALITY   => { M_ACTIVE => false },
                                 PREFS_CB_TRACEDBCACHE      => { M_ACTIVE => false },
@@ -142,7 +146,11 @@ module Cfg
         end
 
         def use_ssl?
-            return true
+            return @cfg_store.use_ssl
+        end
+
+        def sync_comms?
+            return @cfg_store.sync_comms
         end
 
         #
