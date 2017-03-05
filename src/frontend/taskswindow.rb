@@ -163,7 +163,7 @@ class TasksWindow < TopWindow
     end
 
     def end_file_op(iter, status)
-        if status == Cfg::STAT_CANCELLED && @has_cancelled
+        if !status && @has_cancelled
             @mutex.synchronize do
                 @tv.model.each { |model, path, iter| iter[COL_STATUS] = STAT_CANCELLED if in_downloads?(iter) }
             end

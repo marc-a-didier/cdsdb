@@ -27,26 +27,6 @@ module Cfg
 
     VERSION = "0.10.0"
 
-    # Client/Server transmission block size
-    TX_BLOCK_SIZE = 128*1024
-    MSG_EOL       = 'EOL'
-    FILE_INFO_SEP = '@:@'
-
-    MSG_CONTINUE   = 'CONTINUE'
-    MSG_CANCELLED  = 'CANCELLED'
-
-    MSG_OK         = 'OK'
-    MSG_DONE       = 'DONE'
-    MSG_ERROR      = 'NO_METHOD'
-    MSG_FUCKED     = 'CDsDB music server: Fucked up...'
-    MSG_WELCOME    = 'CDsDB music server: e pericoloso sporgersi dalla finestra!'
-
-    STAT_CONTINUE  = 1
-    STAT_CANCELLED = 0
-
-    SYNC_HDR  = '-'
-    SYNC_MODE = { false => '0', true => '1' }
-
     class << self
 
         include ConfigFields

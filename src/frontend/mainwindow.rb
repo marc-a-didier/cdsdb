@@ -405,24 +405,21 @@ class MainWindow < TopWindow
     end
 
     def task_completed(network_task)
-        if network_task.resource_type == :db
-            file = DBIntf.build_db_name
-            File.unlink(file+'.back') if File.exists?(file+'.back')
-            srv_db_version = EpsdfClient.get_server_db_version
-            Trace.debug("server db version=#{srv_db_version}")
-            DBIntf.disconnect
-            if srv_db_version == DBIntf.db_version
-                FileUtils.mv(file, file+'.back')
-            else
-                # Cfg.set_db_version(srv_db_version)
-                # Should warn or exit
-                raise 'DB version mismatch'
-            end
-            FileUtils.mv(Cfg.dir(:db)+network_task.resource_data, DBIntf.build_db_name)
-            DBCache::Cache.clear
-            @mc.reload_plists.reload_filters
-            set_window_title
+        file = DBIntf.build_db_name
+        File.unlink(file+'.back') if File.exists?(file+'.back')
+        srv_db_version = EpsdfClient.get_server_db_version
+        Trace.debug("server db version=#{srv_db_version}")
+        DBIntf.disconnect
+        if srv_db_version == DBIntf.db_version
+            FileUtils.mv(file, file+'.back')
+        else
+            # Should warn or exit
+            raise 'DB version mismatch'
         end
+        FileUtils.mv(Cfg.dir(:db)+network_task.resource_data, DBIntf.build_db_name)
+        DBCache::Cache.clear
+        @mc.reload_plists.reload_filters
+        set_window_title
     end
 
     def on_update_resources
