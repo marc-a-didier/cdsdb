@@ -542,7 +542,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkCheckButton" id="prefs_cb_synccomms">
+                              <object class="GtkCheckButton" id="prefs_cb_asynccomms">
                                 <property name="label" translatable="yes">Asynchronous comms</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>

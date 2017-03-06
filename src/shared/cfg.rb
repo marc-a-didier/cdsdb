@@ -73,7 +73,6 @@ module Cfg
         end
 
 
-        SERVER_RSRC_DIR = File.join(File.dirname(__FILE__), '../../')
         PREFS_FILE      = 'prefs.yml'
         LOG_FILE        = 'cdsdb.log'
 
@@ -138,7 +137,7 @@ module Cfg
 
         def save
             @cfg_store.reload(@cfg)
-            File.open(prefs_file, "w") { |file| file.puts(@cfg.to_yaml) }
+            IO.write(prefs_file, @cfg.to_yaml)
         end
 
         def prefs_file
