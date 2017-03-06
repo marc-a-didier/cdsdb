@@ -251,12 +251,12 @@ module Epsdf
             begin
                 socket = TCPSocket.new(Cfg.server, Cfg.port)
                 if Cfg.use_ssl?
-                    expected_cert = OpenSSL::X509::Certificate.new(File.open(SSL_CERT))
+                    expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
                     ssl = OpenSSL::SSL::SSLSocket.new(socket)
                     ssl.sync_close = true
                     ssl.connect
                     if ssl.peer_cert.to_s != expected_cert.to_s
-                        Trace.net("Unexpected certificate".red.bold)
+                        Trace.net('Unexpected certificate'.red.bold)
                         return nil
                     end
                     @streamer.session = ssl
@@ -325,8 +325,8 @@ module Epsdf
             tcp_server = TCPServer.new('0.0.0.0', Cfg.port)
             if Cfg.use_ssl?
                 ssl_context = OpenSSL::SSL::SSLContext.new
-                ssl_context.cert = OpenSSL::X509::Certificate.new(File.open(SSL_CERT))
-                ssl_context.key = OpenSSL::PKey::RSA.new(File.open(SSL_KEY))
+                ssl_context.cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
+                ssl_context.key = OpenSSL::PKey::RSA.new(IO.read(SSL_KEY))
                 ssl_server = OpenSSL::SSL::SSLServer.new(tcp_server, ssl_context)
                 server = ssl_server
             else
