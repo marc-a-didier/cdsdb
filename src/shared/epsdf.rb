@@ -45,7 +45,7 @@ module Epsdf
         STAT_ABRT      = 'ABRT'
 
         MSG_OK         = 'OK'
-        MSG_ASYNC_OK   = 'OK - ASYNC'
+        MSG_ASYNC_OK   = 'OK-ASYNC'
         MSG_ERROR      = 'Error'
         MSG_FUCKED     = 'Fucked up...'
         MSG_WELCOME    = 'E pericoloso sporgersi dalla finestra!'
@@ -65,6 +65,7 @@ module Epsdf
         SSL_KEY  = File.join(ENV['HOME'], '.ssh', 'cdsdb_key.pem')
         SSL_CERT = File.join(ENV['HOME'], '.ssh', 'cdsdb_cert.pem')
 
+        DOWNLOAD_EXT = '.dwl'
 
         Header   = Struct.new(:source, :options, :version)
         Request  = Struct.new(:action, :params)
@@ -213,7 +214,7 @@ module Epsdf
                 msg['rtrack'] = network_task.resource_data.track.rtrack
             else
                 msg['file_name'] = network_task.resource_data
-                network_task.resource_data += '.dwl' if network_task.resource_type == :db
+                network_task.resource_data += DOWNLOAD_EXT if network_task.resource_type == :db
             end
 
             msg['block_size'] = -Cfg.tx_block_size if network_task.resource_type == :track && Cfg.size_over_quality
@@ -229,6 +230,7 @@ module Epsdf
 
         def receive_resource(streamer, msg, &block)
             file = Cfg.dir(msg['type'].to_sym)+msg['file_name']
+            file += DOWNLOAD_EXT if msg['type'].to_sym == :db
 
             FileUtils.mkpath(File.dirname(file)) unless Dir.exists?(File.dirname(file))
 
@@ -299,7 +301,7 @@ module Epsdf
             if response = post_request(request)
                 result = yield(response) #if block_given?
                 Trace.net("[#{request['action'].magenta}] <-> [#{response['status'].green}]")
-                Trace.net("Latency: %8.6f - Server: %8.6f" % [Time.now.to_f-started, response['duration']])
+                Trace.net("L: %8.6f - S: %8.6f" % [Time.now.to_f-started, response['duration']])
                 @streamer.session.close
             end
             return result

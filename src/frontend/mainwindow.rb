@@ -351,7 +351,7 @@ class MainWindow < TopWindow
     def on_save_item
         # If there's no change the db is not updated so we can do it in batch
         # Segment is handled in record class
-        Trace.debug("*** save memos called")
+        Trace.debug('*** save memos called')
         [@art_browser.artlnk, @rec_browser.reclnk, @trk_browser.trklnk].each { |dblink| dblink.from_widgets }
     end
 
@@ -377,7 +377,7 @@ class MainWindow < TopWindow
         if event.button == 3 # right mouse button
             @img_popup.popup(nil, nil, event.button, event.time) if Cfg.admin
         else
-            dlg = Gtk::Dialog.new("Cover", nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
+            dlg = Gtk::Dialog.new('Cover', nil, Gtk::Dialog::MODAL, [Gtk::Stock::OK, Gtk::Dialog::RESPONSE_ACCEPT])
             dlg.vbox.add(Gtk::Image.new(cover_name))
             dlg.show_all
             dlg.run
@@ -400,23 +400,16 @@ class MainWindow < TopWindow
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
+        if EpsdfClient.get_server_db_version != DBIntf.db_version
+            GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
+            return
+        end
         file = File.basename(DBIntf.build_db_name)
         @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, :db, file, self))
     end
 
     def task_completed(network_task)
-        file = DBIntf.build_db_name
-        File.unlink(file+'.back') if File.exists?(file+'.back')
-        srv_db_version = EpsdfClient.get_server_db_version
-        Trace.debug("server db version=#{srv_db_version}")
-        DBIntf.disconnect
-        if srv_db_version == DBIntf.db_version
-            FileUtils.mv(file, file+'.back')
-        else
-            # Should warn or exit
-            raise 'DB version mismatch'
-        end
-        FileUtils.mv(Cfg.dir(:db)+network_task.resource_data, DBIntf.build_db_name)
+        DBIntf.swap_databases
         DBCache::Cache.clear
         @mc.reload_plists.reload_filters
         set_window_title
