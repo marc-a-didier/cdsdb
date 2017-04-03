@@ -139,11 +139,16 @@ module XIntf
                         next unless File.directory?(entry)
                         Dir[entry+'/*'].each do |file|
                             next if File.directory?(file)
-                            key =  't'+File.basename(file).gsub(File.extname(file), '')
+                            key = 't'+File.basename(file).gsub(File.extname(file), '')
                             @map[key] = ImageData.new(file.gsub(Cfg.covers_dir, ''), nil, nil)
                             Trace.imc("Key #{key} added, file=#{@map[key].file_name}")
                         end
                     end
+                end
+
+                def reload
+                    init
+                    preload_tracks_cover
                 end
 
                 def dump_infos

@@ -409,10 +409,16 @@ class MainWindow < TopWindow
     end
 
     def task_completed(network_task)
-        DBIntf.swap_databases
-        DBCache::Cache.clear
-        @mc.reload_plists.reload_filters
-        set_window_title
+        case network_task.resource_type
+            when :db
+                DBIntf.swap_databases
+                DBCache::Cache.clear
+                @mc.reload_plists.reload_filters
+                set_window_title
+
+            when :covers, :flags
+                XIntf::Image::Cache.reload
+        end
     end
 
     def on_update_resources
