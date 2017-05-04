@@ -516,7 +516,8 @@
                               <object class="GtkCheckButton" id="prefs_cb_usessl">
                                 <property name="label" translatable="yes">Use SSL</property>
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">False</property>
                                 <property name="receives_default">False</property>
                                 <property name="active">True</property>
                                 <property name="draw_indicator">True</property>

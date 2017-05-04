@@ -3610,6 +3610,14 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mm_tools_serverinfo">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Server info</property>
+                        <property name="use_underline">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem" id="mm_tools_sep1">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>

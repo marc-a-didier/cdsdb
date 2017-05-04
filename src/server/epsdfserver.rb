@@ -111,10 +111,10 @@ class EpsdfServer
     end
 
     def server_info(streamer, request)
-        return "CDsDB Server v#{Cfg::VERSION}n"+
+        return "CDsDB Server v#{Cfg::VERSION}\n"+
                "Ruby #{RUBY_VERSION}, #{RUBY_RELEASE_DATE}, #{RUBY_PLATFORM}\n"+
                "SQLite3 #{`sqlite3 --version`}"+
-               "Database v#{DBIntf.db_version}\n"
+               "Database v#{DBIntf.db_version}"
     end
 
     def download_resource(streamer, request)

@@ -167,6 +167,7 @@ module GtkIDs
     MM_TOOLS_EXPORTDB        = "mm_tools_exportdb"
     MM_TOOLS_GENREORDER      = "mm_tools_genreorder"
     MM_TOOLS_CACHEINFO       = "mm_tools_cacheinfo"
+    MM_TOOLS_SERVERINFO      = "mm_tools_serverinfo"
     MM_TOOLS_STATS           = "mm_tools_stats"
     MM_TOOLS_GRAPH           = "mm_tools_graph"
     MM_DBTOOLS_FULLCHECKLOG  = "mm_dbtools_fullchecklog"

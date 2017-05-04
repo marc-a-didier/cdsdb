@@ -153,6 +153,7 @@ class MainWindow < TopWindow
         GtkUI[MM_TOOLS_EXPORTDB].signal_connect(:activate)    { Utils.export_to_xml }
         GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
         GtkUI[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
+        GtkUI[MM_TOOLS_SERVERINFO].signal_connect(:activate)  { dump_serverinfo }
         GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
         GtkUI[MM_TOOLS_GRAPH].signal_connect(:activate)       { GraphStats.graph_period }
 
@@ -389,6 +390,14 @@ class MainWindow < TopWindow
     def dump_cacheinfo
         DBCache::Cache.dump_infos
         XIntf::Image::Cache.dump_infos
+    end
+
+    def dump_serverinfo
+        if Cfg.remote?
+            puts(EpsdfClient.server_info.bold)
+        else
+            puts('Not in connected mode!'.red.bold)
+        end
     end
 
     #
