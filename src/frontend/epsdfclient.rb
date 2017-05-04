@@ -84,8 +84,10 @@ module EpsdfClient
                     receive_resource(@streamer, response['msg']) do |curr_size|
                         network_task.task_owner.update_file_op(network_task.task_ref, curr_size, response['msg']['file_size'])
                     end
-                    status = @streamer.parse_response['status'] == Epsdf::Protocol::MSG_OK
+                    dresp = @streamer.parse_response
+                    status = dresp['status'] == Epsdf::Protocol::MSG_OK
                     network_task.task_owner.end_file_op(network_task.task_ref, status)
+                    Trace.net("<-[%s, %8.6f]" % [dresp['msg'].green, dresp['duration']])
                 end
             end
             status
@@ -98,8 +100,10 @@ module EpsdfClient
                 send_resource(@streamer, msg) do |curr_size|
                     network_task.task_owner.update_file_op(network_task.task_ref, curr_size, msg['file_size'])
                 end
-                status = @streamer.parse_response['status'] == Epsdf::Protocol::MSG_OK
+                uresp = @streamer.parse_response
+                status = uresp['status'] == Epsdf::Protocol::MSG_OK
                 network_task.task_owner.end_file_op(network_task.task_ref, status)
+                Trace.net("<-[%s, %8.6f]" % [uresp['msg'].green, uresp['duration']])
             end if msg['file_size'] != 0
             status
         end

@@ -107,13 +107,13 @@ module Cfg
         def load
             @cfg_store = CfgStorage.new
 
-            if ARGV[0]
-                @cfg_store.config_dir = ARGV[0]
-            else
+#             if ARGV[0]
+#                 @cfg_store.config_dir = ARGV[0]
+#             else
                 dir = ENV['XDG_CONFIG_HOME'] || File.join(ENV['HOME'], '.config')
                 @cfg_store.config_dir = File.join(dir, 'cdsdb/')
                 FileUtils.mkpath(@cfg_store.config_dir) unless Dir.exists?(@cfg_store.config_dir)
-            end
+#             end
 
             # Load preferences file
             @cfg = Psych.load_file(prefs_file) if File.exists?(prefs_file)
