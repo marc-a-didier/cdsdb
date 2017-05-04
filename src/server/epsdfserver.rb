@@ -46,14 +46,6 @@ class EpsdfServer
 
         Signal.trap("TERM") { exit(0) }
         Signal.trap("HUP")  { }
-
-        load_hosts
-    end
-
-    def reload_hosts(streamer, request)
-        Log.info("Reloading hosts, request from #{streamer.hostname}")
-        load_hosts
-        return Epsdf::Protocol::MSG_OK
     end
 
     def is_alive(streamer, request)

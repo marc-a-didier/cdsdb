@@ -252,19 +252,16 @@ module Epsdf
         def new_connection
             begin
                 socket = TCPSocket.new(Cfg.server, Cfg.port)
-                if Cfg.use_ssl?
-                    expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
-                    ssl = OpenSSL::SSL::SSLSocket.new(socket)
-                    ssl.sync_close = true
-                    ssl.connect
-                    if ssl.peer_cert.to_s != expected_cert.to_s
-                        Trace.net('Unexpected certificate'.red.bold)
-                        return nil
-                    end
-                    @streamer.session = ssl
-                else
-                    @streamer.session = socket
+
+                expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
+                ssl = OpenSSL::SSL::SSLSocket.new(socket)
+                ssl.sync_close = true
+                ssl.connect
+                if ssl.peer_cert.to_s != expected_cert.to_s
+                    Trace.net('Unexpected certificate'.red.bold)
+                    return nil
                 end
+                @streamer.session = ssl
 
                 msg = @streamer.session.gets.chomp
                 if msg != MSG_WELCOME
@@ -316,37 +313,19 @@ module Epsdf
 
         include Protocol
 
-        def load_hosts
-            # A bit of security... in case of plain text protocol
-            @@allowed_hosts = IO.read('/etc/hosts').split("\n").map { |line| line.match(/^[0-9]/) ? [line.split[0], line.split[1]] : nil }.compact.to_h
-            Log.info("Allowed hosts: #{@@allowed_hosts.keys.join(' ')}")
-            # puts("Allowed hosts: #{@@allowed_hosts.keys.join(' ')}")
-        end
-
         def listen
             tcp_server = TCPServer.new('0.0.0.0', Cfg.port)
-            if Cfg.use_ssl?
-                ssl_context = OpenSSL::SSL::SSLContext.new
-                ssl_context.cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
-                ssl_context.key = OpenSSL::PKey::RSA.new(IO.read(SSL_KEY))
-                ssl_server = OpenSSL::SSL::SSLServer.new(tcp_server, ssl_context)
-                server = ssl_server
-            else
-                server = tcp_server
-            end
+
+            ssl_context = OpenSSL::SSL::SSLContext.new
+            ssl_context.cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
+            ssl_context.key = OpenSSL::PKey::RSA.new(IO.read(SSL_KEY))
+            ssl_server = OpenSSL::SSL::SSLServer.new(tcp_server, ssl_context)
 
             begin
                 Kernel.loop do
                     begin
-                        Thread.start(server.accept) do |session|
+                        Thread.start(ssl_server.accept) do |session|
                             started = Time.now.to_f
-                            if !Cfg.use_ssl? && !@@allowed_hosts[session.peeraddr[3]]
-                                Log.warn("Unlisted ip, connection refused from #{session.peeraddr[3]}")
-                                session.puts(MSG_FUCKED)
-                                sleep(1)
-                                session.close
-                                next # Exit thread, i hope...
-                            end
 
                             streamer = Streamer.new(session)
 

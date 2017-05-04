@@ -12,10 +12,6 @@ module EpsdfClient
         end
 
         # WARNING: do NOT use return in callbacks otherwise the code after the yield is NOT executed!!!
-        def reload_hosts
-            send_simple_request('reload hosts', {}) { |response| response['msg'] }
-        end
-
         def is_alive
             send_simple_request('is alive', {}) { |response| response['msg'] }
         end
