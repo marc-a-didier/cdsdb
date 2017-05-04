@@ -68,7 +68,7 @@ class EpsdfServer
         return File.exists?(Cfg.dir(request['params']['type'].to_sym)+request['params']['fname']) ? 1 : 0
     end
 
-    def check_multiple_audio(streamer, request)
+    def has_audio(streamer, request)
         audio_link = Audio::Link.new
         return request['params']['tracks'].map do |track|
             audio_link.reset.set_track_ref(track.to_i).setup_audio_file.status

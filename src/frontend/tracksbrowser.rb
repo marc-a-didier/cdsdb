@@ -298,7 +298,7 @@ class TracksBrowser < Gtk::TreeView
         # If client mode and some or all files not found, ask if present on the server
         if Cfg.remote? && check_on_server
             # Replace each file not found state with server state
-            EpsdfClient.check_multiple_audio(self.map { |iter| iter[TTV_REF] }).each_with_index do |found, i|
+            EpsdfClient.has_audio(self.map { |iter| iter[TTV_REF] }).each_with_index do |found, i|
                 iter = model.get_iter(i.to_s)
                 iter[TTV_XLINK].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_XLINK].audio_status == Audio::Status::NOT_FOUND) && found != 0
             end
@@ -507,7 +507,7 @@ class TracksBrowser < Gtk::TreeView
         tracks = []
         model.each { |model, path, iter| (tracks << iter[TTV_REF]) if iter[TTV_XLINK].audio_status == Audio::Status::OK }
         # Replace each file not found state with server state
-        EpsdfClient.check_multiple_audio(tracks).each_with_index do |found, i|
+        EpsdfClient.has_audio(tracks).each_with_index do |found, i|
             if found == 0
                 @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :track, model.get_iter(i.to_s)[TTV_XLINK].audio_file, nil))
             end

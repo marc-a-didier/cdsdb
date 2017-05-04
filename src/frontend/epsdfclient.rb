@@ -30,8 +30,8 @@ module EpsdfClient
             end
         end
 
-        def check_multiple_audio(tracks)
-            send_simple_request('check multiple audio', { 'tracks' => tracks }) do |response|
+        def has_audio(tracks)
+            send_simple_request('has audio', { 'tracks' => tracks }) do |response|
                 response['msg']
             end
         end
