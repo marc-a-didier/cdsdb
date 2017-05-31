@@ -298,7 +298,7 @@ module Epsdf
             if response = post_request(request)
                 result = yield(response) #if block_given?
                 Trace.net("[#{request['action'].magenta}]<->[#{response['status'].green}]")
-                Trace.net("L: %8.6f - S: %8.6f" % [Time.now.to_f-started, response['duration']])
+                Trace.net("L: %.3f - S: %.3f" % [Time.now.to_f-started, response['duration']])
                 @streamer.session.close
             end
             return result

@@ -83,7 +83,7 @@ module EpsdfClient
                     dresp = @streamer.parse_response
                     status = dresp['status'] == Epsdf::Protocol::MSG_OK
                     network_task.task_owner.end_file_op(network_task.task_ref, status)
-                    Trace.net("<-[%s, %8.6f]" % [dresp['msg'].green, dresp['duration']])
+                    Trace.net("<-[%s, %.3f]" % [dresp['msg'].green, dresp['duration']])
                 end
             end
             status
@@ -99,7 +99,7 @@ module EpsdfClient
                 uresp = @streamer.parse_response
                 status = uresp['status'] == Epsdf::Protocol::MSG_OK
                 network_task.task_owner.end_file_op(network_task.task_ref, status)
-                Trace.net("<-[%s, %8.6f]" % [uresp['msg'].green, uresp['duration']])
+                Trace.net("<-[%s, %.3f]" % [uresp['msg'].green, uresp['duration']])
             end if msg['file_size'] != 0
             status
         end
