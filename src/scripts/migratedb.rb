@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
 #
-# Migration from 6.2 cds db to 7
+# Migration from 7.0 cds db to 7.1
 #
-# No mods, new db version table executed in the sqlitecds.sql ddl
+# 'origins' table is now filled in sqlitecds.sql ddl -> removed from migration
 #
 #
 
@@ -22,16 +22,16 @@ end
 
 path = "../../db/"
 
-$src = SQLite3::Database.new(path+"cds6.2.db")
+$src = SQLite3::Database.new(path+"cds.db")
 $src.execute("PRAGMA synchronous=OFF;")
 
-$dst = SQLite3::Database.new(path+"cds.db")
+$dst = SQLite3::Database.new(path+"cds.new.db")
 $dst.execute('PRAGMA synchronous=OFF;')
 $dst.execute('PRAGMA encoding="UTF-8";')
 
 if ARGV[0] == "--create"
     sql = ""
-    IO.foreach("./sqlitecds7.sql") { |line| sql += line.chomp }
+    IO.foreach("./sqlitecds.sql") { |line| sql += line.chomp }
     $dst.execute_batch(sql)
 end
 
@@ -45,7 +45,6 @@ puts sql
     $dst.execute("COMMIT;")
 end
 
-["collections", "medias", "genres", "labels",
- "plists", "pltracks", "origins",
- "artists", "records", "segments", "tracks",
+["collections", "medias", "genres", "labels", "plists",
+ "pltracks", "artists", "records", "segments", "tracks",
  "hosts", "logtracks", "filters"].each { |table| dup_table(table) }

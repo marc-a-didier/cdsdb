@@ -20,7 +20,7 @@ module EpsdfClient
             send_simple_request('get db version', {}) { |response| response['msg'] }
         end
 
-        def check_resource(type, file_name)
+        def has_resource(type, file_name)
             send_simple_request('has resource', { 'type' => type, 'fname' => file_name }) do |response|
                 response['msg']
             end

@@ -409,9 +409,10 @@ class MainWindow < TopWindow
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
-        if EpsdfClient.get_server_db_version != DBIntf.db_version
-            GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
-            return
+        # Bad idea to go download a previous db version...
+        if EpsdfClient.get_server_db_version < DBIntf.db_version
+           GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
+           return
         end
         file = File.basename(DBIntf.build_db_name)
         @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, :db, file, self))
@@ -425,13 +426,13 @@ class MainWindow < TopWindow
                 @mc.reload_plists.reload_filters
                 set_window_title
 
-            when :covers, :flags
+            when :covers
                 XIntf::Image::Cache.reload
         end
     end
 
     def on_update_resources
-        [:covers, :flags, :icons].each do |resource_type|
+        [:covers, :icons].each do |resource_type|
             EpsdfClient.resources_to_update(resource_type).each do |resource|
                 @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, resource_type, resource, self))
             end

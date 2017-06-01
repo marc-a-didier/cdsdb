@@ -306,7 +306,7 @@ module DBClasses
 
     Collection = Struct.new(:rcollection, :sname) { include SQLintf }
 
-    Origin = Struct.new(:rorigin, :sname) { include SQLintf }
+    Origin = Struct.new(:rorigin, :sname, :scode) { include SQLintf }
 
 
     KEY_NAME_TO_CLASS_MAP = { :rartist => Artist, :rplist => PList, :rgenre => Genre, :rlabel => Label,

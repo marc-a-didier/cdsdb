@@ -73,8 +73,9 @@ module Cfg
         end
 
 
-        PREFS_FILE      = 'prefs.yml'
-        LOG_FILE        = 'cdsdb.log'
+        PREFS_FILE    = 'prefs.yml'
+        LOG_FILE      = 'cdsdb.log'
+        ISO_FLAGS_DIR = '/usr/share/iso-flag-png/'
 
 
         DEF_CONFIG = {  WINDOWS => {
@@ -189,7 +190,11 @@ module Cfg
         end
 
         def dir(type)
-            return type == :track ? self.music_dir : self.rsrc_dir+type.to_s+'/'
+            case type
+                when :track then self.music_dir
+                when :flags then ISO_FLAGS_DIR
+                else self.rsrc_dir+type.to_s+'/'
+            end
         end
 
         def covers_dir;  return dir(:covers)           end

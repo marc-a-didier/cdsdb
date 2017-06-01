@@ -14,7 +14,7 @@ module XIntf
             DEFAULT_COVER = 'r0'
 
             DEF_RECORD_FILE = 'default.png'
-            DEF_FLAG_FILE   = 'default.svg'
+            DEF_FLAG_FILE   = '_united_nations.png'
 
             FLAG_SIZE  =  16
             SMALL_SIZE =  64
@@ -115,7 +115,7 @@ module XIntf
                     key = 'f'+rorigin.to_s
                     if @map[key].nil?
                         Trace.imc("Flag MISS for origin #{rorigin}".red)
-                        file = Cfg.flags_dir+rorigin.to_s+'.svg'
+                        file = Cfg.flags_dir+DBClasses::Origin.new.ref_load(rorigin).scode+'.png'
                         File.exists?(file) ? @map[key] = GdkPixbuf::Pixbuf.new(file: file, width: FLAG_SIZE, height: FLAG_SIZE) : key = DEFAULT_FLAG
                     else
                         Trace.imc("Flag HIT for origin #{rorigin}".red)
