@@ -49,6 +49,7 @@ module Epsdf
         MSG_ERROR      = 'Error'
         MSG_FUCKED     = 'Fucked up...'
         MSG_WELCOME    = 'E pericoloso sporgersi dalla finestra!'
+        MSG_BYE        = 'Ciao bella!'
 
         OPT_PLAIN      = 0
         OPT_COMP       = 1
@@ -253,11 +254,11 @@ module Epsdf
             begin
                 socket = TCPSocket.new(Cfg.server, Cfg.port)
 
-                expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
+                # expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
                 ssl = OpenSSL::SSL::SSLSocket.new(socket)
                 ssl.sync_close = true
                 ssl.connect
-                if ssl.peer_cert.to_s != expected_cert.to_s
+                if ssl.peer_cert.to_s != @expected_cert.to_s
                     Trace.net('Unexpected certificate'.red.bold)
                     return nil
                 end
@@ -299,6 +300,7 @@ module Epsdf
                 result = yield(response) #if block_given?
                 Trace.net("[#{request['action'].magenta}]<->[#{response['status'].green}]")
                 Trace.net("L: %.3f - S: %.3f" % [Time.now.to_f-started, response['duration']])
+                # @streamer.session.puts(MSG_BYE)
                 @streamer.session.close
             end
             return result
@@ -349,6 +351,7 @@ module Epsdf
                             end
                             # Give client some time to read the response
                             sleep(1)
+                            # session.gets # Should receive a ciao bella message
                             session.close
                         end
                     rescue Errno::ECONNRESET, OpenSSL::SSL::SSLError => ex

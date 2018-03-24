@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-gem 'gstreamer', '1.2.6'
-# require 'gstreamer'
+# gem 'gstreamer', '1.2.6'
+require 'gstreamer'
 
 require 'gtk2'
 require 'gst'
@@ -25,7 +25,7 @@ require 'thread' # For mutex in tasks window
 require 'logger'
 require 'psych'
 require 'json'
-require 'rexml/document'
+# require 'rexml/document'
 require 'uri'
 require 'cgi'
 
@@ -42,9 +42,10 @@ require '../shared/dbutils'
 require '../shared/audiolink'
 require '../shared/epsdf'
 
-require './gstplayer'
-# require './gstplayer_g1.0'
-require './gstreplaygain'
+# require './gstplayer'
+require './gstplayer_g1.0'
+# require './gstreplaygain'
+require './gstreplaygain_g1.0'
 
 require './qualifiers'
 require './gtkbuilderintf'
@@ -59,7 +60,7 @@ require './gtkutils'
 
 require './playerintf'
 require './topwindow'
-require './plistexporter'
+# require './plistexporter'
 require './plistswindow'
 require './stats'
 require './graphstats'
@@ -67,8 +68,8 @@ require './discanalyzer'
 
 require './prefs'
 require './filterwindow'
-require './playerwindow'
-# require './playerwindow_g1.0'
+# require './playerwindow'
+require './playerwindow_g1.0'
 require './pqueuewindow'
 require './cdeditorwindow'
 require './memoswindow'

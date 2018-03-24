@@ -9,6 +9,7 @@ module EpsdfClient
 
         def setup
             @streamer = Epsdf::Streamer.new
+            @expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
         end
 
         # WARNING: do NOT use return in callbacks otherwise the code after the yield is NOT executed!!!
