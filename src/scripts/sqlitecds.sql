@@ -178,5 +178,6 @@ INSERT INTO "origins" VALUES (31, 'Portugal', 'pt');
 INSERT INTO "origins" VALUES (32, 'Luxembourg', 'lu');
 INSERT INTO "origins" VALUES (33, 'Eesti Vabariik', 'ee');
 INSERT INTO "origins" VALUES (34, 'South Africa', 'za');
+INSERT INTO "origins" VALUES (35, 'México', 'mx');
 
 COMMIT;

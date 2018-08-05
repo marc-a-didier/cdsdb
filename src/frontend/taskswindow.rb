@@ -159,6 +159,7 @@ class TasksWindow < TopWindow
 
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i
+        Gtk.main_iteration while Gtk.events_pending?
         return @has_cancelled ? Epsdf::Protocol::STAT_ABRT : Epsdf::Protocol::STAT_CONT #Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
     end
 

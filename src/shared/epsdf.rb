@@ -252,6 +252,12 @@ module Epsdf
 
         def new_connection
             begin
+                while @streamer.session do
+                    Trace.net('Waiting for session to be free')
+                    sleep(0.5)
+                end
+                @streamer.session = true # Occupy the session as fast as possible with any value
+
                 socket = TCPSocket.new(Cfg.server, Cfg.port)
 
                 # expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
@@ -267,6 +273,7 @@ module Epsdf
                 msg = @streamer.session.gets.chomp
                 if msg != MSG_WELCOME
                     Trace.net("[#{'Connect'.magenta}] <-> [#{msg.red.bold}]")
+                    @streamer.session = nil
                     return nil
                 # else
                 #     Trace.net("[#{'Connect'.magenta}] <-> [#{msg.green}]")
@@ -275,6 +282,7 @@ module Epsdf
                 # puts(@streamer.header)
             rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError, OpenSSL::X509::CertificateError => ex
                 Trace.net("Connection: [#{ex.class.to_s.red.bold}]")
+                @streamer.session = nil
                 return nil
             end
             return true
@@ -295,14 +303,19 @@ module Epsdf
         end
 
         def send_request(request, &block)
-            started = Time.now.to_f
-            if response = post_request(request)
-                result = yield(response) #if block_given?
-                Trace.net("[#{request['action'].magenta}]<->[#{response['status'].green}]")
-                Trace.net("L: %.3f - S: %.3f" % [Time.now.to_f-started, response['duration']])
+            begin
+                started = Time.now.to_f
+                if response = post_request(request)
+                    result = yield(response) #if block_given?
+                    Trace.net("[#{request['action'].magenta}]<->[#{response['status'].green}]")
+                    Trace.net("L: %.3f - S: %.3f" % [Time.now.to_f-started, response['duration']])
+                end
                 # @streamer.session.puts(MSG_BYE)
-                @streamer.session.close
+            ensure
+                @streamer.session.close if @streamer.session
+                @streamer.session = nil
             end
+
             return result
         end
 
@@ -349,14 +362,18 @@ module Epsdf
                                 Log.warn("Unknown request #{meth} received.")
                                 streamer.send_stream(json_response(MSG_ERROR, ERR_NO_METH, started))
                             end
-                            # Give client some time to read the response
-                            sleep(1)
-                            # session.gets # Should receive a ciao bella message
+                            until session.eof? do
+                                # puts("not closed")
+                                sleep(1)
+                            end
+#                             begin
+#                                 msg = session.gets.chomp # Should receive a ciao bella message
+#                             while msg != MSG_BYE
                             session.close
                         end
                     rescue Errno::ECONNRESET, OpenSSL::SSL::SSLError => ex
                         # Trace.net("SSL: [#{ex.class.to_s.red.bold}]")
-                        Log.warrn("Connection: #{ex.class.to_s}")
+                        Log.warn("Connection: #{ex.class.to_s}")
                     end
                 end
             rescue Interrupt
