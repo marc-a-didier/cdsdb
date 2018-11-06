@@ -1,13 +1,14 @@
 
-module EpsdfClient
+class EpsdfClient
 
-    class << self
+#     class << self
 
         include Epsdf::Protocol
         include Epsdf::Transfer
         include Epsdf::Client
 
-        def setup
+#         def setup
+        def initialize
             @streamer = Epsdf::Streamer.new
             @expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
         end
@@ -104,7 +105,7 @@ module EpsdfClient
             end if msg['file_size'] != 0
             status
         end
-    end
+#     end
 end
 
-EpsdfClient.setup
+# EpsdfClient.setup

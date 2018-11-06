@@ -252,11 +252,11 @@ module Epsdf
 
         def new_connection
             begin
-                while @streamer.session do
-                    Trace.net('Waiting for session to be free')
-                    sleep(0.5)
-                end
-                @streamer.session = true # Occupy the session as fast as possible with any value
+#                 while @streamer.session do
+#                     Trace.net('Waiting for session to be free')
+#                     sleep(0.5)
+#                 end
+#                 @streamer.session = true # Occupy the session as fast as possible with any value
 
                 socket = TCPSocket.new(Cfg.server, Cfg.port)
 
@@ -273,7 +273,7 @@ module Epsdf
                 msg = @streamer.session.gets.chomp
                 if msg != MSG_WELCOME
                     Trace.net("[#{'Connect'.magenta}] <-> [#{msg.red.bold}]")
-                    @streamer.session = nil
+#                     @streamer.session = nil
                     return nil
                 # else
                 #     Trace.net("[#{'Connect'.magenta}] <-> [#{msg.green}]")
@@ -313,7 +313,7 @@ module Epsdf
                 # @streamer.session.puts(MSG_BYE)
             ensure
                 @streamer.session.close if @streamer.session
-                @streamer.session = nil
+#                 @streamer.session = nil
             end
 
             return result
