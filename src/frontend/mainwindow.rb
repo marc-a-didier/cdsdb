@@ -394,7 +394,6 @@ class MainWindow < TopWindow
 
     def dump_serverinfo
         if Cfg.remote?
-#             puts(EpsdfClient.server_info.bold)
             puts(EpsdfClient.new.server_info.bold)
         else
             puts('Not in connected mode!'.red.bold)
@@ -411,7 +410,6 @@ class MainWindow < TopWindow
             return
         end
         # Bad idea to go download a previous db version...
-#         if EpsdfClient.get_server_db_version < DBIntf.db_version
         if EpsdfClient.new.get_server_db_version < DBIntf.db_version
            GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
            return
@@ -435,7 +433,6 @@ class MainWindow < TopWindow
 
     def on_update_resources
         [:covers, :icons].each do |resource_type|
-#             EpsdfClient.resources_to_update(resource_type).each do |resource|
             EpsdfClient.new.resources_to_update(resource_type).each do |resource|
                 @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, resource_type, resource, self))
             end
@@ -443,6 +440,6 @@ class MainWindow < TopWindow
     end
 
     def on_update_sources
-        # EpsdfClient.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
+        # EpsdfClient.new.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
     end
 end

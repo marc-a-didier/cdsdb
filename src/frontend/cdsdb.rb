@@ -15,7 +15,6 @@ rescue LoadError
 end
 
 
-require 'singleton'
 require 'fileutils'
 require 'find'
 require 'socket'

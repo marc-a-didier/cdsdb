@@ -22,13 +22,11 @@ module DBUtils
     #
     def self.client_sql(sql)
         self.log_exec(sql)
-#         EpsdfClient.exec_sql(sql) if Cfg.remote?
         EpsdfClient.new.exec_sql(sql) if Cfg.remote?
     end
 
     def self.threaded_client_sql(sql)
         self.log_exec(sql)
-#         Thread.new { EpsdfClient.exec_sql(sql) } if Cfg.remote?
         Thread.new { EpsdfClient.new.exec_sql(sql) } if Cfg.remote?
     end
 
@@ -42,11 +40,10 @@ module DBUtils
 
     def self.exec_batch(sql, host, log = true)
         self.exec_local_batch(sql, host, log)
-#         EpsdfClient.exec_batch(sql) if Cfg.remote?
         EpsdfClient.new.exec_batch(sql) if Cfg.remote?
         # May be dangerous to spawn a thread... if request made on the record being inserted,
         # don't know what happen...
-#         Thread.new { EpsdfClient.exec_batch(sql) } if Cfg.remote?
+#         Thread.new { EpsdfClient.new.exec_batch(sql) } if Cfg.remote?
     end
 
     def self.get_last_id(short_tbl_name)

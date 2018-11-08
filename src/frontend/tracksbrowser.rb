@@ -298,7 +298,6 @@ class TracksBrowser < Gtk::TreeView
         # If client mode and some or all files not found, ask if present on the server
         if Cfg.remote? && check_on_server
             # Replace each file not found state with server state
-#             EpsdfClient.has_audio(self.map { |iter| iter[TTV_REF] }).each_with_index do |found, i|
             EpsdfClient.new.has_audio(self.map { |iter| iter[TTV_REF] }).each_with_index do |found, i|
                 iter = model.get_iter(i.to_s)
                 iter[TTV_XLINK].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_XLINK].audio_status == Audio::Status::NOT_FOUND) && found != 0
@@ -433,7 +432,6 @@ class TracksBrowser < Gtk::TreeView
             #         under exceptional and unclear circumstances
 
             # Must rename on server BEFORE the sql update is done because it needs the old name to find the track!!
-#             EpsdfClient.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
             EpsdfClient.new.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
 
             xtrack.track.stitle = new_text
@@ -509,7 +507,6 @@ class TracksBrowser < Gtk::TreeView
         tracks = []
         model.each { |model, path, iter| (tracks << iter[TTV_REF]) if iter[TTV_XLINK].audio_status == Audio::Status::OK }
         # Replace each file not found state with server state
-#         EpsdfClient.has_audio(tracks).each_with_index do |found, i|
         EpsdfClient.new.has_audio(tracks).each_with_index do |found, i|
             if found == 0
                 @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :track, model.get_iter(i.to_s)[TTV_XLINK].audio_file, nil))
@@ -517,7 +514,6 @@ class TracksBrowser < Gtk::TreeView
         end
 
         Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_XLINK].cover_file_name}")
-#         unless EpsdfClient.has_resource(:covers, model.get_iter('0')[TTV_XLINK].cover_file_name)
         unless EpsdfClient.new.has_resource(:covers, model.get_iter('0')[TTV_XLINK].cover_file_name)
             @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :covers, model.get_iter('0')[TTV_XLINK].cover_file_name, nil))
         end
