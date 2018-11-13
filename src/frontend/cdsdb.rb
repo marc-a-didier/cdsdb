@@ -1,7 +1,11 @@
 #!/usr/bin/env ruby
 
-# gem 'gstreamer', '1.2.6'
-require 'gstreamer'
+gtk_version = '3.2.8'
+
+gem 'glib2', gtk_version
+gem 'gstreamer', gtk_version
+gem 'gtk2', gtk_version
+# require 'gstreamer'
 
 require 'gtk2'
 require 'gst'

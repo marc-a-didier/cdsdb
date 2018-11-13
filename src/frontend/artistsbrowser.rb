@@ -57,7 +57,7 @@ class ArtistsBrowser < Gtk::TreeView
 
         selection.signal_connect(:changed)  { |widget| on_selection_changed(widget) }
         signal_connect(:button_press_event) { |widget, event|
-            if event.event_type == Gdk::Event::BUTTON_PRESS || event.button == 3 # left mouse button
+            if event.event_type == Gdk::Event::BUTTON_PRESS && event.button == 3 # left mouse button
                 [GtkIDs::ART_POPUP_ADD, GtkIDs::ART_POPUP_DEL,
                  GtkIDs::ART_POPUP_EDIT, GtkIDs::ART_POPUP_INFOS].each { |item|
                     GtkUI[item].sensitive = @tvs && model.iter_depth(@tvs) == @tvs[2].max_level
