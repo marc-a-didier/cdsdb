@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 gtk_version = '3.2.8'
+# gtk_version = '3.4.1'
 
 gem 'glib2', gtk_version
 gem 'gstreamer', gtk_version

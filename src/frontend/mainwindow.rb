@@ -154,7 +154,7 @@ class MainWindow < TopWindow
         GtkUI[MM_TOOLS_GENREORDER].signal_connect(:activate)  { DBReorderer.new.run }
         GtkUI[MM_TOOLS_CACHEINFO].signal_connect(:activate)   { dump_cacheinfo }
         GtkUI[MM_TOOLS_SERVERINFO].signal_connect(:activate)  { dump_serverinfo }
-        GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new(@mc).db_stats }
+        GtkUI[MM_TOOLS_STATS].signal_connect(:activate)       { Stats.new.db_stats }
         GtkUI[MM_TOOLS_GRAPH].signal_connect(:activate)       { GraphStats.graph_period }
 
         GtkUI[MM_DBTOOLS_FULLCHECKLOG].signal_connect(:activate) { DBUtils.check_log_vs_played(true) } # update_log_time
