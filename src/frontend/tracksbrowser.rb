@@ -270,8 +270,11 @@ class TracksBrowser < Gtk::TreeView
     # Set the tags or rating for a selected track(s) or all tracks (when set from records)
     def set_track_field(field, value, to_all)
         sql = "UPDATE tracks SET #{field}=" +
-              (field == "itags" ? field+(value < 0 ? ' & ~ ' : ' | ')+value.abs.to_s : value.to_s) +
-              " WHERE rtrack IN ("+self.send(to_all ? :map : :selected_map) { |iter| iter[TTV_REF].to_s }.join(',')+');'
+              (field == 'itags' ? field+(value < 0 ? ' & ~ ' : ' | ')+value.abs.to_s : value.to_s) +
+              " WHERE rtrack IN ("+self.send(to_all ? :map : :selected_map) { |iter| iter[TTV_REF].to_s }.join(',')+')'
+
+        # Uodate only unqualified tracks
+        sql += ' AND irating=0' if to_all && field == 'irating'
 
         DBUtils.threaded_client_sql(sql)
 
