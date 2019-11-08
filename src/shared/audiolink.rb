@@ -164,8 +164,8 @@ module Audio
         end
 
         def record_on_disk?
-            setup_audio_file unless audio.file
-            return Dir.exists?(File.dirname(audio.file))
+            setup_audio_file unless audio && audio.file
+            return audio.file ? Dir.exists?(File.dirname(audio.file)) : false
         end
 
         #
