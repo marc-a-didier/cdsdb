@@ -26,7 +26,7 @@ class Stats
     DBTotals = Struct.new(:artists, :records, :segments, :tracks, :ptime, :played, :tot_ptime)
 
 
-    TV_ITEMS = {'Played tracks' => [false, :played_tracks_stats],
+    TV_ITEMS = {'Played tracks by hosts' => [false, :tracks_by_hosts],
                 'Rated and tagged tracks' => [false, :rating_tags_stats],
                 'Played tracks by genre' => [false, :played_by_genre],
 
@@ -102,7 +102,7 @@ class Stats
                 @tables.each.with_index(1) { |table, id| header << table.sub_data(template, id) }
                 header += "</head>\n"
 
-                body = "<body>\n"+"<h2>DB stats generated #{Time.now}</h2><br />\n"
+                body = "<body>\n"+"<h2>CDsDB stats generated #{Time.now}</h2><br />\n"
                 @tables.each.with_index(1) { |table, id| body << "<hr><h3>#{table.title}</h3><br/>\n" + "<div id='table_chart_#{id}_div'></div>\n" }
                 body << "\n</body>"
 
@@ -138,12 +138,19 @@ class Stats
     end
 
     def db_general_infos
+        tot_played = DBIntf.get_first_value('SELECT COUNT(rtrack) FROM logtracks')
+        never_played = DBIntf.get_first_value('SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0')
+        dist_played = DBIntf.get_first_value('SELECT COUNT(DISTINCT(rtrack)) FROM logtracks')
+
         @tables.add('General Info').
                 add_columns([ [:string, 'Type'], [:number, 'Count'], [:string, ''] ]).
                 add_row(['Total number of artists', @db_tots.artists, '']).
                 add_row(['Total number of records', @db_tots.records, "Duration: #{@db_tots.ptime.to_day_length}"]).
                 add_row(['Total number of segments', @db_tots.segments, '']).
-                add_row(['Total number of tracks', @db_tots.tracks, ''])
+                add_row(['Total number of tracks', @db_tots.tracks, '']).
+                add_row(['Never played tracks', never_played, '']).
+                add_row(['Distinct played tracks', dist_played, '']).
+                add_row(['Played tracks total', tot_played, "Duration: #{@db_tots.tot_ptime.to_day_length}"])
 
         table = @tables.add('Records by media type').add_columns([ [:string, 'Medium'], [:number, 'Records'],
                                                                    [:number, '%'], [:string, 'Duration'] ])
@@ -241,9 +248,7 @@ class Stats
             Gtk.main_iteration while Gtk.events_pending?
             genre = @genres.detect { |g| g.to_a.index(row[1]) }
             cols = [row[0], row[1]]
-            unless genre.nil?
-                cols += [row[2], genre.tot_tracks, row[2].to_f/genre.tot_tracks.to_f*100.0]
-            end
+            cols += [row[2], genre.tot_tracks, row[2].to_f/genre.tot_tracks.to_f*100.0] if genre
             table.add_row(cols)
         end
         table.set_bar_format([4])
@@ -257,11 +262,12 @@ class Stats
 
         if genre.ref == 0
             table = @tables.add('All Styles Artists Top Chart')
-            sql += 'WHERE iplayed > 0 GROUP BY artists.rartist ORDER BY totplayed DESC;'
+            sql += 'WHERE iplayed > 0 GROUP BY artists.rartist ORDER BY totplayed DESC'
         else
             table = @tables.add("#{genre.name} Artists Top Chart")
-            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre.ref} GROUP BY artists.rartist ORDER BY totplayed DESC;"
+            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre.ref} GROUP BY artists.rartist ORDER BY totplayed DESC"
         end
+        sql += ' LIMIT 1000;'
         table.add_columns([ [:number, 'Play count'], [:string, 'Artist'] ])
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
@@ -276,11 +282,12 @@ class Stats
 
         if genre.ref == 0
             table = @tables.add('All Styles Records Top Chart')
-            sql += 'WHERE iplayed > 0 GROUP BY records.rrecord ORDER BY totplayed DESC;'
+            sql += 'WHERE iplayed > 0 GROUP BY records.rrecord ORDER BY totplayed DESC'
         else
             table = @tables.add("#{genre.name} Records Top Chart")
-            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre.ref} GROUP BY records.rrecord ORDER BY totplayed DESC;"
+            sql += "WHERE iplayed > 0 AND records.rgenre=#{genre.ref} GROUP BY records.rrecord ORDER BY totplayed DESC"
         end
+        sql += ' LIMIT 1000;'
         table.add_columns([ [:number, 'Play count'], [:string, 'Record'], [:string, 'Artist'] ])
         DBIntf.execute(sql) do |row|
             Gtk.main_iteration while Gtk.events_pending?
@@ -342,18 +349,10 @@ class Stats
         end
     end
 
-    def played_tracks_stats
+    def tracks_by_hosts
         tot_played = DBIntf.get_first_value('SELECT COUNT(rtrack) FROM logtracks')
-        never_played = DBIntf.get_first_value('SELECT COUNT(rtrack) FROM tracks WHERE iplayed=0')
-        dist_played = DBIntf.get_first_value('SELECT COUNT(DISTINCT(rtrack)) FROM logtracks')
 
-        @tables.add('Played tracks summary & by hosts').
-                    add_columns([ [:string, 'Type'], [:number, 'Count'] ]).
-                    add_row(['Played tracks total', tot_played]).
-                    add_row(['Never played tracks', never_played]).
-                    add_row(['Distinct played tracks', dist_played])
-
-        table = @tables.add.add_columns([ [:string, 'Host'], [:number, 'Count'], [:number, '%'] ])
+        table = @tables.add('Played tracks by hosts').add_columns([ [:string, 'Host'], [:number, 'Count'], [:number, '%'] ])
         DBIntf.execute('SELECT * FROM hosts') do |host|
             host_played = DBIntf.get_first_value("SELECT COUNT(rtrack) FROM logtracks WHERE rhost=#{host[0]}")
             table.add_row([host[1], host_played, host_played*100.0/tot_played])
