@@ -33,7 +33,8 @@ class PListsWindow < TopWindow
         GtkUI[GtkIDs::PM_PL_EXPORT_XSPF].signal_connect(:activate)   { PListExporter.export_to_xspf(@pts, @current_pl.sname) }
         GtkUI[GtkIDs::PM_PL_EXPORT_M3U].signal_connect(:activate)    { PListExporter.export_to_m3u(@pts, @current_pl.sname)  }
         GtkUI[GtkIDs::PM_PL_EXPORT_PLS].signal_connect(:activate)    { PListExporter.export_to_pls(@pts, @current_pl.sname)  }
-        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
+#         GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
+        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_tracks_to_device(@mc, selected_tracks) }
         GtkUI[GtkIDs::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
         GtkUI[GtkIDs::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
         GtkUI[GtkIDs::PM_PL_SHOWINBROWSER].signal_connect(:activate) {
@@ -46,7 +47,7 @@ class PListsWindow < TopWindow
         GtkUI[GtkIDs::PL_MB_EXPORT_XSPF].signal_connect(:activate)   { PListExporter.export_to_xspf(@pts, @current_pl.sname) }
         GtkUI[GtkIDs::PL_MB_EXPORT_M3U].signal_connect(:activate)    { PListExporter.export_to_m3u(@pts, @current_pl.sname)  }
         GtkUI[GtkIDs::PL_MB_EXPORT_PLS].signal_connect(:activate)    { PListExporter.export_to_pls(@pts, @current_pl.sname)  }
-        GtkUI[GtkIDs::PL_MB_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
+#         GtkUI[GtkIDs::PL_MB_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
 
         GtkUI[GtkIDs::PL_MB_CLOSE].signal_connect(:activate)         { window.signal_emit(:delete_event, nil) }
 
@@ -187,6 +188,11 @@ class PListsWindow < TopWindow
 
     def selected_track
         return @tvpt.selection.count_selected_rows == 1 ? @tvpt.model.get_iter(@tvpt.selection.selected_rows[0]) : nil
+    end
+
+    # Returns an array of track cache data from the current selection
+    def selected_tracks
+        return @tvpt.selection.selected_rows.map { |path| @tvpt.model.get_iter(path)[TT_DATA] }
     end
 
     def on_drag_received(widget, context, x, y, data, info, time)

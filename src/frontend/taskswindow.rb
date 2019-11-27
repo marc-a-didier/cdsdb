@@ -24,7 +24,7 @@ class TasksWindow < TopWindow
 
         progress_renderer = Gtk::CellRendererProgress.new
         progress_renderer.sensitive = false
-        progress_column = Gtk::TreeViewColumn.new("Progress", progress_renderer)
+        progress_column = Gtk::TreeViewColumn.new('Progress', progress_renderer)
         progress_column.min_width = 150
         progress_column.set_cell_data_func(progress_renderer) do |column, cell, model, iter|
             cell.value = iter[COL_PROGRESS]
@@ -32,15 +32,15 @@ class TasksWindow < TopWindow
         end
 
         task_renderer = Gtk::CellRendererText.new
-        task_column = Gtk::TreeViewColumn.new("Task", task_renderer)
+        task_column = Gtk::TreeViewColumn.new('Task', task_renderer)
         task_column.set_cell_data_func(task_renderer) { |col, renderer, model, iter| renderer.text = task_type(iter[COL_TASK]) }
 
         status_renderer = Gtk::CellRendererText.new
-        status_column = Gtk::TreeViewColumn.new("Status", status_renderer)
+        status_column = Gtk::TreeViewColumn.new('Status', status_renderer)
         status_column.set_cell_data_func(status_renderer) { |col, renderer, model, iter| renderer.text = STATUS[iter[COL_STATUS]] }
 
         @tv.append_column(task_column)
-        @tv.append_column(Gtk::TreeViewColumn.new("File", Gtk::CellRendererText.new, :text => COL_TITLE))
+        @tv.append_column(Gtk::TreeViewColumn.new('File', Gtk::CellRendererText.new, :text => COL_TITLE))
         @tv.append_column(progress_column)
         @tv.append_column(status_column)
 
@@ -85,9 +85,12 @@ class TasksWindow < TopWindow
     def check_waiting_tasks
         @mutex.synchronize do
             @tv.model.each do |model, path, iter|
+                # Exit loop if a task is already processing
                 break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD || iter[COL_STATUS] == STAT_UPLOAD
 
-                if iter[COL_STATUS] == STAT_WAITING
+                # If the task has no owner, skip the entry. It means it's another type of
+                # task (e.g. export to device), it's handled by the caller itself and no EpsdfClient should be started.
+                if iter[COL_STATUS] == STAT_WAITING && iter[COL_TASK].resource_owner
                     @tv.set_cursor(iter.path, nil, false)
                     iter[COL_STATUS] = iter[COL_TASK_TYPE].to_sym == :upload ? STAT_UPLOAD : STAT_DOWNLOAD
 
@@ -100,7 +103,7 @@ class TasksWindow < TopWindow
     def check_config
         if Cfg.remote?
             if @chk_thread.nil?
-                Trace.debug("Task thread started...".green) if Cfg.trace_network
+                Trace.debug('Task thread started...'.green) if Cfg.trace_network
                 DBCache::Cache.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
                 @chk_thread = Thread.new do
                     loop do
@@ -113,8 +116,12 @@ class TasksWindow < TopWindow
             DBCache::Cache.set_audio_status_from_to(Audio::Status::ON_SERVER, Audio::Status::NOT_FOUND)
             @chk_thread.exit
             @chk_thread = nil
-            Trace.debug("Task thread stopped".brown) if Cfg.trace_network
+            Trace.debug('Task thread stopped'.brown) if Cfg.trace_network
         end
+    end
+
+    def select_task(iter)
+        @tv.set_cursor(iter.path, nil, false)
     end
 
     def in_downloads?(iter)

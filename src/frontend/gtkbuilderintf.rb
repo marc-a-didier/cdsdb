@@ -90,6 +90,7 @@ module GtkIDs
     TRK_POPUP_AUDIOINFO = "tpm_audioinfo"
     TRK_POPUP_PLAYHIST  = "tpm_playhist"
     TRK_POPUP_CONTPL    = "tpm_contpl"
+    TRK_POPUP_EXPORT    = "tpm_export"
 
     # Status icon popup menu
     TTPM_MENU       = "ttpm_menu"

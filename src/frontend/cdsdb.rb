@@ -64,7 +64,7 @@ require './gtkutils'
 
 require './playerintf'
 require './topwindow'
-# require './plistexporter'
+require './plistexporter'
 require './plistswindow'
 require './stats'
 require './graphstats'

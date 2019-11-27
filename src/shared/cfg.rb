@@ -10,6 +10,7 @@ module ConfigFields
     PREFS_CB_SIZEOVERQUALITY    = 'prefs_cb_sizeoverquality'
     PREFS_FC_MUSICDIR           = 'prefs_fc_musicdir'
     PREFS_FC_RSRCDIR            = 'prefs_fc_rsrcdir'
+    PREFS_FC_DEVICEDIR          = 'prefs_fc_devicedir'
     PREFS_CB_TRACEDBCACHE       = 'prefs_cb_tracedbcache'
     PREFS_CB_IMAGECACHE         = 'prefs_cb_traceimagecache'
     PREFS_CB_TRACEGST           = 'prefs_cb_tracegst'
@@ -26,7 +27,7 @@ end
 
 module Cfg
 
-    VERSION = "0.10.0"
+    VERSION = '0.10.1'
 
     class << self
 
@@ -41,7 +42,7 @@ module Cfg
         CfgStorage = Struct.new(:remote, :admin, :config_dir,
                                 :server, :port, :tx_block_size,
                                 :use_ssl, :size_over_quality, :async_comms,
-                                :music_dir, :rsrc_dir,
+                                :music_dir, :rsrc_dir, :device_dir,
                                 :trace_db_cache, :trace_image_cache, :trace_gst,
                                 :trace_gstqueue, :trace_network, :trace_sql,
                                 :notifications, :notif_duration, :cd_device,
@@ -62,6 +63,7 @@ module Cfg
                 self.size_over_quality  = t[PREFS_CB_SIZEOVERQUALITY][M_ACTIVE]
                 self.music_dir          = t[PREFS_FC_MUSICDIR][M_CURR_FLD]+'/'
                 self.rsrc_dir           = t[PREFS_FC_RSRCDIR][M_CURR_FLD]+'/'
+                self.device_dir         = t[PREFS_FC_DEVICEDIR][M_CURR_FLD]+'/'
                 self.notifications      = t[PREFS_CB_SHOWNOTIFICATIONS][M_ACTIVE]
                 self.notif_duration     = t[PREFS_ENTRY_NOTIFDURATION][M_TEXT].to_i
                 self.live_charts_update = t[PREFS_CB_LIVEUPDATE][M_ACTIVE]
@@ -84,6 +86,7 @@ module Cfg
                                 PREFS_ENTRY_NOTIFDURATION  => { M_TEXT => '4' },
                                 PREFS_FC_MUSICDIR          => { M_CURR_FLD => ENV['HOME']+'/Music/' },
                                 PREFS_FC_RSRCDIR           => { M_CURR_FLD => './../../' },
+                                PREFS_FC_DEVICEDIR         => { M_CURR_FLD => ENV['HOME']+'/phone/Music/' },
                                 PREFS_CD_DEVICE            => { M_TEXT => '/dev/cdrom' },
                                 PREFS_ENTRY_SERVER         => { M_TEXT => 'madAM1H' },
                                 PREFS_ENTRY_PORT           => { M_TEXT => '32666' },

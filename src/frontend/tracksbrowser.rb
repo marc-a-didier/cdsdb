@@ -97,6 +97,7 @@ class TracksBrowser < Gtk::TreeView
         GtkUI[GtkIDs::TRK_POPUP_UPDPTIME].signal_connect(:activate)  { on_update_playtime }
         GtkUI[GtkIDs::TRK_POPUP_ENQUEUE].signal_connect(:activate)   { on_trk_enqueue(false) }
         GtkUI[GtkIDs::TRK_POPUP_ENQFROM].signal_connect(:activate)   { on_trk_enqueue(true) }
+        GtkUI[GtkIDs::TRK_POPUP_EXPORT].signal_connect(:activate)    { PListExporter.export_tracks_to_device(@mc, get_selection) }
 
         GtkUI[GtkIDs::TRK_POPUP_AUDIOINFO].signal_connect(:activate) do
             if @trklnk.valid_track_ref? && @trklnk.playable?
