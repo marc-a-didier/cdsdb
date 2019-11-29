@@ -9,32 +9,6 @@ require 'openssl'
 
 module Epsdf
 
-    NetworkTask = Struct.new(:action,         # action type (download/upload)
-                             :resource_type,  # type of file to work with
-                             :resource_data,  # may be a file name or a cache link
-                             :resource_owner, # call resource_owner.task_completed at the end
-                             :task_owner,
-                             :task_ref
-                            ) do
-
-        def to_params
-            params = { 'type' => self.resource_type, 'block_size' => Cfg.tx_block_size }
-
-            if self.resource_type == :track
-                params['file_name'] = Audio::Link.new.set_track_ref(self.resource_data.track.rtrack).setup_audio_file.file
-                params['rtrack'] = self.resource_data.track.rtrack
-            elsif self.resource_type == :db
-                params['file_name'] = DBIntf.build_db_name
-            else
-                params['file_name'] = self.resource_data
-            end
-            params['file_name'] = Cfg.relative_path(self.resource_type, params['file_name'])
-
-            return params
-        end
-    end
-
-
     module Protocol
         VERSION  = '1.0.0'
 
@@ -246,18 +220,12 @@ module Epsdf
         end
     end
 
-    module Client
+    module ClientImpl
 
         include Protocol
 
         def new_connection
             begin
-#                 while @streamer.session do
-#                     Trace.net('Waiting for session to be free')
-#                     sleep(0.5)
-#                 end
-#                 @streamer.session = true # Occupy the session as fast as possible with any value
-
                 socket = TCPSocket.new(Cfg.server, Cfg.port)
 
                 # expected_cert = OpenSSL::X509::Certificate.new(IO.read(SSL_CERT))
@@ -324,7 +292,7 @@ module Epsdf
         end
     end
 
-    module Server
+    module ServerImpl
 
         include Protocol
 

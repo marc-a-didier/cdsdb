@@ -1,14 +1,15 @@
 
 class TasksWindow < TopWindow
 
-    STATUS = ["Waiting", "Downloading...", "Done", "Uploading...", "Running...", "Cancelled"]
+    STATUS = ['Done', 'Cancelled', 'Waiting', 'Downloading...', 'Uploading...', 'Exporting...']
 
-    STAT_WAITING    = 0
-    STAT_DOWNLOAD   = 1
-    STAT_DONE       = 2
-    STAT_UPLOAD     = 3
-    STAT_RUN        = 4
-    STAT_CANCELLED  = 5
+
+    STAT_DONE       = 0
+    STAT_CANCELLED  = 1
+    STAT_WAITING    = 2
+    STAT_DOWNLOAD   = 3
+    STAT_UPLOAD     = 4
+    STAT_EXPORT     = 5
 
     COL_TASK_TYPE = 0
     COL_TITLE     = 1
@@ -16,6 +17,21 @@ class TasksWindow < TopWindow
     COL_STATUS    = 3
     COL_TASK      = 4
 
+    TASK_TO_INT  = { :download => STAT_DOWNLOAD, :upload => STAT_UPLOAD, :export => STAT_EXPORT }
+
+
+    Task = Struct.new(:action,         # action type (download/upload, export)
+                      :resource_type,  # type of file to work with
+                      :resource_data,  # may be a file name or a cache link
+                      :resource_owner, # call resource_owner.task_completed at the end
+                      :task_owner,
+                      :task_ref,
+                      :executed) do
+
+        def network_task?
+            return self.action != :export
+        end
+    end
 
     def initialize(mc)
         super(mc, GtkIDs::TASKS_WINDOW)
@@ -57,11 +73,7 @@ class TasksWindow < TopWindow
             @mutex.synchronize do
                 index = 0
                 while iter = @tv.model.get_iter(index.to_s)
-                    if iter[COL_STATUS] == STAT_DONE || iter[COL_STATUS] == STAT_CANCELLED
-                        @tv.model.remove(iter)
-                    else
-                        index += 1
-                    end
+                    iter[COL_STATUS] < STAT_WAITING ? @tv.model.remove(iter) : index += 1
                 end
                 @tv.columns_autosize
             end
@@ -75,57 +87,59 @@ class TasksWindow < TopWindow
             end
         end
 
-        @chk_thread = nil
         @has_cancelled = false
         @mutex = Mutex.new
 
-        check_config
+        Trace.debug('Task thread started...'.green)
+        @chk_thread = Thread.new do
+            loop do
+                check_waiting_tasks
+                sleep(1.0)
+            end
+        end
     end
 
     def check_waiting_tasks
         @mutex.synchronize do
             @tv.model.each do |model, path, iter|
                 # Exit loop if a task is already processing
-                break if iter.nil? || iter[COL_STATUS] == STAT_DOWNLOAD || iter[COL_STATUS] == STAT_UPLOAD
+                break if iter[COL_STATUS] > STAT_WAITING
 
-                # If the task has no owner, skip the entry. It means it's another type of
-                # task (e.g. export to device), it's handled by the caller itself and no EpsdfClient should be started.
-                if iter[COL_STATUS] == STAT_WAITING && iter[COL_TASK].resource_owner
+                if iter[COL_STATUS] == STAT_WAITING
                     @tv.set_cursor(iter.path, nil, false)
-                    iter[COL_STATUS] = iter[COL_TASK_TYPE].to_sym == :upload ? STAT_UPLOAD : STAT_DOWNLOAD
+                    iter[COL_STATUS] = TASK_TO_INT[iter[COL_TASK].action]
+                    iter[COL_STATUS] = iter[COL_TASK].network_task? ? (Epsdf::Client.new.process_task(iter[COL_TASK]) ? 0 : 1) :
+                                                                      (PListExporter.process_task(iter[COL_TASK]) ? 0 : 1)
+                    iter[COL_TASK].executed = Time.now.to_i
+                end
+            end
 
-                    EpsdfClient.new.send(iter[COL_TASK_TYPE].to_sym == :upload ? :upload_resource : :download_resource, iter[COL_TASK])
+            # Automatically remove executed tasks after a delay
+            index = 0
+            while iter = @tv.model.get_iter(index.to_s)
+                if iter[COL_TASK].executed && (Time.now.to_i-iter[COL_TASK].executed > 5*60)
+                    @tv.model.remove(iter)
+                    @tv.columns_autosize
+                else
+                    index += 1
                 end
             end
         end
     end
 
-    def check_config
+    def remote_config_updated
+        # Called when the server connection is switched.
+        # If Cfg.remote? is true it was false before and inversely
         if Cfg.remote?
-            if @chk_thread.nil?
-                Trace.debug('Task thread started...'.green) if Cfg.trace_network
-                DBCache::Cache.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
-                @chk_thread = Thread.new do
-                    loop do
-                        check_waiting_tasks
-                        sleep(1.0)
-                    end
-                end
-            end
-        elsif @chk_thread
+            DBCache::Cache.set_audio_status_from_to(Audio::Status::NOT_FOUND, Audio::Status::UNKNOWN)
+        else
             DBCache::Cache.set_audio_status_from_to(Audio::Status::ON_SERVER, Audio::Status::NOT_FOUND)
-            @chk_thread.exit
-            @chk_thread = nil
-            Trace.debug('Task thread stopped'.brown) if Cfg.trace_network
         end
-    end
-
-    def select_task(iter)
-        @tv.set_cursor(iter.path, nil, false)
+        Trace.debug('DB cache audio status reset'.red)
     end
 
     def in_downloads?(iter)
-        return iter[COL_STATUS] == STAT_WAITING || iter[COL_STATUS] == STAT_DOWNLOAD
+        return iter[COL_STATUS] >= STAT_WAITING
     end
 
     def track_in_download?(dblink)
@@ -137,29 +151,31 @@ class TasksWindow < TopWindow
         return false
     end
 
-    def task_type(network_task)
-        type = network_task.resource_type == :track ? 'Audio ' : 'File '
-        return type+network_task.action.to_s
+    def task_type(task)
+        type = task.resource_type == :track ? 'Audio ' : 'File '
+        return type+task.action.to_s
     end
 
-    def task_title(network_task)
-        if network_task.resource_type == :track && network_task.action == :download
-            return network_task.resource_data.track.stitle
+    def task_title(task)
+        if task.resource_type == :track && task.action == :download
+            return task.resource_data.track.stitle
         else
-            return File.basename(network_task.resource_data)
+            return File.basename(task.resource_data)
         end
     end
 
-    def new_task(network_task)
+    def new_task(task)
+        return nil if task.network_task? && !Cfg.remote
+
         iter = @tv.model.append
-        iter[COL_TASK_TYPE] = network_task.action
-        iter[COL_TITLE]     = task_title(network_task)
+        iter[COL_TASK_TYPE] = task.action
+        iter[COL_TITLE]     = task_title(task)
         iter[COL_PROGRESS]  = 0
         iter[COL_STATUS]    = STAT_WAITING
-        iter[COL_TASK]      = network_task
+        iter[COL_TASK]      = task
 
-        network_task.task_owner = self
-        network_task.task_ref   = iter
+        task.task_owner = self
+        task.task_ref   = iter
 
         return iter
     end
@@ -177,9 +193,9 @@ class TasksWindow < TopWindow
             end
             @has_cancelled = false
         else
-            iter[COL_PROGRESS] = 100
-            iter[COL_STATUS]   = STAT_DONE
-            iter[COL_TASK].resource_owner.task_completed(iter[COL_TASK]) if iter[COL_TASK].resource_owner
+            iter[COL_PROGRESS] = status ? 100 : 0
+            iter[COL_STATUS]   = status ? STAT_DONE : STAT_CANCELLED
+            iter[COL_TASK].resource_owner.task_completed(iter[COL_TASK]) if status && iter[COL_TASK].resource_owner
         end
     end
 end

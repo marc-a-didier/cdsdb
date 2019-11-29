@@ -83,7 +83,7 @@ class MainWindow < TopWindow
         GtkUI[MW_MEMOS_ACTION].signal_connect(:activate)  { toggle_window_visibility(@mc.memos)   }
         GtkUI[MW_SERVER_ACTION].signal_connect(:activate) {
             Cfg.remote = GtkUI[MW_SERVER_ACTION].active?
-            @mc.tasks.check_config
+            @mc.tasks.remote_config_updated
             @trk_browser.check_for_audio_file if @trk_browser
         }
 
@@ -126,7 +126,7 @@ class MainWindow < TopWindow
         GtkUI[MM_FILE_QUIT].signal_connect(:activate)        { @mc.clean_up; Gtk.main_quit }
 
         GtkUI[MM_EDIT_SEARCH].signal_connect(:activate)      { @search_dlg = Dialogs::Search.new(@mc).run }
-        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { Dialogs::Preferences.run; @mc.tasks.check_config }
+        GtkUI[MM_EDIT_PREFS].signal_connect(:activate)       { Dialogs::Preferences.run; @mc.tasks.remote_config_updated }
 
 
         [MM_VIEW_BYNUMBER, MM_VIEW_BYRATING, MM_VIEW_BYPLAYCOUNT, MM_VIEW_BYDATE, MM_VIEW_BYLENGTH].each { |item|
@@ -195,7 +195,7 @@ class MainWindow < TopWindow
         @img_popup = Gtk::Menu.new
         item = Gtk::MenuItem.new('Upload to server', false)
         item.signal_connect(:activate) { |widget|
-            @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :covers, @mc.track_xlink.cover_file_name, nil))
+            @mc.tasks.new_task(TasksWindow::Task.new(:upload, :covers, @mc.track_xlink.cover_file_name, nil))
         }
         @img_popup.append(item)
         @img_popup.show_all
@@ -394,7 +394,7 @@ class MainWindow < TopWindow
 
     def dump_serverinfo
         if Cfg.remote?
-            puts(EpsdfClient.new.server_info.bold)
+            puts(Epsdf::Client.new.server_info.bold)
         else
             puts('Not in connected mode!'.red.bold)
         end
@@ -410,12 +410,12 @@ class MainWindow < TopWindow
             return
         end
         # Bad idea to go download a previous db version...
-        if EpsdfClient.new.get_server_db_version < DBIntf.db_version
+        if Epsdf::Client.new.get_server_db_version < DBIntf.db_version
            GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
            return
         end
         file = File.basename(DBIntf.build_db_name)
-        @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, :db, file, self))
+        @mc.tasks.new_task(TasksWindow::Task.new(:download, :db, file, self))
     end
 
     def task_completed(network_task)
@@ -433,13 +433,13 @@ class MainWindow < TopWindow
 
     def on_update_resources
         [:covers, :icons].each do |resource_type|
-            EpsdfClient.new.resources_to_update(resource_type).each do |resource|
-                @mc.tasks.new_task(Epsdf::NetworkTask.new(:download, resource_type, resource, self))
+            Epsdf::Client.new.resources_to_update(resource_type).each do |resource|
+                @mc.tasks.new_task(TasksWindow::Task.new(:download, resource_type, resource, self))
             end
         end if Cfg.remote?
     end
 
     def on_update_sources
-        # EpsdfClient.new.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
+        # Epsdf::Client.new.synchronize_sources.each { |file| @mc.tasks.new_file_download(self, file, 1) } if Cfg.remote?
     end
 end

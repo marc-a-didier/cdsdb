@@ -302,7 +302,7 @@ class TracksBrowser < Gtk::TreeView
         # If client mode and some or all files not found, ask if present on the server
         if Cfg.remote? && check_on_server
             # Replace each file not found state with server state
-            EpsdfClient.new.has_audio(self.map { |iter| iter[TTV_REF] }).each_with_index do |found, i|
+            Epsdf::Client.new.has_audio(self.map { |iter| iter[TTV_REF] }).each_with_index do |found, i|
                 iter = model.get_iter(i.to_s)
                 iter[TTV_XLINK].set_audio_status(Audio::Status::ON_SERVER) if (iter[TTV_XLINK].audio_status == Audio::Status::NOT_FOUND) && found != 0
             end
@@ -436,7 +436,7 @@ class TracksBrowser < Gtk::TreeView
             #         under exceptional and unclear circumstances
 
             # Must rename on server BEFORE the sql update is done because it needs the old name to find the track!!
-            EpsdfClient.new.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
+            Epsdf::Client.new.rename_audio(xtrack.track.rtrack, new_text) if Cfg.remote?
 
             xtrack.track.stitle = new_text
             xtrack.track.sql_update
@@ -502,7 +502,7 @@ class TracksBrowser < Gtk::TreeView
         meth = use_selection ? selection.method(:selected_each) : model.method(:each)
         meth.call do |model, path, iter|
             if iter[TTV_XLINK].audio_status == Audio::Status::ON_SERVER
-                iter[TTV_XLINK].get_remote_audio_file(Epsdf::NetworkTask.new(:download, :track, iter[TTV_XLINK], self), @mc.tasks)
+                iter[TTV_XLINK].get_remote_audio_file(TasksWindow::Task.new(:download, :track, iter[TTV_XLINK], self), @mc.tasks)
             end
         end
     end
@@ -511,15 +511,15 @@ class TracksBrowser < Gtk::TreeView
         tracks = []
         model.each { |model, path, iter| (tracks << iter[TTV_REF]) if iter[TTV_XLINK].audio_status == Audio::Status::OK }
         # Replace each file not found state with server state
-        EpsdfClient.new.has_audio(tracks).each_with_index do |found, i|
+        Epsdf::Client.new.has_audio(tracks).each_with_index do |found, i|
             if found == 0
-                @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :track, model.get_iter(i.to_s)[TTV_XLINK].audio_file, nil))
+                @mc.tasks.new_task(TasksWindow::Task.new(:upload, :track, model.get_iter(i.to_s)[TTV_XLINK].audio_file, nil))
             end
         end
 
         Trace.debug("Checking cover file: #{model.get_iter('0')[TTV_XLINK].cover_file_name}")
-        unless EpsdfClient.new.has_resource(:covers, model.get_iter('0')[TTV_XLINK].cover_file_name)
-            @mc.tasks.new_task(Epsdf::NetworkTask.new(:upload, :covers, model.get_iter('0')[TTV_XLINK].cover_file_name, nil))
+        unless Epsdf::Client.new.has_resource(:covers, model.get_iter('0')[TTV_XLINK].cover_file_name)
+            @mc.tasks.new_task(TasksWindow::Task.new(:upload, :covers, model.get_iter('0')[TTV_XLINK].cover_file_name, nil))
         end
     end
 

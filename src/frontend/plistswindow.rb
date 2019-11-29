@@ -422,7 +422,7 @@ class PListsWindow < TopWindow
         return if @tvpl.selection.selected.nil?
         DBUtils.renumber_plist(@current_pl.rplist, local?)
         # DBUtils.renumber_play_list(@current_pl.rplist)
-        # EpsdfClient.new.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
+        # Epsdf::Client.new.renumber_play_list(@current_pl.rplist) if !local? && Cfg.remote?
     end
 
     def enqueue_track
