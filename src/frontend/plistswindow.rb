@@ -34,7 +34,7 @@ class PListsWindow < TopWindow
         GtkUI[GtkIDs::PM_PL_EXPORT_M3U].signal_connect(:activate)    { PListExporter.export_to_m3u(@pts, @current_pl.sname)  }
         GtkUI[GtkIDs::PM_PL_EXPORT_PLS].signal_connect(:activate)    { PListExporter.export_to_pls(@pts, @current_pl.sname)  }
 #         GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_to_device(@mc, @pts) }
-        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { PListExporter.export_tracks_to_device(@mc, selected_tracks) }
+        GtkUI[GtkIDs::PM_PL_EXPORT_DEVICE].signal_connect(:activate) { FSExporter.export_tracks_to_device(@mc, selected_tracks) }
         GtkUI[GtkIDs::PM_PL_SHUFFLE].signal_connect(:activate)       { shuffle_play_list }
         GtkUI[GtkIDs::PM_PL_ENQUEUE].signal_connect(:activate)       { enqueue_track }
         GtkUI[GtkIDs::PM_PL_SHOWINBROWSER].signal_connect(:activate) {

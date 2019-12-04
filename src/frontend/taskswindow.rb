@@ -17,7 +17,7 @@ class TasksWindow < TopWindow
     COL_STATUS    = 3
     COL_TASK      = 4
 
-    TASK_TO_INT  = { :download => STAT_DOWNLOAD, :upload => STAT_UPLOAD, :export => STAT_EXPORT }
+    TASK_TO_STAT  = { :download => STAT_DOWNLOAD, :upload => STAT_UPLOAD, :export => STAT_EXPORT }
 
 
     Task = Struct.new(:action,         # action type (download/upload, export)
@@ -81,48 +81,46 @@ class TasksWindow < TopWindow
 
         # Check if there is at least one download in progress before setting the cancel flag
         GtkUI[GtkIDs::TKPM_CANCEL].signal_connect(:activate) do
-            @tv.model.each do |model, path, iter|
-                @has_cancelled = true if in_downloads?(iter)
-                break if @has_cancelled
+            @mutex.synchronize do
+                @tv.model.each do |model, path, iter|
+                    if iter[COL_STATUS] >= STAT_WAITING
+                        iter[COL_STATUS] = STAT_CANCELLED
+                        iter[COL_TASK].executed = Time.now.to_i
+                    end
+                end
             end
         end
 
-        @has_cancelled = false
         @mutex = Mutex.new
 
-        Trace.debug('Task thread started...'.green)
-        @chk_thread = Thread.new do
-            loop do
-                check_waiting_tasks
+        Trace.debug('Task thread starting...'.green)
+        Thread.new do
+            Kernel.loop do
+                @mutex.synchronize { check_tasks } unless @mutex.locked?
                 sleep(1.0)
             end
         end
     end
 
-    def check_waiting_tasks
-        @mutex.synchronize do
-            @tv.model.each do |model, path, iter|
-                # Exit loop if a task is already processing
-                break if iter[COL_STATUS] > STAT_WAITING
+    def check_tasks
+        @tv.model.each do |model, path, iter|
+            # Exit loop if a task is already processing
+            break if iter[COL_STATUS] > STAT_WAITING
 
-                if iter[COL_STATUS] == STAT_WAITING
-                    @tv.set_cursor(iter.path, nil, false)
-                    iter[COL_STATUS] = TASK_TO_INT[iter[COL_TASK].action]
-                    iter[COL_STATUS] = iter[COL_TASK].network_task? ? (Epsdf::Client.new.process_task(iter[COL_TASK]) ? 0 : 1) :
-                                                                      (PListExporter.process_task(iter[COL_TASK]) ? 0 : 1)
-                    iter[COL_TASK].executed = Time.now.to_i
-                end
+            if iter[COL_STATUS] == STAT_WAITING
+                @tv.set_cursor(iter.path, nil, false)
+                iter[COL_STATUS] = TASK_TO_STAT[iter[COL_TASK].action]
+                iter[COL_STATUS] = iter[COL_TASK].network_task? ? (Epsdf::Client.new.process_task(iter[COL_TASK]) ? 0 : 1) :
+                                                                  (FSExporter.process_task(iter[COL_TASK]) ? 0 : 1)
+                iter[COL_TASK].executed = Time.now.to_i
+                break # Process one task at a time
             end
 
             # Automatically remove executed tasks after a delay
-            index = 0
-            while iter = @tv.model.get_iter(index.to_s)
-                if iter[COL_TASK].executed && (Time.now.to_i-iter[COL_TASK].executed > 5*60)
-                    @tv.model.remove(iter)
-                    @tv.columns_autosize
-                else
-                    index += 1
-                end
+            if iter[COL_TASK].executed && (Time.now.to_i-iter[COL_TASK].executed > 5*60)
+                @tv.model.remove(iter)
+                @tv.columns_autosize
+                break # Must exit, the each loop is now broken since iter was removed
             end
         end
     end
@@ -138,30 +136,22 @@ class TasksWindow < TopWindow
         Trace.debug('DB cache audio status reset'.red)
     end
 
-    def in_downloads?(iter)
-        return iter[COL_STATUS] >= STAT_WAITING
-    end
-
     def track_in_download?(dblink)
         @tv.model.each do |model, path, iter|
             return true if iter[COL_TASK].resource_type == :track &&
                            iter[COL_TASK].resource_data.track.rtrack == dblink.track.rtrack &&
-                           in_downloads?(iter)
+                           iter[COL_STATUS] >= STAT_WAITING
         end
         return false
     end
 
     def task_type(task)
-        type = task.resource_type == :track ? 'Audio ' : 'File '
-        return type+task.action.to_s
+        return (task.resource_type == :track ? 'Audio ' : 'File ')+task.action.to_s
     end
 
     def task_title(task)
-        if task.resource_type == :track && task.action == :download
-            return task.resource_data.track.stitle
-        else
-            return File.basename(task.resource_data)
-        end
+        return task.resource_type == :track && task.action == :download ? task.resource_data.track.stitle :
+                                                                          File.basename(task.resource_data)
     end
 
     def new_task(task)
@@ -183,19 +173,13 @@ class TasksWindow < TopWindow
     def update_file_op(iter, curr_size, tot_size)
         iter[COL_PROGRESS] = (curr_size*100.0/tot_size).to_i
         Gtk.main_iteration while Gtk.events_pending?
-        return @has_cancelled ? Epsdf::Protocol::STAT_ABRT : Epsdf::Protocol::STAT_CONT #Cfg::STAT_CANCELLED : Cfg::STAT_CONTINUE
+        # Don't think it makes any sense, the cancel jobs action must acquire the mutex and it can't
+        # get it while the task is in progess...
+        return iter[COL_STATUS] == STAT_CANCELLED ? Epsdf::Protocol::STAT_ABRT : Epsdf::Protocol::STAT_CONT
     end
 
     def end_file_op(iter, status)
-        if !status && @has_cancelled
-            @mutex.synchronize do
-                @tv.model.each { |model, path, iter| iter[COL_STATUS] = STAT_CANCELLED if in_downloads?(iter) }
-            end
-            @has_cancelled = false
-        else
-            iter[COL_PROGRESS] = status ? 100 : 0
-            iter[COL_STATUS]   = status ? STAT_DONE : STAT_CANCELLED
-            iter[COL_TASK].resource_owner.task_completed(iter[COL_TASK]) if status && iter[COL_TASK].resource_owner
-        end
+        iter[COL_STATUS] = status ? STAT_DONE : STAT_CANCELLED
+        iter[COL_TASK].resource_owner.task_completed(iter[COL_TASK]) if status && iter[COL_TASK].resource_owner
     end
 end

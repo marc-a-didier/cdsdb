@@ -53,24 +53,24 @@ class MainWindow < TopWindow
         # Set cd image to default image
         GtkUI[REC_IMAGE].pixbuf = XIntf::Image::Cache.default_large_record
 
-        Gtk::IconTheme.add_builtin_icon("player_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"player.png"))
-        Gtk::IconTheme.add_builtin_icon("pqueue_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"pqueue.png"))
-        Gtk::IconTheme.add_builtin_icon("plists_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"plists.png"))
-        Gtk::IconTheme.add_builtin_icon("charts_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"charts.png"))
-        GtkUI[MW_TBBTN_PLAYER].icon_name = "player_icon"
-        GtkUI[MW_TBBTN_PQUEUE].icon_name = "pqueue_icon"
-        GtkUI[MW_TBBTN_PLISTS].icon_name = "plists_icon"
-        GtkUI[MW_TBBTN_CHARTS].icon_name = "charts_icon"
+        Gtk::IconTheme.add_builtin_icon('player_icon', 22, GtkUtils.get_btn_icon(Cfg.icons_dir+'player.png'))
+        Gtk::IconTheme.add_builtin_icon('pqueue_icon', 22, GtkUtils.get_btn_icon(Cfg.icons_dir+'pqueue.png'))
+        Gtk::IconTheme.add_builtin_icon('plists_icon', 22, GtkUtils.get_btn_icon(Cfg.icons_dir+'plists.png'))
+        Gtk::IconTheme.add_builtin_icon('charts_icon', 22, GtkUtils.get_btn_icon(Cfg.icons_dir+'charts.png'))
+        GtkUI[MW_TBBTN_PLAYER].icon_name = 'player_icon'
+        GtkUI[MW_TBBTN_PQUEUE].icon_name = 'pqueue_icon'
+        GtkUI[MW_TBBTN_PLISTS].icon_name = 'plists_icon'
+        GtkUI[MW_TBBTN_CHARTS].icon_name = 'charts_icon'
 
-        Gtk::IconTheme.add_builtin_icon("server_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"network-server.png"))
-        Gtk::IconTheme.add_builtin_icon("tasks_icon",  22, GtkUtils.get_btn_icon(Cfg.icons_dir+"tasks.png"))
-        Gtk::IconTheme.add_builtin_icon("filter_icon", 22, GtkUtils.get_btn_icon(Cfg.icons_dir+"filter.png"))
-        Gtk::IconTheme.add_builtin_icon("memos_icon",  22, GtkUtils.get_btn_icon(Cfg.icons_dir+"document-edit.png"))
+        Gtk::IconTheme.add_builtin_icon('server_icon', 22, GtkUtils.get_btn_icon(Cfg.icons_dir+'network-server.png'))
+        Gtk::IconTheme.add_builtin_icon('tasks_icon',  22, GtkUtils.get_btn_icon(Cfg.icons_dir+'tasks.png'))
+        Gtk::IconTheme.add_builtin_icon('filter_icon', 22, GtkUtils.get_btn_icon(Cfg.icons_dir+'filter.png'))
+        Gtk::IconTheme.add_builtin_icon('memos_icon',  22, GtkUtils.get_btn_icon(Cfg.icons_dir+'document-edit.png'))
 
-        GtkUI[MW_TBBTN_SERVER].icon_name = "server_icon"
-        GtkUI[MW_TBBTN_TASKS].icon_name  = "tasks_icon"
-        GtkUI[MW_TBBTN_FILTER].icon_name = "filter_icon"
-        GtkUI[MW_TBBTN_MEMOS].icon_name  = "memos_icon"
+        GtkUI[MW_TBBTN_SERVER].icon_name = 'server_icon'
+        GtkUI[MW_TBBTN_TASKS].icon_name  = 'tasks_icon'
+        GtkUI[MW_TBBTN_FILTER].icon_name = 'filter_icon'
+        GtkUI[MW_TBBTN_MEMOS].icon_name  = 'memos_icon'
 
 
         # Connect signals needed to restore windows positions
@@ -99,13 +99,13 @@ class MainWindow < TopWindow
         Prefs.load_menu_state(GtkUI[VIEW_MENU])
 
         # Set windows icons
-        @mc.pqueue.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"pqueue.png")
-        @mc.player.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"player.png")
-        @mc.plists.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"plists.png")
-        @mc.charts.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"charts.png")
-        @mc.tasks.window.icon   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"tasks.png")
-        @mc.filters.window.icon = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"filter.png")
-        @mc.memos.window.icon   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"document-edit.png")
+        @mc.pqueue.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'pqueue.png')
+        @mc.player.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'player.png')
+        @mc.plists.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'plists.png')
+        @mc.charts.window.icon  = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'charts.png')
+        @mc.tasks.window.icon   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'tasks.png')
+        @mc.filters.window.icon = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'filter.png')
+        @mc.memos.window.icon   = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'document-edit.png')
 
         # Stores the history window object
         @history = [nil, nil, nil, nil] # Pointer to recent added/ripped/played
@@ -171,7 +171,7 @@ class MainWindow < TopWindow
 
         # It took me ages to research this (copied as it from a pyhton forum!!!! me too!!!!)
         GtkUI[MAIN_WINDOW].add_events( Gdk::Event::FOCUS_CHANGE) # It took me ages to research this
-        GtkUI[MAIN_WINDOW].signal_connect("focus_in_event") { |widget, event| @mc.filter_receiver = self; false }
+        GtkUI[MAIN_WINDOW].signal_connect('focus_in_event') { |widget, event| @mc.filter_receiver = self; false }
 
         # Status icon popup menu
         GtkUI[TTPM_ITEM_PLAY].signal_connect(:activate)  { GtkUI[PLAYER_BTN_START].send(:clicked) }
@@ -182,9 +182,9 @@ class MainWindow < TopWindow
         GtkUI[TTPM_ITEM_QUIT].signal_connect(:activate)  { GtkUI[MM_FILE_QUIT].send(:activate) }
 
 
-        GtkUI[REC_VP_IMAGE].signal_connect("button_press_event") { |widget, event| handle_img_click(widget, event) }
+        GtkUI[REC_VP_IMAGE].signal_connect('button_press_event') { |widget, event| handle_img_click(widget, event) }
 
-        dragtable = [ ["text/uri-list", Gtk::Drag::TargetFlags::OTHER_APP, 105] ]
+        dragtable = [ ['text/uri-list', Gtk::Drag::TargetFlags::OTHER_APP, 105] ]
         Gtk::Drag::dest_set(GtkUI[REC_VP_IMAGE],
                             Gtk::Drag::DEST_DEFAULT_ALL, dragtable,
                             Gdk::DragContext::ACTION_COPY)
@@ -230,7 +230,7 @@ class MainWindow < TopWindow
         # Disable sensible controls if not in admin mode
         ADMIN_CTRLS.each { |control| GtkUI[control].sensitive = false } unless Cfg.admin
 
-        GtkUI[MAIN_WINDOW].icon = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+"audio-cd.png")
+        GtkUI[MAIN_WINDOW].icon = GdkPixbuf::Pixbuf.new(file: Cfg.icons_dir+'audio-cd.png')
         GtkUI[MAIN_WINDOW].show
 
         #
@@ -300,14 +300,14 @@ class MainWindow < TopWindow
     def on_set_tags(widget)
         bit = 1 << Qualifiers::TAGS.index(widget.child.label)
         bit = -bit unless widget.active? # Send negative value to tell it must be unset
-        @trk_browser.set_track_field("itags", bit, @pm_owner.instance_of?(RecordsBrowser))
+        @trk_browser.set_track_field('itags', bit, @pm_owner.instance_of?(RecordsBrowser))
     end
 
     #
     # Send the value of rating selection to the popup owner so it can do what it wants of it
     #
     def on_set_rating(widget)
-        @trk_browser.set_track_field("irating", Qualifiers::RATINGS.index(widget.child.label), @pm_owner.instance_of?(RecordsBrowser))
+        @trk_browser.set_track_field('irating', Qualifiers::RATINGS.index(widget.child.label), @pm_owner.instance_of?(RecordsBrowser))
     end
 
 
@@ -322,9 +322,9 @@ class MainWindow < TopWindow
     end
 
     def set_dbrefs_visibility
-        [@art_browser, @rec_browser, @trk_browser, @mc.plists, @mc.filters].each { |receiver|
+        [@art_browser, @rec_browser, @trk_browser, @mc.plists, @mc.filters].each do |receiver|
             receiver.set_ref_column_visibility(GtkUI[MM_VIEW_DBREFS].active?)
-        }
+        end
     end
 
     #
@@ -393,11 +393,7 @@ class MainWindow < TopWindow
     end
 
     def dump_serverinfo
-        if Cfg.remote?
-            puts(Epsdf::Client.new.server_info.bold)
-        else
-            puts('Not in connected mode!'.red.bold)
-        end
+        puts(Cfg.remote? ? Epsdf::Client.new.server_info.bold : 'Not in connected mode!'.red.bold)
     end
 
     #

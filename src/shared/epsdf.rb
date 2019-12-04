@@ -170,7 +170,7 @@ module Epsdf
             file = Cfg.dir(msg['type'].to_sym)+msg['file_name']
             if File.exists?(file)
                 # If small size is prefered over quality, the requested block size is negative.
-                if self.is_a?(Server)
+                if self.is_a?(Server) # ServerImpl???
                     Cfg.size_over_quality = params['block_size'] < 0
                 end
                 msg['block_size'] = params['block_size'].abs
