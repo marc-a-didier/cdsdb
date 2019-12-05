@@ -46,7 +46,7 @@ end
 module Log
     class << self
         def log
-            @log ||= Logger.new(Cfg.log_file, 100, 2*1024*1024)
+            @log ||= Logger.new(Cfg.log_file, 100, 20*1024*1024)
         end
 
         def method_missing(method, *args, &block)
