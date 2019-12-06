@@ -362,8 +362,7 @@ class MainWindow < TopWindow
     end
 
     def on_tag_dir_genre
-        value = Dialogs::DBSelector.new(:rgenre).run
-        if value
+        if value = Dialogs::DBSelector.new(:rgenre).run
             dir = GtkUtils.select_source(Gtk::FileChooser::ACTION_SELECT_FOLDER)
             Utils.tag_full_dir_to_genre(DBUtils.name_from_id(value, 'genre'), dir) unless dir.empty?
         end
@@ -405,13 +404,12 @@ class MainWindow < TopWindow
             GtkUtils.show_message("T'es VRAIMENT TROP CON mon gars!!!", Gtk::MessageDialog::ERROR)
             return
         end
-        # Bad idea to go download a previous db version...
+        # Bad idea to download an outdated db...
         if Epsdf::Client.new.get_server_db_version < DBIntf.db_version
-           GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
-           return
+            GtkUtils.show_message('DB version mismatch', Gtk::MessageDialog::ERROR)
+        else
+            @mc.tasks.new_task(TasksWindow::Task.new(:download, :db, File.basename(DBIntf.build_db_name), self))
         end
-        file = File.basename(DBIntf.build_db_name)
-        @mc.tasks.new_task(TasksWindow::Task.new(:download, :db, file, self))
     end
 
     def task_completed(network_task)
@@ -421,6 +419,7 @@ class MainWindow < TopWindow
                 DBCache::Cache.clear
                 @mc.reload_plists.reload_filters
                 set_window_title
+                Trace.debug('DB cache fully reset'.red)
 
             when :covers
                 XIntf::Image::Cache.reload
