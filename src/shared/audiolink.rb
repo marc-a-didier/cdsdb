@@ -20,11 +20,21 @@ module Audio
         end
 
         def audio_file
-            return @tags.nil? ? super : @tags.file_name
+#             return @tags.nil? ? super : @tags.file_name
+            if @tags
+               return @tags.file_name
+            else
+                return self.track ? super : self.setup_audio_file.file
+            end
         end
 
         def audio_status
-            return @tags.nil? ? super : Status::OK
+#             return @tags.nil? ? super : Status::OK
+            if @tags
+               return Status::OK
+            else
+                return self.track ? super : self.setup_audio_file.status
+            end
         end
 
         def load_from_tags(file_name)
@@ -39,28 +49,6 @@ module Audio
         # Builds the theoretical file name for a given track. Returns it WITHOUT extension.
         def build_audio_file_name
             return track.build_audio_file_name(segment_artist, record, segment, genre)
-
-#             # If we have a segment, find the intra-segment order. If segmented and isegorder is 0, then the track
-#             # is alone in its segment.
-#             track_pos = 0
-#             if record.segmented?
-#                 track_pos = track.isegorder == 0 ? 1 : track.isegorder
-#             end
-#             # If we have a segment, prepend the title with the track position inside the segment
-#             title = track_pos == 0 ? track.stitle : track_pos.to_s+". "+track.stitle
-#
-#             # If we have a compilation, the main dir is the record title as opposite to the standard case
-#             # where it's the artist name
-#             if record.compile?
-#                 dir = File.join(record.stitle.clean_path, segment_artist.sname.clean_path)
-#             else
-#                 dir = File.join(segment_artist.sname.clean_path, record.stitle.clean_path)
-#             end
-#
-#             fname = sprintf("%02d - %s", track.iorder, title.clean_path)
-#             dir += "/"+segment.stitle.clean_path unless segment.stitle.empty?
-#
-#             return Cfg.music_dir+genre.sname+"/"+dir+"/"+fname
         end
 
         def setup_audio_file

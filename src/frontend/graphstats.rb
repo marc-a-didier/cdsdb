@@ -310,17 +310,19 @@ module GraphStats
                     offset = Date.new(2010, 1, 1)
             end
 
-            charts = []
-            charts << self.played_tracks_evolution(offset, period)
-            charts << self.tags_snapshot(date, period)
-            charts << self.tags_evolution(offset, period)
-            charts << self.ratings_snapshot(date, period)
-            charts << self.ratings_evolution(offset, period)
-            charts << self.genres_snapshot(date, period)
-            charts << self.genres_evolution(offset, period)
-            charts << self.artists_snapshot(date, period)
-            charts << self.countries_snapshot(date, period)
-            self.render_charts(charts)
+            Thread.new do
+                charts = []
+                charts << self.played_tracks_evolution(offset, period)
+                charts << self.tags_snapshot(date, period)
+                charts << self.tags_evolution(offset, period)
+                charts << self.ratings_snapshot(date, period)
+                charts << self.ratings_evolution(offset, period)
+                charts << self.genres_snapshot(date, period)
+                charts << self.genres_evolution(offset, period)
+                charts << self.artists_snapshot(date, period)
+                charts << self.countries_snapshot(date, period)
+                self.render_charts(charts)
+            end
         end
     end
 end

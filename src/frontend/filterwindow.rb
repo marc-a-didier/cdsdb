@@ -177,14 +177,15 @@ class FilterWindow < TopWindow
             to_date   = GtkUI[FLT_ENTRY_TODATE].text.to_date
             to_date, from_date = from_date, to_date if to_date > 0 && from_date > 0 && to_date < from_date
 
+            # Try to avoid the use of the logtracks table, it saves a lot of time!
             if from_date == 0 && to_date > 0
-                # If only to_date is set, we can use the track last played field, it saves a lot of time
-                # not using the logtracks table...
                 wc += " AND tracks.ilastplayed <= #{to_date}"
+            elsif from_date > 0 && to_date == 0
+                wc += " AND tracks.ilastplayed >= #{from_date}"
             else
                 wc += ' AND (SELECT idateplayed FROM logtracks WHERE logtracks.rtrack=tracks.rtrack' unless is_for_charts
-                wc += " AND logtracks.idateplayed >= #{from_date}" if from_date > 0
-                wc += " AND logtracks.idateplayed <= #{to_date}" if to_date > 0
+                wc += " AND logtracks.idateplayed >= #{from_date}"
+                wc += " AND logtracks.idateplayed <= #{to_date}"
                 wc += ')' unless is_for_charts
             end
         end

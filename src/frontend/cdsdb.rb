@@ -6,10 +6,10 @@ gtk_version = '3.2.8'
 gem 'glib2', gtk_version
 gem 'gstreamer', gtk_version
 gem 'gtk2', gtk_version
-# require 'gstreamer'
 
 require 'gtk2'
-require 'gst'
+require 'gstreamer'
+# require 'gst'
 require 'sqlite3'
 require 'taglib2'
 
@@ -46,10 +46,15 @@ require '../shared/dbutils'
 require '../shared/audiolink'
 require '../shared/epsdf'
 
-# require './gstplayer'
-require './gstplayer_g1.0'
-# require './gstreplaygain'
-require './gstreplaygain_g1.0'
+if ARGV.detect { |arg| arg == '--oldgst' }
+    require './gstplayer'
+    require './gstreplaygain'
+    require './playerwindow'
+else
+    require './gstplayer_g1.0'
+    require './gstreplaygain_g1.0'
+    require './playerwindow_g1.0'
+end
 
 require './qualifiers'
 require './gtkbuilderintf'
@@ -74,7 +79,7 @@ require './discanalyzer'
 require './prefs'
 require './filterwindow'
 # require './playerwindow'
-require './playerwindow_g1.0'
+# require './playerwindow_g1.0'
 require './pqueuewindow'
 require './cdeditorwindow'
 require './memoswindow'
