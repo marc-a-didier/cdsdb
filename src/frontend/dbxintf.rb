@@ -15,7 +15,7 @@ module XIntf
 
         def to_widgets
             GtkUI[GtkIDs::MW_INFLBL_ARTIST].text = info_string
-            GtkUI[GtkIDs::MEMO_ARTIST].buffer.text = valid_artist_ref? ? artist.mnotes.to_memo : ""
+            GtkUI[GtkIDs::MEMO_ARTIST].buffer.text = valid_artist_ref? ? artist.mnotes.to_memo : ''
         end
 
         def from_widgets

@@ -56,7 +56,7 @@ class TracksBrowser < Gtk::TreeView
         pixcol.pack_start(pix, false)
         pixcol.set_cell_data_func(pix) { |column, cell, model, iter| cell.pixbuf = iter.get_value(TTV_PIX) }
 
-        colNames = ["Ref.", "Track", "Title", "Duration", "Artist"]
+        colNames = ['Ref.', 'Track', 'Title', 'Duration', 'Artist']
         title_col = Gtk::TreeViewColumn.new(colNames[2], renderer, :text => TTV_TITLE)
         append_column(Gtk::TreeViewColumn.new(colNames[0], Gtk::CellRendererText.new, :text => TTV_REF))
         append_column(pixcol)
@@ -74,10 +74,10 @@ class TracksBrowser < Gtk::TreeView
         end
 
         enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
-                                 [["browser-selection", Gtk::Drag::TargetFlags::SAME_APP, 700]],
+                                 [['browser-selection', Gtk::Drag::TargetFlags::SAME_APP, 700]],
                                  Gdk::DragContext::ACTION_COPY)
         signal_connect(:drag_data_get) do |widget, drag_context, selection_data, info, time|
-            tracks = "tracks:message:get_tracks_selection"
+            tracks = 'tracks:message:get_tracks_selection'
             selection_data.set(Gdk::Selection::TYPE_STRING, tracks)
         end
 
@@ -103,7 +103,7 @@ class TracksBrowser < Gtk::TreeView
             if @trklnk.valid_track_ref? && @trklnk.playable?
                 Dialogs::Audio.run(@trklnk.audio_file)
             else
-                GtkUtils.show_message("File not found!", Gtk::MessageDialog::ERROR)
+                GtkUtils.show_message('File not found!', Gtk::MessageDialog::ERROR)
             end
         end
         GtkUI[GtkIDs::TRK_POPUP_PLAYHIST].signal_connect(:activate) {
@@ -149,10 +149,10 @@ class TracksBrowser < Gtk::TreeView
             sub_menu = GtkUI[GtkIDs::TRK_POPUP_ADDTOPL].submenu
             GtkUI[GtkIDs::TRK_POPUP_ADDTOPL].remove_submenu
             sub_menu.destroy if sub_menu
-            if DBIntf.get_first_value("SELECT COUNT(rplist) FROM plists;").to_i > 0
+            if DBIntf.get_first_value('SELECT COUNT(rplist) FROM plists;').to_i > 0
                 pltpm = Gtk::Menu.new
                 items = []
-                DBIntf.execute("SELECT sname FROM plists ORDER BY sname;") do |row|
+                DBIntf.execute('SELECT sname FROM plists ORDER BY sname;') do |row|
                     items << Gtk::MenuItem.new(row[0], false)
                     items.last.signal_connect(:activate) { |widget| on_trk_add_to_pl(widget) }
                     pltpm.append(items.last)
@@ -178,12 +178,12 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def generate_sql(rtrack = -1)
-        sql =  "SELECT tracks.rtrack, tracks.iorder, tracks.stitle, tracks.iplaytime, tracks.isegorder," \
-                      "artists.sname, segments.rartist, segments.stitle, tracks.irating, tracks.iplayed FROM tracks " \
-                "INNER JOIN segments ON tracks.rsegment=segments.rsegment " \
-                "INNER JOIN artists ON artists.rartist=segments.rartist " \
-                "INNER JOIN records ON records.rrecord=tracks.rrecord "
-        #sql +=  "INNER JOIN records ON records.rrecord=tracks.rrecord " unless @mc.main_filter.empty?
+        sql =  'SELECT tracks.rtrack, tracks.iorder, tracks.stitle, tracks.iplaytime, tracks.isegorder,' \
+                      'artists.sname, segments.rartist, segments.stitle, tracks.irating, tracks.iplayed FROM tracks ' \
+                'INNER JOIN segments ON tracks.rsegment=segments.rsegment ' \
+                'INNER JOIN artists ON artists.rartist=segments.rartist ' \
+                'INNER JOIN records ON records.rrecord=tracks.rrecord '
+        #sql +=  'INNER JOIN records ON records.rrecord=tracks.rrecord ' unless @mc.main_filter.empty?
         if rtrack == -1
             if @mc.artist.rartist == 0 # Artiste compile?
                 sql += @mc.is_on_record ? "WHERE tracks.rrecord=#{@mc.record.rrecord}" :
@@ -193,13 +193,13 @@ class TracksBrowser < Gtk::TreeView
                                           "WHERE tracks.rsegment=#{@mc.segment.rsegment}"
             end
             sql += @mc.main_filter
-            sql += " AND "+@mc.sub_filter unless @mc.sub_filter.empty?
-            sql += " ORDER BY "
-            sql += "tracks.irating DESC, tracks.iplayed DESC, " if GtkUI[GtkIDs::MM_VIEW_BYRATING].active?
-            sql += "tracks.iplayed DESC, " if GtkUI[GtkIDs::MM_VIEW_BYPLAYCOUNT].active?
-            sql += "tracks.ilastplayed DESC, " if GtkUI[GtkIDs::MM_VIEW_BYDATE].active?
-            sql += "tracks.iplaytime, " if GtkUI[GtkIDs::MM_VIEW_BYLENGTH].active?
-            sql += "tracks.iorder;"
+            sql += ' AND '+@mc.sub_filter unless @mc.sub_filter.empty?
+            sql += ' ORDER BY '
+            sql += 'tracks.irating DESC, tracks.iplayed DESC, ' if GtkUI[GtkIDs::MM_VIEW_BYRATING].active?
+            sql += 'tracks.iplayed DESC, ' if GtkUI[GtkIDs::MM_VIEW_BYPLAYCOUNT].active?
+            sql += 'tracks.ilastplayed DESC, ' if GtkUI[GtkIDs::MM_VIEW_BYDATE].active?
+            sql += 'tracks.iplaytime, ' if GtkUI[GtkIDs::MM_VIEW_BYLENGTH].active?
+            sql += 'tracks.iorder;'
         else
             sql += "WHERE rtrack=#{rtrack};"
         end
@@ -211,12 +211,12 @@ class TracksBrowser < Gtk::TreeView
         iter[TTV_REF]       = row[ROW_REF]
         iter[TTV_ORDER]     = row[ROW_ORDER]
         iter[TTV_TITLE]     = row[ROW_TITLE]
-        iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+". "+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && GtkUI[GtkIDs::MM_VIEW_TRACKINDEX].active?
+        iter[TTV_TITLE]     = row[ROW_SEG_ORDER].to_s+'. '+iter[TTV_TITLE] if row[ROW_SEG_ORDER] != 0 && GtkUI[GtkIDs::MM_VIEW_TRACKINDEX].active?
         iter[TTV_PLAY_TIME] = row[ROW_PLAY_TIME].to_ms_length
         if columns[TTV_ART_OR_SEG].visible?
             iter[TTV_ART_OR_SEG] = @mc.artist.compile? ? row[ROW_ART_NAME] : row[ROW_SEG_TITLE]
         else
-            iter[TTV_ART_OR_SEG] = ""
+            iter[TTV_ART_OR_SEG] = ''
         end
         iter[TTV_XLINK] = XIntf::Track.new.set_track_ref(iter[TTV_REF])
     end
@@ -230,8 +230,8 @@ class TracksBrowser < Gtk::TreeView
 
         columns[TTV_ART_OR_SEG].visible = @mc.artist.compile? ||
                                          (@mc.record.segmented? || !@mc.segment.stitle.empty?) # Show segment name if title not empty
-        #@mc.artist.compile? ? @tv.columns[TTV_ART_OR_SEG].title = "Artist" : @tv.columns[TTV_ART_OR_SEG].title = "Segment"
-        columns[TTV_ART_OR_SEG].title = @mc.artist.compile? ? "Artist" : "Segment"
+        #@mc.artist.compile? ? @tv.columns[TTV_ART_OR_SEG].title = 'Artist' : @tv.columns[TTV_ART_OR_SEG].title = 'Segment'
+        columns[TTV_ART_OR_SEG].title = @mc.artist.compile? ? 'Artist' : 'Segment'
 
         DBIntf.execute(generate_sql) { |row| map_row_to_entry(row, model.append) }
 
@@ -272,7 +272,7 @@ class TracksBrowser < Gtk::TreeView
     def set_track_field(field, value, to_all)
         sql = "UPDATE tracks SET #{field}=" +
               (field == 'itags' ? field+(value < 0 ? ' & ~ ' : ' | ')+value.abs.to_s : value.to_s) +
-              " WHERE rtrack IN ("+self.send(to_all ? :map : :selected_map) { |iter| iter[TTV_REF].to_s }.join(',')+')'
+              ' WHERE rtrack IN ('+self.send(to_all ? :map : :selected_map) { |iter| iter[TTV_REF].to_s }.join(',')+')'
 
         # Uodate only unqualified tracks
         sql += ' AND irating=0' if to_all && field == 'irating'
@@ -346,13 +346,13 @@ class TracksBrowser < Gtk::TreeView
     def on_selection_changed(widget)
         return if selection.count_selected_rows == 0
 
-        # Trace.debug("track selection changed.".green)
+        # Trace.debug('track selection changed.'.green)
         xtrack = selected_track
         if xtrack
             # Skip if we're selecting the track that is already selected.
             # Possible when clicking on the selection again and again.
             return if @trklnk.valid_track_ref? && @trklnk == xtrack
-            # Trace.debug("track selection changed.".brown)
+            # Trace.debug('track selection changed.'.brown)
 
             @trklnk = xtrack
             @trklnk.to_widgets_with_cover
@@ -361,7 +361,7 @@ class TracksBrowser < Gtk::TreeView
             @mc.set_segment_artist(@trklnk) if @trklnk.segment.rartist != @mc.segment.rartist
         else
             # There's nothing to do... may be set artist infos to empty.
-            # Trace.debug("--- multi select ---".magenta)
+            # Trace.debug('--- multi select ---'.magenta)
         end
     end
 
@@ -382,7 +382,7 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_trk_del
-        msg = selection.count_selected_rows == 1 ? "Sure to delete this track?" : "Sure to delete these tracks?"
+        msg = selection.count_selected_rows == 1 ? 'Sure to delete this track?' : 'Sure to delete these tracks?'
         if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
             selection.selected_each { |model, path, iter| GtkUtils.delete_track(iter[TTV_REF]); model.remove(iter) }
             load_entries_select_first
@@ -390,7 +390,7 @@ class TracksBrowser < Gtk::TreeView
     end
 
     def on_del_from_fs
-        msg = selection.count_selected_rows == 1 ? "Sure to delete this file?" : "Sure to delete these files?"
+        msg = selection.count_selected_rows == 1 ? 'Sure to delete this file?' : 'Sure to delete these files?'
         if GtkUtils.get_response(msg) == Gtk::Dialog::RESPONSE_OK
             selection.selected_each { |model, path, iter| iter[TTV_XLINK].remove_from_fs }
             check_for_audio_file
