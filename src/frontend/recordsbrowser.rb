@@ -144,13 +144,9 @@ class RecordsBrowser < Gtk::TreeView
 
         if @reclnk.valid_record_ref?
             # Redraw segment only if on a segment or the infos string will overwrite the record infos
-            if selection.selected.parent
-                @reclnk.to_widgets(false)
-                # Change artist infos if we're browsing a compile subtree
-                @mc.update_artist_infos(@reclnk.segment.rartist) if @mc.artist.compile?
-            else
-                @reclnk.to_widgets(true)
-            end
+            @reclnk.to_widgets(selection.selected.parent ? false : true)
+            # Change artist infos if we're browsing a compile subtree
+            @mc.update_artist_infos(@reclnk.segment.rartist) if @mc.artist.compile?
         end
         @mc.record_changed #if @reclnk.valid?
     end
