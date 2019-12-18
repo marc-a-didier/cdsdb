@@ -157,7 +157,7 @@ class TasksWindow < TopWindow
     def new_task(task)
         return nil if task.network_task? && !Cfg.remote
 
-        @mutex.synchronize do
+#         @mutex.synchronize do
             iter = @tv.model.append
             iter[COL_TASK_TYPE] = task.action
             iter[COL_TITLE]     = task_title(task)
@@ -169,7 +169,7 @@ class TasksWindow < TopWindow
             task.task_ref   = iter
 
             return iter
-        end
+#         end
     end
 
     def update_file_op(iter, curr_size, tot_size)
