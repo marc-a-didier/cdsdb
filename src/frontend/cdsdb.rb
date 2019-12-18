@@ -49,11 +49,9 @@ require '../shared/epsdf'
 if ARGV.detect { |arg| arg == '--oldgst' }
     require './gstplayer'
     require './gstreplaygain'
-    require './playerwindow'
 else
     require './gstplayer_g1.0'
     require './gstreplaygain_g1.0'
-    require './playerwindow_g1.0'
 end
 
 require './qualifiers'
@@ -78,8 +76,11 @@ require './discanalyzer'
 
 require './prefs'
 require './filterwindow'
-# require './playerwindow'
-# require './playerwindow_g1.0'
+if ARGV.detect { |arg| arg == '--oldgst' }
+    require './playerwindow'
+else
+    require './playerwindow_g1.0'
+end
 require './pqueuewindow'
 require './cdeditorwindow'
 require './memoswindow'

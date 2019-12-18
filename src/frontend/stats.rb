@@ -200,7 +200,6 @@ class Stats
         audio_link = Audio::Link.new
 #         DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref} AND rmedia<>#{Audio::MEDIA_FILE}") do |record|
         DBIntf.execute("SELECT rrecord FROM records WHERE rgenre=#{genre.ref}") do |record|
-            Gtk.main_iteration while Gtk.events_pending?
             rtrack = DBIntf.get_first_value("SELECT rtrack FROM tracks WHERE rrecord=#{record[0]};")
             if audio_link.reset.set_track_ref(rtrack).record_on_disk?
                 genre.ripped += 1
@@ -245,7 +244,6 @@ class Stats
                             [:number, 'Play count'], [:string, 'Genre'], [:number, 'Played'],
                             [:number, 'Available'], [:number, '% Played'] ])
         DBIntf.execute(sql) do |row|
-            Gtk.main_iteration while Gtk.events_pending?
             genre = @genres.detect { |g| g.to_a.index(row[1]) }
             cols = [row[0], row[1]]
             cols += [row[2], genre.tot_tracks, row[2].to_f/genre.tot_tracks.to_f*100.0] if genre
@@ -269,10 +267,7 @@ class Stats
         end
         sql += ' LIMIT 1000;'
         table.add_columns([ [:number, 'Play count'], [:string, 'Artist'] ])
-        DBIntf.execute(sql) do |row|
-            Gtk.main_iteration while Gtk.events_pending?
-            table.add_row([row[0], row[1]])
-        end
+        DBIntf.execute(sql) { |row| table.add_row([row[0], row[1]]) }
     end
 
     def top_records(genre)
@@ -289,16 +284,13 @@ class Stats
         end
         sql += ' LIMIT 1000;'
         table.add_columns([ [:number, 'Play count'], [:string, 'Record'], [:string, 'Artist'] ])
-        DBIntf.execute(sql) do |row|
-            Gtk.main_iteration while Gtk.events_pending?
-            table.add_row([row[0], row[1], row[2]])
-        end
+        DBIntf.execute(sql) { |row| table.add_row([row[0], row[1], row[2]]) }
     end
 
     def top_tracks(genre)
         if genre.ref == 0
             table = @tables.add('All Styles Tracks Top Chart')
-            sql = "SELECT rtrack, stitle, iplayed FROM tracks WHERE iplayed > 0 ORDER BY iplayed DESC;"
+            sql = 'SELECT rtrack, stitle, iplayed FROM tracks WHERE iplayed > 0 ORDER BY iplayed DESC;'
         else
             table = @tables.add("#{genre.name} Tracks Top Chart")
             sql = "SELECT tracks.rtrack, tracks.stitle, tracks.iplayed FROM tracks
@@ -310,7 +302,6 @@ class Stats
                             [:string, 'Artist'], [:string, 'Record'], [:string, 'Segment'] ])
         audio_link = Audio::Link.new
         DBIntf.execute(sql) do |row|
-            Gtk.main_iteration while Gtk.events_pending?
             audio_link.reset.set_track_ref(row[0].to_i)
             table.add_row([row[2], row[1], audio_link.segment_artist.sname, audio_link.record.stitle, audio_link.segment.stitle])
         end
@@ -320,8 +311,7 @@ class Stats
         audio_link = Audio::Link.new
         table = @tables.add('Most rated tracks').add_columns([ [:string, 'Rating'], [:string, 'Track'], [:string, 'Artist'],
                                                                [:string, 'Record'], [:string, 'Segment'] ])
-        DBIntf.execute("SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;") do |row|
-            Gtk.main_iteration while Gtk.events_pending?
+        DBIntf.execute('SELECT rtrack, stitle, irating FROM tracks WHERE irating > 0 ORDER BY irating DESC;') do |row|
             audio_link.reset.set_track_ref(row[0])
             table.add_row([Qualifiers::RATINGS[row[2]], row[1], audio_link.segment_artist.sname,
                            audio_link.record.stitle, audio_link.segment.stitle])
