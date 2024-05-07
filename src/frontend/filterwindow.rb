@@ -333,6 +333,8 @@ class FilterWindow < TopWindow
             end
         end
 
+        Trace.inf("#{tracks.size} matches found")
+
         tracks.slice!(max_tracks, tracks.size)
 
         f.puts; f.puts

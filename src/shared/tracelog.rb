@@ -7,6 +7,7 @@ module Trace
     SQL = 'SQL: '.blue.bold
     DBC = 'DBC: '.blue.bold
     IMC = 'IMC: '.blue.bold
+    INF = 'INF: '.blue.bold
 
     class << self
         def trace
@@ -39,6 +40,10 @@ module Trace
 
         def imc(msg)
             self.trace.debug(IMC+msg) if Cfg.trace_image_cache
+        end
+
+        def inf(msg)
+            self.trace.debug(INF+msg)
         end
     end
 end
