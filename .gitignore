@@ -1,0 +1,7 @@
+covers/
+db/
+flags/
+icons/
+src/tests/
+**/*.log
+**/*.log.*
