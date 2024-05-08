@@ -83,7 +83,9 @@ module Epsdf
         end
 
         def parse_header
-            @header = JSON.parse(@session.gets.chomp)
+            hdr = @session.gets
+            raise Errno::ECONNRESET unless hdr
+            @header = JSON.parse(hdr.chomp)
             return self
         end
 
@@ -168,7 +170,7 @@ module Epsdf
             setup_resource_from_msg(msg) unless params['file_name']
 
             file = Cfg.dir(msg['type'].to_sym)+msg['file_name']
-            if File.exists?(file)
+            if File.exist?(file)
                 # If small size is prefered over quality, the requested block size is negative.
                 if self.is_a?(Server) # ServerImpl???
                     Cfg.size_over_quality = params['block_size'] < 0
@@ -207,7 +209,7 @@ module Epsdf
             file = Cfg.dir(msg['type'].to_sym)+msg['file_name']
             file += DOWNLOAD_EXT if msg['type'].to_sym == :db
 
-            FileUtils.mkpath(File.dirname(file)) unless Dir.exists?(File.dirname(file))
+            FileUtils.mkpath(File.dirname(file)) unless Dir.exist?(File.dirname(file))
 
             status = streamer.receive_file(file, &block)
             if status == STAT_CONT
@@ -232,7 +234,7 @@ module Epsdf
                 ssl = OpenSSL::SSL::SSLSocket.new(socket)
                 ssl.sync_close = true
                 ssl.connect
-                if ssl.peer_cert.to_s != @expected_cert.to_s
+                if !ssl.peer_cert || ssl.peer_cert.to_s != @expected_cert.to_s
                     Trace.net('Unexpected certificate'.red.bold)
                     return nil
                 end
@@ -248,7 +250,8 @@ module Epsdf
                 end
                 @streamer.hand_shake
                 # puts(@streamer.header)
-            rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError, OpenSSL::X509::CertificateError => ex
+#            rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError, OpenSSL::X509::CertificateError => ex
+            rescue SystemCallError, SocketError, OpenSSL::X509::CertificateError => ex
                 Trace.net("Connection: [#{ex.class.to_s.red.bold}]")
                 @streamer.session = nil
                 return nil
@@ -263,7 +266,8 @@ module Epsdf
                     response = @streamer.send_stream(request.to_h.to_json).parse_response
                     # puts(response)
                     return response
-                rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => ex
+#                rescue Errno::ECONNRESET, Errno::ECONNREFUSED, Errno::ETIMEDOUT, SocketError => ex
+                rescue SystemCallError, SocketError => ex
                     Trace.net("Connection: [#{ex.class.to_s.red.bold}]")
                 end
             end
@@ -311,6 +315,7 @@ module Epsdf
                             started = Time.now.to_f
 
                             streamer = Streamer.new(session)
+                            #raise Errno::ECONNRESET unless streamer.session
 
                             session.puts(MSG_WELCOME)
                             streamer.parse_header
@@ -339,7 +344,7 @@ module Epsdf
 #                             while msg != MSG_BYE
                             session.close
                         end
-                    rescue Errno::ECONNRESET, OpenSSL::SSL::SSLError => ex
+                    rescue SystemCallError, OpenSSL::SSL::SSLError => ex
                         # Trace.net("SSL: [#{ex.class.to_s.red.bold}]")
                         Log.warn("Connection: #{ex.class.to_s}")
                     end
